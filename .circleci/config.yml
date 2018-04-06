@@ -1,0 +1,14 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1-stretch
+    working_directory: /go/src/github.com/cybozu-go/sabakan
+    steps:
+      - checkout
+      - run: go get github.com/golang/lint/golint
+      - run: go get golang.org/x/tools/cmd/goimports
+      - run: (! $GOPATH/bin/goimports -d . 2>&1 | read _)
+      - run: $GOPATH/bin/golint -set_exit_status ./...
+      - run: go get -v -t -d ./...
+      - run: go test -race -v ./...
