@@ -14,7 +14,7 @@ import (
 
 var (
 	flagHTTP           = flag.String("http", "0.0.0.0:8888", "<Listen IP>:<Port number>")
-	flagEtcdServers    = flag.String("etcd-servers", "", "URLs of the backend etcd")
+	flagEtcdServers    = flag.String("etcd-servers", "http://localhost:2379", "URLs of the backend etcd")
 	flagEtcdPrefix     = flag.String("etcd-prefix", "", "etcd prefix")
 	flagNodeIPv4Offset = flag.String("node-ipv4-offset", "", "IP address offset to assign Nodes")
 	flagNodeRackShift  = flag.String("node-rack-shift", "", "Integer to calculate IP addresses for address each nodes based on --node-ipv4-offset")
