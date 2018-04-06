@@ -2,19 +2,18 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/coreos/etcd/client"
+	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/gorilla/mux"
 )
 
 var (
-	flagHttp           = flag.String("http", "0.0.0.0:8888", "<Listen IP>:<Port number>")
+	flagHTTP           = flag.String("http", "0.0.0.0:8888", "<Listen IP>:<Port number>")
 	flagEtcdServers    = flag.String("etcd-servers", "", "URLs of the backend etcd")
 	flagEtcdPrefix     = flag.String("etcd-prefix", "", "etcd prefix")
 	flagNodeIPv4Offset = flag.String("node-ipv4-offset", "", "IP address offset to assign Nodes")
@@ -25,29 +24,28 @@ var (
 	flagBMCPerNode     = flag.String("bmc-ip-per-node", "1", "Number of IP addresses per BMC. Default to 1")
 )
 
-type EtcdConfig struct {
+type etcdConfig struct {
 	Servers []string
 	Prefix  string
 }
 
-type EtcdClient struct {
-	c client.Client
+type etcdClient struct {
+	c *clientv3.Client
 }
 
 func main() {
 	flag.Parse()
 
-	var e EtcdConfig
+	var e etcdConfig
 	e.Servers = strings.Split(*flagEtcdServers, ",")
 	e.Prefix = *flagEtcdPrefix
 
-	cfg := client.Config{
+	cfg := clientv3.Config{
 		Endpoints: e.Servers,
-		Transport: client.DefaultTransport,
 	}
-	c, err := client.New(cfg)
+	c, err := clientv3.New(cfg)
 	if err != nil {
-		// handle error
+		log.ErrorExit(err)
 	}
 
 	r := mux.NewRouter()
@@ -55,7 +53,7 @@ func main() {
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
-			Addr:    fmt.Sprintf(":%d", 8080),
+			Addr:    *flagHTTP,
 			Handler: r,
 		},
 		ShutdownTimeout: 3 * time.Minute,
@@ -68,22 +66,20 @@ func main() {
 	}
 }
 
-func (e *EtcdClient) initHelloFunc(r *mux.Router) {
+func (e *etcdClient) initHelloFunc(r *mux.Router) {
 	r.HandleFunc("/hello", e.handleHello).Methods("GET")
 }
 
-func initHello(r *mux.Router, c client.Client) {
-	e := &EtcdClient{c}
+func initHello(r *mux.Router, c *clientv3.Client) {
+	e := &etcdClient{c}
 	e.initHelloFunc(r)
 }
 
-func (e *EtcdClient) handleHello(w http.ResponseWriter, r *http.Request) {
-	kAPI := client.NewKeysAPI(e.c)
-
-	// create a new key /foo with the value "bar"
-	_, err := kAPI.Create(r.Context(), "/hello", "Hello, world")
+func (e *etcdClient) handleHello(w http.ResponseWriter, r *http.Request) {
+	_, err := e.c.Put(r.Context(), "/world", "Hello, world v3")
 	if err != nil {
-		// handle error
+		w.Write([]byte(err.Error() + "\n"))
+		return
 	}
-	//r.Write([]byte("Hello, world"))
+	w.Write([]byte("Hello, world\n"))
 }
