@@ -9,6 +9,7 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/sabakan"
 	"github.com/gorilla/mux"
 )
 
@@ -50,6 +51,7 @@ func main() {
 
 	r := mux.NewRouter()
 	initHello(r.PathPrefix("/").Subrouter(), c)
+	sabakan.InitCrypts(r.PathPrefix("/api/v1/crypts").Subrouter(), c)
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
