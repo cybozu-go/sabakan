@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gorilla/mux"
@@ -52,11 +53,11 @@ func (e *etcdClient) handleCryptsGet(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error() + "\n"))
 		return
 	}
-	if len(resp.Kvs) == 0 {
+	if resp.Count == 0 {
 		w.WriteHeader(404)
 		return
 	}
-	if len(resp.Kvs) != 1 {
+	if resp.Count != 1 {
 		w.WriteHeader(500)
 		return
 	}
@@ -80,9 +81,21 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	serial := vars["serial"]
 	var receivedEntity cryptEntity
 	b, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(b, &receivedEntity)
+	err := json.Unmarshal(b, &receivedEntity)
 	path := receivedEntity.Path
 	key := receivedEntity.Key
+	if err != nil {
+		w.Write([]byte(err.Error() + "\n"))
+		return
+	}
+	if govalidator.IsNull(path) {
+		w.WriteHeader(400)
+		return
+	}
+	if govalidator.IsNull(key) {
+		w.WriteHeader(400)
+		return
+	}
 
 	s, err := concurrency.NewSession(e.c)
 	defer s.Close()
@@ -103,7 +116,7 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error() + "\n"))
 		return
 	}
-	if len(check.Kvs) == 1 {
+	if check.Count == 1 {
 		w.WriteHeader(400)
 		return
 	}
@@ -124,11 +137,11 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error() + "\n"))
 		return
 	}
-	if len(check.Kvs) == 0 {
+	if check.Count == 0 {
 		w.WriteHeader(404)
 		return
 	}
-	if len(check.Kvs) != 1 {
+	if check.Count != 1 {
 		w.WriteHeader(500)
 		return
 	}
