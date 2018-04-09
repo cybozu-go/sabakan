@@ -37,6 +37,7 @@ func (e *etcdClient) initCryptsFunc(r *mux.Router) {
 	r.HandleFunc("/{serial}", e.handleCryptsDelete).Methods("DELETE")
 }
 
+// InitCrypts initialize the handle functions for crypts
 func InitCrypts(r *mux.Router, c *clientv3.Client) {
 	e := &etcdClient{c}
 	e.initCryptsFunc(r)
@@ -110,29 +111,30 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Prohibit overwriting
-	check, err := e.c.Get(r.Context(),
-		fmt.Sprintf("/crypts/%v/%v", serial, path))
+	target := fmt.Sprintf("/crypts/%v/%v", serial, path)
+	prev, err := e.c.Get(r.Context(), target)
 	if err != nil {
 		w.Write([]byte(err.Error() + "\n"))
 		return
 	}
-	if check.Count == 1 {
+	if prev.Count == 1 {
 		w.WriteHeader(400)
 		return
 	}
 
 	// Put crypts on etcd
-	_, err = e.c.Put(r.Context(),
-		fmt.Sprintf("/crypts/%v/%v", serial, path),
-		key)
+	_, err = e.c.Txn(r.Context()).
+		If(clientv3.Compare(clientv3.CreateRevision(target), "=", 0)).
+		Then(clientv3.OpPut(target, key)).
+		Else().
+		Commit()
 	if err != nil {
 		w.Write([]byte(err.Error() + "\n"))
 		return
 	}
 
 	// Confirm whether it was saved in etcd
-	check, err = e.c.Get(r.Context(),
-		fmt.Sprintf("/crypts/%v/%v", serial, path))
+	check, err := e.c.Get(r.Context(), target)
 	if err != nil {
 		w.Write([]byte(err.Error() + "\n"))
 		return
