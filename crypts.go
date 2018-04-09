@@ -4,19 +4,27 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"io/ioutil"
+	"net/http"
+	"regexp"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gorilla/mux"
 )
 
-type cryptEntity struct {
-	Path string `json:"path"`
-	Key  string `json:"key"`
-}
+type (
+	cryptEntity struct {
+		Path string `json:"path"`
+		Key  string `json:"key"`
+	}
+
+	deleteResponseEntity struct {
+		Path string `json:"path"`
+	}
+
+	deleteResponse []deleteResponseEntity
+)
 
 type etcdClient struct {
 	c *clientv3.Client
@@ -25,6 +33,7 @@ type etcdClient struct {
 func (e *etcdClient) initCryptsFunc(r *mux.Router) {
 	r.HandleFunc("/{serial}/{path}", e.handleCryptsGet).Methods("GET")
 	r.HandleFunc("/{serial}", e.handleCryptsPost).Methods("POST")
+	r.HandleFunc("/{serial}", e.handleCryptsDelete).Methods("DELETE")
 }
 
 func InitCrypts(r *mux.Router, c *clientv3.Client) {
@@ -100,10 +109,10 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Put crypts on etcd
-	resp, err := e.c.Put(r.Context(),
+	_, err = e.c.Put(r.Context(),
 		fmt.Sprintf("/crypts/%v/%v", serial, path),
 		key)
-	if err != nil && resp != nil {
+	if err != nil {
 		w.Write([]byte(err.Error() + "\n"))
 		return
 	}
@@ -145,5 +154,61 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
+	w.Write(res)
+}
+
+func (e *etcdClient) handleCryptsDelete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	serial := vars["serial"]
+
+	// GET current crypts
+	gresp, err := e.c.Get(r.Context(),
+		fmt.Sprintf("/crypts/%v", serial),
+		clientv3.WithPrefix())
+	if err != nil {
+		w.Write([]byte(err.Error() + "\n"))
+		return
+	}
+	if len(gresp.Kvs) == 0 {
+		w.WriteHeader(404)
+		return
+	}
+
+	// DELETE
+	dresp, err := e.c.Delete(r.Context(),
+		fmt.Sprintf("/crypts/%v", serial),
+		clientv3.WithPrefix())
+	if err != nil {
+		w.Write([]byte(err.Error() + "\n"))
+		return
+	}
+	if dresp.Deleted <= 0 {
+		w.WriteHeader(500)
+		return
+	}
+
+	responseBody := deleteResponse{}
+	for _, ev := range gresp.Kvs {
+		path := string(ev.Key)
+		matched, err := regexp.MatchString(fmt.Sprintf("/crypts/%v/.*", serial), path)
+		if err != nil {
+			w.Write([]byte(err.Error() + "\n"))
+			return
+		}
+		if matched {
+			responseBody = append(responseBody, deleteResponseEntity{
+				Path: path,
+			})
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	res, err := json.Marshal(responseBody)
+	if err != nil {
+		w.Write([]byte(err.Error() + "\n"))
+		return
+	}
 	w.Write(res)
 }
