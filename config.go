@@ -2,7 +2,7 @@ package sabakan
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"errors"
 	"net/http"
 	"path"
 
@@ -55,15 +55,15 @@ func (e *etcdClient) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 	key := path.Join(e.prefix, EtcdKeyConfig)
 	resp, err := e.client.Get(r.Context(), key)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if resp == nil {
-		http.Error(w, ErrorValueNotFound, http.StatusNotFound)
+		respError(w, errors.New(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
 	if len(resp.Kvs) == 0 {
-		http.Error(w, ErrorValueNotFound, http.StatusNotFound)
+		respError(w, errors.New(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (e *etcdClient) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(resp.Kvs[0].Value)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -80,75 +80,59 @@ func (e *etcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 	key := path.Join(e.prefix, EtcdKeyMachines)
 	resp, err := e.client.Get(r.Context(), key, clientv3.WithPrefix())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if resp.Count != 0 {
-		http.Error(w, ErrorMachinesExist, http.StatusForbidden)
+		respError(w, errors.New(ErrorMachinesExist), http.StatusForbidden)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	var sc sabakanConfig
 
-	b, _ := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(b, &sc)
+	err = json.NewDecoder(r.Body).Decode(&sc)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		respError(w, err, http.StatusBadRequest)
 		return
 	}
 	// Validation
 	if sc.NodeIPv4Offset == "" {
-		http.Error(w, "node-ipv4-offset: "+ErrorValueNotFound, http.StatusBadRequest)
+		respError(w, errors.New("node-ipv4-offset: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.NodeRackShift == 0 {
-		http.Error(w, "node-rack-shift: "+ErrorValueNotFound, http.StatusBadRequest)
+		respError(w, errors.New("node-rack-shift: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.BMCIPv4Offset == "" {
-		http.Error(w, "bmc-ipv4-offset: "+ErrorValueNotFound, http.StatusBadRequest)
+		respError(w, errors.New("bmc-ipv4-offset: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.BMCRackShift == 0 {
-		http.Error(w, "bmc-rack-shift: "+ErrorValueNotFound, http.StatusBadRequest)
+		respError(w, errors.New("bmc-rack-shift: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.NodeIPPerNode == 0 {
-		http.Error(w, "node-ip-per-node: "+ErrorValueNotFound, http.StatusBadRequest)
+		respError(w, errors.New("node-ip-per-node: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.BMCIPPerNode == 0 {
-		http.Error(w, "bmc-ip-per-node: "+ErrorValueNotFound, http.StatusBadRequest)
+		respError(w, errors.New("bmc-ip-per-node: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 
 	j, err := json.Marshal(sc)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	// Add config if /config doesn't exist.
+	// Put config
 	key = path.Join(e.prefix, EtcdKeyConfig)
-	_, err = e.client.Txn(r.Context()).
-		If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0)).
-		Then(clientv3.OpPut(key, string(j))).
-		Else().
-		Commit()
+	_, err = e.client.Put(r.Context(), key, string(j))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Add config if value of the /config is not same.
-	_, err = e.client.Txn(r.Context()).
-		If(clientv3.Compare(clientv3.Value(key), "!=", string(j))).
-		Then(clientv3.OpPut(key, string(j))).
-		Else().
-		Commit()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 
