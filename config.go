@@ -2,9 +2,9 @@ package sabakan
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/gorilla/mux"
@@ -22,7 +22,8 @@ type sabakanConfig struct {
 
 // etcdClient is etcd3 client object
 type etcdClient struct {
-	c *clientv3.Client
+	client *clientv3.Client
+	prefix string
 }
 
 const (
@@ -40,8 +41,8 @@ const (
 )
 
 // InitConfig is initialization of the sabakan API /config
-func InitConfig(r *mux.Router, c *clientv3.Client) {
-	e := &etcdClient{c}
+func InitConfig(r *mux.Router, c *clientv3.Client, p string) {
+	e := &etcdClient{c, p}
 	e.initConfigFunc(r)
 }
 
@@ -51,7 +52,8 @@ func (e *etcdClient) initConfigFunc(r *mux.Router) {
 }
 
 func (e *etcdClient) handleGetConfig(w http.ResponseWriter, r *http.Request) {
-	resp, err := e.c.Get(r.Context(), EtcdKeyConfig)
+	key := path.Join(e.prefix, EtcdKeyConfig)
+	resp, err := e.client.Get(r.Context(), key)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -75,7 +77,8 @@ func (e *etcdClient) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *etcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
-	resp, err := e.c.Get(r.Context(), EtcdKeyMachines, clientv3.WithPrefix())
+	key := path.Join(e.prefix, EtcdKeyMachines)
+	resp, err := e.client.Get(r.Context(), key, clientv3.WithPrefix())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -88,7 +91,6 @@ func (e *etcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var sc sabakanConfig
 
-	fmt.Println(r.Body)
 	b, _ := ioutil.ReadAll(r.Body)
 	err = json.Unmarshal(b, &sc)
 	if err != nil {
@@ -128,9 +130,10 @@ func (e *etcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add config if /config doesn't exist.
-	_, err = e.c.Txn(r.Context()).
-		If(clientv3.Compare(clientv3.CreateRevision(EtcdKeyConfig), "=", 0)).
-		Then(clientv3.OpPut(EtcdKeyConfig, string(j))).
+	key = path.Join(e.prefix, EtcdKeyConfig)
+	_, err = e.client.Txn(r.Context()).
+		If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0)).
+		Then(clientv3.OpPut(key, string(j))).
 		Else().
 		Commit()
 	if err != nil {
@@ -139,9 +142,9 @@ func (e *etcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add config if value of the /config is not same.
-	_, err = e.c.Txn(r.Context()).
-		If(clientv3.Compare(clientv3.Value(EtcdKeyConfig), "!=", string(j))).
-		Then(clientv3.OpPut(EtcdKeyConfig, string(j))).
+	_, err = e.client.Txn(r.Context()).
+		If(clientv3.Compare(clientv3.Value(key), "!=", string(j))).
+		Then(clientv3.OpPut(key, string(j))).
 		Else().
 		Commit()
 	if err != nil {

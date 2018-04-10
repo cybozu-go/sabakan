@@ -29,7 +29,7 @@ func main() {
 
 	var e etcdConfig
 	e.Servers = strings.Split(*flagEtcdServers, ",")
-	e.Prefix = *flagEtcdPrefix
+	e.Prefix = "/" + *flagEtcdPrefix
 
 	cfg := clientv3.Config{
 		Endpoints: e.Servers,
@@ -40,7 +40,7 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	sabakan.InitConfig(r.PathPrefix("/api/v1/").Subrouter(), c)
+	sabakan.InitConfig(r.PathPrefix("/api/v1/").Subrouter(), c, e.Prefix)
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
