@@ -3,14 +3,15 @@ package sabakan
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/cybozu-go/log"
 	"github.com/gorilla/mux"
 )
 
@@ -25,10 +26,16 @@ type (
 	}
 
 	deleteResponse []deleteResponseEntity
+
+	etcdClient struct {
+		c *clientv3.Client
+	}
 )
 
-type etcdClient struct {
-	c *clientv3.Client
+// InitCrypts initialize the handle functions for crypts
+func InitCrypts(r *mux.Router, c *clientv3.Client) {
+	e := &etcdClient{c}
+	e.initCryptsFunc(r)
 }
 
 func (e *etcdClient) initCryptsFunc(r *mux.Router) {
@@ -37,10 +44,40 @@ func (e *etcdClient) initCryptsFunc(r *mux.Router) {
 	r.HandleFunc("/{serial}", e.handleCryptsDelete).Methods("DELETE")
 }
 
-// InitCrypts initialize the handle functions for crypts
-func InitCrypts(r *mux.Router, c *clientv3.Client) {
-	e := &etcdClient{c}
-	e.initCryptsFunc(r)
+func respWriter(w http.ResponseWriter, data interface{}, status int) error {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(b)
+	return nil
+}
+
+func respError(w http.ResponseWriter, resperr error, status int) {
+	out, err := json.Marshal(map[string]interface{}{
+		"http_status_code": status,
+		"error":            resperr.Error(),
+	})
+	if err != nil {
+		log.Error(err.Error(), nil)
+		return
+	}
+
+	log.Error(string(out), nil)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	fmt.Fprintf(w, string(out))
+}
+
+func makeDeleteResponse(gresp *clientv3.GetResponse, serial string) (deleteResponse, error) {
+	entities := deleteResponse{}
+	for _, ev := range gresp.Kvs {
+		entities = append(entities, deleteResponseEntity{Path: string(ev.Key)})
+	}
+	return entities, nil
 }
 
 func (e *etcdClient) handleCryptsGet(w http.ResponseWriter, r *http.Request) {
@@ -48,33 +85,24 @@ func (e *etcdClient) handleCryptsGet(w http.ResponseWriter, r *http.Request) {
 	serial := vars["serial"]
 	path := vars["path"]
 
+	target := fmt.Sprintf("/crypts/%v/%v", serial, path)
 	resp, err := e.c.Get(r.Context(),
-		fmt.Sprintf("/crypts/%v/%v", serial, path))
+		target)
 	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if resp.Count == 0 {
-		w.WriteHeader(404)
-		return
-	}
-	if resp.Count != 1 {
-		w.WriteHeader(500)
+		respError(w, fmt.Errorf("target %v not found", target), http.StatusNotFound)
 		return
 	}
 
 	ev := resp.Kvs[0]
-	entity := &cryptEntity{
-		Path: string(path),
-		Key:  string(ev.Value)}
-	res, err := json.Marshal(entity)
+	entity := &cryptEntity{Path: string(path), Key: string(ev.Value)}
+	err = respWriter(w, entity, http.StatusOK)
 	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
-		return
+		respError(w, err, http.StatusInternalServerError)
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
 }
 
 func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
@@ -86,27 +114,28 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	path := receivedEntity.Path
 	key := receivedEntity.Key
 	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if govalidator.IsNull(path) {
-		w.WriteHeader(400)
+		respError(w, errors.New("`path` should not be empty"), http.StatusBadRequest)
 		return
 	}
 	if govalidator.IsNull(key) {
-		w.WriteHeader(400)
+		respError(w, errors.New("`key` should not be empty"), http.StatusBadRequest)
 		return
 	}
 
+	//  Start mutex
 	s, err := concurrency.NewSession(e.c)
 	defer s.Close()
 	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 	m := concurrency.NewMutex(s, "/sabakan-post-crypts-lock/")
 	if err := m.Lock(context.TODO()); err != nil {
-		w.Write([]byte(err.Error() + "\n"))
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -118,7 +147,7 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if prev.Count == 1 {
-		w.WriteHeader(400)
+		respError(w, fmt.Errorf("target %v exists", target), http.StatusBadRequest)
 		return
 	}
 
@@ -129,47 +158,21 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 		Else().
 		Commit()
 	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	// Confirm whether it was saved in etcd
-	check, err := e.c.Get(r.Context(), target)
-	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
-		return
-	}
-	if check.Count == 0 {
-		w.WriteHeader(404)
-		return
-	}
-	if check.Count != 1 {
-		w.WriteHeader(500)
-		return
-	}
-	ev := check.Kvs[0]
-	savedKey := string(ev.Value)
-	if savedKey != key {
-		w.WriteHeader(500)
-		return
-	}
-
+	// Close mutex
 	if err := m.Unlock(context.TODO()); err != nil {
-		w.WriteHeader(500)
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	responseEntity := &cryptEntity{
-		Path: string(path),
-		Key:  string(savedKey)}
-	res, err := json.Marshal(responseEntity)
+	entity := &cryptEntity{Path: string(path), Key: string(key)}
+	err = respWriter(w, entity, http.StatusCreated)
 	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
-		return
+		respError(w, err, http.StatusInternalServerError)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(201)
-	w.Write(res)
 }
 
 func (e *etcdClient) handleCryptsDelete(w http.ResponseWriter, r *http.Request) {
@@ -181,11 +184,11 @@ func (e *etcdClient) handleCryptsDelete(w http.ResponseWriter, r *http.Request) 
 		fmt.Sprintf("/crypts/%v", serial),
 		clientv3.WithPrefix())
 	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if len(gresp.Kvs) == 0 {
-		w.WriteHeader(404)
+		respError(w, fmt.Errorf("target not found"), http.StatusNotFound)
 		return
 	}
 
@@ -194,36 +197,21 @@ func (e *etcdClient) handleCryptsDelete(w http.ResponseWriter, r *http.Request) 
 		fmt.Sprintf("/crypts/%v", serial),
 		clientv3.WithPrefix())
 	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
+		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if dresp.Deleted <= 0 {
-		w.WriteHeader(500)
+		respError(w, fmt.Errorf("failed to delete"), http.StatusInternalServerError)
 		return
 	}
 
-	responseBody := deleteResponse{}
-	for _, ev := range gresp.Kvs {
-		path := string(ev.Key)
-		matched, err := regexp.MatchString(fmt.Sprintf("/crypts/%v/.*", serial), path)
-		if err != nil {
-			w.Write([]byte(err.Error() + "\n"))
-			return
-		}
-		if matched {
-			responseBody = append(responseBody, deleteResponseEntity{
-				Path: path,
-			})
-		}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	res, err := json.Marshal(responseBody)
+	entities, err := makeDeleteResponse(gresp, serial)
 	if err != nil {
-		w.Write([]byte(err.Error() + "\n"))
-		return
+		respError(w, err, http.StatusInternalServerError)
 	}
-	w.Write(res)
+
+	err = respWriter(w, entities, http.StatusOK)
+	if err != nil {
+		respError(w, err, http.StatusInternalServerError)
+	}
 }
