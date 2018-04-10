@@ -48,6 +48,19 @@ func makeDeleteResponse(gresp *clientv3.GetResponse) (deleteResponse, error) {
 	return entities, nil
 }
 
+func validatePostParams(received cryptEntity) error {
+	diskPath := received.Path
+	key := received.Key
+	if govalidator.IsNull(diskPath) {
+		s := "`diskPath` should not be empty"
+		return errors.New(s)
+	}
+	if govalidator.IsNull(key) {
+		return errors.New("`key` should not be empty")
+	}
+	return nil
+}
+
 func (e *etcdClient) handleCryptsGet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	serial := vars["serial"]
@@ -65,8 +78,13 @@ func (e *etcdClient) handleCryptsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ev := resp.Kvs[0]
-	entity := &cryptEntity{Path: string(diskPath), Key: string(ev.Value)}
-	err = respWriter(w, entity, http.StatusOK)
+	var responseBody cryptEntity
+	err = json.Unmarshal(ev.Value, &responseBody)
+	if err != nil {
+		respError(w, err, http.StatusInternalServerError)
+		return
+	}
+	err = respWriter(w, responseBody, http.StatusOK)
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
 	}
@@ -81,16 +99,12 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 		respError(w, err, http.StatusInternalServerError)
 		return
 	}
-
-	// Validation
 	diskPath := received.Path
 	key := received.Key
-	if govalidator.IsNull(diskPath) {
-		respError(w, errors.New("`diskPath` should not be empty"), http.StatusBadRequest)
-		return
-	}
-	if govalidator.IsNull(key) {
-		respError(w, errors.New("`key` should not be empty"), http.StatusBadRequest)
+
+	// Validation
+	if err := validatePostParams(received); err != nil {
+		respError(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -114,18 +128,19 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error() + "\n"))
 		return
 	}
-	if prev.Count == 1 {
+	if prev.Count >= 1 {
 		respError(w, fmt.Errorf(ErrorCryptsExist), http.StatusBadRequest)
 		return
 	}
 
 	// Put crypts on etcd
-	_, err = e.client.Txn(r.Context()).
-		If(clientv3.Compare(clientv3.CreateRevision(target), "=", 0)).
-		Then(clientv3.OpPut(target, key)).
-		Else().
-		Commit()
+	entity := cryptEntity{Path: diskPath, Key: key}
+	val, err := json.Marshal(entity)
 	if err != nil {
+		respError(w, err, http.StatusInternalServerError)
+		return
+	}
+	if _, err := e.client.Put(r.Context(), target, string(val)); err != nil {
 		respError(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -136,8 +151,7 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entity := &cryptEntity{Path: string(diskPath), Key: string(key)}
-	err = respWriter(w, entity, http.StatusCreated)
+	err = respWriter(w, cryptEntity{Path: string(diskPath), Key: string(key)}, http.StatusCreated)
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
 	}
@@ -148,7 +162,7 @@ func (e *etcdClient) handleCryptsDelete(w http.ResponseWriter, r *http.Request) 
 	serial := vars["serial"]
 	target := path.Join(e.prefix, EtcdKeyCrypts, serial)
 
-	// GET current crypts
+	// Confirm the targets exist
 	gresp, err := e.client.Get(r.Context(),
 		target,
 		clientv3.WithPrefix())
@@ -156,7 +170,7 @@ func (e *etcdClient) handleCryptsDelete(w http.ResponseWriter, r *http.Request) 
 		respError(w, err, http.StatusInternalServerError)
 		return
 	}
-	if len(gresp.Kvs) == 0 {
+	if gresp.Count == 0 {
 		respError(w, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
