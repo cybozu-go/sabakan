@@ -31,13 +31,15 @@ const (
 	EtcdKeyConfig = "/config"
 	// EtcdKeyMachines is etcd key name for machines management
 	EtcdKeyMachines = "/machines"
+	// EtcdKeyCrypts is etcd key name for crypts management
+	EtcdKeyCrypts = "/crypts"
 
 	// ErrorValueNotFound is an error message when a target value is not found
-	ErrorValueNotFound = "Value not found"
+	ErrorValueNotFound = "value not found"
 	// ErrorMachinesExist is an error message when /machines key exists in etcd.
-	ErrorMachinesExist = "Machines already exist"
-	// ErrorValueAlreadyExists is an error message when a target value already exists
-	ErrorValueAlreadyExists = "Value already exists"
+	ErrorMachinesExist = "machines already exist"
+	// ErrorCryptsExist is an error message when /crypts key exists in etcd.
+	ErrorCryptsExist = "crypts already exist"
 )
 
 // InitConfig is initialization of the sabakan API /config

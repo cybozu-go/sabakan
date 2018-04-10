@@ -35,12 +35,12 @@ func InitCrypts(r *mux.Router, c *clientv3.Client, p string) {
 }
 
 func (e *etcdClient) initCryptsFunc(r *mux.Router) {
-	r.HandleFunc("/crypts/{serial}/{path}", e.handleCryptsGet).Methods("GET")
-	r.HandleFunc("/crypts/{serial}", e.handleCryptsPost).Methods("POST")
-	r.HandleFunc("/crypts/{serial}", e.handleCryptsDelete).Methods("DELETE")
+	r.HandleFunc(EtcdKeyCrypts+"/{serial}/{path}", e.handleCryptsGet).Methods("GET")
+	r.HandleFunc(EtcdKeyCrypts+"/{serial}", e.handleCryptsPost).Methods("POST")
+	r.HandleFunc(EtcdKeyCrypts+"/{serial}", e.handleCryptsDelete).Methods("DELETE")
 }
 
-func makeDeleteResponse(gresp *clientv3.GetResponse, serial string) (deleteResponse, error) {
+func makeDeleteResponse(gresp *clientv3.GetResponse) (deleteResponse, error) {
 	entities := deleteResponse{}
 	for _, ev := range gresp.Kvs {
 		entities = append(entities, deleteResponseEntity{Path: string(ev.Key)})
@@ -53,14 +53,14 @@ func (e *etcdClient) handleCryptsGet(w http.ResponseWriter, r *http.Request) {
 	serial := vars["serial"]
 	diskPath := vars["path"]
 
-	target := path.Join(e.prefix, "crypts", serial, diskPath)
+	target := path.Join(e.prefix, EtcdKeyCrypts, serial, diskPath)
 	resp, err := e.client.Get(r.Context(), target)
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if resp.Count == 0 {
-		respError(w, fmt.Errorf("target %v not found", target), http.StatusNotFound)
+		respError(w, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
 
@@ -108,14 +108,14 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Prohibit overwriting
-	target := path.Join(e.prefix, "crypts", serial, diskPath)
+	target := path.Join(e.prefix, EtcdKeyCrypts, serial, diskPath)
 	prev, err := e.client.Get(r.Context(), target)
 	if err != nil {
 		w.Write([]byte(err.Error() + "\n"))
 		return
 	}
 	if prev.Count == 1 {
-		respError(w, fmt.Errorf("target %v exists", target), http.StatusBadRequest)
+		respError(w, fmt.Errorf(ErrorCryptsExist), http.StatusBadRequest)
 		return
 	}
 
@@ -146,36 +146,34 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 func (e *etcdClient) handleCryptsDelete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	serial := vars["serial"]
+	target := path.Join(e.prefix, EtcdKeyCrypts, serial)
 
 	// GET current crypts
 	gresp, err := e.client.Get(r.Context(),
-		fmt.Sprintf("/crypts/%v", serial),
+		target,
 		clientv3.WithPrefix())
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if len(gresp.Kvs) == 0 {
-		respError(w, fmt.Errorf("target not found"), http.StatusNotFound)
+		respError(w, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
 
 	// DELETE
-	dresp, err := e.client.Delete(r.Context(),
-		fmt.Sprintf("/crypts/%v", serial),
+	_, err = e.client.Delete(r.Context(),
+		target,
 		clientv3.WithPrefix())
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
 		return
 	}
-	if dresp.Deleted <= 0 {
-		respError(w, fmt.Errorf("failed to delete"), http.StatusInternalServerError)
-		return
-	}
 
-	entities, err := makeDeleteResponse(gresp, serial)
+	entities, err := makeDeleteResponse(gresp)
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
+		return
 	}
 
 	err = respWriter(w, entities, http.StatusOK)
