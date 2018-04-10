@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func Test_respWritr(t *testing.T) {
+func Test_respWriter(t *testing.T) {
 	w := httptest.NewRecorder()
 	entity := cryptEntity{Path: "path", Key: "aaa"}
 	respWriter(w, entity, http.StatusCreated)
@@ -21,7 +21,7 @@ func Test_respWritr(t *testing.T) {
 	if resp.Header.Get("Content-Type") != "application/json" {
 		t.Fatal("expected application/json")
 	}
-	if sut == entity {
+	if sut != entity {
 		t.Fatal("invalid response body")
 	}
 }

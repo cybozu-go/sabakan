@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+
+	"path"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/cybozu-go/log"
 	"github.com/gorilla/mux"
 )
 
@@ -26,50 +26,18 @@ type (
 	}
 
 	deleteResponse []deleteResponseEntity
-
-	etcdClient struct {
-		c *clientv3.Client
-	}
 )
 
 // InitCrypts initialize the handle functions for crypts
-func InitCrypts(r *mux.Router, c *clientv3.Client) {
-	e := &etcdClient{c}
+func InitCrypts(r *mux.Router, c *clientv3.Client, p string) {
+	e := &etcdClient{c, p}
 	e.initCryptsFunc(r)
 }
 
 func (e *etcdClient) initCryptsFunc(r *mux.Router) {
-	r.HandleFunc("/{serial}/{path}", e.handleCryptsGet).Methods("GET")
-	r.HandleFunc("/{serial}", e.handleCryptsPost).Methods("POST")
-	r.HandleFunc("/{serial}", e.handleCryptsDelete).Methods("DELETE")
-}
-
-func respWriter(w http.ResponseWriter, data interface{}, status int) error {
-	b, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	w.Write(b)
-	return nil
-}
-
-func respError(w http.ResponseWriter, resperr error, status int) {
-	out, err := json.Marshal(map[string]interface{}{
-		"http_status_code": status,
-		"error":            resperr.Error(),
-	})
-	if err != nil {
-		log.Error(err.Error(), nil)
-		return
-	}
-
-	log.Error(string(out), nil)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	fmt.Fprintf(w, string(out))
+	r.HandleFunc("/crypts/{serial}/{path}", e.handleCryptsGet).Methods("GET")
+	r.HandleFunc("/crypts/{serial}", e.handleCryptsPost).Methods("POST")
+	r.HandleFunc("/crypts/{serial}", e.handleCryptsDelete).Methods("DELETE")
 }
 
 func makeDeleteResponse(gresp *clientv3.GetResponse, serial string) (deleteResponse, error) {
@@ -83,11 +51,10 @@ func makeDeleteResponse(gresp *clientv3.GetResponse, serial string) (deleteRespo
 func (e *etcdClient) handleCryptsGet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	serial := vars["serial"]
-	path := vars["path"]
+	diskPath := vars["path"]
 
-	target := fmt.Sprintf("/crypts/%v/%v", serial, path)
-	resp, err := e.c.Get(r.Context(),
-		target)
+	target := path.Join(e.prefix, "crypts", serial, diskPath)
+	resp, err := e.client.Get(r.Context(), target)
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
 		return
@@ -98,7 +65,7 @@ func (e *etcdClient) handleCryptsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ev := resp.Kvs[0]
-	entity := &cryptEntity{Path: string(path), Key: string(ev.Value)}
+	entity := &cryptEntity{Path: string(diskPath), Key: string(ev.Value)}
 	err = respWriter(w, entity, http.StatusOK)
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
@@ -108,17 +75,18 @@ func (e *etcdClient) handleCryptsGet(w http.ResponseWriter, r *http.Request) {
 func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	serial := vars["serial"]
-	var receivedEntity cryptEntity
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &receivedEntity)
-	path := receivedEntity.Path
-	key := receivedEntity.Key
+	var received cryptEntity
+	err := json.NewDecoder(r.Body).Decode(&received)
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
 		return
 	}
-	if govalidator.IsNull(path) {
-		respError(w, errors.New("`path` should not be empty"), http.StatusBadRequest)
+
+	// Validation
+	diskPath := received.Path
+	key := received.Key
+	if govalidator.IsNull(diskPath) {
+		respError(w, errors.New("`diskPath` should not be empty"), http.StatusBadRequest)
 		return
 	}
 	if govalidator.IsNull(key) {
@@ -127,7 +95,7 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//  Start mutex
-	s, err := concurrency.NewSession(e.c)
+	s, err := concurrency.NewSession(e.client)
 	defer s.Close()
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
@@ -140,8 +108,8 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Prohibit overwriting
-	target := fmt.Sprintf("/crypts/%v/%v", serial, path)
-	prev, err := e.c.Get(r.Context(), target)
+	target := path.Join(e.prefix, "crypts", serial, diskPath)
+	prev, err := e.client.Get(r.Context(), target)
 	if err != nil {
 		w.Write([]byte(err.Error() + "\n"))
 		return
@@ -152,7 +120,7 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Put crypts on etcd
-	_, err = e.c.Txn(r.Context()).
+	_, err = e.client.Txn(r.Context()).
 		If(clientv3.Compare(clientv3.CreateRevision(target), "=", 0)).
 		Then(clientv3.OpPut(target, key)).
 		Else().
@@ -168,7 +136,7 @@ func (e *etcdClient) handleCryptsPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entity := &cryptEntity{Path: string(path), Key: string(key)}
+	entity := &cryptEntity{Path: string(diskPath), Key: string(key)}
 	err = respWriter(w, entity, http.StatusCreated)
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
@@ -180,7 +148,7 @@ func (e *etcdClient) handleCryptsDelete(w http.ResponseWriter, r *http.Request) 
 	serial := vars["serial"]
 
 	// GET current crypts
-	gresp, err := e.c.Get(r.Context(),
+	gresp, err := e.client.Get(r.Context(),
 		fmt.Sprintf("/crypts/%v", serial),
 		clientv3.WithPrefix())
 	if err != nil {
@@ -193,7 +161,7 @@ func (e *etcdClient) handleCryptsDelete(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// DELETE
-	dresp, err := e.c.Delete(r.Context(),
+	dresp, err := e.client.Delete(r.Context(),
 		fmt.Sprintf("/crypts/%v", serial),
 		clientv3.WithPrefix())
 	if err != nil {
