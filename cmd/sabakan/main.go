@@ -45,6 +45,8 @@ func main() {
 	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 
+	sabakan.Indexing(c, e.Prefix)
+
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
 			Addr:    *flagHTTP,
