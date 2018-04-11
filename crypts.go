@@ -145,9 +145,7 @@ func (e *EtcdClient) handleDeleteCrypts(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// DELETE
-	_, err = e.Client.Delete(r.Context(),
-		target,
-		clientv3.WithPrefix())
+	_, err = e.Client.Delete(r.Context(), target, clientv3.WithPrefix())
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
 		return
