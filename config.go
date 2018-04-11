@@ -10,8 +10,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// SabakanConfig is structure of the sabakan option
-type sabakanConfig struct {
+// Config is structure of the sabakan option
+type Config struct {
 	NodeIPv4Offset string `json:"node-ipv4-offset"`
 	NodeRackShift  uint   `json:"node-rack-shift"`
 	BMCIPv4Offset  string `json:"bmc-ipv4-offset"`
@@ -88,7 +88,7 @@ func (e *EtcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	var sc sabakanConfig
+	var sc Config
 
 	err = json.NewDecoder(r.Body).Decode(&sc)
 	if err != nil {

@@ -1,16 +1,14 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"flag"
-	"fmt"
-	"io"
 	"net/http"
 	"os"
 
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/google/subcommands"
 )
 
 var (
@@ -18,33 +16,21 @@ var (
 )
 
 func main() {
+	c := &client{
+		endpoint: *flagServer,
+		http: &cmd.HTTPClient{
+			Client:   &http.Client{},
+			Severity: log.LvDebug,
+		},
+	}
+
+	subcommands.Register(subcommands.HelpCommand(), "")
+	subcommands.Register(subcommands.FlagsCommand(), "")
+	subcommands.Register(subcommands.CommandsCommand(), "")
+	subcommands.Register(&remoteConfigCmd{c: c}, "")
 
 	flag.Parse()
-	req, err := http.NewRequest("GET", *flagServer+"/hello", nil)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
-	}
-	req = req.WithContext(context.Background())
 
-	client := &cmd.HTTPClient{
-		Client:   &http.Client{},
-		Severity: log.LvDebug,
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
-	}
-
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
-	}
-	buf := new(bytes.Buffer)
-	io.Copy(buf, res.Body)
-	ret := buf.Bytes()
-	fmt.Println(string(ret))
+	ctx := context.Background()
+	os.Exit(int(subcommands.Execute(ctx)))
 }
