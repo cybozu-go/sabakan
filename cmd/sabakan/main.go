@@ -40,8 +40,9 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	sabakan.InitConfig(r.PathPrefix("/api/v1/").Subrouter(), c, e.Prefix)
-	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), c, e.Prefix)
+	etcdClient := &sabakan.EtcdClient{Client: c, Prefix: e.Prefix}
+	sabakan.InitConfig(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
+	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
