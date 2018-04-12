@@ -1,4 +1,4 @@
-package main
+package sabakan
 
 import (
 	"bytes"
@@ -8,16 +8,25 @@ import (
 	"net/http"
 
 	"github.com/cybozu-go/cmd"
-	"github.com/cybozu-go/sabakan"
 )
 
-type client struct {
+// Client is a sabakan client
+type Client struct {
 	endpoint string
 	http     *cmd.HTTPClient
 }
 
-func (c *client) remoteConfigGet(ctx context.Context) (*sabakan.Config, error) {
-	var conf sabakan.Config
+// NewClient creates a new sabakan client
+func NewClient(endpoint string, http *cmd.HTTPClient) *Client {
+	return &Client{
+		endpoint: endpoint,
+		http:     http,
+	}
+}
+
+// RemoteConfigGet gets a remote config
+func (c *Client) RemoteConfigGet(ctx context.Context) (*Config, error) {
+	var conf Config
 	err := c.jsonGet(ctx, "/config", &conf)
 	if err != nil {
 		return nil, err
@@ -25,11 +34,12 @@ func (c *client) remoteConfigGet(ctx context.Context) (*sabakan.Config, error) {
 	return &conf, nil
 }
 
-func (c *client) remoteConfigSet(ctx context.Context, conf *sabakan.Config) error {
+// RemoteConfigSet sets a remote config
+func (c *Client) RemoteConfigSet(ctx context.Context, conf *Config) error {
 	return c.jsonPost(ctx, "/config", conf)
 }
 
-func (c *client) jsonGet(ctx context.Context, path string, data interface{}) error {
+func (c *Client) jsonGet(ctx context.Context, path string, data interface{}) error {
 	req, err := http.NewRequest("GET", c.endpoint+"/api/v1"+path, nil)
 	if err != nil {
 		return err
@@ -48,7 +58,7 @@ func (c *client) jsonGet(ctx context.Context, path string, data interface{}) err
 	return json.NewDecoder(res.Body).Decode(data)
 }
 
-func (c *client) jsonPost(ctx context.Context, path string, data interface{}) error {
+func (c *Client) jsonPost(ctx context.Context, path string, data interface{}) error {
 	b := new(bytes.Buffer)
 	err := json.NewEncoder(b).Encode(data)
 	if err != nil {

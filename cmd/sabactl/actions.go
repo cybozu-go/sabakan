@@ -12,7 +12,7 @@ import (
 )
 
 type remoteConfigCmd struct {
-	c *client
+	c *sabakan.Client
 }
 
 func (r *remoteConfigCmd) Name() string     { return "remote-config" }
@@ -33,7 +33,7 @@ func (r *remoteConfigCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...int
 }
 
 type remoteConfigGetCmd struct {
-	c *client
+	c *sabakan.Client
 }
 
 func (r *remoteConfigGetCmd) Name() string     { return "get" }
@@ -44,7 +44,7 @@ func (r *remoteConfigGetCmd) Usage() string {
 func (r *remoteConfigGetCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r *remoteConfigGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	conf, err := r.c.remoteConfigGet(ctx)
+	conf, err := r.c.RemoteConfigGet(ctx)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
@@ -56,7 +56,7 @@ func (r *remoteConfigGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 }
 
 type remoteConfigSetCmd struct {
-	c    *client
+	c    *sabakan.Client
 	file string
 }
 
@@ -84,7 +84,7 @@ func (r *remoteConfigSetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 		return 1
 	}
 
-	r.c.remoteConfigSet(ctx, &conf)
+	r.c.RemoteConfigSet(ctx, &conf)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1

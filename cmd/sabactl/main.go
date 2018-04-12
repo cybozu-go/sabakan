@@ -8,6 +8,7 @@ import (
 
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/sabakan"
 	"github.com/google/subcommands"
 )
 
@@ -16,13 +17,10 @@ var (
 )
 
 func main() {
-	c := &client{
-		endpoint: *flagServer,
-		http: &cmd.HTTPClient{
-			Client:   &http.Client{},
-			Severity: log.LvDebug,
-		},
-	}
+	c := sabakan.NewClient(*flagServer, &cmd.HTTPClient{
+		Client:   &http.Client{},
+		Severity: log.LvDebug,
+	})
 
 	subcommands.Register(subcommands.HelpCommand(), "")
 	subcommands.Register(subcommands.FlagsCommand(), "")

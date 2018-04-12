@@ -1,4 +1,4 @@
-package main
+package sabakan
 
 import (
 	"context"
@@ -12,12 +12,11 @@ import (
 	"testing"
 
 	"github.com/cybozu-go/cmd"
-	"github.com/cybozu-go/sabakan"
 )
 
 func TestRemoteConfigGet(t *testing.T) {
 	var method, path string
-	conf := &sabakan.Config{
+	conf := &Config{
 		NodeIPv4Offset: "10.0.0.0",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.1.0.0",
@@ -30,9 +29,9 @@ func TestRemoteConfigGet(t *testing.T) {
 		path = r.URL.Path
 		json.NewEncoder(w).Encode(conf)
 	}))
-	c := client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
+	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	got, err := c.remoteConfigGet(context.Background())
+	got, err := c.RemoteConfigGet(context.Background())
 	if err != nil {
 		t.Error("err == nil")
 	}
@@ -47,8 +46,8 @@ func TestRemoteConfigGet(t *testing.T) {
 
 func TestRemoteConfigPost(t *testing.T) {
 	var method, path string
-	var record sabakan.Config
-	conf := sabakan.Config{
+	var record Config
+	conf := Config{
 		NodeIPv4Offset: "10.0.0.0",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.1.0.0",
@@ -61,9 +60,9 @@ func TestRemoteConfigPost(t *testing.T) {
 		path = r.URL.Path
 		json.NewDecoder(r.Body).Decode(&record)
 	}))
-	c := client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
+	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err := c.remoteConfigSet(context.Background(), &conf)
+	err := c.RemoteConfigSet(context.Background(), &conf)
 	if err != nil {
 		t.Error("err == nil")
 	}
@@ -84,7 +83,7 @@ func TestJSONGet(t *testing.T) {
 
 	var data = make(map[string]string)
 
-	c := client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
+	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 	err := c.jsonGet(context.Background(), "/", &data)
 	if err != nil {
 		t.Error(err)
@@ -99,7 +98,7 @@ func TestJSONGet(t *testing.T) {
 	}))
 	defer s2.Close()
 
-	c = client{endpoint: s2.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
+	c = Client{endpoint: s2.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
 	err = c.jsonGet(context.Background(), "/", &data)
 	if err == nil {
@@ -116,7 +115,7 @@ func TestJSONPost(t *testing.T) {
 
 	var data = make(map[string]string)
 
-	c := client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
+	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 	err := c.jsonPost(context.Background(), "/", map[string]string{"apple": "red", "banana": "yellow"})
 	if err != nil {
 		t.Error(err)
@@ -131,7 +130,7 @@ func TestJSONPost(t *testing.T) {
 	}))
 	defer s2.Close()
 
-	c = client{endpoint: s2.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
+	c = Client{endpoint: s2.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
 	err = c.jsonGet(context.Background(), "/", &data)
 	if err == nil {
