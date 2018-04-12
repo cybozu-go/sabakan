@@ -7,7 +7,6 @@ jobs:
     working_directory: /go/src/github.com/cybozu-go/sabakan
     steps:
       - checkout
-      - run: curl -L http://localhost:2379/health
       - run: go get github.com/golang/lint/golint
       - run: go get golang.org/x/tools/cmd/goimports
       - run: (! $GOPATH/bin/goimports -d . 2>&1 | read _)
