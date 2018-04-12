@@ -9,12 +9,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
-	"strconv"
-	"strings"
-	"testing"
-	"time"
-
 	"reflect"
+	"strconv"
+	"testing"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/gorilla/mux"
@@ -34,24 +31,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func setupEtcd() error {
-	etcd, err := newEtcdClient()
-	if err != nil {
-		return err
-	}
-	defer etcd.Close()
-
-	_, err = etcd.Delete(context.Background(), *flagEtcdPrefix, clientv3.WithPrefix())
-	return err
-}
-
-func newEtcdClient() (*clientv3.Client, error) {
-	return clientv3.New(clientv3.Config{
-		Endpoints:   strings.Split(*flagEtcdServers, ","),
-		DialTimeout: 2 * time.Second,
-	})
-}
-
 func TestValidatePostParams(t *testing.T) {
 	valid := sabakanCrypt{"disk-a", "foo"}
 	if err := validatePostParams(valid); err != nil {
@@ -68,16 +47,25 @@ func TestValidatePostParams(t *testing.T) {
 }
 
 func TestHandleGetCrypts(t *testing.T) {
-	etcd, _ := newEtcdClient()
+	etcd, err := newEtcdClient()
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer etcd.Close()
-	prefix := *flagEtcdPrefix + "/TestHandleGetCrypts"
+	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	etcdClient := EtcdClient{etcd, prefix}
 	serial := "1"
 	diskPath := "exists-path"
 	key := "aaa"
-	crypt := sabakanCrypt{Path: diskPath, Key: key}
-	val, _ := json.Marshal(crypt)
-	etcd.Put(context.Background(), path.Join(prefix, "crypts", serial, diskPath), string(val))
+	inputCrypt := sabakanCrypt{Path: diskPath, Key: key}
+	val, err := json.Marshal(inputCrypt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = etcd.Put(context.Background(), path.Join(prefix, "crypts", serial, diskPath), string(val))
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", path.Join("/api/v1/crypts", serial, diskPath), nil)
 	r = mux.SetURLVars(r, map[string]string{"serial": serial, "path": diskPath})
@@ -85,20 +73,27 @@ func TestHandleGetCrypts(t *testing.T) {
 	etcdClient.handleGetCrypts(w, r)
 
 	resp := w.Result()
-	var sut sabakanCrypt
-	json.NewDecoder(resp.Body).Decode(&sut)
+	var outputCrypt sabakanCrypt
+	err = json.NewDecoder(resp.Body).Decode(&outputCrypt)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if resp.StatusCode != 200 {
 		t.Fatal("expected: 200, actual:", resp.StatusCode)
 	}
-	if sut != crypt {
-		t.Fatal("invalid response body, ", sut)
+	if outputCrypt != inputCrypt {
+		t.Fatal("invalid response body, ", outputCrypt)
 	}
 }
 
 func TestHandleGetCryptsNotFound(t *testing.T) {
-	etcd, _ := newEtcdClient()
+	etcd, err := newEtcdClient()
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer etcd.Close()
-	etcdClient := EtcdClient{etcd, *flagEtcdPrefix + "/TestHandleGetCryptsNotFound"}
+	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	etcdClient := EtcdClient{etcd, prefix}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/api/v1/crypts", nil)
 	r = mux.SetURLVars(r, map[string]string{"serial": "1", "path": "non-exists-key"})
@@ -112,9 +107,12 @@ func TestHandleGetCryptsNotFound(t *testing.T) {
 }
 
 func TestHandlePostCrypts(t *testing.T) {
-	etcd, _ := newEtcdClient()
+	etcd, err := newEtcdClient()
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer etcd.Close()
-	prefix := *flagEtcdPrefix + "/TestHandlePostCrypts"
+	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	etcdClient := EtcdClient{etcd, prefix}
 	serial := "1"
 	diskPath := "put-path"
@@ -128,16 +126,19 @@ func TestHandlePostCrypts(t *testing.T) {
 	etcdClient.handlePostCrypts(w, r)
 
 	resp := w.Result()
-	var responsedCrypt sabakanCrypt
+	var respondedCrypt sabakanCrypt
 	var savedCrypt sabakanCrypt
-	json.NewDecoder(resp.Body).Decode(&responsedCrypt)
+	json.NewDecoder(resp.Body).Decode(&respondedCrypt)
 	etcdResp, _ := etcd.Get(context.Background(), path.Join(prefix, EtcdKeyCrypts, serial, diskPath))
-	json.Unmarshal(etcdResp.Kvs[0].Value, &savedCrypt)
+	err = json.Unmarshal(etcdResp.Kvs[0].Value, &savedCrypt)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if resp.StatusCode != 201 {
 		t.Fatal("expected: 201, actual:", resp.StatusCode)
 	}
-	if responsedCrypt != crypt {
-		t.Fatal("invalid response body, ", responsedCrypt)
+	if respondedCrypt != crypt {
+		t.Fatal("invalid response body, ", respondedCrypt)
 	}
 	if savedCrypt != crypt {
 		t.Fatal("saved entity is invalid, ", savedCrypt)
@@ -145,14 +146,21 @@ func TestHandlePostCrypts(t *testing.T) {
 }
 
 func TestHandlePostCryptsInvalidBody(t *testing.T) {
-	etcd, _ := newEtcdClient()
+	etcd, err := newEtcdClient()
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer etcd.Close()
-	etcdClient := EtcdClient{etcd, *flagEtcdPrefix + "/TestHandlePostCryptsInvalidBody"}
+	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	etcdClient := EtcdClient{etcd, prefix}
 	w := httptest.NewRecorder()
-	invalidBody, _ := json.Marshal(&struct {
+	invalidBody, err := json.Marshal(&struct {
 		Name string `json:"name"`
 		Age  int    `json:"age"`
 	}{"Taro", 1})
+	if err != nil {
+		t.Fatal(err)
+	}
 	r := httptest.NewRequest("POST", "/api/v1/crypts/1", bytes.NewBuffer(invalidBody))
 	r = mux.SetURLVars(r, map[string]string{"serial": "1"})
 
@@ -165,20 +173,26 @@ func TestHandlePostCryptsInvalidBody(t *testing.T) {
 }
 
 func TestHandleDeleteCrypts(t *testing.T) {
-	etcd, _ := newEtcdClient()
+	etcd, err := newEtcdClient()
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer etcd.Close()
-	prefix := *flagEtcdPrefix + "/TestHandleDeleteCrypts"
+	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	etcdClient := EtcdClient{etcd, prefix}
-	expectedResponse := deleteResponse{}
+	expected := deleteResponse{}
 	serial := "1"
 	key := "aaa"
 	for i := 0; i < 5; i++ {
 		diskPath := "path" + strconv.Itoa(i)
 		crypt := sabakanCrypt{Path: diskPath, Key: key}
-		val, _ := json.Marshal(crypt)
+		val, err := json.Marshal(crypt)
+		if err != nil {
+			t.Fatal(err)
+		}
 		target := path.Join(prefix, EtcdKeyCrypts, serial, diskPath)
 		etcd.Put(context.Background(), target, string(val))
-		expectedResponse = append(expectedResponse, deletePath{target})
+		expected = append(expected, deletePath{target})
 	}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", path.Join("/api/v1/crypts", serial), nil)
@@ -187,24 +201,34 @@ func TestHandleDeleteCrypts(t *testing.T) {
 	etcdClient.handleDeleteCrypts(w, r)
 
 	resp := w.Result()
-	var sut deleteResponse
-	json.NewDecoder(resp.Body).Decode(&sut)
-	etcdResp, _ := etcd.Get(context.Background(), path.Join(prefix, EtcdKeyCrypts, serial), clientv3.WithPrefix())
+	var dresp deleteResponse
+	err = json.NewDecoder(resp.Body).Decode(&dresp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	etcdResp, err := etcd.Get(context.Background(), path.Join(prefix, EtcdKeyCrypts, serial), clientv3.WithPrefix())
+	if err != nil {
+		t.Fatal(err)
+	}
 	if resp.StatusCode != 200 {
 		t.Fatal("expected: 200, actual:", resp.StatusCode)
 	}
 	if etcdResp.Count != 0 {
 		t.Fatal("expected: 0, actual:", etcdResp.Count)
 	}
-	if !reflect.DeepEqual(sut, expectedResponse) {
-		t.Fatal("unexpected response:", sut)
+	if !reflect.DeepEqual(dresp, expected) {
+		t.Fatal("unexpected response:", dresp)
 	}
 }
 
 func TestHandleDeleteCryptsNotFound(t *testing.T) {
-	etcd, _ := newEtcdClient()
+	etcd, err := newEtcdClient()
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer etcd.Close()
-	etcdClient := EtcdClient{etcd, *flagEtcdPrefix + "/TestHandleDeleteCryptsNotFound"}
+	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	etcdClient := EtcdClient{etcd, prefix}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", "/api/v1/crypts", nil)
 	r = mux.SetURLVars(r, map[string]string{"serial": "non-exists-serial"})

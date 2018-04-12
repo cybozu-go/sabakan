@@ -4,37 +4,32 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"fmt"
-
-	"strings"
-
-	"strconv"
-
 	"github.com/cybozu-go/log"
 )
 
-func respWriter(w http.ResponseWriter, data interface{}, status int) error {
+func renderJSON(w http.ResponseWriter, data interface{}, status int) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	out, err := json.Marshal(data)
-	outstr := string(out)
-	log.Info(strings.Join([]string{"status:", strconv.Itoa(status), ", response_body:", outstr}, " "), nil)
-	fmt.Fprintf(w, outstr)
+	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
 		return err
 	}
-	return nil
+	return err
 }
 
-func respError(w http.ResponseWriter, resperr error, status int) {
+func renderError(w http.ResponseWriter, resperr error, status int) {
 	out := map[string]interface{}{
 		"error": resperr.Error(),
 	}
-	log.Error(resperr.Error(), nil)
+	log.Error("an error occurred during request processing", map[string]interface{}{
+		"error": resperr.Error(),
+	})
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	err := json.NewEncoder(w).Encode(out)
 	if err != nil {
-		log.Error(err.Error(), nil)
+		log.Error("failed to encode error to JSON", map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 }

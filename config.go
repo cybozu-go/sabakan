@@ -54,15 +54,15 @@ func (e *EtcdClient) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 	key := path.Join(e.Prefix, EtcdKeyConfig)
 	resp, err := e.Client.Get(r.Context(), key)
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if resp == nil {
-		respError(w, errors.New(ErrorValueNotFound), http.StatusNotFound)
+		renderError(w, errors.New(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
 	if len(resp.Kvs) == 0 {
-		respError(w, errors.New(ErrorValueNotFound), http.StatusNotFound)
+		renderError(w, errors.New(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
 
@@ -70,7 +70,7 @@ func (e *EtcdClient) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(resp.Kvs[0].Value)
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -79,11 +79,11 @@ func (e *EtcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 	key := path.Join(e.Prefix, EtcdKeyMachines)
 	resp, err := e.Client.Get(r.Context(), key, clientv3.WithPrefix())
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if resp.Count != 0 {
-		respError(w, errors.New(ErrorMachinesExist), http.StatusForbidden)
+		renderError(w, errors.New(ErrorMachinesExist), http.StatusForbidden)
 		return
 	}
 
@@ -92,38 +92,38 @@ func (e *EtcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewDecoder(r.Body).Decode(&sc)
 	if err != nil {
-		respError(w, err, http.StatusBadRequest)
+		renderError(w, err, http.StatusBadRequest)
 		return
 	}
 	// Validation
 	if sc.NodeIPv4Offset == "" {
-		respError(w, errors.New("node-ipv4-offset: "+ErrorValueNotFound), http.StatusBadRequest)
+		renderError(w, errors.New("node-ipv4-offset: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.NodeRackShift == 0 {
-		respError(w, errors.New("node-rack-shift: "+ErrorValueNotFound), http.StatusBadRequest)
+		renderError(w, errors.New("node-rack-shift: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.BMCIPv4Offset == "" {
-		respError(w, errors.New("bmc-ipv4-offset: "+ErrorValueNotFound), http.StatusBadRequest)
+		renderError(w, errors.New("bmc-ipv4-offset: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.BMCRackShift == 0 {
-		respError(w, errors.New("bmc-rack-shift: "+ErrorValueNotFound), http.StatusBadRequest)
+		renderError(w, errors.New("bmc-rack-shift: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.NodeIPPerNode == 0 {
-		respError(w, errors.New("node-ip-per-node: "+ErrorValueNotFound), http.StatusBadRequest)
+		renderError(w, errors.New("node-ip-per-node: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 	if sc.BMCIPPerNode == 0 {
-		respError(w, errors.New("bmc-ip-per-node: "+ErrorValueNotFound), http.StatusBadRequest)
+		renderError(w, errors.New("bmc-ip-per-node: "+ErrorValueNotFound), http.StatusBadRequest)
 		return
 	}
 
 	j, err := json.Marshal(sc)
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -131,7 +131,7 @@ func (e *EtcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 	key = path.Join(e.Prefix, EtcdKeyConfig)
 	_, err = e.Client.Put(r.Context(), key, string(j))
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 

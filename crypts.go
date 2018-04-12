@@ -64,11 +64,11 @@ func (e *EtcdClient) handleGetCrypts(w http.ResponseWriter, r *http.Request) {
 	target := path.Join(e.Prefix, EtcdKeyCrypts, serial, diskPath)
 	resp, err := e.Client.Get(r.Context(), target)
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if resp.Count == 0 {
-		respError(w, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound)
+		renderError(w, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
 
@@ -76,12 +76,12 @@ func (e *EtcdClient) handleGetCrypts(w http.ResponseWriter, r *http.Request) {
 	var responseBody sabakanCrypt
 	err = json.Unmarshal(ev.Value, &responseBody)
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
-	err = respWriter(w, responseBody, http.StatusOK)
+	err = renderJSON(w, responseBody, http.StatusOK)
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 	}
 }
 
@@ -91,19 +91,23 @@ func (e *EtcdClient) handlePostCrypts(w http.ResponseWriter, r *http.Request) {
 	var received sabakanCrypt
 	err := json.NewDecoder(r.Body).Decode(&received)
 	if err != nil {
-		respError(w, err, http.StatusBadRequest)
+		renderError(w, err, http.StatusBadRequest)
 		return
 	}
 	diskPath := received.Path
 	key := received.Key
 
 	if err := validatePostParams(received); err != nil {
-		respError(w, err, http.StatusBadRequest)
+		renderError(w, err, http.StatusBadRequest)
 		return
 	}
 
 	target := path.Join(e.Prefix, EtcdKeyCrypts, serial, diskPath)
 	val, err := json.Marshal(sabakanCrypt{Path: diskPath, Key: key})
+	if err != nil {
+		renderError(w, err, http.StatusInternalServerError)
+		return
+	}
 
 	tresp, err := e.Client.Txn(r.Context()).
 		// Prohibit overwriting
@@ -112,17 +116,17 @@ func (e *EtcdClient) handlePostCrypts(w http.ResponseWriter, r *http.Request) {
 		Else().
 		Commit()
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if !tresp.Succeeded {
-		respError(w, fmt.Errorf("transaction failed. sabakan prohibits overwriting crypts"), http.StatusInternalServerError)
+		renderError(w, fmt.Errorf("transaction failed. sabakan prohibits overwriting crypts"), http.StatusInternalServerError)
 		return
 	}
 
-	err = respWriter(w, sabakanCrypt{Path: string(diskPath), Key: string(key)}, http.StatusCreated)
+	err = renderJSON(w, sabakanCrypt{Path: string(diskPath), Key: string(key)}, http.StatusCreated)
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 	}
 }
 
@@ -136,29 +140,29 @@ func (e *EtcdClient) handleDeleteCrypts(w http.ResponseWriter, r *http.Request) 
 		target,
 		clientv3.WithPrefix())
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if gresp.Count == 0 {
-		respError(w, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound)
+		renderError(w, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
 
 	// DELETE
 	_, err = e.Client.Delete(r.Context(), target, clientv3.WithPrefix())
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	dresp, err := makeDeleteResponse(gresp)
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	err = respWriter(w, dresp, http.StatusOK)
+	err = renderJSON(w, dresp, http.StatusOK)
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 	}
 }
