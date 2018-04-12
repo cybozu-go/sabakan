@@ -3,11 +3,10 @@ package sabakan
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"path"
 	"reflect"
-
-	"net"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
@@ -15,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Machine is a machine struct
 type Machine struct {
 	Serial           string                 `json:"serial"`
 	Product          string                 `json:"product"`
@@ -27,6 +27,7 @@ type Machine struct {
 	BMC              map[string]interface{} `json:"bmc"`
 }
 
+// Query is an URL query
 type Query struct {
 	Serial     string
 	Product    string
@@ -39,11 +40,15 @@ type Query struct {
 }
 
 const (
-	ErrorValueIgnored    = "value ignored"
-	ErrorMachineExists   = "already exists"
-	ErrorMachineNotFound = "machine not found"
+	// ErrorMachineExists is an error message when /machines/<serial> key exists in etcd.
+	ErrorMachineExists = "machine already exists"
+	// ErrorMachineNotExists is an error message when /machines/<serial> key doesn't exist in etcd.
+	ErrorMachineNotExists = "machine not found"
+	// ErrorEtcdTxnFailed is an error message when transaction of etcd fails.
+	ErrorEtcdTxnFailed = "etcd transaction failed"
 )
 
+// InitMachines is initilization of the sabakan API /machines
 func InitMachines(r *mux.Router, c *clientv3.Client, p string) {
 	e := &etcdClient{c, p}
 	e.initMachinesFunc(r)
@@ -52,11 +57,10 @@ func InitMachines(r *mux.Router, c *clientv3.Client, p string) {
 func (e *etcdClient) initMachinesFunc(r *mux.Router) {
 	r.HandleFunc("/machines", e.handlePostMachines).Methods("POST")
 	r.HandleFunc("/machines", e.handlePutMachines).Methods("PUT")
-	//r.HandleFunc("/machines", e.handleDeleteMachines).Methods("DELETE")
 	r.HandleFunc("/machines", e.handleGetMachines).Methods("GET")
 }
 
-func OffsetToInt(offset string) uint32 {
+func offsetToInt(offset string) uint32 {
 	ip, _, _ := net.ParseCIDR(offset)
 	return netutil.IP4ToInt(ip)
 }
@@ -71,7 +75,7 @@ func mergeMaps(maps ...map[string]interface{}) map[string]interface{} {
 	return result
 }
 
-func generateIP(mc Machine, e *etcdClient, r *http.Request) (Machine, error, int) {
+func generateIP(mc Machine, e *etcdClient, r *http.Request) (Machine, int, error) {
 	/*
 		Generate IP addresses by sabakan config
 		Example:
@@ -83,23 +87,23 @@ func generateIP(mc Machine, e *etcdClient, r *http.Request) (Machine, error, int
 	key := path.Join(e.prefix, EtcdKeyConfig)
 	resp, err := e.client.Get(r.Context(), key)
 	if err != nil {
-		return Machine{}, err, http.StatusInternalServerError
+		return Machine{}, http.StatusInternalServerError, err
 	}
 	if resp == nil {
-		return Machine{}, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound
+		return Machine{}, http.StatusNotFound, fmt.Errorf(ErrorValueNotFound)
 	}
 	if len(resp.Kvs) == 0 {
-		return Machine{}, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound
+		return Machine{}, http.StatusNotFound, fmt.Errorf(ErrorValueNotFound)
 	}
 
 	var sc sabakanConfig
 	err = json.Unmarshal(resp.Kvs[0].Value, &sc)
 	if err != nil {
-		return Machine{}, err, http.StatusBadRequest
+		return Machine{}, http.StatusBadRequest, err
 	}
 
 	for i := 0; i < int(sc.NodeIPPerNode); i++ {
-		uintip := OffsetToInt(sc.NodeIPv4Offset) + (uint32(1) << uint32(sc.NodeRackShift) * uint32(i+1) * mc.Rack) + mc.NodeNumberOfRack
+		uintip := offsetToInt(sc.NodeIPv4Offset) + (uint32(1) << uint32(sc.NodeRackShift) * uint32(i+1) * mc.Rack) + mc.NodeNumberOfRack
 		ip := netutil.IntToIP4(uintip)
 		ifname := fmt.Sprintf("net%d", i)
 		nif := map[string]interface{}{
@@ -112,7 +116,7 @@ func generateIP(mc Machine, e *etcdClient, r *http.Request) (Machine, error, int
 		mc.Network = mergeMaps(mc.Network, nif)
 	}
 	for i := 0; i < int(sc.BMCIPPerNode); i++ {
-		uintip := OffsetToInt(sc.BMCIPv4Offset) + (uint32(1) << uint32(sc.BMCRackShift) * uint32(i+1) * mc.Rack) + mc.NodeNumberOfRack
+		uintip := offsetToInt(sc.BMCIPv4Offset) + (uint32(1) << uint32(sc.BMCRackShift) * uint32(i+1) * mc.Rack) + mc.NodeNumberOfRack
 		ip := netutil.IntToIP4(uintip)
 		nif := map[string]interface{}{
 			"ipv4": []string{ip.String()},
@@ -130,7 +134,7 @@ func generateIP(mc Machine, e *etcdClient, r *http.Request) (Machine, error, int
 		mc.Cluster,
 		mc.Network,
 		mc.BMC,
-	}, nil, http.StatusOK
+	}, http.StatusOK, nil
 }
 
 func (e *etcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) {
@@ -199,7 +203,7 @@ func (e *etcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) 
 	wmcs := make([]Machine, len(rmcs))
 	for i, rmc := range rmcs {
 		status := 0
-		wmcs[i], err, status = generateIP(rmc, e, r)
+		wmcs[i], status, err = generateIP(rmc, e, r)
 		if err != nil {
 			respError(w, err, status)
 		}
@@ -218,7 +222,7 @@ func (e *etcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) 
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
-	_, err = e.client.Txn(r.Context()).
+	tresp, err := e.client.Txn(r.Context()).
 		If(
 			txnIfOps...,
 		).
@@ -229,6 +233,10 @@ func (e *etcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) 
 		Commit()
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
+		return
+	}
+	if !tresp.Succeeded {
+		respError(w, fmt.Errorf(ErrorEtcdTxnFailed), http.StatusInternalServerError)
 		return
 	}
 
@@ -263,7 +271,7 @@ func (e *etcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if resp.Count == 0 {
-			respError(w, fmt.Errorf("Serial "+rmc.Serial+ErrorMachineNotFound), http.StatusNotFound)
+			respError(w, fmt.Errorf("Serial "+rmc.Serial+" "+ErrorMachineNotExists), http.StatusNotFound)
 			return
 		}
 
@@ -295,7 +303,7 @@ func (e *etcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 		}
 
 		status := 0
-		wmcs[i], err, status = generateIP(wmcs[i], e, r)
+		wmcs[i], status, err = generateIP(wmcs[i], e, r)
 		if err != nil {
 			respError(w, err, status)
 		}
@@ -314,7 +322,7 @@ func (e *etcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
-	_, err = e.client.Txn(r.Context()).
+	tresp, err := e.client.Txn(r.Context()).
 		If(
 			txnIfOps...,
 		).
@@ -325,6 +333,10 @@ func (e *etcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 		Commit()
 	if err != nil {
 		respError(w, err, http.StatusInternalServerError)
+		return
+	}
+	if !tresp.Succeeded {
+		respError(w, fmt.Errorf(ErrorEtcdTxnFailed), http.StatusInternalServerError)
 		return
 	}
 
@@ -350,7 +362,6 @@ func writeHandleGetMachines(w http.ResponseWriter, result []Machine) error {
 		return err
 	}
 	w.Write(out)
-	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
@@ -367,6 +378,18 @@ func appendMachinesIfNotExist(mcs []Machine, newmcs []Machine) []Machine {
 		}
 	}
 	return mcs
+}
+
+func intersectMachines(mcs1 []Machine, mcs2 []Machine) []Machine {
+	var newmcs []Machine
+	for _, mc1 := range mcs1 {
+		for _, mc2 := range mcs2 {
+			if mc1.Serial == mc2.Serial {
+				newmcs = append(newmcs, mc2)
+			}
+		}
+	}
+	return newmcs
 }
 
 func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
@@ -411,15 +434,18 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var result_t map[string][]Machine
-	result_t = map[string][]Machine{}
-	var result []Machine
+	var resultByQuery map[string][]Machine
+	resultByQuery = map[string][]Machine{}
+	queryCount := 0
 	qelem := reflect.ValueOf(&q).Elem()
-	//typeOfqelem := qelem.Type()
 
 	for i := 0; i < qelem.NumField(); i++ {
-		//fmt.Println(qelem.Field(i))
-		//fmt.Println(typeOfqelem.Field(i).Name)
+		if qelem.Field(i).Interface().(string) != "" {
+			queryCount++
+		}
+	}
+
+	for i := 0; i < qelem.NumField(); i++ {
 		qv := qelem.Field(i).Interface().(string)
 
 		if q.Product != "" && MI.Product[qv] != nil {
@@ -428,8 +454,9 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 				respError(w, err, http.StatusInternalServerError)
 				return
 			}
-
-			result_t[qv] = mcs
+			if mcs != nil {
+				resultByQuery[qv] = mcs
+			}
 			continue
 		}
 
@@ -439,7 +466,9 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 				respError(w, err, http.StatusInternalServerError)
 				return
 			}
-			result_t[qv] = mcs
+			if mcs != nil {
+				resultByQuery[qv] = mcs
+			}
 			continue
 		}
 
@@ -449,7 +478,9 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 				respError(w, err, http.StatusInternalServerError)
 				return
 			}
-			result = append(result, mcs...)
+			if mcs != nil {
+				resultByQuery[qv] = mcs
+			}
 			continue
 		}
 
@@ -459,7 +490,9 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 				respError(w, err, http.StatusInternalServerError)
 				return
 			}
-			result = append(result, mcs...)
+			if mcs != nil {
+				resultByQuery[qv] = mcs
+			}
 			continue
 		}
 
@@ -469,8 +502,22 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 				respError(w, err, http.StatusInternalServerError)
 				return
 			}
-			result = append(result, mcs...)
+			if mcs != nil {
+				resultByQuery[qv] = mcs
+			}
 			continue
+		}
+	}
+
+	result := make([]Machine, 0)
+	if queryCount == len(resultByQuery) {
+		// Intersect machines of each query result
+		for _, v := range resultByQuery {
+			if result == nil {
+				result = v
+				continue
+			}
+			result = intersectMachines(result, v)
 		}
 	}
 
@@ -479,5 +526,4 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		respError(w, err, http.StatusNotFound)
 		return
 	}
-
 }

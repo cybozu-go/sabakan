@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/log"
 )
 
+// MachinesIndex is on-memory index of the etcd values
 type MachinesIndex struct {
 	Product    map[string][]string
 	Datacenter map[string][]string
@@ -21,8 +21,10 @@ type MachinesIndex struct {
 	IPv6       map[string]string
 }
 
+// MI is a variable of type MachinesIndex
 var MI MachinesIndex
 
+// Indexing is indexing MachineIndex
 func Indexing(client *clientv3.Client, prefix string) {
 	key := path.Join(prefix, EtcdKeyMachines)
 	resp, err := client.Get(context.TODO(), key, clientv3.WithPrefix())
@@ -32,41 +34,52 @@ func Indexing(client *clientv3.Client, prefix string) {
 	if resp.Count == 0 {
 		return
 	}
-
-	MI.Product = map[string][]string{}
-	MI.Datacenter = map[string][]string{}
-	MI.Rack = map[string][]string{}
-	MI.Role = map[string][]string{}
-	MI.Cluster = map[string][]string{}
-	MI.IPv4 = map[string]string{}
-	MI.IPv6 = map[string]string{}
 	for _, m := range resp.Kvs {
-		var mc Machine
-		err := json.Unmarshal(m.Value, &mc)
-		if err != nil {
-			log.ErrorExit(err)
-		}
+		AddIndex(m.Value)
+	}
+}
 
-		MI.Product[mc.Product] = append(MI.Product[mc.Product], mc.Serial)
-		MI.Datacenter[mc.Datacenter] = append(MI.Datacenter[mc.Datacenter], mc.Serial)
-		MI.Rack[fmt.Sprint(mc.Rack)] = append(MI.Rack[fmt.Sprint(mc.Rack)], mc.Serial)
-		MI.Role[mc.Role] = append(MI.Role[mc.Role], mc.Serial)
-		MI.Cluster[mc.Cluster] = append(MI.Cluster[mc.Cluster], mc.Serial)
-		for _, ifn := range mc.Network {
-			for k, v := range ifn.(map[string]interface{}) {
-				if k == "ipv4" {
-					for _, ip := range v.([]interface{}) {
-						MI.IPv4[ip.(string)] = mc.Serial
-					}
-				}
-				if k == "ipv6" {
-					for _, ip := range v.([]interface{}) {
-						MI.IPv6[ip.(string)] = mc.Serial
-					}
-				}
-			}
-		}
-		for k, v := range mc.BMC {
+func initMI() {
+	if MI.Product == nil {
+		MI.Product = map[string][]string{}
+	}
+	if MI.Datacenter == nil {
+		MI.Datacenter = map[string][]string{}
+	}
+	if MI.Rack == nil {
+		MI.Rack = map[string][]string{}
+	}
+	if MI.Role == nil {
+		MI.Role = map[string][]string{}
+	}
+	if MI.Cluster == nil {
+		MI.Cluster = map[string][]string{}
+	}
+	if MI.IPv4 == nil {
+		MI.IPv4 = map[string]string{}
+	}
+	if MI.IPv6 == nil {
+		MI.IPv6 = map[string]string{}
+	}
+}
+
+// AddIndex adds new machine into the index
+func AddIndex(val []byte) {
+	var mc Machine
+	err := json.Unmarshal(val, &mc)
+	if err != nil {
+		log.ErrorExit(err)
+	}
+	initMI()
+
+	MI.Product[mc.Product] = append(MI.Product[mc.Product], mc.Serial)
+	MI.Datacenter[mc.Datacenter] = append(MI.Datacenter[mc.Datacenter], mc.Serial)
+	mcrack := fmt.Sprint(mc.Rack)
+	MI.Rack[mcrack] = append(MI.Rack[mcrack], mc.Serial)
+	MI.Role[mc.Role] = append(MI.Role[mc.Role], mc.Serial)
+	MI.Cluster[mc.Cluster] = append(MI.Cluster[mc.Cluster], mc.Serial)
+	for _, ifn := range mc.Network {
+		for k, v := range ifn.(map[string]interface{}) {
 			if k == "ipv4" {
 				for _, ip := range v.([]interface{}) {
 					MI.IPv4[ip.(string)] = mc.Serial
@@ -78,124 +91,81 @@ func Indexing(client *clientv3.Client, prefix string) {
 				}
 			}
 		}
-
+	}
+	for k, v := range mc.BMC {
+		if k == "ipv4" {
+			for _, ip := range v.([]interface{}) {
+				MI.IPv4[ip.(string)] = mc.Serial
+			}
+		}
+		if k == "ipv6" {
+			for _, ip := range v.([]interface{}) {
+				MI.IPv6[ip.(string)] = mc.Serial
+			}
+		}
 	}
 }
 
-func GetMachineBySerial(e *etcdClient, r *http.Request, s string) ([]byte, error) {
-	key := path.Join(e.prefix, EtcdKeyMachines, s)
-	resp, err := e.client.Get(r.Context(), key)
+func indexOf(data []string, element string) int {
+	for k, v := range data {
+		if element == v {
+			return k
+		}
+	}
+	return -1 //not found.
+}
+
+// DeleteIndex deletes a machine from the index
+func DeleteIndex(val []byte) {
+	var mc Machine
+	err := json.Unmarshal(val, &mc)
 	if err != nil {
-		return nil, err
+		log.ErrorExit(err)
+		return
 	}
-	if resp.Count == 0 {
-		return nil, fmt.Errorf("serial " + s + ErrorMachineNotFound)
+	initMI()
+
+	i := indexOf(MI.Product[mc.Product], mc.Serial)
+	MI.Product[mc.Product] = append(MI.Product[mc.Product][:i], MI.Product[mc.Product][i+1:]...)
+	i = indexOf(MI.Datacenter[mc.Datacenter], mc.Serial)
+	MI.Datacenter[mc.Datacenter] = append(MI.Datacenter[mc.Datacenter][:i], MI.Datacenter[mc.Datacenter][i+1:]...)
+	mcrack := fmt.Sprint(mc.Rack)
+	i = indexOf(MI.Rack[mcrack], mc.Serial)
+	MI.Rack[mcrack] = append(MI.Rack[mcrack][:i], MI.Rack[mcrack][i+1:]...)
+	i = indexOf(MI.Role[mc.Role], mc.Serial)
+	MI.Role[mc.Role] = append(MI.Role[mc.Role][:i], MI.Role[mc.Role][i+1:]...)
+	i = indexOf(MI.Cluster[mc.Cluster], mc.Serial)
+	MI.Cluster[mc.Cluster] = append(MI.Cluster[mc.Cluster][:i], MI.Cluster[mc.Cluster][i+1:]...)
+	for _, ifn := range mc.Network {
+		for k, v := range ifn.(map[string]interface{}) {
+			if k == "ipv4" {
+				for _, ip := range v.([]interface{}) {
+					delete(MI.IPv4, ip.(string))
+				}
+			}
+			if k == "ipv6" {
+				for _, ip := range v.([]interface{}) {
+					delete(MI.IPv6, ip.(string))
+				}
+			}
+		}
 	}
-	return resp.Kvs[0].Value, nil
+	for k, v := range mc.BMC {
+		if k == "ipv4" {
+			for _, ip := range v.([]interface{}) {
+				delete(MI.IPv4, ip.(string))
+			}
+		}
+		if k == "ipv6" {
+			for _, ip := range v.([]interface{}) {
+				delete(MI.IPv6, ip.(string))
+			}
+		}
+	}
 }
 
-func GetMachineByIPv4(e *etcdClient, r *http.Request, q string) ([]byte, error) {
-	mc, err := GetMachineBySerial(e, r, MI.IPv4[q])
-	if err != nil {
-		return nil, err
-	}
-	return mc, nil
-}
-
-func GetMachineByIPv6(e *etcdClient, r *http.Request, q string) ([]byte, error) {
-	mc, err := GetMachineBySerial(e, r, MI.IPv6[q])
-	if err != nil {
-		return nil, err
-	}
-	return mc, nil
-}
-
-func GetMachinesByProduct(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Product[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
-}
-
-func GetMachinesByDatacenter(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Datacenter[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
-}
-
-func GetMachinesByRack(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Rack[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
-}
-
-func GetMachinesByRole(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Role[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
-}
-
-func GetMachinesByCluster(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Cluster[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
+// UpdateIndex updates target machine on theindex
+func UpdateIndex(pval []byte, nval []byte) {
+	DeleteIndex(pval)
+	AddIndex(nval)
 }
