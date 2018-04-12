@@ -47,13 +47,38 @@ func (s *store) putConfig(ctx context.Context, c *Config) error {
 	return err
 }
 
+func TestConfigValidate(t *testing.T) {
+	cases := []Config{
+		{NodeIPv4Offset: "10.0.0.0", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
+	}
+	for _, c := range cases {
+		err := c.validate()
+		if err != nil {
+			t.Errorf("err != nil")
+		}
+	}
+
+	cases = []Config{
+		{},
+		{NodeIPv4Offset: "10.0.0.0.0", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
+		{NodeIPv4Offset: "10.0.0.0", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0.0", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
+	}
+	for _, c := range cases {
+		err := c.validate()
+		if err == nil {
+			t.Errorf("err == nil")
+		}
+	}
+
+}
+
 func TestHandleGetConfig(t *testing.T) {
 	etcd, err := newEtcdClient()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer etcd.Close()
-	client := etcdClient{client: etcd, prefix: *flagEtcdPrefix + t.Name()}
+	client := EtcdClient{Client: etcd, Prefix: *flagEtcdPrefix + t.Name()}
 	store := store{etcd: etcd, prefix: *flagEtcdPrefix + t.Name()}
 
 	r := httptest.NewRequest("GET", "localhost:8888/api/v1/crypts", nil)
@@ -89,7 +114,7 @@ func TestHandlePostConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer etcd.Close()
-	client := etcdClient{client: etcd, prefix: *flagEtcdPrefix + t.Name()}
+	client := EtcdClient{Client: etcd, Prefix: *flagEtcdPrefix + t.Name()}
 	store := store{etcd: etcd, prefix: *flagEtcdPrefix + t.Name()}
 
 	b := new(bytes.Buffer)
