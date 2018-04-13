@@ -17,7 +17,7 @@ func deleteEtcdKeys(etcd *clientv3.Client, key string) {
 }
 
 func postConfig(etcdClient EtcdClient) {
-	config := sabakanConfig{
+	config := Config{
 		NodeIPv4Offset: "10.0.0.0/16",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.1.0.0/16",

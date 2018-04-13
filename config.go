@@ -67,10 +67,18 @@ const (
 	ErrorInvalidValue = "invalid value"
 	// ErrorValueNotFound is an error message when a target value is not found
 	ErrorValueNotFound = "value not found"
-	// ErrorMachinesExist is an error message when /machines key exists in etcd.
-	ErrorMachinesExist = "machines already exist"
 	// ErrorValueAlreadyExists is an error message when a target value already exists
 	ErrorValueAlreadyExists = "value already exists"
+
+	// ErrorMachinesExist is an error message when /machines key exists in etcd.
+	ErrorMachinesExist = "machines already exist"
+	// ErrorMachineExists is an error message when /machines/<serial> key exists in etcd.
+	ErrorMachineExists = "machine already exists"
+	// ErrorMachineNotExists is an error message when /machines/<serial> key doesn't exist in etcd.
+	ErrorMachineNotExists = "machine not found"
+
+	// ErrorEtcdTxnFailed is an error message when transaction of etcd fails.
+	ErrorEtcdTxnFailed = "etcd transaction failed"
 )
 
 // InitConfig is initialization of the sabakan API /config

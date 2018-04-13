@@ -42,15 +42,6 @@ type Query struct {
 	IPv6       string
 }
 
-const (
-	// ErrorMachineExists is an error message when /machines/<serial> key exists in etcd.
-	ErrorMachineExists = "machine already exists"
-	// ErrorMachineNotExists is an error message when /machines/<serial> key doesn't exist in etcd.
-	ErrorMachineNotExists = "machine not found"
-	// ErrorEtcdTxnFailed is an error message when transaction of etcd fails.
-	ErrorEtcdTxnFailed = "etcd transaction failed"
-)
-
 // InitMachines is initilization of the sabakan API /machines
 func InitMachines(r *mux.Router, e *EtcdClient) {
 	e.initMachinesFunc(r)
@@ -98,7 +89,7 @@ func generateIP(mc Machine, e *EtcdClient, r *http.Request) (Machine, int, error
 		return Machine{}, http.StatusNotFound, fmt.Errorf(ErrorValueNotFound)
 	}
 
-	var sc sabakanConfig
+	var sc Config
 	err = json.Unmarshal(resp.Kvs[0].Value, &sc)
 	if err != nil {
 		return Machine{}, http.StatusBadRequest, err
