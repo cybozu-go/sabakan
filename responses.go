@@ -11,9 +11,6 @@ func renderJSON(w http.ResponseWriter, data interface{}, status int) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	err := json.NewEncoder(w).Encode(data)
-	if err != nil {
-		return err
-	}
 	return err
 }
 

@@ -4,10 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"flag"
-	"fmt"
 	"net/http/httptest"
-	"os"
 	"path"
 	"reflect"
 	"strconv"
@@ -16,20 +13,6 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/gorilla/mux"
 )
-
-var (
-	flagEtcdServers = flag.String("etcd-servers", "http://localhost:2379", "URLs of the backend etcd")
-	flagEtcdPrefix  = flag.String("etcd-prefix", "/sabakan-test", "etcd prefix")
-)
-
-func TestMain(m *testing.M) {
-	err := setupEtcd()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	os.Exit(m.Run())
-}
 
 func TestValidatePostParams(t *testing.T) {
 	valid := sabakanCrypt{"disk-a", "foo"}
