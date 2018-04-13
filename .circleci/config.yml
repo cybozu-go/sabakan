@@ -3,6 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1-stretch
+      - image: quay.io/coreos/etcd:v3.3
     working_directory: /go/src/github.com/cybozu-go/sabakan
     steps:
       - checkout
