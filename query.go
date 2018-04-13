@@ -8,9 +8,9 @@ import (
 )
 
 // GetMachineBySerial returns a value of the etcd key by serial
-func GetMachineBySerial(e *etcdClient, r *http.Request, s string) ([]byte, error) {
-	key := path.Join(e.prefix, EtcdKeyMachines, s)
-	resp, err := e.client.Get(r.Context(), key)
+func GetMachineBySerial(e *EtcdClient, r *http.Request, s string) ([]byte, error) {
+	key := path.Join(e.Prefix, EtcdKeyMachines, s)
+	resp, err := e.Client.Get(r.Context(), key)
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +21,7 @@ func GetMachineBySerial(e *etcdClient, r *http.Request, s string) ([]byte, error
 }
 
 // GetMachineByIPv4 returns type Machine from the etcd and serial by IPv4
-func GetMachineByIPv4(e *etcdClient, r *http.Request, q string) ([]byte, error) {
+func GetMachineByIPv4(e *EtcdClient, r *http.Request, q string) ([]byte, error) {
 	mc, err := GetMachineBySerial(e, r, MI.IPv4[q])
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func GetMachineByIPv4(e *etcdClient, r *http.Request, q string) ([]byte, error) 
 }
 
 // GetMachineByIPv6 returns type Machine from the etcd and serial by IPv6
-func GetMachineByIPv6(e *etcdClient, r *http.Request, q string) ([]byte, error) {
+func GetMachineByIPv6(e *EtcdClient, r *http.Request, q string) ([]byte, error) {
 	mc, err := GetMachineBySerial(e, r, MI.IPv6[q])
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func GetMachineByIPv6(e *etcdClient, r *http.Request, q string) ([]byte, error) 
 }
 
 // GetMachinesByProduct returns type []Machine from the etcd and serial by product
-func GetMachinesByProduct(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
+func GetMachinesByProduct(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
 	var mcs []Machine
 	for _, mc := range MI.Product[q] {
 		j, err := GetMachineBySerial(e, r, mc)
@@ -58,7 +58,7 @@ func GetMachinesByProduct(e *etcdClient, r *http.Request, q string) ([]Machine, 
 }
 
 // GetMachinesByDatacenter returns type []Machine from the etcd and serial by datacenter
-func GetMachinesByDatacenter(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
+func GetMachinesByDatacenter(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
 	var mcs []Machine
 	for _, mc := range MI.Datacenter[q] {
 		j, err := GetMachineBySerial(e, r, mc)
@@ -77,7 +77,7 @@ func GetMachinesByDatacenter(e *etcdClient, r *http.Request, q string) ([]Machin
 }
 
 // GetMachinesByRack returns type []Machine from the etcd and serial by rack
-func GetMachinesByRack(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
+func GetMachinesByRack(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
 	var mcs []Machine
 	for _, mc := range MI.Rack[q] {
 		j, err := GetMachineBySerial(e, r, mc)
@@ -96,7 +96,7 @@ func GetMachinesByRack(e *etcdClient, r *http.Request, q string) ([]Machine, err
 }
 
 // GetMachinesByRole returns type []Machine from the etcd and serial by role
-func GetMachinesByRole(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
+func GetMachinesByRole(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
 	var mcs []Machine
 	for _, mc := range MI.Role[q] {
 		j, err := GetMachineBySerial(e, r, mc)
@@ -115,7 +115,7 @@ func GetMachinesByRole(e *etcdClient, r *http.Request, q string) ([]Machine, err
 }
 
 // GetMachinesByCluster returns type []Machine from the etcd and serial by cluster
-func GetMachinesByCluster(e *etcdClient, r *http.Request, q string) ([]Machine, error) {
+func GetMachinesByCluster(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
 	var mcs []Machine
 	for _, mc := range MI.Cluster[q] {
 		j, err := GetMachineBySerial(e, r, mc)

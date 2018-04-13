@@ -1,15 +1,12 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"net/http"
-	"path"
 	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
@@ -22,15 +19,10 @@ var (
 	flagEtcdPrefix  = flag.String("etcd-prefix", "", "etcd prefix")
 )
 
-type etcdConfig struct {
-	Servers []string
-	Prefix  string
-}
-
 func main() {
 	flag.Parse()
 
-	var e etcdConfig
+	var e sabakan.EtcdConfig
 	e.Servers = strings.Split(*flagEtcdServers, ",")
 	e.Prefix = "/" + *flagEtcdPrefix
 
@@ -51,33 +43,7 @@ func main() {
 	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 
-	// Monitor changes to keys and update index
-	go func() {
-		cfg := clientv3.Config{
-			Endpoints: e.Servers,
-		}
-		c, err := clientv3.New(cfg)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-		defer c.Close()
-
-		key := path.Join(e.Prefix, sabakan.EtcdKeyMachines)
-		rch := c.Watch(context.TODO(), key, clientv3.WithPrefix(), clientv3.WithPrevKV())
-		for wresp := range rch {
-			for _, ev := range wresp.Events {
-				if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
-					sabakan.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
-				}
-				if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
-					sabakan.AddIndex(ev.Kv.Value)
-				}
-				if ev.Type == mvccpb.DELETE {
-					sabakan.DeleteIndex(ev.PrevKv.Value)
-				}
-			}
-		}
-	}()
+	sabakan.EtcdWatcher(e)
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{

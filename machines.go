@@ -1,6 +1,7 @@
 package sabakan
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
+	"github.com/coreos/etcd/mvcc/mvccpb"
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/netutil"
 	"github.com/gorilla/mux"
 )
@@ -49,12 +52,11 @@ const (
 )
 
 // InitMachines is initilization of the sabakan API /machines
-func InitMachines(r *mux.Router, c *clientv3.Client, p string) {
-	e := &etcdClient{c, p}
+func InitMachines(r *mux.Router, e *EtcdClient) {
 	e.initMachinesFunc(r)
 }
 
-func (e *etcdClient) initMachinesFunc(r *mux.Router) {
+func (e *EtcdClient) initMachinesFunc(r *mux.Router) {
 	r.HandleFunc("/machines", e.handlePostMachines).Methods("POST")
 	r.HandleFunc("/machines", e.handlePutMachines).Methods("PUT")
 	r.HandleFunc("/machines", e.handleGetMachines).Methods("GET")
@@ -75,7 +77,7 @@ func mergeMaps(maps ...map[string]interface{}) map[string]interface{} {
 	return result
 }
 
-func generateIP(mc Machine, e *etcdClient, r *http.Request) (Machine, int, error) {
+func generateIP(mc Machine, e *EtcdClient, r *http.Request) (Machine, int, error) {
 	/*
 		Generate IP addresses by sabakan config
 		Example:
@@ -84,8 +86,8 @@ func generateIP(mc Machine, e *etcdClient, r *http.Request) (Machine, int, error
 			net2 = node-ipv4-offset + (1 << node-rack-shift * 3 * rack-number) + node-number-of-a-rack
 			bmc  = bmc-ipv4-offset + (1 << bmc-rack-shift * 1 * rack-number) + node-number-of-a-rack
 	*/
-	key := path.Join(e.prefix, EtcdKeyConfig)
-	resp, err := e.client.Get(r.Context(), key)
+	key := path.Join(e.Prefix, EtcdKeyConfig)
+	resp, err := e.Client.Get(r.Context(), key)
 	if err != nil {
 		return Machine{}, http.StatusInternalServerError, err
 	}
@@ -137,65 +139,65 @@ func generateIP(mc Machine, e *etcdClient, r *http.Request) (Machine, int, error
 	}, http.StatusOK, nil
 }
 
-func (e *etcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) {
+func (e *EtcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var rmcs []Machine
 
 	err := json.NewDecoder(r.Body).Decode(&rmcs)
 	if err != nil {
-		respError(w, err, http.StatusBadRequest)
+		renderError(w, err, http.StatusBadRequest)
 		return
 	}
 
 	// Validation
 	for _, mc := range rmcs {
 		if mc.Serial == "" {
-			respError(w, fmt.Errorf("serial: "+ErrorValueNotFound), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("serial: "+ErrorValueNotFound), http.StatusBadRequest)
 			return
 		}
 		if mc.Product == "" {
-			respError(w, fmt.Errorf("product: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("product: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
 			return
 		}
 		if mc.Datacenter == "" {
-			respError(w, fmt.Errorf("datacenter: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("datacenter: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
 			return
 		}
 		if mc.Rack == 0 {
-			respError(w, fmt.Errorf("rack: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("rack: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
 			return
 		}
 		if mc.Role == "" {
-			respError(w, fmt.Errorf("role: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("role: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
 			return
 		}
 		if mc.NodeNumberOfRack == 0 {
-			respError(w, fmt.Errorf("node-number-of-rack: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("node-number-of-rack: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
 			return
 		}
 		if mc.Cluster == "" {
-			respError(w, fmt.Errorf("cluster: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("cluster: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
 			return
 		}
 		if mc.Network != nil {
-			respError(w, fmt.Errorf("network: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("network: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
 			return
 		}
 		if mc.BMC != nil {
-			respError(w, fmt.Errorf("bmc: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("bmc: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
 			return
 		}
 	}
 
 	for _, mc := range rmcs {
-		key := path.Join(e.prefix, EtcdKeyMachines, mc.Serial)
-		resp, err := e.client.Get(r.Context(), key)
+		key := path.Join(e.Prefix, EtcdKeyMachines, mc.Serial)
+		resp, err := e.Client.Get(r.Context(), key)
 		if err != nil {
-			respError(w, err, http.StatusInternalServerError)
+			renderError(w, err, http.StatusInternalServerError)
 			return
 		}
 		if resp.Count != 0 {
-			respError(w, fmt.Errorf("serial: "+mc.Serial+" "+ErrorMachineExists), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("serial: "+mc.Serial+" "+ErrorMachineExists), http.StatusBadRequest)
 			return
 		}
 	}
@@ -205,7 +207,7 @@ func (e *etcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) 
 		status := 0
 		wmcs[i], status, err = generateIP(rmc, e, r)
 		if err != nil {
-			respError(w, err, status)
+			renderError(w, err, status)
 		}
 	}
 
@@ -213,16 +215,16 @@ func (e *etcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) 
 	txnIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
-		key := path.Join(e.prefix, EtcdKeyMachines, wmc.Serial)
+		key := path.Join(e.Prefix, EtcdKeyMachines, wmc.Serial)
 		txnIfOps = append(txnIfOps, clientv3util.KeyMissing(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
-			respError(w, err, http.StatusInternalServerError)
+			renderError(w, err, http.StatusInternalServerError)
 			return
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
-	tresp, err := e.client.Txn(r.Context()).
+	tresp, err := e.Client.Txn(r.Context()).
 		If(
 			txnIfOps...,
 		).
@@ -232,31 +234,31 @@ func (e *etcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) 
 		Else().
 		Commit()
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if !tresp.Succeeded {
-		respError(w, fmt.Errorf(ErrorEtcdTxnFailed), http.StatusInternalServerError)
+		renderError(w, fmt.Errorf(ErrorEtcdTxnFailed), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (e *etcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
+func (e *EtcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var rmcs []Machine
 
 	err := json.NewDecoder(r.Body).Decode(&rmcs)
 	if err != nil {
-		respError(w, err, http.StatusBadRequest)
+		renderError(w, err, http.StatusBadRequest)
 		return
 	}
 
 	// Validation
 	for _, mc := range rmcs {
 		if mc.Serial == "" {
-			respError(w, fmt.Errorf("serial: "+ErrorValueNotFound), http.StatusBadRequest)
+			renderError(w, fmt.Errorf("serial: "+ErrorValueNotFound), http.StatusBadRequest)
 			return
 		}
 	}
@@ -264,21 +266,21 @@ func (e *etcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 	// Update []Machine
 	wmcs := make([]Machine, len(rmcs))
 	for i, rmc := range rmcs {
-		key := path.Join(e.prefix, EtcdKeyMachines, rmc.Serial)
-		resp, err := e.client.Get(r.Context(), key)
+		key := path.Join(e.Prefix, EtcdKeyMachines, rmc.Serial)
+		resp, err := e.Client.Get(r.Context(), key)
 		if err != nil {
-			respError(w, err, http.StatusInternalServerError)
+			renderError(w, err, http.StatusInternalServerError)
 			return
 		}
 		if resp.Count == 0 {
-			respError(w, fmt.Errorf("Serial "+rmc.Serial+" "+ErrorMachineNotExists), http.StatusNotFound)
+			renderError(w, fmt.Errorf("Serial "+rmc.Serial+" "+ErrorMachineNotExists), http.StatusNotFound)
 			return
 		}
 
 		var emc Machine
 		err = json.Unmarshal(resp.Kvs[0].Value, &emc)
 		if err != nil {
-			respError(w, err, http.StatusInternalServerError)
+			renderError(w, err, http.StatusInternalServerError)
 			return
 		}
 		wmcs[i] = emc
@@ -305,7 +307,7 @@ func (e *etcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 		status := 0
 		wmcs[i], status, err = generateIP(wmcs[i], e, r)
 		if err != nil {
-			respError(w, err, status)
+			renderError(w, err, status)
 		}
 	}
 
@@ -313,16 +315,16 @@ func (e *etcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 	txnIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
-		key := path.Join(e.prefix, EtcdKeyMachines, wmc.Serial)
+		key := path.Join(e.Prefix, EtcdKeyMachines, wmc.Serial)
 		txnIfOps = append(txnIfOps, clientv3util.KeyExists(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
-			respError(w, err, http.StatusInternalServerError)
+			renderError(w, err, http.StatusInternalServerError)
 			return
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
-	tresp, err := e.client.Txn(r.Context()).
+	tresp, err := e.Client.Txn(r.Context()).
 		If(
 			txnIfOps...,
 		).
@@ -332,18 +334,18 @@ func (e *etcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 		Else().
 		Commit()
 	if err != nil {
-		respError(w, err, http.StatusInternalServerError)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if !tresp.Succeeded {
-		respError(w, fmt.Errorf(ErrorEtcdTxnFailed), http.StatusInternalServerError)
+		renderError(w, fmt.Errorf(ErrorEtcdTxnFailed), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 }
 
-func handleGetMachinesParam(q *Query, r *http.Request) error {
+func getMachinesQuery(q *Query, r *http.Request) error {
 	q.Serial = r.URL.Query().Get("serial")
 	q.Product = r.URL.Query().Get("product")
 	q.Datacenter = r.URL.Query().Get("datacenter")
@@ -353,15 +355,6 @@ func handleGetMachinesParam(q *Query, r *http.Request) error {
 	q.IPv4 = r.URL.Query().Get("ipv4")
 	q.IPv6 = r.URL.Query().Get("ipv6")
 
-	return nil
-}
-
-func writeHandleGetMachines(w http.ResponseWriter, result []Machine) error {
-	out, err := json.Marshal(result)
-	if err != nil {
-		return err
-	}
-	w.Write(out)
 	return nil
 }
 
@@ -392,11 +385,11 @@ func intersectMachines(mcs1 []Machine, mcs2 []Machine) []Machine {
 	return newmcs
 }
 
-func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
+func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	var q Query
 
-	if err := handleGetMachinesParam(&q, r); err != nil {
-		respError(w, err, http.StatusBadRequest)
+	if err := getMachinesQuery(&q, r); err != nil {
+		renderError(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -405,32 +398,57 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	if q.Serial != "" {
 		j, err := GetMachineBySerial(e, r, q.Serial)
 		if err != nil {
-			respError(w, err, http.StatusNotFound)
+			renderError(w, err, http.StatusNotFound)
 			return
 		}
-		w.Write(j)
-		w.WriteHeader(http.StatusOK)
+		var responseBody Machine
+		err = json.Unmarshal(j, &responseBody)
+		if err != nil {
+			renderError(w, err, http.StatusInternalServerError)
+		}
+		err = renderJSON(w, responseBody, http.StatusOK)
+		if err != nil {
+			renderError(w, err, http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 
 	if q.IPv4 != "" {
 		j, err := GetMachineByIPv4(e, r, q.IPv4)
 		if err != nil {
-			respError(w, err, http.StatusNotFound)
+			renderError(w, err, http.StatusNotFound)
 			return
 		}
-		w.Write(j)
-		w.WriteHeader(http.StatusOK)
+		var responseBody Machine
+		err = json.Unmarshal(j, &responseBody)
+		if err != nil {
+			renderError(w, err, http.StatusInternalServerError)
+		}
+		err = renderJSON(w, responseBody, http.StatusOK)
+		if err != nil {
+			renderError(w, err, http.StatusInternalServerError)
+			return
+		}
 		return
 	}
+
 	if q.IPv6 != "" {
 		j, err := GetMachineByIPv6(e, r, q.IPv4)
 		if err != nil {
-			respError(w, err, http.StatusNotFound)
+			renderError(w, err, http.StatusNotFound)
 			return
 		}
-		w.Write(j)
-		w.WriteHeader(http.StatusOK)
+		var responseBody Machine
+		err = json.Unmarshal(j, &responseBody)
+		if err != nil {
+			renderError(w, err, http.StatusInternalServerError)
+		}
+		err = renderJSON(w, responseBody, http.StatusOK)
+		if err != nil {
+			renderError(w, err, http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 
@@ -451,7 +469,7 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		if q.Product != "" && MI.Product[qv] != nil {
 			mcs, err := GetMachinesByProduct(e, r, qv)
 			if err != nil {
-				respError(w, err, http.StatusInternalServerError)
+				renderError(w, err, http.StatusInternalServerError)
 				return
 			}
 			if mcs != nil {
@@ -463,7 +481,7 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		if q.Datacenter != "" && MI.Datacenter[qv] != nil {
 			mcs, err := GetMachinesByDatacenter(e, r, qv)
 			if err != nil {
-				respError(w, err, http.StatusInternalServerError)
+				renderError(w, err, http.StatusInternalServerError)
 				return
 			}
 			if mcs != nil {
@@ -475,7 +493,7 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		if q.Rack != "" && MI.Rack[qv] != nil {
 			mcs, err := GetMachinesByRack(e, r, qv)
 			if err != nil {
-				respError(w, err, http.StatusInternalServerError)
+				renderError(w, err, http.StatusInternalServerError)
 				return
 			}
 			if mcs != nil {
@@ -487,7 +505,7 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		if q.Role != "" && MI.Role[qv] != nil {
 			mcs, err := GetMachinesByRole(e, r, qv)
 			if err != nil {
-				respError(w, err, http.StatusInternalServerError)
+				renderError(w, err, http.StatusInternalServerError)
 				return
 			}
 			if mcs != nil {
@@ -499,7 +517,7 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		if q.Cluster != "" && MI.Cluster[qv] != nil {
 			mcs, err := GetMachinesByCluster(e, r, qv)
 			if err != nil {
-				respError(w, err, http.StatusInternalServerError)
+				renderError(w, err, http.StatusInternalServerError)
 				return
 			}
 			if mcs != nil {
@@ -510,7 +528,7 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := make([]Machine, 0)
-	if queryCount == len(resultByQuery) {
+	if queryCount > 1 && queryCount == len(resultByQuery) {
 		// Intersect machines of each query result
 		for _, v := range resultByQuery {
 			if result == nil {
@@ -520,10 +538,45 @@ func (e *etcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			result = intersectMachines(result, v)
 		}
 	}
+	if queryCount == 1 && queryCount == len(resultByQuery) {
+		for _, v := range resultByQuery {
+			result = v
+		}
+	}
 
-	err := writeHandleGetMachines(w, result)
+	err := renderJSON(w, result, http.StatusOK)
 	if err != nil {
-		respError(w, err, http.StatusNotFound)
+		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
+}
+
+// EtcdWatcher launch etcd client session to monitor changes to keys and update index
+func EtcdWatcher(e EtcdConfig) {
+	go func() {
+		cfg := clientv3.Config{
+			Endpoints: e.Servers,
+		}
+		c, err := clientv3.New(cfg)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+		defer c.Close()
+
+		key := path.Join(e.Prefix, EtcdKeyMachines)
+		rch := c.Watch(context.TODO(), key, clientv3.WithPrefix(), clientv3.WithPrevKV())
+		for wresp := range rch {
+			for _, ev := range wresp.Events {
+				if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
+					UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
+				}
+				if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
+					AddIndex(ev.Kv.Value)
+				}
+				if ev.Type == mvccpb.DELETE {
+					DeleteIndex(ev.PrevKv.Value)
+				}
+			}
+		}
+	}()
 }

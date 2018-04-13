@@ -49,6 +49,12 @@ type EtcdClient struct {
 	Prefix string
 }
 
+// EtcdConfig is etcd3 connection options
+type EtcdConfig struct {
+	Servers []string
+	Prefix  string
+}
+
 const (
 	// EtcdKeyConfig is etcd key name for sabakan option
 	EtcdKeyConfig = "/config"
