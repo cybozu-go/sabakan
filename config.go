@@ -29,7 +29,7 @@ func (c *Config) validate() error {
 		return errors.New("node-rack-shift: " + ErrorValueNotFound)
 	}
 	if _, _, err := net.ParseCIDR(c.BMCIPv4Offset); err != nil {
-		return errors.New("node-ipv4-offset: " + ErrorInvalidValue)
+		return errors.New("bmc-ipv4-offset: " + ErrorInvalidValue)
 	}
 	if c.BMCRackShift == 0 {
 		return errors.New("bmc-rack-shift: " + ErrorValueNotFound)
