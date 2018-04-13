@@ -49,7 +49,7 @@ func (s *store) putConfig(ctx context.Context, c *Config) error {
 
 func TestConfigValidate(t *testing.T) {
 	cases := []Config{
-		{NodeIPv4Offset: "10.0.0.0", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
+		{NodeIPv4Offset: "10.0.0.0/24", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0/24", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
 	}
 	for _, c := range cases {
 		err := c.validate()
@@ -60,8 +60,8 @@ func TestConfigValidate(t *testing.T) {
 
 	cases = []Config{
 		{},
-		{NodeIPv4Offset: "10.0.0.0.0", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
-		{NodeIPv4Offset: "10.0.0.0", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0.0", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
+		{NodeIPv4Offset: "10.0.0.0.0/24", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0/24", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
+		{NodeIPv4Offset: "10.0.0.0/24", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0.0/24", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
 	}
 	for _, c := range cases {
 		err := c.validate()
@@ -91,9 +91,9 @@ func TestHandleGetConfig(t *testing.T) {
 	}
 
 	value := Config{
-		NodeIPv4Offset: "10.0.0.0",
+		NodeIPv4Offset: "10.0.0.0/24",
 		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.10.0.0",
+		BMCIPv4Offset:  "10.10.0.0/24",
 		BMCRackShift:   2,
 		NodeIPPerNode:  3,
 		BMCIPPerNode:   1,
@@ -129,9 +129,9 @@ func TestHandlePostConfig(t *testing.T) {
 
 	b = new(bytes.Buffer)
 	b.WriteString(`{
-		"node-ipv4-offset": "10.0.0.0",
+		"node-ipv4-offset": "10.0.0.0/24",
 		"node-rack-shift": 5,
-		"bmc-ipv4-offset": "10.1.0.0",
+		"bmc-ipv4-offset": "10.1.0.0/24",
 		"bmc-rack-shift": 2,
 		"node-ip-per-node": 3,
 		"bmc-ip-per-node": 1
@@ -144,7 +144,7 @@ func TestHandlePostConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if conf.NodeIPv4Offset != "10.0.0.0" || conf.NodeRackShift != 5 || conf.BMCIPv4Offset != "10.1.0.0" ||
+	if conf.NodeIPv4Offset != "10.0.0.0/24" || conf.NodeRackShift != 5 || conf.BMCIPv4Offset != "10.1.0.0/24" ||
 		conf.BMCRackShift != 2 || conf.NodeIPPerNode != 3 || conf.BMCIPPerNode != 1 {
 		t.Fatalf("unexpected config: %v", conf)
 	}

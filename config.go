@@ -22,13 +22,13 @@ type Config struct {
 }
 
 func (c *Config) validate() error {
-	if ip := net.ParseIP(c.NodeIPv4Offset); ip == nil {
+	if _, _, err := net.ParseCIDR(c.NodeIPv4Offset); err != nil {
 		return errors.New("node-ipv4-offset: " + ErrorInvalidValue)
 	}
 	if c.NodeRackShift == 0 {
 		return errors.New("node-rack-shift: " + ErrorValueNotFound)
 	}
-	if ip := net.ParseIP(c.BMCIPv4Offset); ip == nil {
+	if _, _, err := net.ParseCIDR(c.BMCIPv4Offset); err != nil {
 		return errors.New("node-ipv4-offset: " + ErrorInvalidValue)
 	}
 	if c.BMCRackShift == 0 {
