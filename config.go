@@ -3,6 +3,7 @@ package sabakan
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 	"path"
 
@@ -10,8 +11,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// SabakanConfig is structure of the sabakan option
-type sabakanConfig struct {
+// Config is structure of the sabakan option
+type Config struct {
 	NodeIPv4Offset string `json:"node-ipv4-offset"`
 	NodeRackShift  uint   `json:"node-rack-shift"`
 	BMCIPv4Offset  string `json:"bmc-ipv4-offset"`
@@ -20,7 +21,29 @@ type sabakanConfig struct {
 	BMCIPPerNode   uint   `json:"bmc-ip-per-node"`
 }
 
-// EtcdClient is etcd3 Client object
+func (c *Config) validate() error {
+	if _, _, err := net.ParseCIDR(c.NodeIPv4Offset); err != nil {
+		return errors.New("node-ipv4-offset: " + ErrorInvalidValue)
+	}
+	if c.NodeRackShift == 0 {
+		return errors.New("node-rack-shift: " + ErrorValueNotFound)
+	}
+	if _, _, err := net.ParseCIDR(c.BMCIPv4Offset); err != nil {
+		return errors.New("bmc-ipv4-offset: " + ErrorInvalidValue)
+	}
+	if c.BMCRackShift == 0 {
+		return errors.New("bmc-rack-shift: " + ErrorValueNotFound)
+	}
+	if c.NodeIPPerNode == 0 {
+		return errors.New("node-ip-per-node: " + ErrorValueNotFound)
+	}
+	if c.BMCIPPerNode == 0 {
+		return errors.New("bmc-ip-per-node: " + ErrorValueNotFound)
+	}
+	return nil
+}
+
+// EtcdClient is etcd3 client object
 type EtcdClient struct {
 	Client *clientv3.Client
 	Prefix string
@@ -34,10 +57,14 @@ const (
 	// EtcdKeyCrypts is etcd key name for crypts management
 	EtcdKeyCrypts = "/crypts"
 
+	// ErrorInvalidValue is an error message when a target value is invalid
+	ErrorInvalidValue = "invalid value"
 	// ErrorValueNotFound is an error message when a target value is not found
 	ErrorValueNotFound = "value not found"
 	// ErrorMachinesExist is an error message when /machines key exists in etcd.
 	ErrorMachinesExist = "machines already exist"
+	// ErrorValueAlreadyExists is an error message when a target value already exists
+	ErrorValueAlreadyExists = "value already exists"
 )
 
 // InitConfig is initialization of the sabakan API /config
@@ -88,36 +115,15 @@ func (e *EtcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	var sc sabakanConfig
-
+	var sc Config
 	err = json.NewDecoder(r.Body).Decode(&sc)
 	if err != nil {
 		renderError(w, err, http.StatusBadRequest)
 		return
 	}
-	// Validation
-	if sc.NodeIPv4Offset == "" {
-		renderError(w, errors.New("node-ipv4-offset: "+ErrorValueNotFound), http.StatusBadRequest)
-		return
-	}
-	if sc.NodeRackShift == 0 {
-		renderError(w, errors.New("node-rack-shift: "+ErrorValueNotFound), http.StatusBadRequest)
-		return
-	}
-	if sc.BMCIPv4Offset == "" {
-		renderError(w, errors.New("bmc-ipv4-offset: "+ErrorValueNotFound), http.StatusBadRequest)
-		return
-	}
-	if sc.BMCRackShift == 0 {
-		renderError(w, errors.New("bmc-rack-shift: "+ErrorValueNotFound), http.StatusBadRequest)
-		return
-	}
-	if sc.NodeIPPerNode == 0 {
-		renderError(w, errors.New("node-ip-per-node: "+ErrorValueNotFound), http.StatusBadRequest)
-		return
-	}
-	if sc.BMCIPPerNode == 0 {
-		renderError(w, errors.New("bmc-ip-per-node: "+ErrorValueNotFound), http.StatusBadRequest)
+	err = sc.validate()
+	if err != nil {
+		renderError(w, err, http.StatusBadRequest)
 		return
 	}
 
