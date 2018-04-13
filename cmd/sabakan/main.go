@@ -43,6 +43,7 @@ func main() {
 	etcdClient := &sabakan.EtcdClient{Client: c, Prefix: e.Prefix}
 	sabakan.InitConfig(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
+	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
