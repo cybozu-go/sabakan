@@ -36,7 +36,8 @@ func TestHandleGetCrypts(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	etcdClient := EtcdClient{etcd, prefix}
+	mi, _ := Indexing(etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix, mi}
 	serial := "1"
 	diskPath := "exists-path"
 	key := "aaa"
@@ -76,7 +77,8 @@ func TestHandleGetCryptsNotFound(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	etcdClient := EtcdClient{etcd, prefix}
+	mi, _ := Indexing(etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix, mi}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/api/v1/crypts", nil)
 	r = mux.SetURLVars(r, map[string]string{"serial": "1", "path": "non-exists-key"})
@@ -96,7 +98,8 @@ func TestHandlePostCrypts(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	etcdClient := EtcdClient{etcd, prefix}
+	mi, _ := Indexing(etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix, mi}
 	serial := "1"
 	diskPath := "put-path"
 	key := "aaa"
@@ -135,7 +138,8 @@ func TestHandlePostCryptsInvalidBody(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	etcdClient := EtcdClient{etcd, prefix}
+	mi, _ := Indexing(etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix, mi}
 	w := httptest.NewRecorder()
 	invalidBody, err := json.Marshal(&struct {
 		Name string `json:"name"`
@@ -162,7 +166,8 @@ func TestHandleDeleteCrypts(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	etcdClient := EtcdClient{etcd, prefix}
+	mi, _ := Indexing(etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix, mi}
 	expected := deleteResponse{}
 	serial := "1"
 	key := "aaa"
@@ -211,7 +216,8 @@ func TestHandleDeleteCryptsNotFound(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	etcdClient := EtcdClient{etcd, prefix}
+	mi, _ := Indexing(etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix, mi}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", "/api/v1/crypts", nil)
 	r = mux.SetURLVars(r, map[string]string{"serial": "non-exists-serial"})

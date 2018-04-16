@@ -12,6 +12,7 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/coreos/etcd/mvcc/mvccpb"
+	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/netutil"
 	"github.com/gorilla/mux"
@@ -68,7 +69,7 @@ func mergeMaps(maps ...map[string]interface{}) map[string]interface{} {
 	return result
 }
 
-func generateIP(mc Machine, e *EtcdClient, r *http.Request) (Machine, int, error) {
+func generateIP(mc Machine, e *EtcdClient, ctx context.Context) (Machine, int, error) {
 	/*
 		Generate IP addresses by sabakan config
 		Example:
@@ -78,7 +79,7 @@ func generateIP(mc Machine, e *EtcdClient, r *http.Request) (Machine, int, error
 			bmc  = bmc-ipv4-offset + (1 << bmc-rack-shift * 1 * rack-number) + node-number-of-a-rack
 	*/
 	key := path.Join(e.Prefix, EtcdKeyConfig)
-	resp, err := e.Client.Get(r.Context(), key)
+	resp, err := e.Client.Get(ctx, key)
 	if err != nil {
 		return Machine{}, http.StatusInternalServerError, err
 	}
@@ -196,7 +197,7 @@ func (e *EtcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) 
 	wmcs := make([]Machine, len(rmcs))
 	for i, rmc := range rmcs {
 		status := 0
-		wmcs[i], status, err = generateIP(rmc, e, r)
+		wmcs[i], status, err = generateIP(rmc, e, r.Context())
 		if err != nil {
 			renderError(w, err, status)
 		}
@@ -296,7 +297,7 @@ func (e *EtcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 		}
 
 		status := 0
-		wmcs[i], status, err = generateIP(wmcs[i], e, r)
+		wmcs[i], status, err = generateIP(wmcs[i], e, r.Context())
 		if err != nil {
 			renderError(w, err, status)
 		}
@@ -336,7 +337,7 @@ func (e *EtcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getMachinesQuery(q *Query, r *http.Request) error {
+func getMachinesQuery(q *Query, r *http.Request) {
 	q.Serial = r.URL.Query().Get("serial")
 	q.Product = r.URL.Query().Get("product")
 	q.Datacenter = r.URL.Query().Get("datacenter")
@@ -345,8 +346,7 @@ func getMachinesQuery(q *Query, r *http.Request) error {
 	q.Cluster = r.URL.Query().Get("cluster")
 	q.IPv4 = r.URL.Query().Get("ipv4")
 	q.IPv6 = r.URL.Query().Get("ipv6")
-
-	return nil
+	return
 }
 
 func appendMachinesIfNotExist(mcs []Machine, newmcs []Machine) []Machine {
@@ -379,25 +379,16 @@ func intersectMachines(mcs1 []Machine, mcs2 []Machine) []Machine {
 func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	var q Query
 
-	if err := getMachinesQuery(&q, r); err != nil {
-		renderError(w, err, http.StatusBadRequest)
-		return
-	}
-
+	getMachinesQuery(&q, r)
 	w.Header().Set("Content-Type", "application/json")
 
 	if q.Serial != "" {
-		j, err := GetMachineBySerial(e, r, q.Serial)
+		mc, err := GetMachineBySerial(e, r.Context(), q.Serial)
 		if err != nil {
 			renderError(w, err, http.StatusNotFound)
 			return
 		}
-		var responseBody Machine
-		err = json.Unmarshal(j, &responseBody)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-		}
-		err = renderJSON(w, responseBody, http.StatusOK)
+		err = renderJSON(w, mc, http.StatusOK)
 		if err != nil {
 			renderError(w, err, http.StatusInternalServerError)
 			return
@@ -406,17 +397,12 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if q.IPv4 != "" {
-		j, err := GetMachineByIPv4(e, r, q.IPv4)
+		mc, err := GetMachineByIPv4(e, r.Context(), q.IPv4)
 		if err != nil {
 			renderError(w, err, http.StatusNotFound)
 			return
 		}
-		var responseBody Machine
-		err = json.Unmarshal(j, &responseBody)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-		}
-		err = renderJSON(w, responseBody, http.StatusOK)
+		err = renderJSON(w, mc, http.StatusOK)
 		if err != nil {
 			renderError(w, err, http.StatusInternalServerError)
 			return
@@ -425,17 +411,12 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if q.IPv6 != "" {
-		j, err := GetMachineByIPv6(e, r, q.IPv4)
+		mc, err := GetMachineByIPv6(e, r.Context(), q.IPv4)
 		if err != nil {
 			renderError(w, err, http.StatusNotFound)
 			return
 		}
-		var responseBody Machine
-		err = json.Unmarshal(j, &responseBody)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-		}
-		err = renderJSON(w, responseBody, http.StatusOK)
+		err = renderJSON(w, mc, http.StatusOK)
 		if err != nil {
 			renderError(w, err, http.StatusInternalServerError)
 			return
@@ -457,8 +438,8 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < qelem.NumField(); i++ {
 		qv := qelem.Field(i).Interface().(string)
 
-		if q.Product != "" && MI.Product[qv] != nil {
-			mcs, err := GetMachinesByProduct(e, r, qv)
+		if q.Product != "" && e.MI.Product[qv] != nil {
+			mcs, err := GetMachinesByProduct(e, r.Context(), qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -469,8 +450,8 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if q.Datacenter != "" && MI.Datacenter[qv] != nil {
-			mcs, err := GetMachinesByDatacenter(e, r, qv)
+		if q.Datacenter != "" && e.MI.Datacenter[qv] != nil {
+			mcs, err := GetMachinesByDatacenter(e, r.Context(), qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -481,8 +462,8 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if q.Rack != "" && MI.Rack[qv] != nil {
-			mcs, err := GetMachinesByRack(e, r, qv)
+		if q.Rack != "" && e.MI.Rack[qv] != nil {
+			mcs, err := GetMachinesByRack(e, r.Context(), qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -493,8 +474,8 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if q.Role != "" && MI.Role[qv] != nil {
-			mcs, err := GetMachinesByRole(e, r, qv)
+		if q.Role != "" && e.MI.Role[qv] != nil {
+			mcs, err := GetMachinesByRole(e, r.Context(), qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -505,8 +486,8 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if q.Cluster != "" && MI.Cluster[qv] != nil {
-			mcs, err := GetMachinesByCluster(e, r, qv)
+		if q.Cluster != "" && e.MI.Cluster[qv] != nil {
+			mcs, err := GetMachinesByCluster(e, r.Context(), qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -543,8 +524,8 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 }
 
 // EtcdWatcher launch etcd client session to monitor changes to keys and update index
-func EtcdWatcher(e EtcdConfig) {
-	go func() {
+func EtcdWatcher(e EtcdConfig, mi *MachinesIndex, ctx context.Context) {
+	cmd.Go(func(ctx context.Context) error {
 		cfg := clientv3.Config{
 			Endpoints: e.Servers,
 		}
@@ -555,19 +536,32 @@ func EtcdWatcher(e EtcdConfig) {
 		defer c.Close()
 
 		key := path.Join(e.Prefix, EtcdKeyMachines)
-		rch := c.Watch(context.TODO(), key, clientv3.WithPrefix(), clientv3.WithPrevKV())
-		for wresp := range rch {
-			for _, ev := range wresp.Events {
-				if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
-					UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
-				}
-				if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
-					AddIndex(ev.Kv.Value)
-				}
-				if ev.Type == mvccpb.DELETE {
-					DeleteIndex(ev.PrevKv.Value)
+		for {
+
+			rch := c.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
+			for wresp := range rch {
+				for _, ev := range wresp.Events {
+					if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
+						err := mi.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
+						if err != nil {
+							return err
+						}
+					}
+					if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
+						err := mi.AddIndex(ev.Kv.Value)
+						if err != nil {
+							return err
+						}
+					}
+					if ev.Type == mvccpb.DELETE {
+						err := mi.DeleteIndex(ev.PrevKv.Value)
+						if err != nil {
+							return err
+						}
+					}
 				}
 			}
+			return nil
 		}
-	}()
+	})
 }

@@ -43,10 +43,11 @@ func (c *Config) validate() error {
 	return nil
 }
 
-// EtcdClient is etcd3 client object
+// EtcdClient is etcd3 client object and index
 type EtcdClient struct {
 	Client *clientv3.Client
 	Prefix string
+	MI     MachinesIndex
 }
 
 // EtcdConfig is etcd3 connection options
@@ -67,8 +68,6 @@ const (
 	ErrorInvalidValue = "invalid value"
 	// ErrorValueNotFound is an error message when a target value is not found
 	ErrorValueNotFound = "value not found"
-	// ErrorValueAlreadyExists is an error message when a target value already exists
-	ErrorValueAlreadyExists = "value already exists"
 
 	// ErrorMachinesExist is an error message when /machines key exists in etcd.
 	ErrorMachinesExist = "machines already exist"

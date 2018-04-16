@@ -8,13 +8,7 @@ import (
 	"net/http/httptest"
 	"path"
 	"testing"
-
-	"github.com/coreos/etcd/clientv3"
 )
-
-func deleteEtcdKeys(etcd *clientv3.Client, key string) {
-	etcd.Delete(context.Background(), key, clientv3.WithPrefix())
-}
 
 func postConfig(etcdClient EtcdClient) {
 	config := Config{
@@ -63,12 +57,11 @@ func TestHandlePostMachines(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	etcdClient := EtcdClient{etcd, prefix}
+	mi, _ := Indexing(etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix, mi}
 
 	postConfig(etcdClient)
-	defer deleteEtcdKeys(etcd, path.Join(prefix, EtcdKeyConfig))
 	mcs, resp := postMachines(etcdClient)
-	defer deleteEtcdKeys(etcd, path.Join(prefix, EtcdKeyMachines))
 
 	var savedMachine Machine
 	for i := 0; i < 2; i++ {
@@ -105,17 +98,15 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	etcdClient := EtcdClient{etcd, prefix}
 	etcdConfig := EtcdConfig{[]string{"http://localhost:2379"}, prefix}
+	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	EtcdWatcher(etcdConfig, &mi, ctx)
 
+	etcdClient := EtcdClient{etcd, prefix, mi}
 	postConfig(etcdClient)
-	defer deleteEtcdKeys(etcd, path.Join(prefix, EtcdKeyConfig))
 	mcs, _ := postMachines(etcdClient)
-	Indexing(etcd, prefix)
-	EtcdWatcher(etcdConfig)
-	defer deleteEtcdKeys(etcd, path.Join(prefix, EtcdKeyMachines))
 
-	// Test replying single value
 	querySingleValue := map[int][]string{
 		0: []string{
 			"?serial=1234abcd",
@@ -323,10 +314,6 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		}
 	}
 
-	// Test PUT
-	//testJSON := `[{"serial": "1234abcd", "datacenter": "ny1", "node-number-of-rack": 5 }]`
-
-	//val, _ := json.Marshal(testJSON)
 	val, _ := json.Marshal([]map[string]interface{}{
 		{
 			"serial":              "1234abcd",

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net/http"
 	"strings"
@@ -35,15 +36,19 @@ func main() {
 	}
 	defer c.Close()
 
-	sabakan.Indexing(c, e.Prefix)
+	mi, err := sabakan.Indexing(c, e.Prefix)
+	if err != nil {
+		log.ErrorExit(err)
+	}
 
 	r := mux.NewRouter()
-	etcdClient := &sabakan.EtcdClient{Client: c, Prefix: e.Prefix}
+	etcdClient := &sabakan.EtcdClient{Client: c, Prefix: e.Prefix, MI: mi}
 	sabakan.InitConfig(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 
-	sabakan.EtcdWatcher(e)
+	ctx := context.Background()
+	sabakan.EtcdWatcher(e, &mi, ctx)
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{

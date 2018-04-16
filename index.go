@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
+	"sync"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/cybozu-go/log"
 )
 
 // MachinesIndex is on-memory index of the etcd values
@@ -19,75 +19,61 @@ type MachinesIndex struct {
 	Cluster    map[string][]string
 	IPv4       map[string]string
 	IPv6       map[string]string
+	mux        sync.Mutex
 }
 
-// MI is a variable of type MachinesIndex
-var MI MachinesIndex
+// Indexing is indexing machineIndex
+func Indexing(client *clientv3.Client, prefix string) (MachinesIndex, error) {
+	var mi MachinesIndex
+	mi.Product = map[string][]string{}
+	mi.Datacenter = map[string][]string{}
+	mi.Rack = map[string][]string{}
+	mi.Role = map[string][]string{}
+	mi.Cluster = map[string][]string{}
+	mi.IPv4 = map[string]string{}
+	mi.IPv6 = map[string]string{}
 
-// Indexing is indexing MachineIndex
-func Indexing(client *clientv3.Client, prefix string) {
 	key := path.Join(prefix, EtcdKeyMachines)
-	resp, err := client.Get(context.TODO(), key, clientv3.WithPrefix())
+	resp, err := client.Get(context.Background(), key, clientv3.WithPrefix())
 	if err != nil {
-		log.ErrorExit(err)
+		return mi, err
 	}
 	if resp.Count == 0 {
-		return
+		return mi, nil
 	}
 	for _, m := range resp.Kvs {
-		AddIndex(m.Value)
+		err := mi.AddIndex(m.Value)
+		if err != nil {
+			return mi, err
+		}
 	}
-}
-
-func initMI() {
-	if MI.Product == nil {
-		MI.Product = map[string][]string{}
-	}
-	if MI.Datacenter == nil {
-		MI.Datacenter = map[string][]string{}
-	}
-	if MI.Rack == nil {
-		MI.Rack = map[string][]string{}
-	}
-	if MI.Role == nil {
-		MI.Role = map[string][]string{}
-	}
-	if MI.Cluster == nil {
-		MI.Cluster = map[string][]string{}
-	}
-	if MI.IPv4 == nil {
-		MI.IPv4 = map[string]string{}
-	}
-	if MI.IPv6 == nil {
-		MI.IPv6 = map[string]string{}
-	}
+	return mi, nil
 }
 
 // AddIndex adds new machine into the index
-func AddIndex(val []byte) {
+func (mi *MachinesIndex) AddIndex(val []byte) error {
 	var mc Machine
 	err := json.Unmarshal(val, &mc)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
-	initMI()
 
-	MI.Product[mc.Product] = append(MI.Product[mc.Product], mc.Serial)
-	MI.Datacenter[mc.Datacenter] = append(MI.Datacenter[mc.Datacenter], mc.Serial)
+	mi.Product[mc.Product] = append(mi.Product[mc.Product], mc.Serial)
+	mi.Datacenter[mc.Datacenter] = append(mi.Datacenter[mc.Datacenter], mc.Serial)
 	mcrack := fmt.Sprint(mc.Rack)
-	MI.Rack[mcrack] = append(MI.Rack[mcrack], mc.Serial)
-	MI.Role[mc.Role] = append(MI.Role[mc.Role], mc.Serial)
-	MI.Cluster[mc.Cluster] = append(MI.Cluster[mc.Cluster], mc.Serial)
+	mi.Rack[mcrack] = append(mi.Rack[mcrack], mc.Serial)
+	mi.Role[mc.Role] = append(mi.Role[mc.Role], mc.Serial)
+	mi.Cluster[mc.Cluster] = append(mi.Cluster[mc.Cluster], mc.Serial)
 	for _, ifn := range mc.Network {
 		for k, v := range ifn.(map[string]interface{}) {
 			if k == "ipv4" {
 				for _, ip := range v.([]interface{}) {
-					MI.IPv4[ip.(string)] = mc.Serial
+					mi.IPv4[ip.(string)] = mc.Serial
 				}
 			}
 			if k == "ipv6" {
 				for _, ip := range v.([]interface{}) {
-					MI.IPv6[ip.(string)] = mc.Serial
+					mi.IPv6[ip.(string)] = mc.Serial
 				}
 			}
 		}
@@ -95,15 +81,16 @@ func AddIndex(val []byte) {
 	for k, v := range mc.BMC {
 		if k == "ipv4" {
 			for _, ip := range v.([]interface{}) {
-				MI.IPv4[ip.(string)] = mc.Serial
+				mi.IPv4[ip.(string)] = mc.Serial
 			}
 		}
 		if k == "ipv6" {
 			for _, ip := range v.([]interface{}) {
-				MI.IPv6[ip.(string)] = mc.Serial
+				mi.IPv6[ip.(string)] = mc.Serial
 			}
 		}
 	}
+	return nil
 }
 
 func indexOf(data []string, element string) int {
@@ -116,36 +103,34 @@ func indexOf(data []string, element string) int {
 }
 
 // DeleteIndex deletes a machine from the index
-func DeleteIndex(val []byte) {
+func (mi *MachinesIndex) DeleteIndex(val []byte) error {
 	var mc Machine
 	err := json.Unmarshal(val, &mc)
 	if err != nil {
-		log.ErrorExit(err)
-		return
+		return err
 	}
-	initMI()
 
-	i := indexOf(MI.Product[mc.Product], mc.Serial)
-	MI.Product[mc.Product] = append(MI.Product[mc.Product][:i], MI.Product[mc.Product][i+1:]...)
-	i = indexOf(MI.Datacenter[mc.Datacenter], mc.Serial)
-	MI.Datacenter[mc.Datacenter] = append(MI.Datacenter[mc.Datacenter][:i], MI.Datacenter[mc.Datacenter][i+1:]...)
+	i := indexOf(mi.Product[mc.Product], mc.Serial)
+	mi.Product[mc.Product] = append(mi.Product[mc.Product][:i], mi.Product[mc.Product][i+1:]...)
+	i = indexOf(mi.Datacenter[mc.Datacenter], mc.Serial)
+	mi.Datacenter[mc.Datacenter] = append(mi.Datacenter[mc.Datacenter][:i], mi.Datacenter[mc.Datacenter][i+1:]...)
 	mcrack := fmt.Sprint(mc.Rack)
-	i = indexOf(MI.Rack[mcrack], mc.Serial)
-	MI.Rack[mcrack] = append(MI.Rack[mcrack][:i], MI.Rack[mcrack][i+1:]...)
-	i = indexOf(MI.Role[mc.Role], mc.Serial)
-	MI.Role[mc.Role] = append(MI.Role[mc.Role][:i], MI.Role[mc.Role][i+1:]...)
-	i = indexOf(MI.Cluster[mc.Cluster], mc.Serial)
-	MI.Cluster[mc.Cluster] = append(MI.Cluster[mc.Cluster][:i], MI.Cluster[mc.Cluster][i+1:]...)
+	i = indexOf(mi.Rack[mcrack], mc.Serial)
+	mi.Rack[mcrack] = append(mi.Rack[mcrack][:i], mi.Rack[mcrack][i+1:]...)
+	i = indexOf(mi.Role[mc.Role], mc.Serial)
+	mi.Role[mc.Role] = append(mi.Role[mc.Role][:i], mi.Role[mc.Role][i+1:]...)
+	i = indexOf(mi.Cluster[mc.Cluster], mc.Serial)
+	mi.Cluster[mc.Cluster] = append(mi.Cluster[mc.Cluster][:i], mi.Cluster[mc.Cluster][i+1:]...)
 	for _, ifn := range mc.Network {
 		for k, v := range ifn.(map[string]interface{}) {
 			if k == "ipv4" {
 				for _, ip := range v.([]interface{}) {
-					delete(MI.IPv4, ip.(string))
+					delete(mi.IPv4, ip.(string))
 				}
 			}
 			if k == "ipv6" {
 				for _, ip := range v.([]interface{}) {
-					delete(MI.IPv6, ip.(string))
+					delete(mi.IPv6, ip.(string))
 				}
 			}
 		}
@@ -153,19 +138,27 @@ func DeleteIndex(val []byte) {
 	for k, v := range mc.BMC {
 		if k == "ipv4" {
 			for _, ip := range v.([]interface{}) {
-				delete(MI.IPv4, ip.(string))
+				delete(mi.IPv4, ip.(string))
 			}
 		}
 		if k == "ipv6" {
 			for _, ip := range v.([]interface{}) {
-				delete(MI.IPv6, ip.(string))
+				delete(mi.IPv6, ip.(string))
 			}
 		}
 	}
+	return nil
 }
 
-// UpdateIndex updates target machine on theindex
-func UpdateIndex(pval []byte, nval []byte) {
-	DeleteIndex(pval)
-	AddIndex(nval)
+// UpdateIndex updates target machine on the index
+func (mi *MachinesIndex) UpdateIndex(pval []byte, nval []byte) error {
+	err := mi.DeleteIndex(pval)
+	if err != nil {
+		return err
+	}
+	err = mi.AddIndex(nval)
+	if err != nil {
+		return err
+	}
+	return nil
 }
