@@ -48,7 +48,7 @@ func main() {
 	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 
 	ctx := context.Background()
-	sabakan.EtcdWatcher(e, &mi, ctx)
+	sabakan.EtcdWatcher(ctx, e, &mi)
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{

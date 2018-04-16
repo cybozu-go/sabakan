@@ -69,7 +69,7 @@ func mergeMaps(maps ...map[string]interface{}) map[string]interface{} {
 	return result
 }
 
-func generateIP(mc Machine, e *EtcdClient, ctx context.Context) (Machine, int, error) {
+func generateIP(ctx context.Context, mc Machine, e *EtcdClient) (Machine, int, error) {
 	/*
 		Generate IP addresses by sabakan config
 		Example:
@@ -197,7 +197,7 @@ func (e *EtcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) 
 	wmcs := make([]Machine, len(rmcs))
 	for i, rmc := range rmcs {
 		status := 0
-		wmcs[i], status, err = generateIP(rmc, e, r.Context())
+		wmcs[i], status, err = generateIP(r.Context(), rmc, e)
 		if err != nil {
 			renderError(w, err, status)
 		}
@@ -297,7 +297,7 @@ func (e *EtcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
 		}
 
 		status := 0
-		wmcs[i], status, err = generateIP(wmcs[i], e, r.Context())
+		wmcs[i], status, err = generateIP(r.Context(), wmcs[i], e)
 		if err != nil {
 			renderError(w, err, status)
 		}
@@ -383,7 +383,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if q.Serial != "" {
-		mc, err := GetMachineBySerial(e, r.Context(), q.Serial)
+		mc, err := GetMachineBySerial(r.Context(), e, q.Serial)
 		if err != nil {
 			renderError(w, err, http.StatusNotFound)
 			return
@@ -397,7 +397,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if q.IPv4 != "" {
-		mc, err := GetMachineByIPv4(e, r.Context(), q.IPv4)
+		mc, err := GetMachineByIPv4(r.Context(), e, q.IPv4)
 		if err != nil {
 			renderError(w, err, http.StatusNotFound)
 			return
@@ -411,7 +411,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if q.IPv6 != "" {
-		mc, err := GetMachineByIPv6(e, r.Context(), q.IPv4)
+		mc, err := GetMachineByIPv6(r.Context(), e, q.IPv4)
 		if err != nil {
 			renderError(w, err, http.StatusNotFound)
 			return
@@ -439,7 +439,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		qv := qelem.Field(i).Interface().(string)
 
 		if q.Product != "" && e.MI.Product[qv] != nil {
-			mcs, err := GetMachinesByProduct(e, r.Context(), qv)
+			mcs, err := GetMachinesByProduct(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -451,7 +451,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if q.Datacenter != "" && e.MI.Datacenter[qv] != nil {
-			mcs, err := GetMachinesByDatacenter(e, r.Context(), qv)
+			mcs, err := GetMachinesByDatacenter(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -463,7 +463,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if q.Rack != "" && e.MI.Rack[qv] != nil {
-			mcs, err := GetMachinesByRack(e, r.Context(), qv)
+			mcs, err := GetMachinesByRack(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -475,7 +475,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if q.Role != "" && e.MI.Role[qv] != nil {
-			mcs, err := GetMachinesByRole(e, r.Context(), qv)
+			mcs, err := GetMachinesByRole(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -487,7 +487,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if q.Cluster != "" && e.MI.Cluster[qv] != nil {
-			mcs, err := GetMachinesByCluster(e, r.Context(), qv)
+			mcs, err := GetMachinesByCluster(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
 				return
@@ -524,7 +524,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 }
 
 // EtcdWatcher launch etcd client session to monitor changes to keys and update index
-func EtcdWatcher(e EtcdConfig, mi *MachinesIndex, ctx context.Context) {
+func EtcdWatcher(ctx context.Context, e EtcdConfig, mi *MachinesIndex) {
 	cmd.Go(func(ctx context.Context) error {
 		cfg := clientv3.Config{
 			Endpoints: e.Servers,

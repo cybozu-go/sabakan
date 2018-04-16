@@ -101,7 +101,7 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 	etcdConfig := EtcdConfig{[]string{"http://localhost:2379"}, prefix}
 	mi, _ := Indexing(etcd, prefix)
 	ctx := context.Background()
-	EtcdWatcher(etcdConfig, &mi, ctx)
+	EtcdWatcher(ctx, etcdConfig, &mi)
 
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	postConfig(etcdClient)
