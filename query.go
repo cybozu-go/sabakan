@@ -1,134 +1,91 @@
 package sabakan
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"path"
+
+	"github.com/coreos/etcd/clientv3"
 )
 
-// GetMachineBySerial returns a value of the etcd key by serial
-func GetMachineBySerial(e *EtcdClient, r *http.Request, s string) ([]byte, error) {
-	key := path.Join(e.Prefix, EtcdKeyMachines, s)
-	resp, err := e.Client.Get(r.Context(), key)
+// GetMachinesBySerial returns values of the etcd keys by serial
+func GetMachinesBySerial(e *EtcdClient, ctx context.Context, ss []string) ([]Machine, error) {
+	var mcs []Machine
+	key := path.Join(e.Prefix, EtcdKeyMachines)
+	resp, err := e.Client.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return nil, err
 	}
-	if resp.Count == 0 {
-		return nil, fmt.Errorf("serial " + s + " " + ErrorMachineNotExists)
+	for _, s := range ss {
+		var mc Machine
+		for _, m := range resp.Kvs {
+			_, k := path.Split(string(m.Key))
+			if k == s {
+				err = json.Unmarshal(m.Value, &mc)
+				if err != nil {
+					e.MI.mux.Unlock()
+					return nil, err
+				}
+				mcs = append(mcs, mc)
+				break
+			}
+		}
 	}
-	return resp.Kvs[0].Value, nil
+	if len(mcs) == 0 {
+		return nil, fmt.Errorf(ErrorMachineNotExists)
+	}
+	return mcs, nil
+}
+
+// GetMachineBySerial returns a value of the etcd key by serial
+func GetMachineBySerial(e *EtcdClient, ctx context.Context, q string) (Machine, error) {
+	mcs, err := GetMachinesBySerial(e, ctx, []string{q})
+	if err != nil {
+		return Machine{}, err
+	}
+	return mcs[0], nil
 }
 
 // GetMachineByIPv4 returns type Machine from the etcd and serial by IPv4
-func GetMachineByIPv4(e *EtcdClient, r *http.Request, q string) ([]byte, error) {
-	mc, err := GetMachineBySerial(e, r, MI.IPv4[q])
+func GetMachineByIPv4(e *EtcdClient, ctx context.Context, q string) (Machine, error) {
+	mcs, err := GetMachinesBySerial(e, ctx, []string{e.MI.IPv4[q]})
 	if err != nil {
-		return nil, err
+		return Machine{}, err
 	}
-	return mc, nil
+	return mcs[0], err
 }
 
 // GetMachineByIPv6 returns type Machine from the etcd and serial by IPv6
-func GetMachineByIPv6(e *EtcdClient, r *http.Request, q string) ([]byte, error) {
-	mc, err := GetMachineBySerial(e, r, MI.IPv6[q])
+func GetMachineByIPv6(e *EtcdClient, ctx context.Context, q string) (Machine, error) {
+	mcs, err := GetMachinesBySerial(e, ctx, []string{e.MI.IPv6[q]})
 	if err != nil {
-		return nil, err
+		return Machine{}, err
 	}
-	return mc, nil
+	return mcs[0], err
 }
 
 // GetMachinesByProduct returns type []Machine from the etcd and serial by product
-func GetMachinesByProduct(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Product[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
+func GetMachinesByProduct(e *EtcdClient, ctx context.Context, q string) ([]Machine, error) {
+	return GetMachinesBySerial(e, ctx, e.MI.Product[q])
 }
 
 // GetMachinesByDatacenter returns type []Machine from the etcd and serial by datacenter
-func GetMachinesByDatacenter(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Datacenter[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
+func GetMachinesByDatacenter(e *EtcdClient, ctx context.Context, q string) ([]Machine, error) {
+	return GetMachinesBySerial(e, ctx, e.MI.Datacenter[q])
 }
 
 // GetMachinesByRack returns type []Machine from the etcd and serial by rack
-func GetMachinesByRack(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Rack[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
+func GetMachinesByRack(e *EtcdClient, ctx context.Context, q string) ([]Machine, error) {
+	return GetMachinesBySerial(e, ctx, e.MI.Rack[q])
 }
 
 // GetMachinesByRole returns type []Machine from the etcd and serial by role
-func GetMachinesByRole(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Role[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
+func GetMachinesByRole(e *EtcdClient, ctx context.Context, q string) ([]Machine, error) {
+	return GetMachinesBySerial(e, ctx, e.MI.Role[q])
 }
 
 // GetMachinesByCluster returns type []Machine from the etcd and serial by cluster
-func GetMachinesByCluster(e *EtcdClient, r *http.Request, q string) ([]Machine, error) {
-	var mcs []Machine
-	for _, mc := range MI.Cluster[q] {
-		j, err := GetMachineBySerial(e, r, mc)
-		if err != nil {
-			return nil, err
-		}
-
-		var rmc Machine
-		err = json.Unmarshal(j, &rmc)
-		if err != nil {
-			return nil, err
-		}
-		mcs = append(mcs, rmc)
-	}
-	return mcs, nil
+func GetMachinesByCluster(e *EtcdClient, ctx context.Context, q string) ([]Machine, error) {
+	return GetMachinesBySerial(e, ctx, e.MI.Cluster[q])
 }
