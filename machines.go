@@ -435,6 +435,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	e.MI.Wg.Wait()
 	for i := 0; i < qelem.NumField(); i++ {
 		qv := qelem.Field(i).Interface().(string)
 
@@ -537,31 +538,34 @@ func EtcdWatcher(ctx context.Context, e EtcdConfig, mi *MachinesIndex) {
 
 		key := path.Join(e.Prefix, EtcdKeyMachines)
 		for {
-
 			rch := c.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
 			for wresp := range rch {
 				for _, ev := range wresp.Events {
+					mi.Wg.Add(1)
 					if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
 						err := mi.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
+						mi.Wg.Done()
 						if err != nil {
 							return err
 						}
 					}
 					if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
 						err := mi.AddIndex(ev.Kv.Value)
+						mi.Wg.Done()
 						if err != nil {
 							return err
 						}
 					}
 					if ev.Type == mvccpb.DELETE {
 						err := mi.DeleteIndex(ev.PrevKv.Value)
+						mi.Wg.Done()
 						if err != nil {
 							return err
 						}
 					}
 				}
 			}
-			return nil
 		}
+		return nil
 	})
 }

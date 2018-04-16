@@ -187,6 +187,7 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 			q := querySingleValueArray[i][n]
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
+			mi.Wg.Wait()
 			etcdClient.handleGetMachines(w, r)
 
 			resp := w.Result()
@@ -230,6 +231,7 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		q := queryMultipleValuesArray[n]
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
+		mi.Wg.Wait()
 		etcdClient.handleGetMachines(w, r)
 
 		resp := w.Result()
@@ -274,6 +276,7 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		q := queryNotFound[n]
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
+		mi.Wg.Wait()
 		etcdClient.handleGetMachines(w, r)
 
 		resp := w.Result()
@@ -301,6 +304,7 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		q := queryEmptyArray[n]
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
+		mi.Wg.Wait()
 		etcdClient.handleGetMachines(w, r)
 
 		resp := w.Result()
@@ -324,11 +328,13 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PUT", "localhost:8888/api/v1/machines", bytes.NewBuffer(val))
+	mi.Wg.Wait()
 	etcdClient.handlePutMachines(w, r)
 
 	q := "?serial=1234abcd"
 	w = httptest.NewRecorder()
 	r = httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
+	mi.Wg.Wait()
 	etcdClient.handleGetMachines(w, r)
 
 	var respMachine Machine

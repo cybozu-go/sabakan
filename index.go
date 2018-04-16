@@ -19,7 +19,7 @@ type MachinesIndex struct {
 	Cluster    map[string][]string
 	IPv4       map[string]string
 	IPv6       map[string]string
-	mux        sync.Mutex
+	Wg         sync.WaitGroup
 }
 
 // Indexing is indexing machineIndex

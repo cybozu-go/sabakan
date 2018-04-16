@@ -24,7 +24,6 @@ func GetMachinesBySerial(ctx context.Context, e *EtcdClient, ss []string) ([]Mac
 			if k == s {
 				err = json.Unmarshal(m.Value, &mc)
 				if err != nil {
-					e.MI.mux.Unlock()
 					return nil, err
 				}
 				mcs = append(mcs, mc)
