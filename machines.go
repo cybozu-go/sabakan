@@ -20,15 +20,27 @@ import (
 
 // Machine is a machine struct
 type Machine struct {
-	Serial           string                 `json:"serial"`
-	Product          string                 `json:"product"`
-	Datacenter       string                 `json:"datacenter"`
-	Rack             uint32                 `json:"rack"`
-	NodeNumberOfRack uint32                 `json:"node-number-of-rack"`
-	Role             string                 `json:"role"`
-	Cluster          string                 `json:"cluster"`
-	Network          map[string]interface{} `json:"network"`
-	BMC              map[string]interface{} `json:"bmc"`
+	Serial           string                    `json:"serial"`
+	Product          string                    `json:"product"`
+	Datacenter       string                    `json:"datacenter"`
+	Rack             uint32                    `json:"rack"`
+	NodeNumberOfRack uint32                    `json:"node-number-of-rack"`
+	Role             string                    `json:"role"`
+	Cluster          string                    `json:"cluster"`
+	Network          map[string]MachineNetwork `json:"network"`
+	BMC              MachineBMC                `json:"bmc"`
+}
+
+// MachineNetwork is a network interface struct for Machine
+type MachineNetwork struct {
+	IPv4 []string `json:"ipv4"`
+	IPv6 []string `json:"ipv6"`
+	Mac  string   `json:"mac"`
+}
+
+// MachineBMC is a bmc interface struct for Machine
+type MachineBMC struct {
+	IPv4 []string `json:"ipv4"`
 }
 
 // Query is an URL query
@@ -96,26 +108,23 @@ func generateIP(ctx context.Context, mc Machine, e *EtcdClient) (Machine, int, e
 		return Machine{}, http.StatusBadRequest, err
 	}
 
+	mc.Network = map[string]MachineNetwork{}
 	for i := 0; i < int(sc.NodeIPPerNode); i++ {
 		uintip := offsetToInt(sc.NodeIPv4Offset) + (uint32(1) << uint32(sc.NodeRackShift) * uint32(i+1) * mc.Rack) + mc.NodeNumberOfRack
 		ip := netutil.IntToIP4(uintip)
 		ifname := fmt.Sprintf("net%d", i)
-		nif := map[string]interface{}{
-			ifname: map[string]interface{}{
-				"ipv4": []string{ip.String()},
-				"ipv6": []string{},
-				"mac":  "",
-			},
+		mc.Network[ifname] = MachineNetwork{
+			IPv4: []string{ip.String()},
+			IPv6: []string{},
+			Mac:  "",
 		}
-		mc.Network = mergeMaps(mc.Network, nif)
 	}
 	for i := 0; i < int(sc.BMCIPPerNode); i++ {
 		uintip := offsetToInt(sc.BMCIPv4Offset) + (uint32(1) << uint32(sc.BMCRackShift) * uint32(i+1) * mc.Rack) + mc.NodeNumberOfRack
 		ip := netutil.IntToIP4(uintip)
-		nif := map[string]interface{}{
-			"ipv4": []string{ip.String()},
+		mc.BMC = MachineBMC{
+			IPv4: []string{ip.String()},
 		}
-		mc.BMC = mergeMaps(mc.BMC, nif)
 	}
 
 	return Machine{
@@ -169,14 +178,6 @@ func (e *EtcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) 
 		}
 		if mc.Cluster == "" {
 			renderError(w, fmt.Errorf("cluster: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
-			return
-		}
-		if mc.Network != nil {
-			renderError(w, fmt.Errorf("network: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
-			return
-		}
-		if mc.BMC != nil {
-			renderError(w, fmt.Errorf("bmc: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
 			return
 		}
 	}

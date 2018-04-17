@@ -67,30 +67,15 @@ func (mi *MachinesIndex) AddIndex(val []byte) error {
 	mi.Role[mc.Role] = append(mi.Role[mc.Role], mc.Serial)
 	mi.Cluster[mc.Cluster] = append(mi.Cluster[mc.Cluster], mc.Serial)
 	for _, ifn := range mc.Network {
-		for k, v := range ifn.(map[string]interface{}) {
-			if k == "ipv4" {
-				for _, ip := range v.([]interface{}) {
-					mi.IPv4[ip.(string)] = mc.Serial
-				}
-			}
-			if k == "ipv6" {
-				for _, ip := range v.([]interface{}) {
-					mi.IPv6[ip.(string)] = mc.Serial
-				}
-			}
+		for _, v := range ifn.IPv4 {
+			mi.IPv4[v] = mc.Serial
+		}
+		for _, v := range ifn.IPv6 {
+			mi.IPv6[v] = mc.Serial
 		}
 	}
-	for k, v := range mc.BMC {
-		if k == "ipv4" {
-			for _, ip := range v.([]interface{}) {
-				mi.IPv4[ip.(string)] = mc.Serial
-			}
-		}
-		if k == "ipv6" {
-			for _, ip := range v.([]interface{}) {
-				mi.IPv6[ip.(string)] = mc.Serial
-			}
-		}
+	for _, v := range mc.BMC.IPv4 {
+		mi.IPv4[v] = mc.Serial
 	}
 	mi.Wg.Done()
 	return nil
@@ -127,30 +112,15 @@ func (mi *MachinesIndex) DeleteIndex(val []byte) error {
 	i = indexOf(mi.Cluster[mc.Cluster], mc.Serial)
 	mi.Cluster[mc.Cluster] = append(mi.Cluster[mc.Cluster][:i], mi.Cluster[mc.Cluster][i+1:]...)
 	for _, ifn := range mc.Network {
-		for k, v := range ifn.(map[string]interface{}) {
-			if k == "ipv4" {
-				for _, ip := range v.([]interface{}) {
-					delete(mi.IPv4, ip.(string))
-				}
-			}
-			if k == "ipv6" {
-				for _, ip := range v.([]interface{}) {
-					delete(mi.IPv6, ip.(string))
-				}
-			}
+		for _, v := range ifn.IPv4 {
+			mi.IPv4[v] = ""
+		}
+		for _, v := range ifn.IPv6 {
+			mi.IPv4[v] = ""
 		}
 	}
-	for k, v := range mc.BMC {
-		if k == "ipv4" {
-			for _, ip := range v.([]interface{}) {
-				delete(mi.IPv4, ip.(string))
-			}
-		}
-		if k == "ipv6" {
-			for _, ip := range v.([]interface{}) {
-				delete(mi.IPv6, ip.(string))
-			}
-		}
+	for _, v := range mc.BMC.IPv4 {
+		mi.IPv4[v] = ""
 	}
 	mi.Wg.Done()
 	return nil
