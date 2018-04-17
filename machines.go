@@ -529,7 +529,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 }
 
 // EtcdWatcher launch etcd client session to monitor changes to keys and update index
-func EtcdWatcher(ctx context.Context, e EtcdConfig, mi *machinesIndex) error {
+func EtcdWatcher(ctx context.Context, e EtcdConfig, mi *MachinesIndex) error {
 	cfg := clientv3.Config{
 		Endpoints: e.Servers,
 	}
