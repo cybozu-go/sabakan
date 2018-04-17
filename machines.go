@@ -423,15 +423,15 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	e.MI.mux.Lock()
+	mi.mux.Lock()
 	for i := 0; i < qelem.NumField(); i++ {
 		qv := qelem.Field(i).Interface().(string)
 
-		if q.Product != "" && e.MI.Product[qv] != nil {
+		if q.Product != "" && mi.Product[qv] != nil {
 			mcs, err := GetMachinesByProduct(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
-				e.MI.mux.Unlock()
+				mi.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -440,11 +440,11 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if q.Datacenter != "" && e.MI.Datacenter[qv] != nil {
+		if q.Datacenter != "" && mi.Datacenter[qv] != nil {
 			mcs, err := GetMachinesByDatacenter(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
-				e.MI.mux.Unlock()
+				mi.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -453,11 +453,11 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if q.Rack != "" && e.MI.Rack[qv] != nil {
+		if q.Rack != "" && mi.Rack[qv] != nil {
 			mcs, err := GetMachinesByRack(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
-				e.MI.mux.Unlock()
+				mi.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -466,11 +466,11 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if q.Role != "" && e.MI.Role[qv] != nil {
+		if q.Role != "" && mi.Role[qv] != nil {
 			mcs, err := GetMachinesByRole(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
-				e.MI.mux.Unlock()
+				mi.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -479,11 +479,11 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if q.Cluster != "" && e.MI.Cluster[qv] != nil {
+		if q.Cluster != "" && mi.Cluster[qv] != nil {
 			mcs, err := GetMachinesByCluster(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
-				e.MI.mux.Unlock()
+				mi.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -492,7 +492,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 	}
-	e.MI.mux.Unlock()
+	mi.mux.Unlock()
 
 	result := make([]Machine, 0)
 	if queryCount > 1 && queryCount == len(resultByQuery) {
@@ -519,7 +519,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 }
 
 // EtcdWatcher launch etcd client session to monitor changes to keys and update index
-func EtcdWatcher(ctx context.Context, e EtcdConfig, mi *MachinesIndex) error {
+func EtcdWatcher(ctx context.Context, e EtcdConfig) error {
 	cfg := clientv3.Config{
 		Endpoints: e.Servers,
 	}

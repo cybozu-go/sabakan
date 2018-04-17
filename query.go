@@ -48,7 +48,7 @@ func GetMachineBySerial(ctx context.Context, e *EtcdClient, q string) (Machine, 
 
 // GetMachineByIPv4 returns type Machine from the etcd and serial by IPv4
 func GetMachineByIPv4(ctx context.Context, e *EtcdClient, q string) (Machine, error) {
-	mcs, err := GetMachinesBySerial(ctx, e, []string{e.MI.IPv4[q]})
+	mcs, err := GetMachinesBySerial(ctx, e, []string{mi.IPv4[q]})
 	if err != nil {
 		return Machine{}, err
 	}
@@ -57,7 +57,7 @@ func GetMachineByIPv4(ctx context.Context, e *EtcdClient, q string) (Machine, er
 
 // GetMachineByIPv6 returns type Machine from the etcd and serial by IPv6
 func GetMachineByIPv6(ctx context.Context, e *EtcdClient, q string) (Machine, error) {
-	mcs, err := GetMachinesBySerial(ctx, e, []string{e.MI.IPv6[q]})
+	mcs, err := GetMachinesBySerial(ctx, e, []string{mi.IPv6[q]})
 	if err != nil {
 		return Machine{}, err
 	}
@@ -66,25 +66,25 @@ func GetMachineByIPv6(ctx context.Context, e *EtcdClient, q string) (Machine, er
 
 // GetMachinesByProduct returns type []Machine from the etcd and serial by product
 func GetMachinesByProduct(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, e.MI.Product[q])
+	return GetMachinesBySerial(ctx, e, mi.Product[q])
 }
 
 // GetMachinesByDatacenter returns type []Machine from the etcd and serial by datacenter
 func GetMachinesByDatacenter(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, e.MI.Datacenter[q])
+	return GetMachinesBySerial(ctx, e, mi.Datacenter[q])
 }
 
 // GetMachinesByRack returns type []Machine from the etcd and serial by rack
 func GetMachinesByRack(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, e.MI.Rack[q])
+	return GetMachinesBySerial(ctx, e, mi.Rack[q])
 }
 
 // GetMachinesByRole returns type []Machine from the etcd and serial by role
 func GetMachinesByRole(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, e.MI.Role[q])
+	return GetMachinesBySerial(ctx, e, mi.Role[q])
 }
 
 // GetMachinesByCluster returns type []Machine from the etcd and serial by cluster
 func GetMachinesByCluster(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, e.MI.Cluster[q])
+	return GetMachinesBySerial(ctx, e, mi.Cluster[q])
 }

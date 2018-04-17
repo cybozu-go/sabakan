@@ -10,8 +10,8 @@ import (
 	"github.com/coreos/etcd/clientv3"
 )
 
-// MachinesIndex is on-memory index of the etcd values
-type MachinesIndex struct {
+// machinesIndex is on-memory index of the etcd values
+type machinesIndex struct {
 	Product    map[string][]string
 	Datacenter map[string][]string
 	Rack       map[string][]string
@@ -22,9 +22,12 @@ type MachinesIndex struct {
 	mux        *sync.Mutex
 }
 
+var (
+	mi machinesIndex
+)
+
 // Indexing is indexing MachineIndex
-func Indexing(ctx context.Context, client *clientv3.Client, prefix string) (MachinesIndex, error) {
-	var mi MachinesIndex
+func Indexing(ctx context.Context, client *clientv3.Client, prefix string) error {
 	mi.Product = map[string][]string{}
 	mi.Datacenter = map[string][]string{}
 	mi.Rack = map[string][]string{}
@@ -37,22 +40,22 @@ func Indexing(ctx context.Context, client *clientv3.Client, prefix string) (Mach
 	key := path.Join(prefix, EtcdKeyMachines)
 	resp, err := client.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		return mi, err
+		return err
 	}
 	if resp.Count == 0 {
-		return mi, nil
+		return nil
 	}
 	for _, m := range resp.Kvs {
 		err := mi.AddIndex(m.Value)
 		if err != nil {
-			return mi, err
+			return err
 		}
 	}
-	return mi, nil
+	return nil
 }
 
 // AddIndex adds new machine into the index
-func (mi *MachinesIndex) AddIndex(val []byte) error {
+func (mi *machinesIndex) AddIndex(val []byte) error {
 	var mc Machine
 	err := json.Unmarshal(val, &mc)
 	if err != nil {
@@ -91,7 +94,7 @@ func indexOf(data []string, element string) int {
 }
 
 // DeleteIndex deletes a machine from the index
-func (mi *MachinesIndex) DeleteIndex(val []byte) error {
+func (mi *machinesIndex) DeleteIndex(val []byte) error {
 	var mc Machine
 	err := json.Unmarshal(val, &mc)
 	if err != nil {
@@ -126,7 +129,7 @@ func (mi *MachinesIndex) DeleteIndex(val []byte) error {
 }
 
 // UpdateIndex updates target machine on the index
-func (mi *MachinesIndex) UpdateIndex(pval []byte, nval []byte) error {
+func (mi *machinesIndex) UpdateIndex(pval []byte, nval []byte) error {
 	err := mi.DeleteIndex(pval)
 	if err != nil {
 		return err

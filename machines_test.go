@@ -58,8 +58,8 @@ func TestHandlePostMachines(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 
 	PostConfig(etcdClient)
 	mcs, resp := PostMachines(etcdClient)
@@ -100,9 +100,9 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
+	Indexing(ctx, etcd, prefix)
 
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 	for i := 0; i < 2; i++ {

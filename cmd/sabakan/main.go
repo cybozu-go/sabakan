@@ -37,19 +37,19 @@ func main() {
 	defer c.Close()
 
 	ctx := context.Background()
-	mi, err := sabakan.Indexing(ctx, c, e.Prefix)
+	err = sabakan.Indexing(ctx, c, e.Prefix)
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
 	r := mux.NewRouter()
-	etcdClient := &sabakan.EtcdClient{Client: c, Prefix: e.Prefix, MI: mi}
+	etcdClient := &sabakan.EtcdClient{Client: c, Prefix: e.Prefix}
 	sabakan.InitConfig(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 
 	cmd.Go(func(ctx context.Context) error {
-		return sabakan.EtcdWatcher(ctx, e, &mi)
+		return sabakan.EtcdWatcher(ctx, e)
 	})
 
 	s := &cmd.HTTPServer{

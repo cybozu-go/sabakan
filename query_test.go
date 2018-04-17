@@ -11,8 +11,8 @@ func TestGetMachinesBySerial(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
@@ -35,8 +35,8 @@ func TestGetMachineBySerial(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
@@ -59,8 +59,8 @@ func TestGetMachineByIPv4(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
@@ -98,8 +98,8 @@ func TestGetMachinesByProduct(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
@@ -133,8 +133,8 @@ func TestGetMachinesByDatacenter(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
@@ -168,8 +168,8 @@ func TestGetMachinesByRack(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
@@ -203,8 +203,8 @@ func TestGetMachinesByRole(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
@@ -238,8 +238,8 @@ func TestGetMachinesByCluster(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 

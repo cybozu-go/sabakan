@@ -47,7 +47,6 @@ func (c *Config) validate() error {
 type EtcdClient struct {
 	Client *clientv3.Client
 	Prefix string
-	MI     MachinesIndex
 }
 
 // EtcdConfig is etcd3 connection options

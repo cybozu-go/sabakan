@@ -12,7 +12,7 @@ func TestIndexing(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	_, err := Indexing(ctx, etcd, prefix)
+	err := Indexing(ctx, etcd, prefix)
 	if err != nil {
 		t.Fatal("Failed to create index")
 	}
@@ -23,8 +23,8 @@ func TestAddIndex(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
@@ -42,8 +42,8 @@ func TestDeleteIndex(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
@@ -66,8 +66,8 @@ func TestUpdateIndex(t *testing.T) {
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
 	ctx := context.Background()
-	mi, _ := Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix, mi}
+	Indexing(ctx, etcd, prefix)
+	etcdClient := EtcdClient{etcd, prefix}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
 
