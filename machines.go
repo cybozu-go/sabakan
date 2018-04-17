@@ -540,27 +540,25 @@ func EtcdWatcher(ctx context.Context, e EtcdConfig, mi *MachinesIndex) error {
 	defer c.Close()
 
 	key := path.Join(e.Prefix, EtcdKeyMachines)
-	for {
-		rch := c.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
-		for wresp := range rch {
-			for _, ev := range wresp.Events {
-				if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
-					err := mi.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
-					if err != nil {
-						return err
-					}
+	rch := c.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
+	for wresp := range rch {
+		for _, ev := range wresp.Events {
+			if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
+				err := mi.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
+				if err != nil {
+					return err
 				}
-				if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
-					err := mi.AddIndex(ev.Kv.Value)
-					if err != nil {
-						return err
-					}
+			}
+			if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
+				err := mi.AddIndex(ev.Kv.Value)
+				if err != nil {
+					return err
 				}
-				if ev.Type == mvccpb.DELETE {
-					err := mi.DeleteIndex(ev.PrevKv.Value)
-					if err != nil {
-						return err
-					}
+			}
+			if ev.Type == mvccpb.DELETE {
+				err := mi.DeleteIndex(ev.PrevKv.Value)
+				if err != nil {
+					return err
 				}
 			}
 		}

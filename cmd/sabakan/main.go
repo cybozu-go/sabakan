@@ -49,8 +49,7 @@ func main() {
 	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 
 	cmd.Go(func(ctx context.Context) error {
-		err := sabakan.EtcdWatcher(ctx, e, &mi)
-		return err
+		return sabakan.EtcdWatcher(ctx, e, &mi)
 	})
 
 	s := &cmd.HTTPServer{
