@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func postConfig(etcdClient EtcdClient) {
+func PostConfig(etcdClient EtcdClient) {
 	config := Config{
 		NodeIPv4Offset: "10.0.0.0/16",
 		NodeRackShift:  4,
@@ -25,7 +25,7 @@ func postConfig(etcdClient EtcdClient) {
 	etcdClient.handlePostConfig(w, r)
 }
 
-func postMachines(etcdClient EtcdClient) ([]Machine, *http.Response) {
+func PostMachines(etcdClient EtcdClient) ([]Machine, *http.Response) {
 	mcs := make([]Machine, 2)
 	mcs[0] = Machine{
 		Serial:           "1234abcd",
@@ -60,8 +60,8 @@ func TestHandlePostMachines(t *testing.T) {
 	mi, _ := Indexing(etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 
-	postConfig(etcdClient)
-	mcs, resp := postMachines(etcdClient)
+	PostConfig(etcdClient)
+	mcs, resp := PostMachines(etcdClient)
 
 	var savedMachine Machine
 	for i := 0; i < 2; i++ {
@@ -98,14 +98,18 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	etcdConfig := EtcdConfig{[]string{"http://localhost:2379"}, prefix}
 	mi, _ := Indexing(etcd, prefix)
-	ctx := context.Background()
-	EtcdWatcher(ctx, etcdConfig, &mi)
 
 	etcdClient := EtcdClient{etcd, prefix, mi}
-	postConfig(etcdClient)
-	mcs, _ := postMachines(etcdClient)
+	PostConfig(etcdClient)
+	mcs, _ := PostMachines(etcdClient)
+	for i := 0; i < 2; i++ {
+		etcdResp, _ := etcd.Get(context.Background(), path.Join(prefix, EtcdKeyMachines, mcs[i].Serial))
+		err := mi.AddIndex(etcdResp.Kvs[0].Value)
+		if err != nil {
+			t.Fatal("Failed to add index, ", err.Error())
+		}
+	}
 
 	querySingleValue := map[int][]string{
 		0: []string{
@@ -187,7 +191,7 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 			q := querySingleValueArray[i][n]
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
-			mi.Wg.Wait()
+
 			etcdClient.handleGetMachines(w, r)
 
 			resp := w.Result()
@@ -231,7 +235,7 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		q := queryMultipleValuesArray[n]
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
-		mi.Wg.Wait()
+
 		etcdClient.handleGetMachines(w, r)
 
 		resp := w.Result()
@@ -276,7 +280,7 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		q := queryNotFound[n]
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
-		mi.Wg.Wait()
+
 		etcdClient.handleGetMachines(w, r)
 
 		resp := w.Result()
@@ -304,7 +308,7 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		q := queryEmptyArray[n]
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
-		mi.Wg.Wait()
+
 		etcdClient.handleGetMachines(w, r)
 
 		resp := w.Result()
@@ -328,13 +332,13 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PUT", "localhost:8888/api/v1/machines", bytes.NewBuffer(val))
-	mi.Wg.Wait()
+
 	etcdClient.handlePutMachines(w, r)
 
 	q := "?serial=1234abcd"
 	w = httptest.NewRecorder()
 	r = httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
-	mi.Wg.Wait()
+
 	etcdClient.handleGetMachines(w, r)
 
 	var respMachine Machine
