@@ -57,6 +57,8 @@ func (mi *MachinesIndex) AddIndex(val []byte) error {
 	if err != nil {
 		return err
 	}
+	mi.Wg.Wait()
+	mi.Wg.Add(1)
 
 	mi.Product[mc.Product] = append(mi.Product[mc.Product], mc.Serial)
 	mi.Datacenter[mc.Datacenter] = append(mi.Datacenter[mc.Datacenter], mc.Serial)
@@ -90,6 +92,7 @@ func (mi *MachinesIndex) AddIndex(val []byte) error {
 			}
 		}
 	}
+	mi.Wg.Done()
 	return nil
 }
 
@@ -109,6 +112,8 @@ func (mi *MachinesIndex) DeleteIndex(val []byte) error {
 	if err != nil {
 		return err
 	}
+	mi.Wg.Wait()
+	mi.Wg.Add(1)
 
 	i := indexOf(mi.Product[mc.Product], mc.Serial)
 	mi.Product[mc.Product] = append(mi.Product[mc.Product][:i], mi.Product[mc.Product][i+1:]...)
@@ -147,6 +152,7 @@ func (mi *MachinesIndex) DeleteIndex(val []byte) error {
 			}
 		}
 	}
+	mi.Wg.Done()
 	return nil
 }
 
