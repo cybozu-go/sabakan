@@ -69,16 +69,6 @@ func offsetToInt(offset string) uint32 {
 	return netutil.IP4ToInt(ip)
 }
 
-func mergeMaps(maps ...map[string]interface{}) map[string]interface{} {
-	result := make(map[string]interface{})
-	for _, m := range maps {
-		for k, v := range m {
-			result[k] = v
-		}
-	}
-	return result
-}
-
 func generateIP(ctx context.Context, mc Machine, e *EtcdClient) (Machine, int, error) {
 	/*
 		Generate IP addresses by sabakan config
