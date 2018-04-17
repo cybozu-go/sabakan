@@ -19,7 +19,7 @@ type MachinesIndex struct {
 	Cluster    map[string][]string
 	IPv4       map[string]string
 	IPv6       map[string]string
-	mux        sync.Mutex
+	mux        *sync.Mutex
 }
 
 // Indexing is indexing MachineIndex
@@ -32,6 +32,7 @@ func Indexing(ctx context.Context, client *clientv3.Client, prefix string) (Mach
 	mi.Cluster = map[string][]string{}
 	mi.IPv4 = map[string]string{}
 	mi.IPv6 = map[string]string{}
+	mi.mux = &sync.Mutex{}
 
 	key := path.Join(prefix, EtcdKeyMachines)
 	resp, err := client.Get(ctx, key, clientv3.WithPrefix())
