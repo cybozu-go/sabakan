@@ -12,8 +12,6 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/coreos/etcd/mvcc/mvccpb"
-	"github.com/cybozu-go/cmd"
-	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/netutil"
 	"github.com/gorilla/mux"
 )
@@ -347,7 +345,6 @@ func getMachinesQuery(q *Query, r *http.Request) {
 	q.Cluster = r.URL.Query().Get("cluster")
 	q.IPv4 = r.URL.Query().Get("ipv4")
 	q.IPv6 = r.URL.Query().Get("ipv6")
-	return
 }
 
 func appendMachinesIfNotExist(mcs []Machine, newmcs []Machine) []Machine {
@@ -436,8 +433,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	e.MI.Wg.Wait()
-	e.MI.Wg.Add(1)
+	e.MI.mux.Lock()
 	for i := 0; i < qelem.NumField(); i++ {
 		qv := qelem.Field(i).Interface().(string)
 
@@ -445,6 +441,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			mcs, err := GetMachinesByProduct(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
+				e.MI.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -457,6 +454,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			mcs, err := GetMachinesByDatacenter(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
+				e.MI.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -469,6 +467,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			mcs, err := GetMachinesByRack(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
+				e.MI.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -481,6 +480,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			mcs, err := GetMachinesByRole(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
+				e.MI.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -493,6 +493,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			mcs, err := GetMachinesByCluster(r.Context(), e, qv)
 			if err != nil {
 				renderError(w, err, http.StatusInternalServerError)
+				e.MI.mux.Unlock()
 				return
 			}
 			if mcs != nil {
@@ -501,6 +502,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 	}
+	e.MI.mux.Unlock()
 
 	result := make([]Machine, 0)
 	if queryCount > 1 && queryCount == len(resultByQuery) {
@@ -518,7 +520,6 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 			result = v
 		}
 	}
-	e.MI.Wg.Done()
 
 	err := renderJSON(w, result, http.StatusOK)
 	if err != nil {
@@ -528,43 +529,41 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 }
 
 // EtcdWatcher launch etcd client session to monitor changes to keys and update index
-func EtcdWatcher(ctx context.Context, e EtcdConfig, mi *MachinesIndex) {
-	cmd.Go(func(ctx context.Context) error {
-		cfg := clientv3.Config{
-			Endpoints: e.Servers,
-		}
-		c, err := clientv3.New(cfg)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-		defer c.Close()
+func EtcdWatcher(ctx context.Context, e EtcdConfig, mi *machinesIndex) error {
+	cfg := clientv3.Config{
+		Endpoints: e.Servers,
+	}
+	c, err := clientv3.New(cfg)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
 
-		key := path.Join(e.Prefix, EtcdKeyMachines)
-		for {
-			rch := c.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
-			for wresp := range rch {
-				for _, ev := range wresp.Events {
-					if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
-						err := mi.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
-						if err != nil {
-							return err
-						}
+	key := path.Join(e.Prefix, EtcdKeyMachines)
+	for {
+		rch := c.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
+		for wresp := range rch {
+			for _, ev := range wresp.Events {
+				if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
+					err := mi.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
+					if err != nil {
+						return err
 					}
-					if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
-						err := mi.AddIndex(ev.Kv.Value)
-						if err != nil {
-							return err
-						}
+				}
+				if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
+					err := mi.AddIndex(ev.Kv.Value)
+					if err != nil {
+						return err
 					}
-					if ev.Type == mvccpb.DELETE {
-						err := mi.DeleteIndex(ev.PrevKv.Value)
-						if err != nil {
-							return err
-						}
+				}
+				if ev.Type == mvccpb.DELETE {
+					err := mi.DeleteIndex(ev.PrevKv.Value)
+					if err != nil {
+						return err
 					}
 				}
 			}
 		}
-		return nil
-	})
+	}
+	return nil
 }

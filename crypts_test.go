@@ -36,7 +36,8 @@ func TestHandleGetCrypts(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	serial := "1"
 	diskPath := "exists-path"
@@ -77,7 +78,8 @@ func TestHandleGetCryptsNotFound(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/api/v1/crypts", nil)
@@ -98,7 +100,8 @@ func TestHandlePostCrypts(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	serial := "1"
 	diskPath := "put-path"
@@ -138,7 +141,8 @@ func TestHandlePostCryptsInvalidBody(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	w := httptest.NewRecorder()
 	invalidBody, err := json.Marshal(&struct {
@@ -166,7 +170,8 @@ func TestHandleDeleteCrypts(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	expected := deleteResponse{}
 	serial := "1"
@@ -216,7 +221,8 @@ func TestHandleDeleteCryptsNotFound(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", "/api/v1/crypts", nil)

@@ -10,7 +10,8 @@ func TestGetMachinesBySerial(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
@@ -23,7 +24,6 @@ func TestGetMachinesBySerial(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
 	mcs, err := GetMachinesBySerial(ctx, &etcdClient, []string{"1234abcd"})
 	if err != nil {
 		t.Fatal("Failed to get, ", err.Error())
@@ -34,7 +34,8 @@ func TestGetMachineBySerial(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
@@ -47,7 +48,6 @@ func TestGetMachineBySerial(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
 	_, err := GetMachineBySerial(ctx, &etcdClient, "1234abcd")
 	if err != nil {
 		t.Fatal("Failed to get, ", err.Error())
@@ -58,7 +58,8 @@ func TestGetMachineByIPv4(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
@@ -71,7 +72,6 @@ func TestGetMachineByIPv4(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
 	value := "10.0.0.33"
 	_, err := GetMachineByIPv4(ctx, &etcdClient, value)
 	if err != nil {
@@ -97,7 +97,8 @@ func TestGetMachinesByProduct(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
@@ -110,7 +111,6 @@ func TestGetMachinesByProduct(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
 	value := "R740"
 	_, err := GetMachinesByProduct(ctx, &etcdClient, value)
 	if err != nil {
@@ -132,7 +132,8 @@ func TestGetMachinesByDatacenter(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
@@ -145,7 +146,6 @@ func TestGetMachinesByDatacenter(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
 	value := "dc1"
 	_, err := GetMachinesByDatacenter(ctx, &etcdClient, value)
 	if err != nil {
@@ -167,7 +167,8 @@ func TestGetMachinesByRack(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
@@ -180,7 +181,6 @@ func TestGetMachinesByRack(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
 	value := "2"
 	_, err := GetMachinesByRack(ctx, &etcdClient, value)
 	if err != nil {
@@ -202,7 +202,8 @@ func TestGetMachinesByRole(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
@@ -215,7 +216,6 @@ func TestGetMachinesByRole(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
 	value := "boot"
 	_, err := GetMachinesByRole(ctx, &etcdClient, value)
 	if err != nil {
@@ -237,7 +237,8 @@ func TestGetMachinesByCluster(t *testing.T) {
 	etcd, _ := newEtcdClient()
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	mi, _ := Indexing(etcd, prefix)
+	ctx := context.Background()
+	mi, _ := Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix, mi}
 	PostConfig(etcdClient)
 	mcs, _ := PostMachines(etcdClient)
@@ -250,7 +251,6 @@ func TestGetMachinesByCluster(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
 	value := "apac"
 	_, err := GetMachinesByCluster(ctx, &etcdClient, value)
 	if err != nil {

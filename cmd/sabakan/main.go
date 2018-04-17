@@ -36,7 +36,8 @@ func main() {
 	}
 	defer c.Close()
 
-	mi, err := sabakan.Indexing(c, e.Prefix)
+	ctx := context.Background()
+	mi, err := sabakan.Indexing(ctx, c, e.Prefix)
 	if err != nil {
 		log.ErrorExit(err)
 	}
@@ -47,8 +48,10 @@ func main() {
 	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 
-	ctx := context.Background()
-	sabakan.EtcdWatcher(ctx, e, &mi)
+	cmd.Go(func(ctx context.Context) error {
+		err := sabakan.EtcdWatcher(ctx, e, &mi)
+		return err
+	})
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{

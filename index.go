@@ -19,11 +19,11 @@ type MachinesIndex struct {
 	Cluster    map[string][]string
 	IPv4       map[string]string
 	IPv6       map[string]string
-	Wg         sync.WaitGroup
+	mux        sync.Mutex
 }
 
-// Indexing is indexing machineIndex
-func Indexing(client *clientv3.Client, prefix string) (MachinesIndex, error) {
+// Indexing is indexing MachineIndex
+func Indexing(ctx context.Context, client *clientv3.Client, prefix string) (MachinesIndex, error) {
 	var mi MachinesIndex
 	mi.Product = map[string][]string{}
 	mi.Datacenter = map[string][]string{}
@@ -34,7 +34,7 @@ func Indexing(client *clientv3.Client, prefix string) (MachinesIndex, error) {
 	mi.IPv6 = map[string]string{}
 
 	key := path.Join(prefix, EtcdKeyMachines)
-	resp, err := client.Get(context.Background(), key, clientv3.WithPrefix())
+	resp, err := client.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return mi, err
 	}
@@ -57,8 +57,7 @@ func (mi *MachinesIndex) AddIndex(val []byte) error {
 	if err != nil {
 		return err
 	}
-	mi.Wg.Wait()
-	mi.Wg.Add(1)
+	mi.mux.Lock()
 
 	mi.Product[mc.Product] = append(mi.Product[mc.Product], mc.Serial)
 	mi.Datacenter[mc.Datacenter] = append(mi.Datacenter[mc.Datacenter], mc.Serial)
@@ -77,7 +76,7 @@ func (mi *MachinesIndex) AddIndex(val []byte) error {
 	for _, v := range mc.BMC.IPv4 {
 		mi.IPv4[v] = mc.Serial
 	}
-	mi.Wg.Done()
+	mi.mux.Unlock()
 	return nil
 }
 
@@ -97,8 +96,7 @@ func (mi *MachinesIndex) DeleteIndex(val []byte) error {
 	if err != nil {
 		return err
 	}
-	mi.Wg.Wait()
-	mi.Wg.Add(1)
+	mi.mux.Lock()
 
 	i := indexOf(mi.Product[mc.Product], mc.Serial)
 	mi.Product[mc.Product] = append(mi.Product[mc.Product][:i], mi.Product[mc.Product][i+1:]...)
@@ -122,7 +120,7 @@ func (mi *MachinesIndex) DeleteIndex(val []byte) error {
 	for _, v := range mc.BMC.IPv4 {
 		mi.IPv4[v] = ""
 	}
-	mi.Wg.Done()
+	mi.mux.Unlock()
 	return nil
 }
 
@@ -132,9 +130,5 @@ func (mi *MachinesIndex) UpdateIndex(pval []byte, nval []byte) error {
 	if err != nil {
 		return err
 	}
-	err = mi.AddIndex(nval)
-	if err != nil {
-		return err
-	}
-	return nil
+	return mi.AddIndex(nval)
 }
