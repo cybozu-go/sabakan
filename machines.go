@@ -369,14 +369,18 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 
 	getMachinesQuery(&q, r)
 	w.Header().Set("Content-Type", "application/json")
+	result := []Machine{}
 
 	if q.Serial != "" {
-		mc, err := GetMachineBySerial(r.Context(), e, q.Serial)
+		mcs, err := GetMachinesBySerial(r.Context(), e, []string{q.Serial})
 		if err != nil {
-			renderError(w, err, http.StatusNotFound)
+			renderError(w, err, http.StatusInternalServerError)
 			return
 		}
-		err = renderJSON(w, mc, http.StatusOK)
+		if len(mcs) != 0 {
+			result = mcs
+		}
+		err = renderJSON(w, result, http.StatusOK)
 		if err != nil {
 			renderError(w, err, http.StatusInternalServerError)
 			return
@@ -385,12 +389,15 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if q.IPv4 != "" {
-		mc, err := GetMachineByIPv4(r.Context(), e, q.IPv4)
+		mcs, err := GetMachinesByIPv4(r.Context(), e, q.IPv4)
 		if err != nil {
-			renderError(w, err, http.StatusNotFound)
+			renderError(w, err, http.StatusInternalServerError)
 			return
 		}
-		err = renderJSON(w, mc, http.StatusOK)
+		if len(mcs) != 0 {
+			result = mcs
+		}
+		err = renderJSON(w, result, http.StatusOK)
 		if err != nil {
 			renderError(w, err, http.StatusInternalServerError)
 			return
@@ -399,12 +406,15 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if q.IPv6 != "" {
-		mc, err := GetMachineByIPv6(r.Context(), e, q.IPv4)
+		mcs, err := GetMachinesByIPv4(r.Context(), e, q.IPv6)
 		if err != nil {
-			renderError(w, err, http.StatusNotFound)
+			renderError(w, err, http.StatusInternalServerError)
 			return
 		}
-		err = renderJSON(w, mc, http.StatusOK)
+		if len(mcs) != 0 {
+			result = mcs
+		}
+		err = renderJSON(w, result, http.StatusOK)
 		if err != nil {
 			renderError(w, err, http.StatusInternalServerError)
 			return
@@ -494,11 +504,10 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	}
 	mi.mux.Unlock()
 
-	result := make([]Machine, 0)
 	if queryCount > 1 && queryCount == len(resultByQuery) {
 		// Intersect machines of each query result
 		for _, v := range resultByQuery {
-			if result == nil {
+			if len(result) == 0 {
 				result = v
 				continue
 			}

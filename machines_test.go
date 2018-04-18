@@ -113,63 +113,13 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		}
 	}
 
-	querySingleValue := map[int][]string{
+	// Test replying single value array
+	querySingleValueArray := map[int][]string{
 		0: []string{
 			"?serial=1234abcd",
 			"?ipv4=10.0.0.97",
 			"?ipv4=10.0.0.33",
 			"?ipv4=10.0.0.65",
-		},
-		1: []string{
-			"?serial=5678efgh",
-			"?ipv4=10.0.0.98",
-			"?ipv4=10.0.0.34",
-			"?ipv4=10.0.0.66",
-		},
-	}
-
-	// Test replying serial
-	for i := 0; i < len(mcs); i++ {
-		var respMachine Machine
-		for n := 0; n < len(querySingleValue[i]); n++ {
-			q := "?serial=" + mcs[i].Serial
-			w := httptest.NewRecorder()
-			r := httptest.NewRequest("GET", "localhost:8888/api/v1/machines"+q, nil)
-			etcdClient.handleGetMachines(w, r)
-
-			resp := w.Result()
-			json.NewDecoder(resp.Body).Decode(&respMachine)
-
-			if resp.StatusCode != 200 {
-				t.Fatal("expected: 200, actual:", resp.StatusCode)
-			}
-			if respMachine.Serial != mcs[i].Serial {
-				t.Fatal("machine value not found, ", mcs[i].Serial)
-			}
-			if respMachine.Product != mcs[i].Product {
-				t.Fatal("machine value not found, ", mcs[i].Product)
-			}
-			if respMachine.Datacenter != mcs[i].Datacenter {
-				t.Fatal("machine value not found, ", mcs[i].Datacenter)
-			}
-			if respMachine.Rack != mcs[i].Rack {
-				t.Fatal("machine value not found, ", mcs[i].Rack)
-			}
-			if respMachine.NodeNumberOfRack != mcs[i].NodeNumberOfRack {
-				t.Fatal("machine value not found, ", mcs[i].NodeNumberOfRack)
-			}
-			if respMachine.Role != mcs[i].Role {
-				t.Fatal("machine value not found, ", mcs[i].Role)
-			}
-			if respMachine.Cluster != mcs[i].Cluster {
-				t.Fatal("machine value not found, ", mcs[i].Cluster)
-			}
-		}
-	}
-
-	// Test replying single value array
-	querySingleValueArray := map[int][]string{
-		0: []string{
 			"?product=R740",
 			"?role=boot",
 			"?cluster=apac",
@@ -181,6 +131,10 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 			"?rack=2&cluster=apac",
 		},
 		1: []string{
+			"?serial=5678efgh",
+			"?ipv4=10.0.0.98",
+			"?ipv4=10.0.0.34",
+			"?ipv4=10.0.0.66",
 			"?product=R640",
 			"?role=node",
 			"?cluster=emea",
@@ -288,8 +242,8 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		resp := w.Result()
 		json.NewDecoder(resp.Body).Decode(&respMachines)
 
-		if resp.StatusCode != 404 {
-			t.Fatal("expected: 404, actual:", resp.StatusCode)
+		if resp.StatusCode != 200 {
+			t.Fatal("expected: 200, actual:", resp.StatusCode)
 		}
 		if len(respMachines) != 0 {
 			t.Fatal("expected: 0 actual:", len(respMachines))
@@ -343,32 +297,32 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 
 	etcdClient.handleGetMachines(w, r)
 
-	var respMachine Machine
+	var respMachines []Machine
 	resp := w.Result()
-	json.NewDecoder(resp.Body).Decode(&respMachine)
+	json.NewDecoder(resp.Body).Decode(&respMachines)
 
 	if resp.StatusCode != 200 {
 		t.Fatal("expected: 200, actual:", resp.StatusCode)
 	}
-	if respMachine.Serial != mcs[0].Serial {
+	if respMachines[0].Serial != mcs[0].Serial {
 		t.Fatal("machine value not found, ", mcs[0].Serial)
 	}
-	if respMachine.Product != mcs[0].Product {
+	if respMachines[0].Product != mcs[0].Product {
 		t.Fatal("machine value not found, ", mcs[0].Product)
 	}
-	if respMachine.Datacenter != "ny1" {
+	if respMachines[0].Datacenter != "ny1" {
 		t.Fatal("machine value not found, ", mcs[0].Datacenter)
 	}
-	if respMachine.Rack != mcs[0].Rack {
+	if respMachines[0].Rack != mcs[0].Rack {
 		t.Fatal("machine value not found, ", mcs[0].Rack)
 	}
-	if respMachine.NodeNumberOfRack != 5 {
+	if respMachines[0].NodeNumberOfRack != 5 {
 		t.Fatal("machine value not found, ", mcs[0].NodeNumberOfRack)
 	}
-	if respMachine.Role != mcs[0].Role {
+	if respMachines[0].Role != mcs[0].Role {
 		t.Fatal("machine value not found, ", mcs[0].Role)
 	}
-	if respMachine.Cluster != mcs[0].Cluster {
+	if respMachines[0].Cluster != mcs[0].Cluster {
 		t.Fatal("machine value not found, ", mcs[0].Cluster)
 	}
 }

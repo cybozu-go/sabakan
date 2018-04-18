@@ -3,7 +3,6 @@ package sabakan
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
@@ -31,37 +30,17 @@ func GetMachinesBySerial(ctx context.Context, e *EtcdClient, ss []string) ([]Mac
 			}
 		}
 	}
-	if len(mcs) == 0 {
-		return nil, fmt.Errorf(ErrorMachineNotExists)
-	}
 	return mcs, nil
 }
 
-// GetMachineBySerial returns a value of the etcd key by serial
-func GetMachineBySerial(ctx context.Context, e *EtcdClient, q string) (Machine, error) {
-	mcs, err := GetMachinesBySerial(ctx, e, []string{q})
-	if err != nil {
-		return Machine{}, err
-	}
-	return mcs[0], nil
+// GetMachineByIPv4 returns type []Machine from the etcd and serial by IPv4
+func GetMachinesByIPv4(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
+	return GetMachinesBySerial(ctx, e, []string{mi.IPv4[q]})
 }
 
-// GetMachineByIPv4 returns type Machine from the etcd and serial by IPv4
-func GetMachineByIPv4(ctx context.Context, e *EtcdClient, q string) (Machine, error) {
-	mcs, err := GetMachinesBySerial(ctx, e, []string{mi.IPv4[q]})
-	if err != nil {
-		return Machine{}, err
-	}
-	return mcs[0], err
-}
-
-// GetMachineByIPv6 returns type Machine from the etcd and serial by IPv6
-func GetMachineByIPv6(ctx context.Context, e *EtcdClient, q string) (Machine, error) {
-	mcs, err := GetMachinesBySerial(ctx, e, []string{mi.IPv6[q]})
-	if err != nil {
-		return Machine{}, err
-	}
-	return mcs[0], err
+// GetMachineByIPv6 returns type []Machine from the etcd and serial by IPv6
+func GetMachinesByIPv6(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
+	return GetMachinesBySerial(ctx, e, []string{mi.IPv6[q]})
 }
 
 // GetMachinesByProduct returns type []Machine from the etcd and serial by product
