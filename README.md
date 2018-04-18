@@ -10,21 +10,21 @@ Sabakan is the Bare-metal management system to organize hardware information usi
 
 * Server inventory
 
-Sabakan provides helpful information depending on an organization's requirements.
+    Sabakan provides helpful information depending on an organization's requirements.
 
 * Disc encryption inventory
 
-Sabakan managed servers requires disk encryption for variable data. When a server initializes Operating system, It formats target storage with encryption key. The key is stored in the Sabakan. 
+    Sabakan managed servers requires disk encryption for variable data. When a server initializes the Operating system, It formats target storage with an encryption key. Sabakan stores its key, and a server retrieve it before mounts encrypted storage.
 
 ## Plan
 
 * HTTP server
 
-All Sabakan managed servers are started up by HTTP boot. HTTP server provides kernel and initramfs to boot them.
+    All Sabakan managed servers are started up by HTTP boot. HTTP server provides kernel and initramfs to boot them.
 
 * DHCP server
 
-Sabakan(or another software) distributes IP address to servers for HTTP boot. Administrators have to define machines in Sabakan before servers start. DHCP server get defined IP addresses in Sabakan, then set them as static DHCP IP addresses.
+    Sabakan(or another software) distributes IP address to servers for HTTP boot. Administrators have to define machines in Sabakan before servers start. DHCP server get defined IP addresses in Sabakan, then set them as static DHCP IP addresses.
 
 ## Usage
 
