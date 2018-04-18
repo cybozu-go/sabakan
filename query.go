@@ -33,12 +33,12 @@ func GetMachinesBySerial(ctx context.Context, e *EtcdClient, ss []string) ([]Mac
 	return mcs, nil
 }
 
-// GetMachineByIPv4 returns type []Machine from the etcd and serial by IPv4
+// GetMachinesByIPv4 returns type []Machine from the etcd and serial by IPv4
 func GetMachinesByIPv4(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
 	return GetMachinesBySerial(ctx, e, []string{mi.IPv4[q]})
 }
 
-// GetMachineByIPv6 returns type []Machine from the etcd and serial by IPv6
+// GetMachinesByIPv6 returns type []Machine from the etcd and serial by IPv6
 func GetMachinesByIPv6(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
 	return GetMachinesBySerial(ctx, e, []string{mi.IPv6[q]})
 }
