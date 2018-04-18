@@ -43,10 +43,16 @@ func (c *Config) validate() error {
 	return nil
 }
 
-// EtcdClient is etcd3 client object
+// EtcdClient is etcd3 client object and index
 type EtcdClient struct {
 	Client *clientv3.Client
 	Prefix string
+}
+
+// EtcdConfig is etcd3 connection options
+type EtcdConfig struct {
+	Servers []string
+	Prefix  string
 }
 
 const (
@@ -61,10 +67,16 @@ const (
 	ErrorInvalidValue = "invalid value"
 	// ErrorValueNotFound is an error message when a target value is not found
 	ErrorValueNotFound = "value not found"
+
 	// ErrorMachinesExist is an error message when /machines key exists in etcd.
 	ErrorMachinesExist = "machines already exist"
-	// ErrorValueAlreadyExists is an error message when a target value already exists
-	ErrorValueAlreadyExists = "value already exists"
+	// ErrorMachineExists is an error message when /machines/<serial> key exists in etcd.
+	ErrorMachineExists = "machine already exists"
+	// ErrorMachineNotExists is an error message when /machines/<serial> key doesn't exist in etcd.
+	ErrorMachineNotExists = "machine not found"
+
+	// ErrorEtcdTxnFailed is an error message when transaction of etcd fails.
+	ErrorEtcdTxnFailed = "etcd transaction failed"
 )
 
 // InitConfig is initialization of the sabakan API /config

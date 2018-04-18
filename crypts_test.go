@@ -36,6 +36,8 @@ func TestHandleGetCrypts(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	ctx := context.Background()
+	Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix}
 	serial := "1"
 	diskPath := "exists-path"
@@ -76,6 +78,8 @@ func TestHandleGetCryptsNotFound(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	ctx := context.Background()
+	Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/api/v1/crypts", nil)
@@ -96,6 +100,8 @@ func TestHandlePostCrypts(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	ctx := context.Background()
+	Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix}
 	serial := "1"
 	diskPath := "put-path"
@@ -135,6 +141,8 @@ func TestHandlePostCryptsInvalidBody(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	ctx := context.Background()
+	Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix}
 	w := httptest.NewRecorder()
 	invalidBody, err := json.Marshal(&struct {
@@ -162,6 +170,8 @@ func TestHandleDeleteCrypts(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	ctx := context.Background()
+	Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix}
 	expected := deleteResponse{}
 	serial := "1"
@@ -211,6 +221,8 @@ func TestHandleDeleteCryptsNotFound(t *testing.T) {
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	ctx := context.Background()
+	Indexing(ctx, etcd, prefix)
 	etcdClient := EtcdClient{etcd, prefix}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", "/api/v1/crypts", nil)

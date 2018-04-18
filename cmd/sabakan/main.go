@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net/http"
 	"strings"
@@ -19,15 +20,10 @@ var (
 	flagEtcdPrefix  = flag.String("etcd-prefix", "", "etcd prefix")
 )
 
-type etcdConfig struct {
-	Servers []string
-	Prefix  string
-}
-
 func main() {
 	flag.Parse()
 
-	var e etcdConfig
+	var e sabakan.EtcdConfig
 	e.Servers = strings.Split(*flagEtcdServers, ",")
 	e.Prefix = "/" + *flagEtcdPrefix
 
@@ -38,11 +34,23 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
+	defer c.Close()
+
+	ctx := context.Background()
+	err = sabakan.Indexing(ctx, c, e.Prefix)
+	if err != nil {
+		log.ErrorExit(err)
+	}
 
 	r := mux.NewRouter()
 	etcdClient := &sabakan.EtcdClient{Client: c, Prefix: e.Prefix}
 	sabakan.InitConfig(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
 	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
+	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
+
+	cmd.Go(func(ctx context.Context) error {
+		return sabakan.EtcdWatcher(ctx, e)
+	})
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
