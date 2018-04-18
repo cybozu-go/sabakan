@@ -4,7 +4,7 @@
 
 # Sabakan
 
-Sabakan is the Bare-metal management system to organize hardware information using etcd as a backend distributed database.
+Sabakan is the Bare-metal management system to organize hardware information using etcd3 as a backend distributed database.
 
 ## Features
 
@@ -82,7 +82,7 @@ Subcommands:
 
 ### Prerequisites
 
-- [etcd](https://github.com/coreos/etcd)
+- [etcd3](https://github.com/coreos/etcd)
 
 ### Install sabakan and sabactl
 
