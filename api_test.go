@@ -84,7 +84,7 @@ func TestJSONGet(t *testing.T) {
 	var data = make(map[string]string)
 
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
-	err := c.jsonGet(context.Background(), "/", &data)
+	err := c.jsonGet(context.Background(), "/", nil, &data)
 	if err != nil {
 		t.Error(err)
 	}
@@ -100,7 +100,7 @@ func TestJSONGet(t *testing.T) {
 
 	c = Client{endpoint: s2.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err = c.jsonGet(context.Background(), "/", &data)
+	err = c.jsonGet(context.Background(), "/", nil, &data)
 	if err == nil {
 		t.Errorf("%v != nil", err)
 	}
@@ -132,7 +132,7 @@ func TestJSONPost(t *testing.T) {
 
 	c = Client{endpoint: s2.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err = c.jsonGet(context.Background(), "/", &data)
+	err = c.jsonGet(context.Background(), "/", nil, &data)
 	if err == nil {
 		t.Errorf("%v != nil", err)
 	}

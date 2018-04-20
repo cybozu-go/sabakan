@@ -38,6 +38,7 @@ func (r *machinesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 //
 type machinesGetCmd struct {
 	c          *sabakan.Client
+	query      map[string]*string
 	serial     string
 	datacenter string
 	rack       string
@@ -53,24 +54,31 @@ func (r *machinesGetCmd) Usage() string {
 	return "sabactl machines get [options]"
 }
 func (r *machinesGetCmd) SetFlags(f *flag.FlagSet) {
-	f.StringVar(&r.serial, "serial", "", "serial")
-	f.StringVar(&r.datacenter, "datacenter", "", "datacenter")
-	f.StringVar(&r.rack, "rack", "", "rack")
-	f.StringVar(&r.cluster, "cluster", "", "cluster")
-	f.StringVar(&r.product, "product", "", "product")
-	f.StringVar(&r.ipv4, "ipv4", "", "ipv4 address")
-	f.StringVar(&r.ipv6, "ipv6", "", "ipv6 address")
+	r.query = map[string]*string{}
+	for _, k := range []string{"serial", "datacenter", "rack", "cluster", "product", "ipv4", "ipv6"} {
+		r.query[k] = f.String(k, "", k)
+	}
+}
+
+func (r *machinesGetCmd) getParams() map[string]string {
+	var params = map[string]string{}
+	for k, v := range r.query {
+		if len(*v) > 0 {
+			params[k] = *v
+		}
+	}
+	return params
 }
 
 func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	conf, err := r.c.MachinesGet(ctx)
+	machines, err := r.c.MachinesGet(ctx, r.getParams())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
-	e.Encode(conf)
+	e.Encode(machines)
 	return 0
 }
 

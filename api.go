@@ -27,7 +27,7 @@ func NewClient(endpoint string, http *cmd.HTTPClient) *Client {
 // RemoteConfigGet gets a remote config
 func (c *Client) RemoteConfigGet(ctx context.Context) (*Config, error) {
 	var conf Config
-	err := c.jsonGet(ctx, "/config", &conf)
+	err := c.jsonGet(ctx, "/config", nil, &conf)
 	if err != nil {
 		return nil, err
 	}
@@ -39,11 +39,36 @@ func (c *Client) RemoteConfigSet(ctx context.Context, conf *Config) error {
 	return c.jsonPost(ctx, "/config", conf)
 }
 
-func (c *Client) jsonGet(ctx context.Context, path string, data interface{}) error {
+// MachinesGet get machine information from sabakan server
+func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]Machine, error) {
+	var machines []Machine
+	err := c.jsonGet(ctx, "/machines", params, &machines)
+	if err != nil {
+		return nil, err
+	}
+	return machines, nil
+}
+
+// MachinesAdd add machine information to sabakan server
+func (c *Client) MachinesAdd(ctx context.Context, machines []Machine) error {
+	return nil
+}
+
+// MachinesUpdate update machine information on sabakan server
+func (c *Client) MachinesUpdate(ctx context.Context, machines []Machine) error {
+	return nil
+}
+
+func (c *Client) jsonGet(ctx context.Context, path string, params map[string]string, data interface{}) error {
 	req, err := http.NewRequest("GET", c.endpoint+"/api/v1"+path, nil)
 	if err != nil {
 		return err
 	}
+	q := req.URL.Query()
+	for k, v := range params {
+		q.Add(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
 	req = req.WithContext(ctx)
 	res, err := c.http.Do(req)
 	if err != nil {
@@ -80,20 +105,5 @@ func (c *Client) jsonPost(ctx context.Context, path string, data interface{}) er
 		// TODO: return a message from a server"
 		return fmt.Errorf("server returns failure code: " + res.Status)
 	}
-	return nil
-}
-
-// MachinesGet get machine information from sabakan server
-func (c *Client) MachinesGet(ctx context.Context) ([]Machine, error) {
-	return []Machine{}, nil
-}
-
-// MachinesAdd add machine information to sabakan server
-func (c *Client) MachinesAdd(ctx context.Context, machines []Machine) error {
-	return nil
-}
-
-// MachinesUpdate update machine information on sabakan server
-func (c *Client) MachinesUpdate(ctx context.Context, machines []Machine) error {
 	return nil
 }
