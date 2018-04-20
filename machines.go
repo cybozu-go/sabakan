@@ -337,21 +337,6 @@ func getMachinesQuery(q *Query, r *http.Request) {
 	q.IPv6 = r.URL.Query().Get("ipv6")
 }
 
-func appendMachinesIfNotExist(mcs []Machine, newmcs []Machine) []Machine {
-	for _, newmc := range newmcs {
-		found := false
-		for _, mc := range mcs {
-			if mc.Serial == newmc.Serial {
-				found = true
-			}
-		}
-		if mcs == nil || !found {
-			mcs = append(mcs, newmc)
-		}
-	}
-	return mcs
-}
-
 func intersectMachines(mcs1 []Machine, mcs2 []Machine) []Machine {
 	var newmcs []Machine
 	for _, mc1 := range mcs1 {
@@ -422,8 +407,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var resultByQuery map[string][]Machine
-	resultByQuery = map[string][]Machine{}
+	resultByQuery := map[string][]Machine{}
 	queryCount := 0
 	qelem := reflect.ValueOf(&q).Elem()
 

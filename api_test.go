@@ -137,3 +137,26 @@ func TestJSONPost(t *testing.T) {
 		t.Errorf("%v != nil", err)
 	}
 }
+
+func TestMachinesGet(t *testing.T) {
+	var method, path string
+	machines := []Machine{{Serial: "123abc"}}
+
+	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		method = r.Method
+		path = r.URL.Path
+		json.NewEncoder(w).Encode(machines)
+	}))
+	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
+
+	got, err := c.MachinesGet(context.Background(), nil)
+	if err != nil {
+		t.Error("err == nil")
+	}
+	if method != "GET" || path != "/api/v1/machines" {
+		t.Errorf("%s != GET, nor %s != /api/v1/machines", method, path)
+	}
+	if !reflect.DeepEqual(got, machines) {
+		t.Errorf("%v != %v", got, machines)
+	}
+}

@@ -33,39 +33,38 @@ func (r *machinesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 	return cmdr.Execute(ctx)
 }
 
-//
-// machines get
-//
 type machinesGetCmd struct {
-	c          *sabakan.Client
-	query      map[string]*string
-	serial     string
-	datacenter string
-	rack       string
-	cluster    string
-	product    string
-	ipv4       string
-	ipv6       string
+	c     *sabakan.Client
+	query map[string]*string
 }
 
 func (r *machinesGetCmd) Name() string     { return "get" }
 func (r *machinesGetCmd) Synopsis() string { return "get machines information." }
 func (r *machinesGetCmd) Usage() string {
-	return "sabactl machines get [options]"
+	return "sabactl machines get [options]\n"
 }
+
+var machinesGetQuery = map[string]string{
+	"serial":     "Serial name",
+	"datacenter": "Datacenter name",
+	"rack":       "Rack name",
+	"cluster":    "Cluster name",
+	"product":    "Product name (e.g. 'R630')",
+	"ipv4":       "IPv4 address",
+	"ipv6":       "IPv6 address",
+}
+
 func (r *machinesGetCmd) SetFlags(f *flag.FlagSet) {
 	r.query = map[string]*string{}
-	for _, k := range []string{"serial", "datacenter", "rack", "cluster", "product", "ipv4", "ipv6"} {
-		r.query[k] = f.String(k, "", k)
+	for k, v := range machinesGetQuery {
+		r.query[k] = f.String(k, "", v)
 	}
 }
 
 func (r *machinesGetCmd) getParams() map[string]string {
 	var params = map[string]string{}
-	for k, v := range r.query {
-		if len(*v) > 0 {
-			params[k] = *v
-		}
+	for k := range machinesGetQuery {
+		params[k] = *r.query[k]
 	}
 	return params
 }
@@ -82,9 +81,6 @@ func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 	return 0
 }
 
-//
-// machines add
-//
 type machinesAddCmd struct {
 	c    *sabakan.Client
 	file string
@@ -122,9 +118,6 @@ func (r *machinesAddCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 	return 0
 }
 
-//
-// machines update
-//
 type machinesUpdateCmd struct {
 	c    *sabakan.Client
 	file string

@@ -39,7 +39,7 @@ type remoteConfigGetCmd struct {
 func (r *remoteConfigGetCmd) Name() string     { return "get" }
 func (r *remoteConfigGetCmd) Synopsis() string { return "get settings of sabakan server." }
 func (r *remoteConfigGetCmd) Usage() string {
-	return "remote-config get"
+	return "remote-config get\n"
 }
 func (r *remoteConfigGetCmd) SetFlags(f *flag.FlagSet) {}
 
