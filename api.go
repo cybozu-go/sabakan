@@ -88,6 +88,11 @@ func (c *Client) MachinesGet(ctx context.Context) ([]Machine, error) {
 	return []Machine{}, nil
 }
 
+// MachinesAdd add machine information to sabakan server
+func (c *Client) MachinesAdd(ctx context.Context, machines []Machine) error {
+	return nil
+}
+
 // MachinesUpdate update machine information on sabakan server
 func (c *Client) MachinesUpdate(ctx context.Context, machines []Machine) error {
 	return nil
