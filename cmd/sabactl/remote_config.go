@@ -84,7 +84,7 @@ func (r *remoteConfigSetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 		return 1
 	}
 
-	r.c.RemoteConfigSet(ctx, &conf)
+	err = r.c.RemoteConfigSet(ctx, &conf)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1

@@ -82,3 +82,13 @@ func (c *Client) jsonPost(ctx context.Context, path string, data interface{}) er
 	}
 	return nil
 }
+
+// MachinesGet get machine information from sabakan server
+func (c *Client) MachinesGet(ctx context.Context) ([]Machine, error) {
+	return []Machine{}, nil
+}
+
+// MachinesUpdate update machine information on sabakan server
+func (c *Client) MachinesUpdate(ctx context.Context, machines []Machine) error {
+	return nil
+}
