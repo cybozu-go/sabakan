@@ -49,12 +49,12 @@ func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]M
 	return machines, nil
 }
 
-// MachinesAdd add machine information to sabakan server
-func (c *Client) MachinesAdd(ctx context.Context, machines []Machine) error {
-	return nil
+// MachinesCreate create machines information to sabakan server
+func (c *Client) MachinesCreate(ctx context.Context, machines []Machine) error {
+	return c.jsonPost(ctx, "/machines", machines)
 }
 
-// MachinesUpdate update machine information on sabakan server
+// MachinesUpdate update machines information on sabakan server
 func (c *Client) MachinesUpdate(ctx context.Context, machines []Machine) error {
 	return nil
 }

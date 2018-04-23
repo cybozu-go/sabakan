@@ -108,6 +108,29 @@ func TestMachinesGet(t *testing.T) {
 	}
 }
 
+func TestMachinesPost(t *testing.T) {
+	var method, path string
+	machines := []Machine{{
+		Serial: "a",
+	}, {
+		Serial: "b",
+	}}
+	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		method = r.Method
+		path = r.URL.Path
+		//status = r.Response.Status
+	}))
+	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
+
+	err := c.MachinesCreate(context.Background(), machines)
+	if err != nil {
+		t.Error("err == nil")
+	}
+	if method != "POST" || path != "/api/v1/machines" {
+		t.Errorf("%s != GET, nor %s != /api/v1/config", method, path)
+	}
+}
+
 func TestJSONGet(t *testing.T) {
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `{ "apple": "red", "banana": "yellow"}`)

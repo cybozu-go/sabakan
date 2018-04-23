@@ -28,7 +28,7 @@ func (r *machinesCmd) SetFlags(f *flag.FlagSet) {}
 func (r *machinesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	cmdr := subcommands.NewCommander(f, "machines")
 	cmdr.Register(&machinesGetCmd{c: r.c}, "")
-	cmdr.Register(&machinesAddCmd{c: r.c}, "")
+	cmdr.Register(&machinesCreateCmd{c: r.c}, "")
 	cmdr.Register(&machinesUpdateCmd{c: r.c}, "")
 	return cmdr.Execute(ctx)
 }
@@ -81,21 +81,21 @@ func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 	return 0
 }
 
-type machinesAddCmd struct {
+type machinesCreateCmd struct {
 	c    *sabakan.Client
 	file string
 }
 
-func (r *machinesAddCmd) Name() string     { return "add" }
-func (r *machinesAddCmd) Synopsis() string { return "add machines information." }
-func (r *machinesAddCmd) Usage() string {
-	return "machines add -f <machines-file.json>\n"
+func (r *machinesCreateCmd) Name() string     { return "create" }
+func (r *machinesCreateCmd) Synopsis() string { return "create machines information." }
+func (r *machinesCreateCmd) Usage() string {
+	return "machines create -f <machines-file.json>\n"
 }
-func (r *machinesAddCmd) SetFlags(f *flag.FlagSet) {
+func (r *machinesCreateCmd) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&r.file, "f", "", "machine file in JSON")
 }
 
-func (r *machinesAddCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	file, err := os.Open(r.file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -110,7 +110,7 @@ func (r *machinesAddCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 		return 1
 	}
 
-	err = r.c.MachinesAdd(ctx, machines)
+	err = r.c.MachinesCreate(ctx, machines)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
