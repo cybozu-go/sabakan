@@ -380,11 +380,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		if len(mcs) != 0 {
 			result = mcs
 		}
-		err = renderJSON(w, result, http.StatusOK)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
+		renderJSON(w, result, http.StatusOK)
 		return
 	}
 
@@ -397,11 +393,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		if len(mcs) != 0 {
 			result = mcs
 		}
-		err = renderJSON(w, result, http.StatusOK)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
+		renderJSON(w, result, http.StatusOK)
 		return
 	}
 
@@ -414,11 +406,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		if len(mcs) != 0 {
 			result = mcs
 		}
-		err = renderJSON(w, result, http.StatusOK)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
+		renderJSON(w, result, http.StatusOK)
 		return
 	}
 
@@ -520,11 +508,7 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err := renderJSON(w, result, http.StatusOK)
-	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-		return
-	}
+	renderJSON(w, result, http.StatusOK)
 }
 
 // EtcdWatcher launch etcd client session to monitor changes to keys and update index
