@@ -18,6 +18,7 @@ var (
 	flagHTTP        = flag.String("http", "0.0.0.0:8888", "<Listen IP>:<Port number>")
 	flagEtcdServers = flag.String("etcd-servers", "http://localhost:2379", "URLs of the backend etcd")
 	flagEtcdPrefix  = flag.String("etcd-prefix", "", "etcd prefix")
+	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
 )
 
 func main() {
@@ -27,8 +28,14 @@ func main() {
 	e.Servers = strings.Split(*flagEtcdServers, ",")
 	e.Prefix = "/" + *flagEtcdPrefix
 
+	timeout, err := time.ParseDuration(*flagEtcdTimeout)
+	if err != nil {
+		log.ErrorExit(err)
+	}
+
 	cfg := clientv3.Config{
-		Endpoints: e.Servers,
+		Endpoints:   e.Servers,
+		DialTimeout: timeout,
 	}
 	c, err := clientv3.New(cfg)
 	if err != nil {
