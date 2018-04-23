@@ -26,6 +26,7 @@ func main() {
 	subcommands.Register(subcommands.FlagsCommand(), "")
 	subcommands.Register(subcommands.CommandsCommand(), "")
 	subcommands.Register(&remoteConfigCmd{c: c}, "")
+	subcommands.Register(&machinesCmd{c: c}, "")
 
 	flag.Parse()
 

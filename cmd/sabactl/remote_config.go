@@ -37,9 +37,9 @@ type remoteConfigGetCmd struct {
 }
 
 func (r *remoteConfigGetCmd) Name() string     { return "get" }
-func (r *remoteConfigGetCmd) Synopsis() string { return "Configure a sabakan server." }
+func (r *remoteConfigGetCmd) Synopsis() string { return "get settings of sabakan server." }
 func (r *remoteConfigGetCmd) Usage() string {
-	return "remote-config get -f <config-file.json>\n"
+	return "remote-config get\n"
 }
 func (r *remoteConfigGetCmd) SetFlags(f *flag.FlagSet) {}
 
@@ -84,7 +84,7 @@ func (r *remoteConfigSetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 		return 1
 	}
 
-	r.c.RemoteConfigSet(ctx, &conf)
+	err = r.c.RemoteConfigSet(ctx, &conf)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1

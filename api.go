@@ -27,7 +27,7 @@ func NewClient(endpoint string, http *cmd.HTTPClient) *Client {
 // RemoteConfigGet gets a remote config
 func (c *Client) RemoteConfigGet(ctx context.Context) (*Config, error) {
 	var conf Config
-	err := c.jsonGet(ctx, "/config", &conf)
+	err := c.getJSON(ctx, "/config", nil, &conf)
 	if err != nil {
 		return nil, err
 	}
@@ -36,14 +36,39 @@ func (c *Client) RemoteConfigGet(ctx context.Context) (*Config, error) {
 
 // RemoteConfigSet sets a remote config
 func (c *Client) RemoteConfigSet(ctx context.Context, conf *Config) error {
-	return c.jsonPost(ctx, "/config", conf)
+	return c.sendRequestWithJSON(ctx, "POST", "/config", conf)
 }
 
-func (c *Client) jsonGet(ctx context.Context, path string, data interface{}) error {
+// MachinesGet get machine information from sabakan server
+func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]Machine, error) {
+	var machines []Machine
+	err := c.getJSON(ctx, "/machines", params, &machines)
+	if err != nil {
+		return nil, err
+	}
+	return machines, nil
+}
+
+// MachinesCreate create machines information to sabakan server
+func (c *Client) MachinesCreate(ctx context.Context, machines []Machine) error {
+	return c.sendRequestWithJSON(ctx, "POST", "/machines", machines)
+}
+
+// MachinesUpdate update machines information on sabakan server
+func (c *Client) MachinesUpdate(ctx context.Context, machines []Machine) error {
+	return c.sendRequestWithJSON(ctx, "PUT", "/machines", machines)
+}
+
+func (c *Client) getJSON(ctx context.Context, path string, params map[string]string, data interface{}) error {
 	req, err := http.NewRequest("GET", c.endpoint+"/api/v1"+path, nil)
 	if err != nil {
 		return err
 	}
+	q := req.URL.Query()
+	for k, v := range params {
+		q.Add(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
 	req = req.WithContext(ctx)
 	res, err := c.http.Do(req)
 	if err != nil {
@@ -58,14 +83,14 @@ func (c *Client) jsonGet(ctx context.Context, path string, data interface{}) err
 	return json.NewDecoder(res.Body).Decode(data)
 }
 
-func (c *Client) jsonPost(ctx context.Context, path string, data interface{}) error {
+func (c *Client) sendRequestWithJSON(ctx context.Context, method string, path string, data interface{}) error {
 	b := new(bytes.Buffer)
 	err := json.NewEncoder(b).Encode(data)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoint+"/api/v1"+path, b)
+	req, err := http.NewRequest(method, c.endpoint+"/api/v1"+path, b)
 	if err != nil {
 		return err
 	}
