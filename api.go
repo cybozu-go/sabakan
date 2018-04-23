@@ -56,7 +56,7 @@ func (c *Client) MachinesCreate(ctx context.Context, machines []Machine) error {
 
 // MachinesUpdate update machines information on sabakan server
 func (c *Client) MachinesUpdate(ctx context.Context, machines []Machine) error {
-	return nil
+	return c.sendRequestWithJSON(ctx, "PUT", "/machines", machines)
 }
 
 func (c *Client) jsonGet(ctx context.Context, path string, params map[string]string, data interface{}) error {

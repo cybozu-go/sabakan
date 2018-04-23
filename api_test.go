@@ -108,7 +108,7 @@ func TestMachinesGet(t *testing.T) {
 	}
 }
 
-func TestMachinesPost(t *testing.T) {
+func TestMachinesCreate(t *testing.T) {
 	var method, path string
 	machines := []Machine{{
 		Serial: "a",
@@ -118,7 +118,6 @@ func TestMachinesPost(t *testing.T) {
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
 		path = r.URL.Path
-		//status = r.Response.Status
 	}))
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
@@ -127,7 +126,29 @@ func TestMachinesPost(t *testing.T) {
 		t.Error("err == nil")
 	}
 	if method != "POST" || path != "/api/v1/machines" {
-		t.Errorf("%s != GET, nor %s != /api/v1/config", method, path)
+		t.Errorf("%s != POST, nor %s != /api/v1/machines", method, path)
+	}
+}
+
+func TestMachinesUpdate(t *testing.T) {
+	var method, path string
+	machines := []Machine{{
+		Serial: "a",
+	}, {
+		Serial: "b",
+	}}
+	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		method = r.Method
+		path = r.URL.Path
+	}))
+	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
+
+	err := c.MachinesUpdate(context.Background(), machines)
+	if err != nil {
+		t.Error("err == nil")
+	}
+	if method != "PUT" || path != "/api/v1/machines" {
+		t.Errorf("%s != PUT, nor %s != /api/v1/machines", method, path)
 	}
 }
 
@@ -164,8 +185,10 @@ func TestJSONGet(t *testing.T) {
 
 func TestSendRequestWithJSON(t *testing.T) {
 	var record []byte
+	var method string
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		record, _ = ioutil.ReadAll(r.Body)
+		method = r.Method
 	}))
 	defer s1.Close()
 
@@ -178,6 +201,9 @@ func TestSendRequestWithJSON(t *testing.T) {
 	}
 	if strings.TrimSpace(string(record)) != `{"apple":"red","banana":"yellow"}` {
 		t.Error("unexpected recorded data: " + string(record))
+	}
+	if method != "POST" {
+		t.Error("unexpected request method:", method)
 	}
 
 	s2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
