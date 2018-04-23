@@ -36,7 +36,7 @@ func (c *Client) RemoteConfigGet(ctx context.Context) (*Config, error) {
 
 // RemoteConfigSet sets a remote config
 func (c *Client) RemoteConfigSet(ctx context.Context, conf *Config) error {
-	return c.jsonPost(ctx, "/config", conf)
+	return c.sendRequestWithJSON(ctx, "POST", "/config", conf)
 }
 
 // MachinesGet get machine information from sabakan server
@@ -51,7 +51,7 @@ func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]M
 
 // MachinesCreate create machines information to sabakan server
 func (c *Client) MachinesCreate(ctx context.Context, machines []Machine) error {
-	return c.jsonPost(ctx, "/machines", machines)
+	return c.sendRequestWithJSON(ctx, "POST", "/machines", machines)
 }
 
 // MachinesUpdate update machines information on sabakan server
@@ -83,14 +83,14 @@ func (c *Client) jsonGet(ctx context.Context, path string, params map[string]str
 	return json.NewDecoder(res.Body).Decode(data)
 }
 
-func (c *Client) jsonPost(ctx context.Context, path string, data interface{}) error {
+func (c *Client) sendRequestWithJSON(ctx context.Context, method string, path string, data interface{}) error {
 	b := new(bytes.Buffer)
 	err := json.NewEncoder(b).Encode(data)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoint+"/api/v1"+path, b)
+	req, err := http.NewRequest(method, c.endpoint+"/api/v1"+path, b)
 	if err != nil {
 		return err
 	}

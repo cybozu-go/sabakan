@@ -162,7 +162,7 @@ func TestJSONGet(t *testing.T) {
 	}
 }
 
-func TestJSONPost(t *testing.T) {
+func TestSendRequestWithJSON(t *testing.T) {
 	var record []byte
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		record, _ = ioutil.ReadAll(r.Body)
@@ -172,7 +172,7 @@ func TestJSONPost(t *testing.T) {
 	var data = make(map[string]string)
 
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
-	err := c.jsonPost(context.Background(), "/", map[string]string{"apple": "red", "banana": "yellow"})
+	err := c.sendRequestWithJSON(context.Background(), "POST", "/", map[string]string{"apple": "red", "banana": "yellow"})
 	if err != nil {
 		t.Error(err)
 	}
