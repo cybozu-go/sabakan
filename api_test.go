@@ -110,18 +110,14 @@ func TestMachinesGet(t *testing.T) {
 
 func TestMachinesCreate(t *testing.T) {
 	var method, path string
-	machines := []Machine{{
-		Serial: "a",
-	}, {
-		Serial: "b",
-	}}
+
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
 		path = r.URL.Path
 	}))
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err := c.MachinesCreate(context.Background(), machines)
+	err := c.MachinesCreate(context.Background(), []Machine{})
 	if err != nil {
 		t.Error("err == nil")
 	}
@@ -132,18 +128,14 @@ func TestMachinesCreate(t *testing.T) {
 
 func TestMachinesUpdate(t *testing.T) {
 	var method, path string
-	machines := []Machine{{
-		Serial: "a",
-	}, {
-		Serial: "b",
-	}}
+
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
 		path = r.URL.Path
 	}))
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err := c.MachinesUpdate(context.Background(), machines)
+	err := c.MachinesUpdate(context.Background(), []Machine{})
 	if err != nil {
 		t.Error("err == nil")
 	}
