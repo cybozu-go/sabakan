@@ -152,7 +152,7 @@ func TestMachinesUpdate(t *testing.T) {
 	}
 }
 
-func TestJSONGet(t *testing.T) {
+func TestGetJSON(t *testing.T) {
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `{ "apple": "red", "banana": "yellow"}`)
 	}))
@@ -161,7 +161,7 @@ func TestJSONGet(t *testing.T) {
 	var data = make(map[string]string)
 
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
-	err := c.jsonGet(context.Background(), "/", nil, &data)
+	err := c.getJSON(context.Background(), "/", nil, &data)
 	if err != nil {
 		t.Error(err)
 	}
@@ -177,7 +177,7 @@ func TestJSONGet(t *testing.T) {
 
 	c = Client{endpoint: s2.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err = c.jsonGet(context.Background(), "/", nil, &data)
+	err = c.getJSON(context.Background(), "/", nil, &data)
 	if err == nil {
 		t.Errorf("%v != nil", err)
 	}
@@ -214,7 +214,7 @@ func TestSendRequestWithJSON(t *testing.T) {
 
 	c = Client{endpoint: s2.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err = c.jsonGet(context.Background(), "/", nil, &data)
+	err = c.getJSON(context.Background(), "/", nil, &data)
 	if err == nil {
 		t.Errorf("%v != nil", err)
 	}
