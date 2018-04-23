@@ -20,6 +20,7 @@ func (r *machinesCmd) Synopsis() string { return "manage machines." }
 func (r *machinesCmd) Usage() string {
 	return `Usage:
 	machines get [options]
+	machines create -f <machines-file.json>
 	machines update -f <machines-file.json>
 `
 }
