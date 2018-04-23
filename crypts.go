@@ -79,10 +79,7 @@ func (e *EtcdClient) handleGetCrypts(w http.ResponseWriter, r *http.Request) {
 		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
-	err = renderJSON(w, responseBody, http.StatusOK)
-	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-	}
+	renderJSON(w, responseBody, http.StatusOK)
 }
 
 func (e *EtcdClient) handlePostCrypts(w http.ResponseWriter, r *http.Request) {
@@ -124,10 +121,7 @@ func (e *EtcdClient) handlePostCrypts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = renderJSON(w, sabakanCrypt{Path: string(diskPath), Key: string(key)}, http.StatusCreated)
-	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-	}
+	renderJSON(w, sabakanCrypt{Path: string(diskPath), Key: string(key)}, http.StatusCreated)
 }
 
 func (e *EtcdClient) handleDeleteCrypts(w http.ResponseWriter, r *http.Request) {
@@ -161,8 +155,5 @@ func (e *EtcdClient) handleDeleteCrypts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = renderJSON(w, dresp, http.StatusOK)
-	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-	}
+	renderJSON(w, dresp, http.StatusOK)
 }

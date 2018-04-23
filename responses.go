@@ -7,11 +7,13 @@ import (
 	"github.com/cybozu-go/log"
 )
 
-func renderJSON(w http.ResponseWriter, data interface{}, status int) error {
+func renderJSON(w http.ResponseWriter, data interface{}, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	err := json.NewEncoder(w).Encode(data)
-	return err
+	if err != nil {
+		renderError(w, err, http.StatusInternalServerError)
+	}
 }
 
 func renderError(w http.ResponseWriter, resperr error, status int) {
