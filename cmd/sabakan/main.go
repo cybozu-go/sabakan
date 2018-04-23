@@ -69,7 +69,7 @@ func main() {
 	s.ListenAndServe()
 
 	err = cmd.Wait()
-	if err != nil && !cmd.IsSignaled(err) {
+	if !cmd.IsSignaled(err) && err != nil {
 		log.ErrorExit(err)
 	}
 }
