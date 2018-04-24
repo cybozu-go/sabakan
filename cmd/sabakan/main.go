@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
+	dhcp "github.com/cybozu-go/sabakan/dhcp"
 	"github.com/gorilla/mux"
 )
 
@@ -20,6 +22,11 @@ var (
 	flagEtcdPrefix  = flag.String("etcd-prefix", "", "etcd prefix")
 	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
 )
+
+//var dhcpBind = "10.69.0.3:67"
+var dhcpBind = "0.0.0.0:67"
+var dhcpBegin = net.IPv4(10, 69, 0, 33)
+var dhcpEnd = net.IPv4(10, 69, 0, 63)
 
 func main() {
 	flag.Parse()
@@ -57,6 +64,15 @@ func main() {
 
 	cmd.Go(func(ctx context.Context) error {
 		return sabakan.EtcdWatcher(ctx, e)
+	})
+
+	dhcps, err := dhcp.New(dhcpBind, "lo", "ipxe", dhcpBegin, dhcpEnd)
+	if err != nil {
+		log.ErrorExit(err)
+	}
+	defer dhcps.Close()
+	cmd.Go(func(ctx context.Context) error {
+		return dhcps.Serve(ctx)
 	})
 
 	s := &cmd.HTTPServer{
