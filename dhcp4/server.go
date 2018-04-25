@@ -58,7 +58,13 @@ const (
 	FirmwareX86Ipxe
 )
 
-func (s *dhcpserver) handleDiscover(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *net.Interface) error {
+type DHCPConn interface {
+	Close() error
+	RecvDHCP() (*dhcp4.Packet, *net.Interface, error)
+	SendDHCP(pkt *dhcp4.Packet, intf *net.Interface) error
+}
+
+func (s *dhcpserver) handleDiscover(conn DHCPConn, pkt *dhcp4.Packet, intf *net.Interface) error {
 	fmt.Printf("isBootDHCP: %v\n", s.isBootDHCP(pkt))
 	/*
 		if err = s.isBootDHCP(pkt); err != nil {
@@ -131,7 +137,7 @@ func (s *dhcpserver) handleDiscover(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *n
 	return nil
 }
 
-func (s *dhcpserver) handleRequest(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *net.Interface) error {
+func (s *dhcpserver) handleRequest(conn DHCPConn, pkt *dhcp4.Packet, intf *net.Interface) error {
 
 	ip := pkt.Options[dhcp4.OptRequestedIP]
 	fmt.Printf("requested ip: %v\n", ip)
