@@ -2,7 +2,6 @@ package dhcp4
 
 import (
 	"context"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"net"
@@ -22,9 +21,11 @@ func New(bind string, ifname string, ipxe string, begin, end net.IP) Server {
 	s.bind = bind
 	s.ifname = ifname
 	s.ipxe = ipxe
-	s.begin = begin
-	s.end = end
-	s.leases = make(map[uint32]struct{})
+	s.assign = assignment{
+		begin:  begin,
+		end:    end,
+		leases: make(map[uint32]struct{}),
+	}
 	return s
 }
 
@@ -33,9 +34,7 @@ type dhcpserver struct {
 	ifname string
 	ipxe   string
 
-	begin  net.IP
-	end    net.IP
-	leases map[uint32]struct{}
+	assign assignment
 }
 
 // Architecture represent an architecture type
@@ -91,7 +90,7 @@ func (s *dhcpserver) handleDiscover(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *n
 		"architecture": arch,
 	})
 
-	ip, err := s.nextIPAddress()
+	ip, err := s.assign.next()
 	fmt.Printf("nextIPAddress: %v, err: %v\n", ip, err)
 	if err != nil {
 		log.Info("DHCP: Couldn't allocate ip address", map[string]interface{}{
@@ -289,31 +288,6 @@ func (s *dhcpserver) ackDHCP(pkt *dhcp4.Packet, serverIP net.IP, clientIP net.IP
 	resp.Options[dhcp4.OptDHCPMessageType] = []byte{5}
 
 	return resp, nil
-}
-
-func ip2int(ip net.IP) uint32 {
-	if len(ip) == 16 {
-		return binary.BigEndian.Uint32(ip[12:16])
-	}
-	return binary.BigEndian.Uint32(ip)
-}
-
-func (s *dhcpserver) nextIPAddress() (net.IP, error) {
-	ibegin := ip2int(s.begin)
-	iend := ip2int(s.end)
-	fmt.Printf("begin: %v, end:%v\n", s.begin, s.end)
-	for n := ibegin; n <= iend; n++ {
-		if _, ok := s.leases[n]; ok {
-			continue
-		}
-
-		s.leases[n] = struct{}{}
-
-		ip := make(net.IP, 4)
-		binary.BigEndian.PutUint32(ip, n)
-		return ip, nil
-	}
-	return nil, errors.New("leases are full")
 }
 
 func interfaceIP(intf *net.Interface) (net.IP, error) {
