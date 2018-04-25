@@ -58,14 +58,13 @@ const (
 	FirmwareX86Ipxe
 )
 
-type DHCPConn interface {
+type dhcpConn interface {
 	Close() error
 	RecvDHCP() (*dhcp4.Packet, *net.Interface, error)
 	SendDHCP(pkt *dhcp4.Packet, intf *net.Interface) error
 }
 
-func (s *dhcpserver) handleDiscover(conn DHCPConn, pkt *dhcp4.Packet, intf *net.Interface) error {
-	fmt.Printf("isBootDHCP: %v\n", s.isBootDHCP(pkt))
+func (s *dhcpserver) handleDiscover(conn dhcpConn, pkt *dhcp4.Packet, intf *net.Interface) error {
 	/*
 		if err = s.isBootDHCP(pkt); err != nil {
 			log.Debug("DHCP: Ignoring packet", map[string]interface{}{
@@ -76,7 +75,6 @@ func (s *dhcpserver) handleDiscover(conn DHCPConn, pkt *dhcp4.Packet, intf *net.
 		}
 	*/
 	arch, fwtype, err := s.validateDHCP(pkt)
-	fmt.Printf("arch: %v, fwtype: %v, err: %v\n", arch, fwtype, err)
 	/*
 		if err != nil {
 			log.Debug("DHCP: Unusable packet", map[string]interface{}{
@@ -97,7 +95,6 @@ func (s *dhcpserver) handleDiscover(conn DHCPConn, pkt *dhcp4.Packet, intf *net.
 	})
 
 	ip, err := s.assign.next()
-	fmt.Printf("nextIPAddress: %v, err: %v\n", ip, err)
 	if err != nil {
 		log.Info("DHCP: Couldn't allocate ip address", map[string]interface{}{
 			"mac_address": pkt.HardwareAddr,
@@ -107,7 +104,6 @@ func (s *dhcpserver) handleDiscover(conn DHCPConn, pkt *dhcp4.Packet, intf *net.
 	}
 
 	serverIP, err := interfaceIP(intf)
-	fmt.Printf("interfaceIP: %v, err: %v\n", serverIP, err)
 	if err != nil {
 		log.Info("DHCP: Couldn't get a source address", map[string]interface{}{
 			"mac_address": pkt.HardwareAddr,
@@ -137,13 +133,11 @@ func (s *dhcpserver) handleDiscover(conn DHCPConn, pkt *dhcp4.Packet, intf *net.
 	return nil
 }
 
-func (s *dhcpserver) handleRequest(conn DHCPConn, pkt *dhcp4.Packet, intf *net.Interface) error {
+func (s *dhcpserver) handleRequest(conn dhcpConn, pkt *dhcp4.Packet, intf *net.Interface) error {
 
 	ip := pkt.Options[dhcp4.OptRequestedIP]
-	fmt.Printf("requested ip: %v\n", ip)
 
 	serverIP, err := interfaceIP(intf)
-	fmt.Printf("interfaceIP: %v, err: %v\n", serverIP, err)
 
 	resp, err := s.ackDHCP(pkt, serverIP, ip)
 	if err != nil {
@@ -179,7 +173,6 @@ func (s *dhcpserver) Serve(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("Receiving DHCP packet: %s", err)
 		}
-		fmt.Printf("received dhcp packet: %s\n", intf.Name)
 		/*
 			if intf.Name != s.ifname {
 				log.Debug("DHCP: Ignoring packet", map[string]interface{}{

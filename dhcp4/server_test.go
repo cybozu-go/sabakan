@@ -27,20 +27,21 @@ func (c *dummyConn) SendDHCP(pkt *dhcp4.Packet, intf *net.Interface) error {
 	return nil
 }
 
-func testDiscover(t *testing.T) {
-	dhcp4Begin := net.IPv4(10, 69, 0, 33)
-	dhcp4End := net.IPv4(10, 69, 0, 63)
+var dhcp4Begin = net.IPv4(10, 69, 0, 33)
+var dhcp4End = net.IPv4(10, 69, 0, 63)
+var serverInterface net.Interface
 
+func init() {
+	intfs, _ := net.Interfaces()
+	serverInterface = intfs[0]
+}
+
+func testDiscover(t *testing.T) {
 	conn := dummyConn{}
-	pkt, err := createPacket(dhcp4.MsgOffer, nil)
-	intfs, err := net.Interfaces()
-	if err != nil {
-		t.Fatal(err)
-	}
-	intf := intfs[0]
+	pkt := createPacket(dhcp4.MsgDiscover, nil)
 
 	dhcp := New("0.0.0.0:67", "lo", "", dhcp4Begin, dhcp4End).(*dhcpserver)
-	err = dhcp.handleDiscover(&conn, pkt, &intf)
+	err := dhcp.handleDiscover(&conn, pkt, &serverInterface)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,13 +49,35 @@ func testDiscover(t *testing.T) {
 	if len(conn.packets) != 1 {
 		t.Fatal("dhcp4.Server should return only one packet")
 	}
-	p := conn.packets[0]
-	assertEqualPackets(t, expected, p)
+	actual := conn.packets[0]
+	expected := createPacket(dhcp4.MsgOffer, nil)
+	expected.YourAddr = dhcp4Begin
+
+	assertEqualPackets(t, expected, actual)
+}
+
+func testRequest(t *testing.T) {
+	conn := dummyConn{}
+	pkt := createPacket(dhcp4.MsgRequest, nil)
+
+	dhcp := New("0.0.0.0:67", "lo", "", dhcp4Begin, dhcp4End).(*dhcpserver)
+	err := dhcp.handleRequest(&conn, pkt, &serverInterface)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(conn.packets) != 1 {
+		t.Fatal("dhcp4.Server should return only one packet")
+	}
+	actual := conn.packets[0]
+	expected := createPacket(dhcp4.MsgAck, nil)
+
+	assertEqualPackets(t, expected, actual)
 }
 
 func assertEqualPackets(t *testing.T, expected *dhcp4.Packet, actual *dhcp4.Packet) {
-	if actual.Type != dhcp4.MsgOffer {
-		t.Fatalf("Type expeceted: %d, actual: %d", actual.Type, dhcp4.MsgOffer)
+	if actual.Type != expected.Type {
+		t.Fatalf("Type expeceted: %d, actual: %d", expected.Type, actual.Type)
 	}
 	if !expected.YourAddr.Equal(actual.YourAddr) {
 		t.Fatalf("YourAddr expeceted: %v, actual: %v", expected.YourAddr, actual.YourAddr)
@@ -65,20 +88,17 @@ func assertEqualPackets(t *testing.T, expected *dhcp4.Packet, actual *dhcp4.Pack
 	}
 }
 
-func createPacket(msgType dhcp4.MessageType, options dhcp4.Options) (*dhcp4.Packet, error) {
-	hwaddr, err := net.ParseMAC("00:00:00:00:00:00")
-	if err != nil {
-		return nil, err
-	}
-	pkt := dhcp4.Packet{
+func createPacket(msgType dhcp4.MessageType, options dhcp4.Options) *dhcp4.Packet {
+	hwaddr, _ := net.ParseMAC("00:00:00:00:00:00")
+	pkt := &dhcp4.Packet{
 		Type:           msgType,
 		TransactionID:  []byte{1, 2, 3, 4},
 		Broadcast:      true,
 		HardwareAddr:   hwaddr,
-		ClientAddr:     net.ParseIP("0.0.0.0"),
-		YourAddr:       net.ParseIP("0.0.0.0"),
-		ServerAddr:     net.ParseIP("0.0.0.0"),
-		RelayAddr:      net.ParseIP("0.0.0.0"),
+		ClientAddr:     nil,
+		YourAddr:       nil,
+		ServerAddr:     nil,
+		RelayAddr:      nil,
 		BootServerName: "",
 		BootFilename:   "",
 		Options:        make(dhcp4.Options),
@@ -87,9 +107,10 @@ func createPacket(msgType dhcp4.MessageType, options dhcp4.Options) (*dhcp4.Pack
 	for k, v := range options {
 		pkt.Options[k] = v
 	}
-	return &pkt, nil
+	return pkt
 }
 
 func TestDHCP(t *testing.T) {
 	t.Run("discover", testDiscover)
+	t.Run("request", testRequest)
 }
