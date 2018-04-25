@@ -14,29 +14,22 @@ import (
 // Server is a DHCP server
 type Server interface {
 	Serve(ctx context.Context) error
-	Close() error
 }
 
 // New creates a new dhcp Server object
-func New(bind string, ifname string, ipxe string, begin, end net.IP) (Server, error) {
-	conn, err := dhcp4.NewConn(bind)
-	if err != nil {
-		return nil, err
-	}
-
+func New(bind string, ifname string, ipxe string, begin, end net.IP) Server {
 	s := new(dhcpserver)
-	s.conn = conn
+	s.bind = bind
 	s.ifname = ifname
 	s.ipxe = ipxe
 	s.begin = begin
 	s.end = end
 	s.leases = make(map[uint32]struct{})
-	return s, nil
+	return s
 }
 
 type dhcpserver struct {
-	conn *dhcp4.Conn
-
+	bind   string
 	ifname string
 	ipxe   string
 
@@ -66,7 +59,7 @@ const (
 	FirmwareX86Ipxe
 )
 
-func (s *dhcpserver) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf *net.Interface) error {
+func (s *dhcpserver) handleDiscover(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *net.Interface) error {
 	fmt.Printf("isBootDHCP: %v\n", s.isBootDHCP(pkt))
 	/*
 		if err = s.isBootDHCP(pkt); err != nil {
@@ -128,7 +121,7 @@ func (s *dhcpserver) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 		return nil
 	}
 
-	if err = s.conn.SendDHCP(resp, intf); err != nil {
+	if err = conn.SendDHCP(resp, intf); err != nil {
 		log.Info("DHCP: Failed to send ProxyDHCP offer", map[string]interface{}{
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
@@ -139,7 +132,7 @@ func (s *dhcpserver) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 	return nil
 }
 
-func (s *dhcpserver) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf *net.Interface) error {
+func (s *dhcpserver) handleRequest(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *net.Interface) error {
 
 	ip := pkt.Options[dhcp4.OptRequestedIP]
 	fmt.Printf("requested ip: %v\n", ip)
@@ -156,7 +149,7 @@ func (s *dhcpserver) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 		return nil
 	}
 
-	if err = s.conn.SendDHCP(resp, intf); err != nil {
+	if err = conn.SendDHCP(resp, intf); err != nil {
 		log.Info("DHCP: Failed to send ProxyDHCP ack", map[string]interface{}{
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
@@ -167,8 +160,17 @@ func (s *dhcpserver) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 }
 
 func (s *dhcpserver) Serve(ctx context.Context) error {
+	conn, err := dhcp4.NewConn(s.bind)
+	if err != nil {
+		return err
+	}
+	go func() {
+		<-ctx.Done()
+		conn.Close()
+	}()
+
 	for {
-		pkt, intf, err := s.conn.RecvDHCP()
+		pkt, intf, err := conn.RecvDHCP()
 		if err != nil {
 			return fmt.Errorf("Receiving DHCP packet: %s", err)
 		}
@@ -185,9 +187,9 @@ func (s *dhcpserver) Serve(ctx context.Context) error {
 
 		switch pkt.Type {
 		case dhcp4.MsgDiscover:
-			err = s.handleDiscover(ctx, pkt, intf)
+			err = s.handleDiscover(conn, pkt, intf)
 		case dhcp4.MsgRequest:
-			err = s.handleRequest(ctx, pkt, intf)
+			err = s.handleRequest(conn, pkt, intf)
 		default:
 			err = fmt.Errorf("unknown packet type: %v", pkt.Type)
 		}
@@ -345,8 +347,4 @@ func interfaceIP(intf *net.Interface) (net.IP, error) {
 	}
 
 	return nil, errors.New("no usable unicast address configured on interface")
-}
-
-func (s *dhcpserver) Close() error {
-	return s.conn.Close()
 }

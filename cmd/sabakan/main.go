@@ -21,10 +21,12 @@ var (
 	flagEtcdServers = flag.String("etcd-servers", "http://localhost:2379", "URLs of the backend etcd")
 	flagEtcdPrefix  = flag.String("etcd-prefix", "", "etcd prefix")
 	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
+
+	flagDHCPBind         = flag.String("dhcp-bind", "0.0.0.0:67", "bound ip addresses and port for dhcp server")
+	flagDHCPInterface    = flag.String("dhcp-interface", "", "interface which receive a packet on")
+	flagDHCPIPXEFirmware = flag.String("dhcp-ipxe-firmware-url", "", "URL to iPXE firmware")
 )
 
-//var dhcpBind = "10.69.0.3:67"
-var dhcpBind = "0.0.0.0:67"
 var dhcpBegin = net.IPv4(10, 69, 0, 33)
 var dhcpEnd = net.IPv4(10, 69, 0, 63)
 
@@ -66,11 +68,7 @@ func main() {
 		return sabakan.EtcdWatcher(ctx, e)
 	})
 
-	dhcps, err := dhcp.New(dhcpBind, "lo", "ipxe", dhcpBegin, dhcpEnd)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-	defer dhcps.Close()
+	dhcps := dhcp.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, dhcpBegin, dhcpEnd)
 	cmd.Go(func(ctx context.Context) error {
 		return dhcps.Serve(ctx)
 	})
@@ -84,6 +82,7 @@ func main() {
 	}
 	s.ListenAndServe()
 
+	cmd.Stop()
 	err = cmd.Wait()
 	if !cmd.IsSignaled(err) && err != nil {
 		log.ErrorExit(err)
