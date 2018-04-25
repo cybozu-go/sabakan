@@ -31,12 +31,28 @@ func testDiscover(t *testing.T) {
 	dhcp4End := net.IPv4(10, 69, 0, 63)
 
 	conn := dummyConn{}
-	pkt := dhcp4.Packet{}
+	hwaddr, err := net.ParseMAC("00:00:00:00:00:00")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkt := dhcp4.Packet{
+		Type:           dhcp4.MsgDiscover,
+		TransactionID:  []byte{1, 2, 3, 4},
+		Broadcast:      true,
+		HardwareAddr:   hwaddr,
+		ClientAddr:     net.ParseIP("0.0.0.0"),
+		YourAddr:       net.ParseIP("0.0.0.0"),
+		ServerAddr:     net.ParseIP("0.0.0.0"),
+		RelayAddr:      net.ParseIP("0.0.0.0"),
+		BootServerName: "",
+		BootFilename:   "",
+		Options:        make(dhcp4.Options),
+	}
+	pkt.Options[dhcp4.OptDHCPMessageType] = []byte{1}
 	intf := net.Interface{}
 
 	dhcp := New("0.0.0.0:67", "", "", dhcp4Begin, dhcp4End).(*dhcpserver)
-	err := dhcp.handleDiscover(&conn, &pkt, &intf)
-
+	err = dhcp.handleDiscover(&conn, &pkt, &intf)
 	if err != nil {
 		t.Fatal(err)
 	}
