@@ -261,18 +261,16 @@ func (s *dhcpserver) offerDHCP(pkt *dhcp4.Packet, serverIP net.IP, arch Architec
 		YourAddr:      clientIP,
 		Options:       make(dhcp4.Options),
 	}
-	resp.Options[dhcp4.OptServerIdentifier] = serverIP
-	resp.Options[dhcp4.OptVendorIdentifier] = []byte("HTTPClient")
-	resp.Options[97] = pkt.Options[97]
 
 	switch fwtype {
 	case FirmwareEFI32, FirmwareEFI64, FirmwareEFIBC:
 		resp.BootServerName = serverIP.String()
 		resp.BootFilename = s.ipxe
+		resp.Options[dhcp4.OptServerIdentifier] = serverIP
+		resp.Options[dhcp4.OptVendorIdentifier] = []byte("HTTPClient")
+		resp.Options[97] = pkt.Options[97]
 	default:
-		resp.BootServerName = serverIP.String()
-		resp.BootFilename = s.ipxe
-		//return nil, fmt.Errorf("unknown firmware type %d", fwtype)
+		resp.Options[dhcp4.OptDHCPMessageType] = []byte{2}
 	}
 
 	return resp, nil
