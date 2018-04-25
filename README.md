@@ -93,6 +93,12 @@ $ go get -u github.com/cybozu-go/sabakan/cmd/sabakan
 $ go get -u github.com/cybozu-go/sabakan/cmd/sabactl
 ```
 
+### Debugging with a DHCP client
+
+```console
+$ make debug
+```
+
 Specification
 -------------
 
