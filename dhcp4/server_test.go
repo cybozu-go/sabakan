@@ -2,7 +2,6 @@ package dhcp4
 
 import (
 	"bytes"
-	"fmt"
 	"net"
 	"testing"
 
@@ -22,7 +21,6 @@ func (c *dummyConn) RecvDHCP() (*dhcp4.Packet, *net.Interface, error) {
 }
 
 func (c *dummyConn) SendDHCP(pkt *dhcp4.Packet, intf *net.Interface) error {
-	fmt.Printf("Send: %v\n", pkt)
 	c.packets = append(c.packets, pkt)
 	return nil
 }

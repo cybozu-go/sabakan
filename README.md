@@ -101,7 +101,7 @@ See [SPEC](SPEC.md).
 License
 -------
 
-Ssabakan is licensed upder MIT
+Sabakan is licensed upder MIT
 
 The source code contains a [Netboot](https://github.com/google/netboot) which is licensed under Apache License 2.0.
 

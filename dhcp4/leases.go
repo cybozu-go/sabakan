@@ -3,7 +3,6 @@ package dhcp4
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"net"
 )
 
@@ -17,7 +16,6 @@ type assignment struct {
 func (a *assignment) next() (net.IP, error) {
 	ibegin := ip2int(a.begin)
 	iend := ip2int(a.end)
-	fmt.Printf("begin: %v, end:%v\n", a.begin, a.end)
 	for n := ibegin; n <= iend; n++ {
 		if _, ok := a.leases[n]; ok {
 			continue

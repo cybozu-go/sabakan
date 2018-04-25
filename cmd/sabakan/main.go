@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -33,6 +34,9 @@ var dhcp4End = net.IPv4(10, 69, 0, 63)
 
 func main() {
 	flag.Parse()
+	if *flagDHCPInterface == "" {
+		log.ErrorExit(fmt.Errorf("-dhcp-interface option required"))
+	}
 
 	var e sabakan.EtcdConfig
 	e.Servers = strings.Split(*flagEtcdServers, ",")
