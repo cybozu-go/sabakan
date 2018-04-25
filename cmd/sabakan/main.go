@@ -12,7 +12,7 @@ import (
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
-	dhcp "github.com/cybozu-go/sabakan/dhcp"
+	"github.com/cybozu-go/sabakan/dhcp4"
 	"github.com/gorilla/mux"
 )
 
@@ -27,8 +27,9 @@ var (
 	flagDHCPIPXEFirmware = flag.String("dhcp-ipxe-firmware-url", "", "URL to iPXE firmware")
 )
 
-var dhcpBegin = net.IPv4(10, 69, 0, 33)
-var dhcpEnd = net.IPv4(10, 69, 0, 63)
+// TODO this is temporary range for the debug
+var dhcp4Begin = net.IPv4(10, 69, 0, 33)
+var dhcp4End = net.IPv4(10, 69, 0, 63)
 
 func main() {
 	flag.Parse()
@@ -68,7 +69,7 @@ func main() {
 		return sabakan.EtcdWatcher(ctx, e)
 	})
 
-	dhcps := dhcp.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, dhcpBegin, dhcpEnd)
+	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, dhcp4Begin, dhcp4End)
 	cmd.Go(func(ctx context.Context) error {
 		return dhcps.Serve(ctx)
 	})
