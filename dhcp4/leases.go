@@ -8,8 +8,8 @@ import (
 
 // TODO this is a temporary on-memory DHCP leases for the mock
 type assignment struct {
-	begin  net.IP
-	end    net.IP
+	begin net.IP
+	end   net.IP
 	//TODO: leases must be committed on DHCPREQUEST
 	leases map[uint32]struct{}
 }
