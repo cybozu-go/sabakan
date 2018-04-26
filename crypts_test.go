@@ -1,237 +1,206 @@
 package sabakan
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http/httptest"
 	"path"
 	"reflect"
-	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/gorilla/mux"
 )
 
-func TestValidatePostParams(t *testing.T) {
-	valid := sabakanCrypt{"disk-a", "foo"}
-	if err := validatePostParams(valid); err != nil {
-		t.Fatal("validator should return nil when the args are valid.")
-	}
-	invalid1 := sabakanCrypt{"", "foo"}
-	if err := validatePostParams(invalid1); err == nil {
-		t.Fatal("validator should return error when the args are valid.")
-	}
-	invalid2 := sabakanCrypt{"disk-a", ""}
-	if err := validatePostParams(invalid2); err == nil {
-		t.Fatal("validator should return error when the args are valid.")
-	}
-}
-
-func TestHandleGetCrypts(t *testing.T) {
+func testCryptsGet(t *testing.T) {
 	etcd, err := newEtcdClient()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer etcd.Close()
 	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	ctx := context.Background()
-	Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix}
+	handler := mux.NewRouter()
+	InitCrypts(handler.PathPrefix("/api/v1/").Subrouter(), &EtcdClient{etcd, prefix})
+
 	serial := "1"
 	diskPath := "exists-path"
 	key := "aaa"
-	inputCrypt := sabakanCrypt{Path: diskPath, Key: key}
-	val, err := json.Marshal(inputCrypt)
+	_, err = etcd.Put(context.Background(), path.Join(prefix, EtcdKeyCrypts, serial, diskPath), key)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = etcd.Put(context.Background(), path.Join(prefix, "crypts", serial, diskPath), string(val))
-	if err != nil {
-		t.Fatal(err)
-	}
-	w := httptest.NewRecorder()
-	r := httptest.NewRequest("GET", path.Join("/api/v1/crypts", serial, diskPath), nil)
-	r = mux.SetURLVars(r, map[string]string{"serial": serial, "path": diskPath})
 
-	etcdClient.handleGetCrypts(w, r)
+	testData := []struct {
+		path   string
+		status int
+		key    string
+	}{
+		{diskPath, 200, key},
+		{"not-exist", 404, ""},
+	}
 
-	resp := w.Result()
-	var outputCrypt sabakanCrypt
-	err = json.NewDecoder(resp.Body).Decode(&outputCrypt)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if resp.StatusCode != 200 {
-		t.Fatal("expected: 200, actual:", resp.StatusCode)
-	}
-	if outputCrypt != inputCrypt {
-		t.Fatal("invalid response body, ", outputCrypt)
-	}
-}
+	for _, td := range testData {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("GET", path.Join("/api/v1/crypts", serial, td.path), nil)
+		handler.ServeHTTP(w, r)
+		resp := w.Result()
 
-func TestHandleGetCryptsNotFound(t *testing.T) {
-	etcd, err := newEtcdClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer etcd.Close()
-	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	ctx := context.Background()
-	Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix}
-	w := httptest.NewRecorder()
-	r := httptest.NewRequest("GET", "/api/v1/crypts", nil)
-	r = mux.SetURLVars(r, map[string]string{"serial": "1", "path": "non-exists-key"})
-
-	etcdClient.handleGetCrypts(w, r)
-
-	resp := w.Result()
-	if resp.StatusCode != 404 {
-		t.Fatal("expected: 404, actual:", resp.StatusCode)
-	}
-}
-
-func TestHandlePostCrypts(t *testing.T) {
-	etcd, err := newEtcdClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer etcd.Close()
-	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	ctx := context.Background()
-	Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix}
-	serial := "1"
-	diskPath := "put-path"
-	key := "aaa"
-	crypt := sabakanCrypt{Path: diskPath, Key: key}
-	val, _ := json.Marshal(crypt)
-	w := httptest.NewRecorder()
-	r := httptest.NewRequest("POST", path.Join("/api/v1/crypts", serial), bytes.NewBuffer(val))
-	r = mux.SetURLVars(r, map[string]string{"serial": serial})
-
-	etcdClient.handlePostCrypts(w, r)
-
-	resp := w.Result()
-	var respondedCrypt sabakanCrypt
-	var savedCrypt sabakanCrypt
-	json.NewDecoder(resp.Body).Decode(&respondedCrypt)
-	etcdResp, _ := etcd.Get(context.Background(), path.Join(prefix, EtcdKeyCrypts, serial, diskPath))
-	err = json.Unmarshal(etcdResp.Kvs[0].Value, &savedCrypt)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if resp.StatusCode != 201 {
-		t.Fatal("expected: 201, actual:", resp.StatusCode)
-	}
-	if respondedCrypt != crypt {
-		t.Fatal("invalid response body, ", respondedCrypt)
-	}
-	if savedCrypt != crypt {
-		t.Fatal("saved entity is invalid, ", savedCrypt)
-	}
-}
-
-func TestHandlePostCryptsInvalidBody(t *testing.T) {
-	etcd, err := newEtcdClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer etcd.Close()
-	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	ctx := context.Background()
-	Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix}
-	w := httptest.NewRecorder()
-	invalidBody, err := json.Marshal(&struct {
-		Name string `json:"name"`
-		Age  int    `json:"age"`
-	}{"Taro", 1})
-	if err != nil {
-		t.Fatal(err)
-	}
-	r := httptest.NewRequest("POST", "/api/v1/crypts/1", bytes.NewBuffer(invalidBody))
-	r = mux.SetURLVars(r, map[string]string{"serial": "1"})
-
-	etcdClient.handlePostCrypts(w, r)
-
-	resp := w.Result()
-	if w.Result().StatusCode != 400 {
-		t.Fatal("expected: 400, actual:", resp.StatusCode)
-	}
-}
-
-func TestHandleDeleteCrypts(t *testing.T) {
-	etcd, err := newEtcdClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer etcd.Close()
-	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	ctx := context.Background()
-	Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix}
-	expected := deleteResponse{}
-	serial := "1"
-	key := "aaa"
-	for i := 0; i < 5; i++ {
-		diskPath := "path" + strconv.Itoa(i)
-		crypt := sabakanCrypt{Path: diskPath, Key: key}
-		val, err := json.Marshal(crypt)
+		if resp.StatusCode != td.status {
+			t.Error("wrong status code, expects:", td.status, ", actual:", resp.StatusCode)
+		}
+		data, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
 		if err != nil {
 			t.Fatal(err)
 		}
-		target := path.Join(prefix, EtcdKeyCrypts, serial, diskPath)
-		etcd.Put(context.Background(), target, string(val))
-		expected = append(expected, deletePath{target})
+		respKey := string(data)
+		if len(td.key) > 0 && td.key != respKey {
+			t.Error("wrong key, expects:", td.key, ", actual:", respKey)
+		}
 	}
+}
+
+func testCryptsPut(t *testing.T) {
+	etcd, err := newEtcdClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer etcd.Close()
+	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	handler := mux.NewRouter()
+	InitCrypts(handler.PathPrefix("/api/v1/").Subrouter(), &EtcdClient{etcd, prefix})
+
+	serial := "1"
+	diskPath := "put-path"
+
+	testData := []struct {
+		path   string
+		status int
+		key    string
+	}{
+		{diskPath, 201, "aaa"},
+		{diskPath, 409, "bbb"},
+		{"another-path", 201, string([]byte{0, 1, 2, 100, 50, 200})},
+	}
+
+	for _, td := range testData {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("PUT", path.Join("/api/v1/crypts", serial, td.path),
+			strings.NewReader(td.key))
+		handler.ServeHTTP(w, r)
+
+		resp := w.Result()
+		if resp.StatusCode != td.status {
+			t.Error("wrong status code, expects:", td.status, ", actual:", resp.StatusCode)
+		}
+		data, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.StatusCode != 201 {
+			continue
+		}
+
+		var respJSON struct {
+			Status int    `json:"status"`
+			Path   string `json:"path"`
+		}
+		err = json.Unmarshal(data, &respJSON)
+		if err != nil {
+			t.Error("invalid JSON:", string(data))
+			continue
+		}
+		if respJSON.Status != 201 {
+			t.Error("invalid status in JSON:", respJSON.Status)
+		}
+		if respJSON.Path != td.path {
+			t.Error("invalid path in JSON:", respJSON.Path)
+		}
+
+		etcdResp, err := etcd.Get(context.Background(), path.Join(prefix, EtcdKeyCrypts, serial, td.path))
+		if len(etcdResp.Kvs) != 1 {
+			t.Fatal("key is not stored in etcd, path:", td.path)
+		}
+		storedKey := string(etcdResp.Kvs[0].Value)
+		if td.key != storedKey {
+			t.Error("stored key is wrong, expect:", td.key, ", actual:", storedKey)
+		}
+	}
+}
+
+func testCryptsDelete(t *testing.T) {
+	etcd, err := newEtcdClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer etcd.Close()
+	prefix := path.Join(*flagEtcdPrefix, t.Name())
+	handler := mux.NewRouter()
+	InitCrypts(handler.PathPrefix("/api/v1/").Subrouter(), &EtcdClient{etcd, prefix})
+
+	expected := make(map[string]struct{})
+	serial := "abc"
+	key := "aaa"
+	for i := 0; i < 5; i++ {
+		diskPath := fmt.Sprintf("path%d", i)
+		expected[diskPath] = struct{}{}
+		target := path.Join(prefix, EtcdKeyCrypts, serial, diskPath)
+		etcd.Put(context.Background(), target, key)
+	}
+
+	// dummy data to test bug in delete logic.
+	serial2 := "abcd"
+	target2 := path.Join(prefix, EtcdKeyCrypts, serial2, "path1")
+	etcd.Put(context.Background(), target2, key)
+
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", path.Join("/api/v1/crypts", serial), nil)
-	r = mux.SetURLVars(r, map[string]string{"serial": serial})
-
-	etcdClient.handleDeleteCrypts(w, r)
+	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
-	var dresp deleteResponse
-	err = json.NewDecoder(resp.Body).Decode(&dresp)
-	if err != nil {
-		t.Fatal(err)
-	}
-	etcdResp, err := etcd.Get(context.Background(), path.Join(prefix, EtcdKeyCrypts, serial), clientv3.WithPrefix())
-	if err != nil {
-		t.Fatal(err)
-	}
 	if resp.StatusCode != 200 {
 		t.Fatal("expected: 200, actual:", resp.StatusCode)
+	}
+
+	var deletedPaths []string
+	err = json.NewDecoder(resp.Body).Decode(&deletedPaths)
+	resp.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual := make(map[string]struct{})
+	for _, p := range deletedPaths {
+		actual[p] = struct{}{}
+	}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatal("unexpected response:", deletedPaths)
+	}
+
+	testTarget := path.Join(prefix, EtcdKeyCrypts, serial) + "/"
+	etcdResp, err := etcd.Get(context.Background(), testTarget, clientv3.WithPrefix())
+	if err != nil {
+		t.Fatal(err)
 	}
 	if etcdResp.Count != 0 {
 		t.Fatal("expected: 0, actual:", etcdResp.Count)
 	}
-	if !reflect.DeepEqual(dresp, expected) {
-		t.Fatal("unexpected response:", dresp)
-	}
-}
 
-func TestHandleDeleteCryptsNotFound(t *testing.T) {
-	etcd, err := newEtcdClient()
+	testTarget2 := path.Join(prefix, EtcdKeyCrypts, serial2) + "/"
+	etcdResp, err = etcd.Get(context.Background(), testTarget2, clientv3.WithPrefix())
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer etcd.Close()
-	prefix := path.Join(*flagEtcdPrefix, t.Name())
-	ctx := context.Background()
-	Indexing(ctx, etcd, prefix)
-	etcdClient := EtcdClient{etcd, prefix}
-	w := httptest.NewRecorder()
-	r := httptest.NewRequest("DELETE", "/api/v1/crypts", nil)
-	r = mux.SetURLVars(r, map[string]string{"serial": "non-exists-serial"})
-
-	etcdClient.handleDeleteCrypts(w, r)
-
-	resp := w.Result()
-	if resp.StatusCode != 404 {
-		t.Fatal("expected: 404, actual:", resp.StatusCode)
+	if etcdResp.Count != 1 {
+		t.Fatal("expected: 1, actual:", etcdResp.Count)
 	}
+}
+
+func TestCrypts(t *testing.T) {
+	t.Run("Get", testCryptsGet)
+	t.Run("Put", testCryptsPut)
+	t.Run("Delete", testCryptsDelete)
 }

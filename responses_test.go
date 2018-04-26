@@ -6,16 +6,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
 func TestRespWriter(t *testing.T) {
 	w := httptest.NewRecorder()
-	inputCrypt := sabakanCrypt{Path: "path", Key: "aaa"}
-	renderJSON(w, inputCrypt, http.StatusCreated)
+	input := map[string]string{"Path": "path", "Key": "aaa"}
+	renderJSON(w, input, http.StatusCreated)
 	resp := w.Result()
-	var outputCrypt sabakanCrypt
-	err := json.NewDecoder(resp.Body).Decode(&outputCrypt)
+	var output map[string]string
+	err := json.NewDecoder(resp.Body).Decode(&output)
+	resp.Body.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +28,7 @@ func TestRespWriter(t *testing.T) {
 	if resp.Header.Get("Content-Type") != "application/json" {
 		t.Fatal("expected application/json")
 	}
-	if outputCrypt != inputCrypt {
+	if !reflect.DeepEqual(input, output) {
 		t.Fatal("invalid response body")
 	}
 }
