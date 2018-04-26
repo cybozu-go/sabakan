@@ -101,6 +101,8 @@ See [SPEC](SPEC.md).
 License
 -------
 
-MIT
+Sabakan is licensed upder MIT
+
+The source code contains a [Netboot](https://github.com/google/netboot) which is licensed under Apache License 2.0.
 
 [godoc]: https://godoc.org/github.com/cybozu-go/sabakan
