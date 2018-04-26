@@ -50,7 +50,7 @@ func (s *dhcpserver) handleDiscover(conn dhcpConn, pkt *dhcp4.Packet, intf *net.
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
 		})
-		return nil
+		return err
 	}
 
 	serverIP, err := interfaceIP(intf)
@@ -60,7 +60,7 @@ func (s *dhcpserver) handleDiscover(conn dhcpConn, pkt *dhcp4.Packet, intf *net.
 			"interface":   intf.Name,
 			"error":       err,
 		})
-		return nil
+		return err
 	}
 
 	resp, err := s.offerDHCP(pkt, serverIP, ip)
@@ -69,7 +69,7 @@ func (s *dhcpserver) handleDiscover(conn dhcpConn, pkt *dhcp4.Packet, intf *net.
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
 		})
-		return nil
+		return err
 	}
 
 	if err = conn.SendDHCP(resp, intf); err != nil {
@@ -77,10 +77,8 @@ func (s *dhcpserver) handleDiscover(conn dhcpConn, pkt *dhcp4.Packet, intf *net.
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
 		})
-		return nil
 	}
-
-	return nil
+	return err
 }
 
 func (s *dhcpserver) handleRequest(conn dhcpConn, pkt *dhcp4.Packet, intf *net.Interface) error {
@@ -94,7 +92,7 @@ func (s *dhcpserver) handleRequest(conn dhcpConn, pkt *dhcp4.Packet, intf *net.I
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
 		})
-		return nil
+		return err
 	}
 
 	if err = conn.SendDHCP(resp, intf); err != nil {
@@ -102,9 +100,8 @@ func (s *dhcpserver) handleRequest(conn dhcpConn, pkt *dhcp4.Packet, intf *net.I
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
 		})
-		return nil
 	}
-	return nil
+	return err
 }
 
 func (s *dhcpserver) Serve(ctx context.Context) error {
@@ -132,17 +129,14 @@ func (s *dhcpserver) Serve(ctx context.Context) error {
 
 		switch pkt.Type {
 		case dhcp4.MsgDiscover:
-			err = s.handleDiscover(conn, pkt, intf)
+			_ = s.handleDiscover(conn, pkt, intf)
 		case dhcp4.MsgRequest:
-			err = s.handleRequest(conn, pkt, intf)
+			_ = s.handleRequest(conn, pkt, intf)
 		default:
-			err = fmt.Errorf("unknown packet type: %v", pkt.Type)
+			log.Error("unknown packet type: %v",map[string]interface{}{
+				"type": pkt.Type,
+			})
 		}
-
-		if err != nil {
-			return err
-		}
-
 	}
 }
 
@@ -154,11 +148,9 @@ func (s *dhcpserver) offerDHCP(pkt *dhcp4.Packet, serverIP net.IP, clientIP net.
 		HardwareAddr:  pkt.HardwareAddr,
 		RelayAddr:     pkt.RelayAddr,
 		ServerAddr:    serverIP,
-		ClientAddr:    nil,
 		YourAddr:      clientIP,
 		Options:       make(dhcp4.Options),
 	}
-	resp.Options[dhcp4.OptDHCPMessageType] = []byte{2}
 
 	return resp, nil
 }
@@ -175,8 +167,6 @@ func (s *dhcpserver) ackDHCP(pkt *dhcp4.Packet, serverIP net.IP, clientIP net.IP
 		YourAddr:      clientIP,
 		Options:       make(dhcp4.Options),
 	}
-
-	resp.Options[dhcp4.OptDHCPMessageType] = []byte{5}
 
 	return resp, nil
 }

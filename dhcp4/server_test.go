@@ -1,7 +1,6 @@
 package dhcp4
 
 import (
-	"bytes"
 	"net"
 	"testing"
 
@@ -80,10 +79,6 @@ func assertEqualPackets(t *testing.T, expected *dhcp4.Packet, actual *dhcp4.Pack
 	if !expected.YourAddr.Equal(actual.YourAddr) {
 		t.Fatalf("YourAddr expeceted: %v, actual: %v", expected.YourAddr, actual.YourAddr)
 	}
-	if !bytes.Equal(expected.Options[dhcp4.OptDHCPMessageType], actual.Options[dhcp4.OptDHCPMessageType]) {
-		t.Fatalf("Options 53 expeceted: %v, actual: %v",
-			expected.Options[dhcp4.OptDHCPMessageType], actual.Options[dhcp4.OptDHCPMessageType])
-	}
 }
 
 func createPacket(msgType dhcp4.MessageType, options dhcp4.Options) *dhcp4.Packet {
@@ -101,7 +96,6 @@ func createPacket(msgType dhcp4.MessageType, options dhcp4.Options) *dhcp4.Packe
 		BootFilename:   "",
 		Options:        make(dhcp4.Options),
 	}
-	pkt.Options[dhcp4.OptDHCPMessageType] = []byte{byte(msgType)}
 	for k, v := range options {
 		pkt.Options[k] = v
 	}

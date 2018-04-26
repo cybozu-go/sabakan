@@ -10,6 +10,7 @@ import (
 type assignment struct {
 	begin  net.IP
 	end    net.IP
+	//TODO: leases must be committed on DHCPREQUEST
 	leases map[uint32]struct{}
 }
 
