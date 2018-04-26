@@ -70,6 +70,7 @@ clean: clean-vm clean-etcd-server
 
 connect:
 	sudo socat $(VM_SERIAL_SOCK) PTY,link=$(VM_SERIAL_PTY) &
+	sleep 1
 	sudo picocom -e q $(VM_SERIAL_PTY)
 
 .PHONY: etcd-server dhcp-debug-network build dhcp-debug-vm debug clean-vm clean connect
