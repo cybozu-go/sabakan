@@ -65,7 +65,7 @@ func (s *dhcpserver) handleDiscover(conn dhcpConn, pkt *dhcp4.Packet, intf *net.
 
 	resp, err := s.offerDHCP(pkt, serverIP, ip)
 	if err != nil {
-		log.Info("DHCP: Failed to construct ProxyDHCP offer", map[string]interface{}{
+		log.Info("DHCP: Failed to construct DHCP Offer", map[string]interface{}{
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
 		})
@@ -73,7 +73,7 @@ func (s *dhcpserver) handleDiscover(conn dhcpConn, pkt *dhcp4.Packet, intf *net.
 	}
 
 	if err = conn.SendDHCP(resp, intf); err != nil {
-		log.Info("DHCP: Failed to send ProxyDHCP offer", map[string]interface{}{
+		log.Info("DHCP: Failed to send DHCP Offer", map[string]interface{}{
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
 		})
@@ -88,7 +88,7 @@ func (s *dhcpserver) handleRequest(conn dhcpConn, pkt *dhcp4.Packet, intf *net.I
 
 	resp, err := s.ackDHCP(pkt, serverIP, ip)
 	if err != nil {
-		log.Info("DHCP: Failed to construct ProxyDHCP ack", map[string]interface{}{
+		log.Info("DHCP: Failed to construct DHCP Ack", map[string]interface{}{
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
 		})
@@ -96,7 +96,7 @@ func (s *dhcpserver) handleRequest(conn dhcpConn, pkt *dhcp4.Packet, intf *net.I
 	}
 
 	if err = conn.SendDHCP(resp, intf); err != nil {
-		log.Info("DHCP: Failed to send ProxyDHCP ack", map[string]interface{}{
+		log.Info("DHCP: Failed to send DHCP Ack", map[string]interface{}{
 			"mac_address": pkt.HardwareAddr,
 			"error":       err,
 		})
@@ -163,7 +163,6 @@ func (s *dhcpserver) ackDHCP(pkt *dhcp4.Packet, serverIP net.IP, clientIP net.IP
 		HardwareAddr:  pkt.HardwareAddr,
 		RelayAddr:     pkt.RelayAddr,
 		ServerAddr:    serverIP,
-		ClientAddr:    nil,
 		YourAddr:      clientIP,
 		Options:       make(dhcp4.Options),
 	}
