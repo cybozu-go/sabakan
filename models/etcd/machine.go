@@ -35,7 +35,7 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
 
-	tresp, err := d.Txn(ctx).
+	tresp, err := d.client.Txn(ctx).
 		If(
 			txnIfOps...,
 		).
@@ -64,7 +64,7 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 	res := make([]*sabakan.Machine, 0, len(serials))
 	for _, serial := range serials {
 		key := path.Join(d.prefix, KeyMachines, serial)
-		resp, err := d.Get(ctx, key)
+		resp, err := d.client.Get(ctx, key)
 		if err != nil {
 			return nil, err
 		}
@@ -93,5 +93,5 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 }
 
 func (d *Driver) Delete(ctx context.Context, serials []string) error {
-
+	return nil
 }

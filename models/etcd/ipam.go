@@ -26,12 +26,9 @@ func (d *Driver) generateIP(ctx context.Context, mc *sabakan.Machine) (*sabakan.
 			net2 = node-ipv4-offset + (1 << node-rack-shift * 3 * rack-number) + node-number-of-a-rack
 			bmc  = bmc-ipv4-offset + (1 << bmc-rack-shift * 1 * rack-number) + node-number-of-a-rack
 	*/
-	rack := mc.Rack
-	nodeNumber := mc.NodeNumberOfRack
-
 	res := mc.ToJSON()
 	key := path.Join(d.prefix, KeyConfig)
-	resp, err := d.Get(ctx, key)
+	resp, err := d.client.Get(ctx, key)
 	if err != nil {
 		return nil, err
 	}

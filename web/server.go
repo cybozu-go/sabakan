@@ -1,13 +1,15 @@
-package sabakan
+package web
 
 import (
 	"net/http"
 	"strings"
+
+	"github.com/cybozu-go/sabakan"
 )
 
 // Server is the sabakan server.
 type Server struct {
-	Model Model
+	Model sabakan.Model
 }
 
 // Handler implements http.Handler

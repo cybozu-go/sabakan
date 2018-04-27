@@ -1,4 +1,4 @@
-package sabakan
+package web
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
 	"github.com/cybozu-go/sabakan/models/mock"
 )
 

@@ -12,6 +12,7 @@ type driver struct {
 	mu       sync.Mutex
 	storage  map[string][]byte
 	machines map[string]*sabakan.Machine
+	config   sabakan.IPAMConfig
 }
 
 // NewModel returns sabakan.Model

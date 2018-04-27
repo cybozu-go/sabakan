@@ -1,4 +1,4 @@
-package sabakan
+package web
 
 import (
 	"io/ioutil"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/sabakan"
 )
 
 func (s Server) handleCrypts(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +86,7 @@ func (s Server) handleCryptsPut(w http.ResponseWriter, r *http.Request, params [
 
 	err = s.Model.Storage.PutEncryptionKey(r.Context(), serial, p, keyData)
 	switch err {
-	case ErrConflicted:
+	case sabakan.ErrConflicted:
 		renderError(r.Context(), w, APIErrConflict)
 		return
 	case nil:

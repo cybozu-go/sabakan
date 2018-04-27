@@ -14,6 +14,7 @@ import (
 	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/dhcp4"
 	"github.com/cybozu-go/sabakan/models/etcd"
+	"github.com/cybozu-go/sabakan/web"
 )
 
 type etcdConfig struct {
@@ -68,9 +69,10 @@ func main() {
 
 	driver := etcd.NewDriver(c, c2, e.Prefix)
 	cmd.Go(driver.Run)
-	model := Model{
-		Storage: d,
-		Machine: d,
+	model := sabakan.Model{
+		Storage: driver,
+		Machine: driver,
+		Config:  driver,
 	}
 
 	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, dhcp4Begin, dhcp4End)
@@ -79,7 +81,7 @@ func main() {
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
 			Addr:    *flagHTTP,
-			Handler: sabakan.Server{model},
+			Handler: web.Server{model},
 		},
 		ShutdownTimeout: 3 * time.Minute,
 	}

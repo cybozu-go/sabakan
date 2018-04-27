@@ -1,4 +1,4 @@
-package sabakan
+package web
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ type store struct {
 }
 
 func (s *store) getConfig(ctx context.Context) (*IPAMConfig, error) {
-	key := path.Join(s.prefix, EtcdKeyConfig)
+	key := path.Join(s.prefix, KeyConfig)
 	resp, err := s.etcd.Get(ctx, key)
 	if err != nil {
 		return nil, err

@@ -171,7 +171,7 @@ func (d *Driver) startWatching(ctx context.Context) error {
 	return nil
 }
 
-func (mi *machineIndex) query(q *sabakan.Query) []string {
+func (mi *machinesIndex) query(q *sabakan.Query) []string {
 	mi.mux.RLock()
 	defer mi.mux.RUnlock()
 

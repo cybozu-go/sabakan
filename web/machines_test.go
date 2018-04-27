@@ -1,4 +1,4 @@
-package sabakan
+package web
 
 import (
 	"bytes"

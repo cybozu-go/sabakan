@@ -9,7 +9,7 @@ import (
 
 // Driver implements sabakan model.
 type Driver struct {
-	*clientv3.Client
+	client  *clientv3.Client
 	watcher *clientv3.Client
 	prefix  string
 	mi      machinesIndex

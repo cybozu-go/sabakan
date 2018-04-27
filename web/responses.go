@@ -1,4 +1,4 @@
-package sabakan
+package web
 
 import (
 	"context"
@@ -14,7 +14,9 @@ func renderJSON(w http.ResponseWriter, data interface{}, status int) {
 	w.WriteHeader(status)
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
+		log.Error("failed to output JSON", map[string]interface{}{
+			log.FnError: err.Error(),
+		})
 	}
 }
 
@@ -26,7 +28,7 @@ func renderError(ctx context.Context, w http.ResponseWriter, e APIError) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(e.Status)
-	err := json.NewEncoder(w).Encode(out)
+	err := json.NewEncoder(w).Encode(fields)
 	if err != nil {
 		log.Error("failed to output JSON", map[string]interface{}{
 			log.FnError: err.Error(),

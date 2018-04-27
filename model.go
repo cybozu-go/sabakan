@@ -23,8 +23,14 @@ type MachineModel interface {
 	Delete(ctx context.Context, serials []string) error
 }
 
+type ConfigModel interface {
+	PutConfig(ctx context.Context, config *IPAMConfig) error
+	GetConfig(ctx context.Context) (*IPAMConfig, error)
+}
+
 // Model is a struct that consists of sub-models.
 type Model struct {
 	Storage StorageModel
 	Machine MachineModel
+	Config  ConfigModel
 }
