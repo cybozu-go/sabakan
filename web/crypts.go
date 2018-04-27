@@ -31,7 +31,7 @@ func (s Server) handleCrypts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renderError(r.Context(), w, APIErrBadRequest)
+	renderError(r.Context(), w, APIErrBadMethod)
 	return
 }
 
