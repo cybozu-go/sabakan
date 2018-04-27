@@ -1,28 +1,17 @@
 package sabakan
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
+	"io/ioutil"
 	"net/http"
 	"path"
+	"strconv"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
+	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/log"
 	"github.com/gorilla/mux"
-)
-
-type (
-	sabakanCrypt struct {
-		Path string `json:"path"`
-		Key  string `json:"key"`
-	}
-
-	deletePath struct {
-		Path string `json:"path"`
-	}
-
-	deleteResponse []deletePath
 )
 
 // InitCrypts initialize the handle functions for crypts
@@ -32,84 +21,60 @@ func InitCrypts(r *mux.Router, e *EtcdClient) {
 
 func (e *EtcdClient) initCryptsFunc(r *mux.Router) {
 	r.HandleFunc("/crypts/{serial}/{path}", e.handleGetCrypts).Methods("GET")
-	r.HandleFunc("/crypts/{serial}", e.handlePostCrypts).Methods("POST")
+	r.HandleFunc("/crypts/{serial}/{path}", e.handlePutCrypts).Methods("PUT")
 	r.HandleFunc("/crypts/{serial}", e.handleDeleteCrypts).Methods("DELETE")
-}
-
-func makeDeleteResponse(gresp *clientv3.GetResponse) (deleteResponse, error) {
-	dres := deleteResponse{}
-	for _, ev := range gresp.Kvs {
-		dres = append(dres, deletePath{Path: string(ev.Key)})
-	}
-	return dres, nil
-}
-
-func validatePostParams(received sabakanCrypt) error {
-	diskPath := received.Path
-	key := received.Key
-	if len(diskPath) == 0 {
-		return errors.New("`diskPath` should not be empty")
-	}
-	if len(key) == 0 {
-		return errors.New("`key` should not be empty")
-	}
-	return nil
 }
 
 func (e *EtcdClient) handleGetCrypts(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	serial := vars["serial"]
-	diskPath := vars["path"]
+	p := vars["path"]
 
-	target := path.Join(e.Prefix, EtcdKeyCrypts, serial, diskPath)
+	target := path.Join(e.Prefix, EtcdKeyCrypts, serial, p)
 	resp, err := e.Client.Get(r.Context(), target)
 	if err != nil {
 		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if resp.Count == 0 {
-		renderError(w, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound)
+		renderError(w, errors.New(ErrorValueNotFound), http.StatusNotFound)
 		return
 	}
 
 	ev := resp.Kvs[0]
-	var responseBody sabakanCrypt
-	err = json.Unmarshal(ev.Value, &responseBody)
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Length", strconv.Itoa(len(ev.Value)))
+	_, err = w.Write(ev.Value)
 	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-		return
+		fields := cmd.FieldsFromContext(r.Context())
+		fields[log.FnError] = err.Error()
+		log.Error("failed to write response for GET /crypts", fields)
 	}
-	renderJSON(w, responseBody, http.StatusOK)
 }
 
-func (e *EtcdClient) handlePostCrypts(w http.ResponseWriter, r *http.Request) {
+func (e *EtcdClient) handlePutCrypts(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	serial := vars["serial"]
-	var received sabakanCrypt
-	err := json.NewDecoder(r.Body).Decode(&received)
-	if err != nil {
-		renderError(w, err, http.StatusBadRequest)
-		return
-	}
-	diskPath := received.Path
-	key := received.Key
+	p := vars["path"]
 
-	if err := validatePostParams(received); err != nil {
-		renderError(w, err, http.StatusBadRequest)
-		return
-	}
-
-	target := path.Join(e.Prefix, EtcdKeyCrypts, serial, diskPath)
-	val, err := json.Marshal(sabakanCrypt{Path: diskPath, Key: key})
+	keyData, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 4096))
 	if err != nil {
 		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
+
+	if len(keyData) == 0 {
+		renderError(w, errors.New("empty key data"), http.StatusBadRequest)
+		return
+	}
+
+	target := path.Join(e.Prefix, EtcdKeyCrypts, serial, p)
 
 	tresp, err := e.Client.Txn(r.Context()).
 		// Prohibit overwriting
 		If(clientv3util.KeyMissing(target)).
-		Then(clientv3.OpPut(target, string(val))).
+		Then(clientv3.OpPut(target, string(keyData))).
 		Else().
 		Commit()
 	if err != nil {
@@ -117,43 +82,35 @@ func (e *EtcdClient) handlePostCrypts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !tresp.Succeeded {
-		renderError(w, fmt.Errorf("transaction failed. sabakan prohibits overwriting crypts"), http.StatusInternalServerError)
+		renderError(w, errors.New("sabakan prohibits overwriting crypt keys"), http.StatusConflict)
 		return
 	}
 
-	renderJSON(w, sabakanCrypt{Path: string(diskPath), Key: string(key)}, http.StatusCreated)
+	resp := make(map[string]interface{})
+	resp["status"] = http.StatusCreated
+	resp["path"] = p
+
+	renderJSON(w, resp, http.StatusCreated)
 }
 
 func (e *EtcdClient) handleDeleteCrypts(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	serial := vars["serial"]
-	target := path.Join(e.Prefix, EtcdKeyCrypts, serial)
-
-	// Confirm the targets exist
-	gresp, err := e.Client.Get(r.Context(),
-		target,
-		clientv3.WithPrefix())
-	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-		return
-	}
-	if gresp.Count == 0 {
-		renderError(w, fmt.Errorf(ErrorValueNotFound), http.StatusNotFound)
-		return
-	}
+	target := path.Join(e.Prefix, EtcdKeyCrypts, serial) + "/"
 
 	// DELETE
-	_, err = e.Client.Delete(r.Context(), target, clientv3.WithPrefix())
+	dresp, err := e.Client.Delete(r.Context(), target,
+		clientv3.WithPrefix(),
+		clientv3.WithPrevKV(),
+	)
 	if err != nil {
 		renderError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	dresp, err := makeDeleteResponse(gresp)
-	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-		return
+	resp := make([]string, len(dresp.PrevKvs))
+	for i, ev := range dresp.PrevKvs {
+		resp[i] = string(ev.Key[len(target):])
 	}
-
-	renderJSON(w, dresp, http.StatusOK)
+	renderJSON(w, resp, http.StatusOK)
 }
