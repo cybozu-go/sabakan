@@ -11,7 +11,6 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
-	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/cybozu-go/netutil"
 	"github.com/gorilla/mux"
 )
@@ -493,42 +492,4 @@ func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderJSON(w, result, http.StatusOK)
-}
-
-// EtcdWatcher launch etcd client session to monitor changes to keys and update index
-func EtcdWatcher(ctx context.Context, e EtcdConfig) error {
-	cfg := clientv3.Config{
-		Endpoints: e.Servers,
-	}
-	c, err := clientv3.New(cfg)
-	if err != nil {
-		return err
-	}
-	defer c.Close()
-
-	key := path.Join(e.Prefix, EtcdKeyMachines)
-	rch := c.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
-	for wresp := range rch {
-		for _, ev := range wresp.Events {
-			if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
-				err := mi.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
-				if err != nil {
-					return err
-				}
-			}
-			if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
-				err := mi.AddIndex(ev.Kv.Value)
-				if err != nil {
-					return err
-				}
-			}
-			if ev.Type == mvccpb.DELETE {
-				err := mi.DeleteIndex(ev.PrevKv.Value)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
 }

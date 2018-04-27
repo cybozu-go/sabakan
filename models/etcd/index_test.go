@@ -1,4 +1,4 @@
-package sabakan
+package etcd
 
 import (
 	"context"

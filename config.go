@@ -43,18 +43,6 @@ func (c *Config) validate() error {
 	return nil
 }
 
-// EtcdClient is etcd3 client object and index
-type EtcdClient struct {
-	Client *clientv3.Client
-	Prefix string
-}
-
-// EtcdConfig is etcd3 connection options
-type EtcdConfig struct {
-	Servers []string
-	Prefix  string
-}
-
 const (
 	// EtcdKeyConfig is etcd key name for sabakan option
 	EtcdKeyConfig = "/config"

@@ -1,51 +1,61 @@
 package sabakan
 
 import (
-	"errors"
 	"io/ioutil"
 	"net/http"
-	"path"
 	"strconv"
+	"strings"
 
-	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
-	"github.com/gorilla/mux"
 )
 
-// InitCrypts initialize the handle functions for crypts
-func InitCrypts(r *mux.Router, e *EtcdClient) {
-	e.initCryptsFunc(r)
+func (s Server) handleCrypts(w http.ResponseWriter, r *http.Request) {
+	params := strings.Split(r.URL.Path[len("/api/v1/crypts/"):], "/")
+
+	if len(params) == 0 {
+		renderError(r.Context(), w, APIErrBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case "GET":
+		s.handleCryptsGet(w, r, params)
+		return
+	case "PUT":
+		s.handleCryptsPut(w, r, params)
+		return
+	case "DELETE":
+		s.handleCryptsDelete(w, r, params[0])
+		return
+	}
+
+	renderError(r.Context(), w, APIErrBadRequest)
+	return
 }
 
-func (e *EtcdClient) initCryptsFunc(r *mux.Router) {
-	r.HandleFunc("/crypts/{serial}/{path}", e.handleGetCrypts).Methods("GET")
-	r.HandleFunc("/crypts/{serial}/{path}", e.handlePutCrypts).Methods("PUT")
-	r.HandleFunc("/crypts/{serial}", e.handleDeleteCrypts).Methods("DELETE")
-}
+func (s Server) handleCryptsGet(w http.ResponseWriter, r *http.Request, params []string) {
+	if len(params) != 2 {
+		renderError(r.Context(), w, APIErrBadRequest)
+		return
+	}
 
-func (e *EtcdClient) handleGetCrypts(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	serial := vars["serial"]
-	p := vars["path"]
+	serial := params[0]
+	p := params[1]
 
-	target := path.Join(e.Prefix, EtcdKeyCrypts, serial, p)
-	resp, err := e.Client.Get(r.Context(), target)
+	key, err := s.Model.Storage.GetEncryptionKey(r.Context(), serial, p)
 	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-		return
-	}
-	if resp.Count == 0 {
-		renderError(w, errors.New(ErrorValueNotFound), http.StatusNotFound)
+		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
 
-	ev := resp.Kvs[0]
+	if key == nil {
+		renderError(r.Context(), w, APIErrNotFound)
+	}
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Length", strconv.Itoa(len(ev.Value)))
-	_, err = w.Write(ev.Value)
+	w.Header().Set("Content-Length", strconv.Itoa(len(key)))
+	_, err = w.Write(key)
 	if err != nil {
 		fields := cmd.FieldsFromContext(r.Context())
 		fields[log.FnError] = err.Error()
@@ -53,36 +63,35 @@ func (e *EtcdClient) handleGetCrypts(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (e *EtcdClient) handlePutCrypts(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	serial := vars["serial"]
-	p := vars["path"]
+func (s Server) handleCryptsPut(w http.ResponseWriter, r *http.Request, params []string) {
+	if len(params) != 2 {
+		renderError(r.Context(), w, APIErrBadRequest)
+		return
+	}
+
+	serial := params[0]
+	p := params[1]
 
 	keyData, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 4096))
 	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
+		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
 
 	if len(keyData) == 0 {
-		renderError(w, errors.New("empty key data"), http.StatusBadRequest)
+		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	}
 
-	target := path.Join(e.Prefix, EtcdKeyCrypts, serial, p)
-
-	tresp, err := e.Client.Txn(r.Context()).
-		// Prohibit overwriting
-		If(clientv3util.KeyMissing(target)).
-		Then(clientv3.OpPut(target, string(keyData))).
-		Else().
-		Commit()
-	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
+	err = s.Model.Storage.PutEncryptionKey(r.Context(), serial, p, keyData)
+	switch err {
+	case ErrConflicted:
+		renderError(r.Context(), w, APIErrConflict)
 		return
-	}
-	if !tresp.Succeeded {
-		renderError(w, errors.New("sabakan prohibits overwriting crypt keys"), http.StatusConflict)
+	case nil:
+		// do nothing
+	default:
+		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
 
@@ -93,24 +102,12 @@ func (e *EtcdClient) handlePutCrypts(w http.ResponseWriter, r *http.Request) {
 	renderJSON(w, resp, http.StatusCreated)
 }
 
-func (e *EtcdClient) handleDeleteCrypts(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	serial := vars["serial"]
-	target := path.Join(e.Prefix, EtcdKeyCrypts, serial) + "/"
-
-	// DELETE
-	dresp, err := e.Client.Delete(r.Context(), target,
-		clientv3.WithPrefix(),
-		clientv3.WithPrevKV(),
-	)
+func (s Server) handleCryptsDelete(w http.ResponseWriter, r *http.Request, serial string) {
+	keys, err := s.Model.Storage.DeleteEncryptionKeys(r.Context(), serial)
 	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
+		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
 
-	resp := make([]string, len(dresp.PrevKvs))
-	for i, ev := range dresp.PrevKvs {
-		resp[i] = string(ev.Key[len(target):])
-	}
-	renderJSON(w, resp, http.StatusOK)
+	renderJSON(w, keys, http.StatusOK)
 }
