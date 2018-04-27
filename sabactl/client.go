@@ -1,4 +1,4 @@
-package sabakan
+package sabactl
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/sabakan"
 )
 
 // Client is a sabakan client
@@ -25,8 +26,8 @@ func NewClient(endpoint string, http *cmd.HTTPClient) *Client {
 }
 
 // RemoteConfigGet gets a remote config
-func (c *Client) RemoteConfigGet(ctx context.Context) (*Config, error) {
-	var conf Config
+func (c *Client) RemoteConfigGet(ctx context.Context) (*sabakan.Config, error) {
+	var conf sabakan.Config
 	err := c.getJSON(ctx, "/config", nil, &conf)
 	if err != nil {
 		return nil, err
@@ -35,13 +36,13 @@ func (c *Client) RemoteConfigGet(ctx context.Context) (*Config, error) {
 }
 
 // RemoteConfigSet sets a remote config
-func (c *Client) RemoteConfigSet(ctx context.Context, conf *Config) error {
+func (c *Client) RemoteConfigSet(ctx context.Context, conf *sabakan.Config) error {
 	return c.sendRequestWithJSON(ctx, "POST", "/config", conf)
 }
 
 // MachinesGet get machine information from sabakan server
-func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]Machine, error) {
-	var machines []Machine
+func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]sabakan.Machine, error) {
+	var machines []sabakan.Machine
 	err := c.getJSON(ctx, "/machines", params, &machines)
 	if err != nil {
 		return nil, err
@@ -50,12 +51,12 @@ func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]M
 }
 
 // MachinesCreate create machines information to sabakan server
-func (c *Client) MachinesCreate(ctx context.Context, machines []Machine) error {
+func (c *Client) MachinesCreate(ctx context.Context, machines []sabakan.Machine) error {
 	return c.sendRequestWithJSON(ctx, "POST", "/machines", machines)
 }
 
 // MachinesUpdate update machines information on sabakan server
-func (c *Client) MachinesUpdate(ctx context.Context, machines []Machine) error {
+func (c *Client) MachinesUpdate(ctx context.Context, machines []sabakan.Machine) error {
 	return c.sendRequestWithJSON(ctx, "PUT", "/machines", machines)
 }
 

@@ -8,11 +8,12 @@ import (
 	"os"
 
 	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/sabactl"
 	"github.com/google/subcommands"
 )
 
 type remoteConfigCmd struct {
-	c *sabakan.Client
+	c *sabactl.Client
 }
 
 func (r *remoteConfigCmd) Name() string     { return "remote-config" }
@@ -33,7 +34,7 @@ func (r *remoteConfigCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...int
 }
 
 type remoteConfigGetCmd struct {
-	c *sabakan.Client
+	c *sabactl.Client
 }
 
 func (r *remoteConfigGetCmd) Name() string     { return "get" }
@@ -56,7 +57,7 @@ func (r *remoteConfigGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 }
 
 type remoteConfigSetCmd struct {
-	c    *sabakan.Client
+	c    *sabactl.Client
 	file string
 }
 

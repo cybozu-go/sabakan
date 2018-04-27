@@ -1,4 +1,4 @@
-package sabakan
+package sabactl
 
 import (
 	"context"
@@ -12,11 +12,12 @@ import (
 	"testing"
 
 	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/sabakan"
 )
 
 func TestRemoteConfigGet(t *testing.T) {
 	var method, path string
-	conf := &Config{
+	conf := &sabakan.Config{
 		NodeIPv4Offset: "10.0.0.0",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.1.0.0",
@@ -46,8 +47,8 @@ func TestRemoteConfigGet(t *testing.T) {
 
 func TestRemoteConfigPost(t *testing.T) {
 	var method, path string
-	var record Config
-	conf := Config{
+	var record sabakan.Config
+	conf := sabakan.Config{
 		NodeIPv4Offset: "10.0.0.0",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.1.0.0",
@@ -77,7 +78,7 @@ func TestRemoteConfigPost(t *testing.T) {
 
 func TestMachinesGet(t *testing.T) {
 	var method, path, rawQuery string
-	machines := []Machine{{Serial: "123abc"}}
+	machines := []sabakan.Machine{{Serial: "123abc"}}
 
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
@@ -117,7 +118,7 @@ func TestMachinesCreate(t *testing.T) {
 	}))
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err := c.MachinesCreate(context.Background(), []Machine{})
+	err := c.MachinesCreate(context.Background(), []sabakan.Machine{})
 	if err != nil {
 		t.Error("err == nil")
 	}
@@ -135,7 +136,7 @@ func TestMachinesUpdate(t *testing.T) {
 	}))
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err := c.MachinesUpdate(context.Background(), []Machine{})
+	err := c.MachinesUpdate(context.Background(), []sabakan.Machine{})
 	if err != nil {
 		t.Error("err == nil")
 	}

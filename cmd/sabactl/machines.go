@@ -8,11 +8,12 @@ import (
 	"os"
 
 	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/sabactl"
 	"github.com/google/subcommands"
 )
 
 type machinesCmd struct {
-	c *sabakan.Client
+	c *sabactl.Client
 }
 
 func (r *machinesCmd) Name() string     { return "machines" }
@@ -35,7 +36,7 @@ func (r *machinesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 }
 
 type machinesGetCmd struct {
-	c     *sabakan.Client
+	c     *sabactl.Client
 	query map[string]*string
 }
 
@@ -83,7 +84,7 @@ func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 }
 
 type machinesCreateCmd struct {
-	c    *sabakan.Client
+	c    *sabactl.Client
 	file string
 }
 
@@ -120,7 +121,7 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 }
 
 type machinesUpdateCmd struct {
-	c    *sabakan.Client
+	c    *sabactl.Client
 	file string
 }
 
