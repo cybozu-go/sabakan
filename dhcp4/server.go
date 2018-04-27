@@ -133,7 +133,7 @@ func (s *dhcpserver) Serve(ctx context.Context) error {
 		case dhcp4.MsgRequest:
 			_ = s.handleRequest(conn, pkt, intf)
 		default:
-			log.Error("unknown packet type: %v",map[string]interface{}{
+			log.Error("unknown packet type: %v", map[string]interface{}{
 				"type": pkt.Type,
 			})
 		}
