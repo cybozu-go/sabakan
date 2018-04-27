@@ -16,7 +16,14 @@ type StorageModel interface {
 	DeleteEncryptionKeys(ctx context.Context, serial string) ([]string, error)
 }
 
+type MachineModel interface {
+	Register(ctx context.Context, machines []*Machine) error
+	Query(ctx context.Context, query Query) ([]*Machine, error)
+	Delete(ctx context.Context, serials []string) error
+}
+
 // Model is a struct that consists of sub-models.
 type Model struct {
 	Storage StorageModel
+	Machine MachineModel
 }

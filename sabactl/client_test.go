@@ -17,7 +17,7 @@ import (
 
 func TestRemoteConfigGet(t *testing.T) {
 	var method, path string
-	conf := &sabakan.Config{
+	conf := &sabakan.IPAMConfig{
 		NodeIPv4Offset: "10.0.0.0",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.1.0.0",
@@ -47,8 +47,8 @@ func TestRemoteConfigGet(t *testing.T) {
 
 func TestRemoteConfigPost(t *testing.T) {
 	var method, path string
-	var record sabakan.Config
-	conf := sabakan.Config{
+	var record sabakan.IPAMConfig
+	conf := sabakan.IPAMConfig{
 		NodeIPv4Offset: "10.0.0.0",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.1.0.0",

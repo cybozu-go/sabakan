@@ -33,7 +33,7 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(p, "ignitions"):
 		//s.handleIgnitions(w, r)
 		//return
-	case strings.HasPrefix(p, "machines"):
+	case p == "machines":
 		s.handleMachines(w, r)
 		return
 	}

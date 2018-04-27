@@ -78,7 +78,7 @@ func (r *remoteConfigSetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 	}
 	defer file.Close()
 
-	var conf sabakan.Config
+	var conf sabakan.IPAMConfig
 	err = json.NewDecoder(file).Decode(&conf)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

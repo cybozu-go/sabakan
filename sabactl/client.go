@@ -26,8 +26,8 @@ func NewClient(endpoint string, http *cmd.HTTPClient) *Client {
 }
 
 // RemoteConfigGet gets a remote config
-func (c *Client) RemoteConfigGet(ctx context.Context) (*sabakan.Config, error) {
-	var conf sabakan.Config
+func (c *Client) RemoteConfigGet(ctx context.Context) (*sabakan.IPAMConfig, error) {
+	var conf sabakan.IPAMConfig
 	err := c.getJSON(ctx, "/config", nil, &conf)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (c *Client) RemoteConfigGet(ctx context.Context) (*sabakan.Config, error) {
 }
 
 // RemoteConfigSet sets a remote config
-func (c *Client) RemoteConfigSet(ctx context.Context, conf *sabakan.Config) error {
+func (c *Client) RemoteConfigSet(ctx context.Context, conf *sabakan.IPAMConfig) error {
 	return c.sendRequestWithJSON(ctx, "POST", "/config", conf)
 }
 

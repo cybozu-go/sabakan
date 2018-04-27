@@ -1,5 +1,5 @@
 // Package mock implements mockup sabakan model for testing.
-package etcd
+package mock
 
 import (
 	"sync"

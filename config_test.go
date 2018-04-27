@@ -19,7 +19,7 @@ type store struct {
 	prefix string
 }
 
-func (s *store) getConfig(ctx context.Context) (*Config, error) {
+func (s *store) getConfig(ctx context.Context) (*IPAMConfig, error) {
 	key := path.Join(s.prefix, EtcdKeyConfig)
 	resp, err := s.etcd.Get(ctx, key)
 	if err != nil {
@@ -29,7 +29,7 @@ func (s *store) getConfig(ctx context.Context) (*Config, error) {
 		return nil, errors.New("no values")
 	}
 
-	var conf Config
+	var conf IPAMConfig
 	err = json.Unmarshal(resp.Kvs[0].Value, &conf)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (s *store) getConfig(ctx context.Context) (*Config, error) {
 	return &conf, nil
 }
 
-func (s *store) putConfig(ctx context.Context, c *Config) error {
+func (s *store) putConfig(ctx context.Context, c *IPAMConfig) error {
 	key := path.Join(s.prefix, EtcdKeyConfig)
 	b, err := json.Marshal(c)
 	if err != nil {
@@ -48,7 +48,7 @@ func (s *store) putConfig(ctx context.Context, c *Config) error {
 }
 
 func TestConfigValidate(t *testing.T) {
-	cases := []Config{
+	cases := []IPAMConfig{
 		{NodeIPv4Offset: "10.0.0.0/24", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0/24", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
 	}
 	for _, c := range cases {
@@ -58,7 +58,7 @@ func TestConfigValidate(t *testing.T) {
 		}
 	}
 
-	cases = []Config{
+	cases = []IPAMConfig{
 		{},
 		{NodeIPv4Offset: "10.0.0.0.0/24", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0/24", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
 		{NodeIPv4Offset: "10.0.0.0/24", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0.0/24", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
@@ -90,7 +90,7 @@ func TestHandleGetConfig(t *testing.T) {
 		t.Fatal("resp.StatusCode == http.StatusNotFound")
 	}
 
-	value := Config{
+	value := IPAMConfig{
 		NodeIPv4Offset: "10.0.0.0/24",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.10.0.0/24",

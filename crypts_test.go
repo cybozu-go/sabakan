@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"github.com/cybozu-go/sabakan/models/mock"
 )
 
 func testCryptsGet(t *testing.T) {

@@ -11,8 +11,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Config is structure of the sabakan option
-type Config struct {
+// IPAMConfig is structure of the sabakan option
+type IPAMConfig struct {
 	NodeIPv4Offset string `json:"node-ipv4-offset"`
 	NodeRackShift  uint   `json:"node-rack-shift"`
 	BMCIPv4Offset  string `json:"bmc-ipv4-offset"`
@@ -21,7 +21,7 @@ type Config struct {
 	BMCIPPerNode   uint   `json:"bmc-ip-per-node"`
 }
 
-func (c *Config) validate() error {
+func (c *IPAMConfig) validate() error {
 	if _, _, err := net.ParseCIDR(c.NodeIPv4Offset); err != nil {
 		return errors.New("node-ipv4-offset: " + ErrorInvalidValue)
 	}
@@ -44,13 +44,6 @@ func (c *Config) validate() error {
 }
 
 const (
-	// EtcdKeyConfig is etcd key name for sabakan option
-	EtcdKeyConfig = "/config"
-	// EtcdKeyMachines is etcd key name for machines management
-	EtcdKeyMachines = "/machines"
-	// EtcdKeyCrypts is etcd key name for crypts management
-	EtcdKeyCrypts = "/crypts"
-
 	// ErrorInvalidValue is an error message when a target value is invalid
 	ErrorInvalidValue = "invalid value"
 	// ErrorValueNotFound is an error message when a target value is not found
@@ -115,7 +108,7 @@ func (e *EtcdClient) handlePostConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	var sc Config
+	var sc IPAMConfig
 	err = json.NewDecoder(r.Body).Decode(&sc)
 	if err != nil {
 		renderError(w, err, http.StatusBadRequest)
