@@ -14,24 +14,22 @@ import (
 
 // machinesIndex is on-memory index of the etcd values
 type machinesIndex struct {
-	mux        sync.Mutex
+	mux        sync.RWMutex
 	Product    map[string][]string
 	Datacenter map[string][]string
 	Rack       map[string][]string
 	Role       map[string][]string
-	Cluster    map[string][]string
 	IPv4       map[string]string
 	IPv6       map[string]string
 }
 
 func (mi *machinesIndex) init(ctx context.Context, client *clientv3.Client, prefix string) error {
-	mi.Product = map[string][]string{}
-	mi.Datacenter = map[string][]string{}
-	mi.Rack = map[string][]string{}
-	mi.Role = map[string][]string{}
-	mi.Cluster = map[string][]string{}
-	mi.IPv4 = map[string]string{}
-	mi.IPv6 = map[string]string{}
+	mi.Product = make(map[string][]string)
+	mi.Datacenter = make(map[string][]string)
+	mi.Rack = make(map[string][]string)
+	mi.Role = make(map[string][]string)
+	mi.IPv4 = make(map[string]string)
+	mi.IPv6 = make(map[string]string)
 
 	key := path.Join(prefix, KeyMachines)
 	resp, err := client.Get(ctx, key, clientv3.WithPrefix())
@@ -50,22 +48,24 @@ func (mi *machinesIndex) init(ctx context.Context, client *clientv3.Client, pref
 	return nil
 }
 
-// AddIndex adds new machine into the index
 func (mi *machinesIndex) AddIndex(val []byte) error {
-	var mc sabakan.Machine
+	mi.mux.Lock()
+	defer mi.mux.Unlock()
+	return mi.addNoLock(val)
+}
+
+func (mi *machinesIndex) addNoLock(val []byte) error {
+	var mc sabakan.MachineJson
 	err := json.Unmarshal(val, &mc)
 	if err != nil {
 		return err
 	}
-	mi.mux.Lock()
-	defer mi.mux.Unlock()
 
 	mi.Product[mc.Product] = append(mi.Product[mc.Product], mc.Serial)
 	mi.Datacenter[mc.Datacenter] = append(mi.Datacenter[mc.Datacenter], mc.Serial)
-	mcrack := fmt.Sprint(mc.Rack)
+	mcrack := fmt.Sprint(*mc.Rack)
 	mi.Rack[mcrack] = append(mi.Rack[mcrack], mc.Serial)
 	mi.Role[mc.Role] = append(mi.Role[mc.Role], mc.Serial)
-	mi.Cluster[mc.Cluster] = append(mi.Cluster[mc.Cluster], mc.Serial)
 	for _, ifn := range mc.Network {
 		for _, v := range ifn.IPv4 {
 			mi.IPv4[v] = mc.Serial
@@ -89,27 +89,28 @@ func indexOf(data []string, element string) int {
 	return -1 //not found.
 }
 
-// DeleteIndex deletes a machine from the index
 func (mi *machinesIndex) DeleteIndex(val []byte) error {
-	var mc sabakan.Machine
+	mi.mux.Lock()
+	defer mi.mux.Unlock()
+	return mi.deleteNoLock(val)
+}
+
+func (mi *machinesIndex) deleteNoLock(val []byte) error {
+	var mc sabakan.MachineJson
 	err := json.Unmarshal(val, &mc)
 	if err != nil {
 		return err
 	}
-	mi.mux.Lock()
-	defer mi.mux.Unlock()
 
 	i := indexOf(mi.Product[mc.Product], mc.Serial)
 	mi.Product[mc.Product] = append(mi.Product[mc.Product][:i], mi.Product[mc.Product][i+1:]...)
 	i = indexOf(mi.Datacenter[mc.Datacenter], mc.Serial)
 	mi.Datacenter[mc.Datacenter] = append(mi.Datacenter[mc.Datacenter][:i], mi.Datacenter[mc.Datacenter][i+1:]...)
-	mcrack := fmt.Sprint(mc.Rack)
+	mcrack := fmt.Sprint(*mc.Rack)
 	i = indexOf(mi.Rack[mcrack], mc.Serial)
 	mi.Rack[mcrack] = append(mi.Rack[mcrack][:i], mi.Rack[mcrack][i+1:]...)
 	i = indexOf(mi.Role[mc.Role], mc.Serial)
 	mi.Role[mc.Role] = append(mi.Role[mc.Role][:i], mi.Role[mc.Role][i+1:]...)
-	i = indexOf(mi.Cluster[mc.Cluster], mc.Serial)
-	mi.Cluster[mc.Cluster] = append(mi.Cluster[mc.Cluster][:i], mi.Cluster[mc.Cluster][i+1:]...)
 	for _, ifn := range mc.Network {
 		for _, v := range ifn.IPv4 {
 			mi.IPv4[v] = ""
@@ -127,11 +128,14 @@ func (mi *machinesIndex) DeleteIndex(val []byte) error {
 // UpdateIndex updates target machine on the index
 // BUG: should hold a lock while updating.
 func (mi *machinesIndex) UpdateIndex(pval []byte, nval []byte) error {
-	err := mi.DeleteIndex(pval)
+	mi.mux.Lock()
+	defer mi.mux.Unlock()
+
+	err := mi.deleteNoLock(pval)
 	if err != nil {
 		return err
 	}
-	return mi.AddIndex(nval)
+	return mi.addNoLock(nval)
 }
 
 func (d *Driver) startWatching(ctx context.Context) error {
@@ -165,4 +169,40 @@ func (d *Driver) startWatching(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (mi *machineIndex) query(q *sabakan.Query) []string {
+	mi.mux.RLock()
+	defer mi.mux.RUnlock()
+
+	res := make(map[string]struct{})
+
+	for _, serial := range mi.Product[q.Product] {
+		res[serial] = struct{}{}
+	}
+	for _, serial := range mi.Datacenter[q.Datacenter] {
+		res[serial] = struct{}{}
+	}
+	for _, serial := range mi.Rack[q.Rack] {
+		res[serial] = struct{}{}
+	}
+	for _, serial := range mi.Role[q.Role] {
+		res[serial] = struct{}{}
+	}
+	if len(q.IPv4) > 0 {
+		if serial, ok := mi.IPv4[q.IPv4]; ok {
+			res[serial] = struct{}{}
+		}
+	}
+	if len(q.IPv6) > 0 {
+		if serial, ok := mi.IPv6[q.IPv6]; ok {
+			res[serial] = struct{}{}
+		}
+	}
+
+	serials := make([]string, 0, len(res))
+	for serial := range res {
+		serials = append(serials, serial)
+	}
+	return serials
 }

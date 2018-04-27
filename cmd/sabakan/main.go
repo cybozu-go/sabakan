@@ -70,6 +70,7 @@ func main() {
 	cmd.Go(driver.Run)
 	model := Model{
 		Storage: d,
+		Machine: d,
 	}
 
 	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, dhcp4Begin, dhcp4End)

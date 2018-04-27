@@ -3,10 +3,8 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-
-	"path"
-
 	"errors"
+	"path"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
@@ -55,8 +53,43 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 	return nil
 }
 
-func (d *Driver) Query(ctx context.Context, query *sabakan.Query) ([]*sabakan.Machine, error) {
+func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
+	var serials []string
+	if len(q.Serial) > 0 {
+		serials = []string{q.Serial}
+	} else {
+		serials = d.mi.query(q)
+	}
 
+	res := make([]*sabakan.Machine, 0, len(serials))
+	for _, serial := range serials {
+		key := path.Join(d.prefix, KeyMachines, serial)
+		resp, err := d.Get(ctx, key)
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.Count == 0 {
+			continue
+		}
+
+		var mj sabakan.MachineJson
+		err = json.Unmarshal(resp.Kvs[0].Value, &mj)
+		if err != nil {
+			return nil, err
+		}
+
+		m := mj.ToMachine()
+		if q.Match(m) {
+			res = append(res, m)
+		}
+	}
+
+	if len(res) == 0 {
+		return nil, nil
+	}
+
+	return res, nil
 }
 
 func (d *Driver) Delete(ctx context.Context, serials []string) error {

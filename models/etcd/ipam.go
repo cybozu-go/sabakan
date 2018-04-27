@@ -29,15 +29,7 @@ func (d *Driver) generateIP(ctx context.Context, mc *sabakan.Machine) (*sabakan.
 	rack := mc.Rack
 	nodeNumber := mc.NodeNumberOfRack
 
-	res := &sabakan.MachineJson{
-		Serial:           mc.Serial,
-		Product:          mc.Product,
-		Datacenter:       mc.Datacenter,
-		Rack:             &rack,
-		NodeNumberOfRack: &nodeNumber,
-		Role:             mc.Role,
-		Cluster:          mc.Cluster,
-	}
+	res := mc.ToJSON()
 	key := path.Join(d.prefix, KeyConfig)
 	resp, err := d.Get(ctx, key)
 	if err != nil {

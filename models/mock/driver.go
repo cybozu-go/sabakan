@@ -9,8 +9,9 @@ import (
 
 // driver implements all interfaces for sabakan model.
 type driver struct {
-	mu      sync.Mutex
-	storage map[string][]byte
+	mu       sync.Mutex
+	storage  map[string][]byte
+	machines map[string]*sabakan.Machine
 }
 
 // NewModel returns sabakan.Model
@@ -20,5 +21,6 @@ func NewModel() sabakan.Model {
 	}
 	return sabakan.Model{
 		Storage: d,
+		Machine: d,
 	}
 }

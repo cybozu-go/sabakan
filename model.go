@@ -16,9 +16,10 @@ type StorageModel interface {
 	DeleteEncryptionKeys(ctx context.Context, serial string) ([]string, error)
 }
 
+// MachineModel is an interface for machine database.
 type MachineModel interface {
 	Register(ctx context.Context, machines []*Machine) error
-	Query(ctx context.Context, query Query) ([]*Machine, error)
+	Query(ctx context.Context, query *Query) ([]*Machine, error)
 	Delete(ctx context.Context, serials []string) error
 }
 

@@ -3,7 +3,6 @@ package sabakan
 import (
 	"encoding/json"
 	"net/http"
-	"reflect"
 )
 
 type MachineJson struct {
@@ -13,9 +12,22 @@ type MachineJson struct {
 	Rack             *uint32                   `json:"rack"`
 	NodeNumberOfRack *uint32                   `json:"node-number-of-rack"`
 	Role             string                    `json:"role"`
-	Cluster          string                    `json:"cluster"`
 	Network          map[string]MachineNetwork `json:"network"`
 	BMC              MachineBMC                `json:"bmc"`
+}
+
+// ToMachine creates *Machine.
+func (mj *MachineJson) ToMachine() *Machine {
+	return &Machine{
+		Serial:           mj.Serial,
+		Product:          mj.Product,
+		Datacenter:       mj.Datacenter,
+		Rack:             *mj.Rack,
+		NodeNumberOfRack: *mj.NodeNumberOfRack,
+		Role:             mj.Role,
+		Network:          mj.Network,
+		BMC:              mj.BMC,
+	}
 }
 
 // Machine is a machine struct
@@ -26,9 +38,24 @@ type Machine struct {
 	Rack             uint32
 	NodeNumberOfRack uint32
 	Role             string
-	Cluster          string
 	Network          map[string]MachineNetwork
 	BMC              MachineBMC
+}
+
+// ToJSON creates *MachineJson.
+func (m *Machine) ToJSON() *MachineJson {
+	rack := m.Rack
+	num := m.NodeNumberOfRack
+	return &MachineJson{
+		Serial:           m.Serial,
+		Product:          m.Product,
+		Datacenter:       m.Datacenter,
+		Rack:             &rack,
+		NodeNumberOfRack: &num,
+		Role:             m.Role,
+		Network:          m.Network,
+		BMC:              m.BMC,
+	}
 }
 
 // MachineNetwork is a network interface struct for Machine
@@ -38,21 +65,27 @@ type MachineNetwork struct {
 	Mac  string   `json:"mac"`
 }
 
+func (n MachineNetwork) hasIPv4(ipv4 string) bool {
+	for _, t := range n.IPv4 {
+		if t == ipv4 {
+			return true
+		}
+	}
+	return false
+}
+
+func (n MachineNetwork) hasIPv6(ipv6 string) bool {
+	for _, t := range n.IPv6 {
+		if t == ipv6 {
+			return true
+		}
+	}
+	return false
+}
+
 // MachineBMC is a bmc interface struct for Machine
 type MachineBMC struct {
 	IPv4 []string `json:"ipv4"`
-}
-
-// Query is an URL query
-type Query struct {
-	Serial     string
-	Product    string
-	Datacenter string
-	Rack       string
-	Role       string
-	Cluster    string
-	IPv4       string
-	IPv6       string
 }
 
 func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
@@ -109,19 +142,7 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("number of rack is empty"))
 			return
 		}
-		if mc.Cluster == "" {
-			renderError(r.Context(), w, BadRequest("cluster is empty"))
-			return
-		}
-		machines[i] = &Machine{
-			Serial:           mc.Serial,
-			Product:          mc.Product,
-			Datacenter:       mc.Datacenter,
-			Rack:             *mc.Rack,
-			NodeNumberOfRack: *mc.NodeNumberOfRack,
-			Role:             mc.Role,
-			Cluster:          mc.Cluster,
-		}
+		machines[i] = mc.ToMachine()
 	}
 
 	err = s.Model.Machine.Register(r.Context(), machines)
@@ -133,171 +154,37 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getMachinesQuery(q *Query, r *http.Request) {
-	q.Serial = r.URL.Query().Get("serial")
-	q.Product = r.URL.Query().Get("product")
-	q.Datacenter = r.URL.Query().Get("datacenter")
-	q.Rack = r.URL.Query().Get("rack")
-	q.Role = r.URL.Query().Get("role")
-	q.Cluster = r.URL.Query().Get("cluster")
-	q.IPv4 = r.URL.Query().Get("ipv4")
-	q.IPv6 = r.URL.Query().Get("ipv6")
-}
-
-func intersectMachines(mcs1 []Machine, mcs2 []Machine) []Machine {
-	var newmcs []Machine
-	for _, mc1 := range mcs1 {
-		for _, mc2 := range mcs2 {
-			if mc1.Serial == mc2.Serial {
-				newmcs = append(newmcs, mc2)
-			}
-		}
-	}
-	return newmcs
+func getMachinesQuery(r *http.Request) *Query {
+	var q Query
+	vals := r.URL.Query()
+	q.Serial = vals.Get("serial")
+	q.Product = vals.Get("product")
+	q.Datacenter = vals.Get("datacenter")
+	q.Rack = vals.Get("rack")
+	q.Role = vals.Get("role")
+	q.IPv4 = vals.Get("ipv4")
+	q.IPv6 = vals.Get("ipv6")
+	return q
 }
 
 func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
-	var q Query
+	q := getMachinesQuery(r)
 
-	getMachinesQuery(&q, r)
-	w.Header().Set("Content-Type", "application/json")
-	result := []Machine{}
-
-	if q.Serial != "" {
-		mcs, err := GetMachinesBySerial(r.Context(), s, []string{q.Serial})
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		if len(mcs) != 0 {
-			result = mcs
-		}
-		renderJSON(w, result, http.StatusOK)
+	machines, err := s.Model.Machine.Query(r.Context(), q)
+	if err != nil {
+		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
 
-	if q.IPv4 != "" {
-		mcs, err := GetMachinesByIPv4(r.Context(), s, q.IPv4)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		if len(mcs) != 0 {
-			result = mcs
-		}
-		renderJSON(w, result, http.StatusOK)
+	if len(machines) == 0 {
+		renderError(r.Context(), w, APIErrNotFound)
 		return
 	}
 
-	if q.IPv6 != "" {
-		mcs, err := GetMachinesByIPv4(r.Context(), s, q.IPv6)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		if len(mcs) != 0 {
-			result = mcs
-		}
-		renderJSON(w, result, http.StatusOK)
-		return
+	j := make([]*MachineJson, len(machines))
+	for i, m := range machines {
+		j[i] = m.ToJSON()
 	}
 
-	resultByQuery := map[string][]Machine{}
-	queryCount := 0
-	qelem := reflect.ValueOf(&q).Elem()
-
-	for i := 0; i < qelem.NumField(); i++ {
-		if qelem.Field(i).Interface().(string) != "" {
-			queryCount++
-		}
-	}
-
-	mi.mux.Lock()
-	for i := 0; i < qelem.NumField(); i++ {
-		qv := qelem.Field(i).Interface().(string)
-
-		if q.Product != "" && mi.Product[qv] != nil {
-			mcs, err := GetMachinesByProduct(r.Context(), s, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-
-		if q.Datacenter != "" && mi.Datacenter[qv] != nil {
-			mcs, err := GetMachinesByDatacenter(r.Context(), s, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-
-		if q.Rack != "" && mi.Rack[qv] != nil {
-			mcs, err := GetMachinesByRack(r.Context(), s, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-
-		if q.Role != "" && mi.Role[qv] != nil {
-			mcs, err := GetMachinesByRole(r.Context(), s, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-
-		if q.Cluster != "" && mi.Cluster[qv] != nil {
-			mcs, err := GetMachinesByCluster(r.Context(), s, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-	}
-	mi.mux.Unlock()
-
-	if queryCount > 1 && queryCount == len(resultByQuery) {
-		// Intersect machines of each query result
-		for _, v := range resultByQuery {
-			if len(result) == 0 {
-				result = v
-				continue
-			}
-			result = intersectMachines(result, v)
-		}
-	}
-	if queryCount == 1 && queryCount == len(resultByQuery) {
-		for _, v := range resultByQuery {
-			result = v
-		}
-	}
-
-	renderJSON(w, result, http.StatusOK)
+	renderJSON(w, j, http.StatusOK)
 }
