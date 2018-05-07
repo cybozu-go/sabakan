@@ -18,10 +18,12 @@ type driver struct {
 // NewModel returns sabakan.Model
 func NewModel() sabakan.Model {
 	d := &driver{
-		storage: make(map[string][]byte),
+		storage:  make(map[string][]byte),
+		machines: make(map[string]*sabakan.Machine),
 	}
 	return sabakan.Model{
 		Storage: d,
 		Machine: d,
+		Config:  d,
 	}
 }

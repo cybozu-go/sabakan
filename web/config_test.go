@@ -1,151 +1,137 @@
 package web
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
-	"path"
+	"reflect"
+	"strings"
 	"testing"
 
-	"github.com/coreos/etcd/clientv3"
+	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/models/mock"
 )
 
-// TODO move this into to non-test
-type store struct {
-	etcd   *clientv3.Client
-	prefix string
-}
+func testConfigGet(t *testing.T) {
+	t.Parallel()
 
-func (s *store) getConfig(ctx context.Context) (*IPAMConfig, error) {
-	key := path.Join(s.prefix, KeyConfig)
-	resp, err := s.etcd.Get(ctx, key)
-	if err != nil {
-		return nil, err
-	}
-	if len(resp.Kvs) == 0 {
-		return nil, errors.New("no values")
-	}
+	m := mock.NewModel()
+	handler := Server{m}
 
-	var conf IPAMConfig
-	err = json.Unmarshal(resp.Kvs[0].Value, &conf)
-	if err != nil {
-		return nil, err
-	}
-	return &conf, nil
-}
-
-func (s *store) putConfig(ctx context.Context, c *IPAMConfig) error {
-	key := path.Join(s.prefix, EtcdKeyConfig)
-	b, err := json.Marshal(c)
-	if err != nil {
-		return err
-	}
-	_, err = s.etcd.Put(ctx, key, string(b))
-	return err
-}
-
-func TestConfigValidate(t *testing.T) {
-	cases := []IPAMConfig{
-		{NodeIPv4Offset: "10.0.0.0/24", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0/24", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
-	}
-	for _, c := range cases {
-		err := c.validate()
-		if err != nil {
-			t.Errorf("err != nil")
-		}
-	}
-
-	cases = []IPAMConfig{
-		{},
-		{NodeIPv4Offset: "10.0.0.0.0/24", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0/24", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
-		{NodeIPv4Offset: "10.0.0.0/24", NodeRackShift: 4, BMCIPv4Offset: "10.1.0.0.0/24", BMCRackShift: 2, NodeIPPerNode: 3, BMCIPPerNode: 1},
-	}
-	for _, c := range cases {
-		err := c.validate()
-		if err == nil {
-			t.Errorf("err == nil")
-		}
-	}
-
-}
-
-func TestHandleGetConfig(t *testing.T) {
-	etcd, err := newEtcdClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer etcd.Close()
-	client := EtcdClient{Client: etcd, Prefix: *flagEtcdPrefix + t.Name()}
-	store := store{etcd: etcd, prefix: *flagEtcdPrefix + t.Name()}
-
-	r := httptest.NewRequest("GET", "localhost:8888/api/v1/crypts", nil)
-	w := httptest.NewRecorder()
-	client.handleGetConfig(w, r)
-	resp := w.Result()
-
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatal("resp.StatusCode == http.StatusNotFound")
-	}
-
-	value := IPAMConfig{
-		NodeIPv4Offset: "10.0.0.0/24",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.10.0.0/24",
-		BMCRackShift:   2,
+	config := &sabakan.IPAMConfig{
+		NodeIPv4Offset: "10.69.0.4/26",
+		NodeRackShift:  6,
+		BMCIPv4Offset:  "10.72.17.4/27",
+		BMCRackShift:   5,
 		NodeIPPerNode:  3,
 		BMCIPPerNode:   1,
 	}
-	store.putConfig(context.Background(), &value)
 
-	w = httptest.NewRecorder()
-	client.handleGetConfig(w, r)
-	resp = w.Result()
+	err := m.Config.PutConfig(context.Background(), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/api/v1/config", nil)
+	handler.ServeHTTP(w, r)
+
+	resp := w.Result()
 	if resp.StatusCode != http.StatusOK {
-		t.Fatal("resp.StatusCode == http.StatusOK")
+		t.Fatal("resp.StatusCode != http.StatusOK:", resp.StatusCode)
+	}
+
+	var result sabakan.IPAMConfig
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(&result, config) {
+		t.Errorf("wrong config: %#v", result)
 	}
 }
 
-func TestHandlePostConfig(t *testing.T) {
-	etcd, err := newEtcdClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer etcd.Close()
-	client := EtcdClient{Client: etcd, Prefix: *flagEtcdPrefix + t.Name()}
-	store := store{etcd: etcd, prefix: *flagEtcdPrefix + t.Name()}
+func testConfigPut(t *testing.T) {
+	t.Parallel()
 
-	b := new(bytes.Buffer)
-	b.WriteString("{}")
-	r := httptest.NewRequest("POST", "localhost:8888/api/v1/crypts", b)
+	m := mock.NewModel()
+	handler := Server{m}
+
+	bad := "{}"
+	good := `
+{
+   "node-ipv4-offset": "10.69.0.4/26",
+   "node-rack-shift": 6,
+   "bmc-ipv4-offset": "10.72.17.4/27",
+   "bmc-rack-shift": 5,
+   "node-ip-per-node": 3,
+   "bmc-ip-per-node": 1
+}
+`
+
 	w := httptest.NewRecorder()
-	client.handlePostConfig(w, r)
+	r := httptest.NewRequest("PUT", "/api/v1/config", strings.NewReader(bad))
+	handler.ServeHTTP(w, r)
+
 	resp := w.Result()
 	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatal("resp.StatusCode == http.StatusBadRequest")
+		t.Error("resp.StatusCode == http.StatusBadRequest")
 	}
 
-	b = new(bytes.Buffer)
-	b.WriteString(`{
-		"node-ipv4-offset": "10.0.0.0/24",
-		"node-rack-shift": 5,
-		"bmc-ipv4-offset": "10.1.0.0/24",
-		"bmc-rack-shift": 2,
-		"node-ip-per-node": 3,
-		"bmc-ip-per-node": 1
-	}`)
-	r = httptest.NewRequest("POST", "localhost:8888/api/v1/crypts", b)
+	r = httptest.NewRequest("PUT", "/api/v1/config", strings.NewReader(good))
 	w = httptest.NewRecorder()
-	client.handlePostConfig(w, r)
+	handler.ServeHTTP(w, r)
+
 	resp = w.Result()
-	conf, err := store.getConfig(context.Background())
+	if resp.StatusCode != http.StatusOK {
+		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
+	}
+
+	conf, err := m.Config.GetConfig(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if conf.NodeIPv4Offset != "10.0.0.0/24" || conf.NodeRackShift != 5 || conf.BMCIPv4Offset != "10.1.0.0/24" ||
-		conf.BMCRackShift != 2 || conf.NodeIPPerNode != 3 || conf.BMCIPPerNode != 1 {
-		t.Fatalf("unexpected config: %v", conf)
+	expected := &sabakan.IPAMConfig{
+		NodeIPv4Offset: "10.69.0.4/26",
+		NodeRackShift:  6,
+		BMCIPv4Offset:  "10.72.17.4/27",
+		BMCRackShift:   5,
+		NodeIPPerNode:  3,
+		BMCIPPerNode:   1,
 	}
+	if !reflect.DeepEqual(conf, expected) {
+		t.Errorf("mismatch: %#v", conf)
+	}
+
+	r = httptest.NewRequest("PUT", "/api/v1/config", strings.NewReader(good))
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
+	}
+
+	machine := &sabakan.Machine{
+		Serial: "1234",
+	}
+	err = m.Machine.Register(context.Background(), []*sabakan.Machine{machine})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r = httptest.NewRequest("PUT", "/api/v1/config", strings.NewReader(good))
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode == http.StatusOK {
+		t.Error("request must not succeed")
+	}
+}
+
+func TestConfig(t *testing.T) {
+	t.Run("Get", testConfigGet)
+	t.Run("Put", testConfigPut)
 }

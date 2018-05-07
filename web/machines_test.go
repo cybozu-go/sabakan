@@ -1,15 +1,6 @@
 package web
 
-import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"path"
-	"testing"
-)
-
+/*
 func PostConfig(etcdClient EtcdClient) {
 	config := IPAMConfig{
 		NodeIPv4Offset: "10.0.0.0/16",
@@ -326,3 +317,4 @@ func TestHandleGetAndPutMachines(t *testing.T) {
 		t.Fatal("machine value not found, ", mcs[0].Cluster)
 	}
 }
+*/
