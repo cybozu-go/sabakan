@@ -1,6 +1,7 @@
 package sabakan
 
-type MachineJson struct {
+// MachineJSON is a struct to encode/decode Machine as JSON.
+type MachineJSON struct {
 	Serial           string                    `json:"serial"`
 	Product          string                    `json:"product"`
 	Datacenter       string                    `json:"datacenter"`
@@ -12,7 +13,7 @@ type MachineJson struct {
 }
 
 // ToMachine creates *Machine.
-func (mj *MachineJson) ToMachine() *Machine {
+func (mj *MachineJSON) ToMachine() *Machine {
 	return &Machine{
 		Serial:           mj.Serial,
 		Product:          mj.Product,
@@ -25,7 +26,7 @@ func (mj *MachineJson) ToMachine() *Machine {
 	}
 }
 
-// Machine is a machine struct
+// Machine represents a server hardware.
 type Machine struct {
 	Serial           string
 	Product          string
@@ -37,11 +38,11 @@ type Machine struct {
 	BMC              MachineBMC
 }
 
-// ToJSON creates *MachineJson.
-func (m *Machine) ToJSON() *MachineJson {
+// ToJSON creates *MachineJSON
+func (m *Machine) ToJSON() *MachineJSON {
 	rack := m.Rack
 	num := m.NodeNumberOfRack
-	return &MachineJson{
+	return &MachineJSON{
 		Serial:           m.Serial,
 		Product:          m.Product,
 		Datacenter:       m.Datacenter,

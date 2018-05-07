@@ -27,6 +27,7 @@ func InternalServerError(e error) APIError {
 	}
 }
 
+// BadRequest creates an APIError that describes what was bad in the request.
 func BadRequest(reason string) APIError {
 	return APIError{http.StatusBadRequest, "invalid request: " + reason, nil}
 }

@@ -55,7 +55,7 @@ func (mi *machinesIndex) AddIndex(val []byte) error {
 }
 
 func (mi *machinesIndex) addNoLock(val []byte) error {
-	var mc sabakan.MachineJson
+	var mc sabakan.MachineJSON
 	err := json.Unmarshal(val, &mc)
 	if err != nil {
 		return err
@@ -96,7 +96,7 @@ func (mi *machinesIndex) DeleteIndex(val []byte) error {
 }
 
 func (mi *machinesIndex) deleteNoLock(val []byte) error {
-	var mc sabakan.MachineJson
+	var mc sabakan.MachineJSON
 	err := json.Unmarshal(val, &mc)
 	if err != nil {
 		return err

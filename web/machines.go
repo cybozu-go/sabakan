@@ -26,7 +26,7 @@ func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var rmcs []sabakan.MachineJson
+	var rmcs []sabakan.MachineJSON
 
 	err := json.NewDecoder(r.Body).Decode(&rmcs)
 	if err != nil {
@@ -103,7 +103,7 @@ func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	j := make([]*sabakan.MachineJson, len(machines))
+	j := make([]*sabakan.MachineJSON, len(machines))
 	for i, m := range machines {
 		j[i] = m.ToJSON()
 	}

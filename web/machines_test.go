@@ -190,7 +190,7 @@ func testMachinesGet(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			continue
 		}
-		var machines []*sabakan.MachineJson
+		var machines []*sabakan.MachineJSON
 		err := json.NewDecoder(resp.Body).Decode(&machines)
 		resp.Body.Close()
 		if err != nil {

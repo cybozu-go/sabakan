@@ -23,6 +23,7 @@ type MachineModel interface {
 	Delete(ctx context.Context, serials []string) error
 }
 
+// ConfigModel is an interface for IPAMConfig.
 type ConfigModel interface {
 	PutConfig(ctx context.Context, config *IPAMConfig) error
 	GetConfig(ctx context.Context) (*IPAMConfig, error)

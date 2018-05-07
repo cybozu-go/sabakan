@@ -11,7 +11,10 @@ import (
 	"github.com/coreos/etcd/clientv3"
 )
 
-const etcdClientUrl = "http://localhost:12379"
+const (
+	etcdClientURL = "http://localhost:12379"
+	etcdPeerURL   = "http://localhost:12380"
+)
 
 func TestMain(m *testing.M) {
 	etcdPath, err := ioutil.TempDir("", "sabakan-test")
@@ -21,8 +24,13 @@ func TestMain(m *testing.M) {
 
 	cmd := exec.Command("etcd",
 		"--data-dir", etcdPath,
-		"--listen-client-urls", etcdClientUrl,
-		"--advertise-client-urls", etcdClientUrl)
+		"--initial-cluster", "default="+etcdPeerURL,
+		"--listen-peer-urls", etcdPeerURL,
+		"--initial-advertise-peer-urls", etcdPeerURL,
+		"--listen-client-urls", etcdClientURL,
+		"--advertise-client-urls", etcdClientURL)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err = cmd.Start()
 	if err != nil {
 		log.Fatal(err)
@@ -36,7 +44,7 @@ func TestMain(m *testing.M) {
 
 func newEtcdClient() (*clientv3.Client, error) {
 	return clientv3.New(clientv3.Config{
-		Endpoints:   []string{etcdClientUrl},
+		Endpoints:   []string{etcdClientURL},
 		DialTimeout: 2 * time.Second,
 	})
 }

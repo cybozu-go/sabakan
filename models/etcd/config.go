@@ -10,6 +10,7 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
+// PutConfig implements sabakan.ConfigModel
 func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) error {
 	key := path.Join(d.prefix, KeyMachines)
 	resp, err := d.client.Get(ctx, key, clientv3.WithPrefix())
@@ -30,6 +31,7 @@ func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) erro
 	return err
 }
 
+// GetConfig implements sabakan.ConfigModel
 func (d *Driver) GetConfig(ctx context.Context) (*sabakan.IPAMConfig, error) {
 	key := path.Join(d.prefix, KeyConfig)
 	resp, err := d.client.Get(ctx, key)

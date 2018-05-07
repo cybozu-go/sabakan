@@ -17,7 +17,7 @@ func offsetToInt(offset string) uint32 {
 	return netutil.IP4ToInt(ip)
 }
 
-func (d *Driver) generateIP(ctx context.Context, mc *sabakan.Machine) (*sabakan.MachineJson, error) {
+func (d *Driver) generateIP(ctx context.Context, mc *sabakan.Machine) (*sabakan.MachineJSON, error) {
 	/*
 		Generate IP addresses by sabakan config
 		Example:

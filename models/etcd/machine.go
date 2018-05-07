@@ -10,9 +10,10 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
+// Register implements sabakan.MachineModel
 func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
 
-	wmcs := make([]*sabakan.MachineJson, len(machines))
+	wmcs := make([]*sabakan.MachineJSON, len(machines))
 	for i, rmc := range machines {
 		var err error
 		wmcs[i], err = d.generateIP(ctx, rmc)
@@ -52,6 +53,7 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 	return nil
 }
 
+// Query implements sabakan.MachineModel
 func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
 	if len(q.Serial) > 0 {
@@ -72,7 +74,7 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 			continue
 		}
 
-		var mj sabakan.MachineJson
+		var mj sabakan.MachineJSON
 		err = json.Unmarshal(resp.Kvs[0].Value, &mj)
 		if err != nil {
 			return nil, err
@@ -91,6 +93,7 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 	return res, nil
 }
 
+// Delete implements sabakan.MachineModel
 func (d *Driver) Delete(ctx context.Context, serials []string) error {
 	return nil
 }
