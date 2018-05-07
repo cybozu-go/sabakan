@@ -13,6 +13,7 @@ type Query struct {
 	IPv6       string
 }
 
+// Match returns true if all non-empty fields matches Machine
 func (q *Query) Match(m *Machine) bool {
 	if len(q.Serial) > 0 && q.Serial != m.Serial {
 		return false
