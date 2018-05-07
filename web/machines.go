@@ -65,12 +65,15 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = s.Model.Machine.Register(r.Context(), machines)
-	if err != nil {
+	switch err {
+	case sabakan.ErrConflicted:
+		renderError(r.Context(), w, APIErrConflict)
+	case nil:
+	default:
 		renderError(r.Context(), w, InternalServerError(err))
-		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 }
 
 func getMachinesQuery(r *http.Request) *sabakan.Query {

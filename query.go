@@ -57,3 +57,17 @@ func (q *Query) Match(m *Machine) bool {
 
 	return true
 }
+
+// QueryBySerial create Query by serial
+func QueryBySerial(serial string) *Query {
+	return &Query{
+		Serial: serial,
+	}
+}
+
+// QueryByIPv4 create Query by IPv4 address
+func QueryByIPv4(ipv4 string) *Query {
+	return &Query{
+		IPv4: ipv4,
+	}
+}

@@ -3,7 +3,6 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
@@ -48,7 +47,7 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 		return err
 	}
 	if !tresp.Succeeded {
-		return errors.New("transaction failed")
+		return sabakan.ErrConflicted
 	}
 	return nil
 }

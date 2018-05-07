@@ -11,6 +11,11 @@ func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 	defer d.mu.Unlock()
 
 	for _, m := range machines {
+		if _, ok := d.machines[m.Serial]; ok {
+			return sabakan.ErrConflicted
+		}
+	}
+	for _, m := range machines {
 		d.machines[m.Serial] = m
 	}
 	return nil

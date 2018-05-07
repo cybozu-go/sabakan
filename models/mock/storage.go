@@ -48,7 +48,7 @@ func (d *driver) DeleteEncryptionKeys(ctx context.Context, serial string) ([]str
 	for k := range d.storage {
 		if strings.HasPrefix(k, prefix) {
 			delete(d.storage, k)
-			resp = append(resp, k)
+			resp = append(resp, k[len(serial)+1:])
 		}
 	}
 
