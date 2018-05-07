@@ -14,12 +14,15 @@ import (
 func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
 
 	wmcs := make([]*sabakan.MachineJSON, len(machines))
+
+	cfg, err := d.GetConfig(ctx)
+	if err != nil {
+		return err
+	}
+
 	for i, rmc := range machines {
-		var err error
-		wmcs[i], err = d.generateIP(ctx, rmc)
-		if err != nil {
-			return err
-		}
+		cfg.GenerateIP(rmc)
+		wmcs[i] = rmc.ToJSON()
 	}
 
 	// Put machines into etcd
