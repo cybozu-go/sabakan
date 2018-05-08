@@ -17,6 +17,12 @@ const (
 )
 
 func TestMain(m *testing.M) {
+	circleci := os.Getenv("CIRCLECI") == "true"
+	if circleci {
+		code := m.Run()
+		os.Exit(code)
+	}
+
 	etcdPath, err := ioutil.TempDir("", "sabakan-test")
 	if err != nil {
 		log.Fatal(err)
@@ -43,8 +49,15 @@ func TestMain(m *testing.M) {
 }
 
 func newEtcdClient() (*clientv3.Client, error) {
+	var clientURL string
+	circleci := os.Getenv("CIRCLECI") == "true"
+	if circleci {
+		clientURL = "http://localhost:2379"
+	} else {
+		clientURL = etcdClientURL
+	}
 	return clientv3.New(clientv3.Config{
-		Endpoints:   []string{etcdClientURL},
+		Endpoints:   []string{clientURL},
 		DialTimeout: 2 * time.Second,
 	})
 }
