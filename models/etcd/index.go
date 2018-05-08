@@ -23,14 +23,18 @@ type machinesIndex struct {
 	IPv6       map[string]string
 }
 
-func (mi *machinesIndex) init(ctx context.Context, client *clientv3.Client, prefix string) error {
-	mi.Product = make(map[string][]string)
-	mi.Datacenter = make(map[string][]string)
-	mi.Rack = make(map[string][]string)
-	mi.Role = make(map[string][]string)
-	mi.IPv4 = make(map[string]string)
-	mi.IPv6 = make(map[string]string)
+func newMachinesIndex() *machinesIndex {
+	return &machinesIndex{
+		Product:    make(map[string][]string),
+		Datacenter: make(map[string][]string),
+		Rack:       make(map[string][]string),
+		Role:       make(map[string][]string),
+		IPv4:       make(map[string]string),
+		IPv6:       make(map[string]string),
+	}
+}
 
+func (mi *machinesIndex) init(ctx context.Context, client *clientv3.Client, prefix string) error {
 	key := path.Join(prefix, KeyMachines)
 	resp, err := client.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
@@ -39,45 +43,48 @@ func (mi *machinesIndex) init(ctx context.Context, client *clientv3.Client, pref
 	if resp.Count == 0 {
 		return nil
 	}
-	for _, m := range resp.Kvs {
-		err := mi.AddIndex(m.Value)
+
+	f := func(val []byte) (*sabakan.Machine, error) {
+		var mc sabakan.MachineJSON
+		err := json.Unmarshal(val, &mc)
+		if err != nil {
+			return nil, err
+		}
+		return mc.ToMachine(), nil
+	}
+	for _, kv := range resp.Kvs {
+		m, err := f(kv.Value)
 		if err != nil {
 			return err
 		}
+		mi.AddIndex(m)
 	}
 	return nil
 }
 
-func (mi *machinesIndex) AddIndex(val []byte) error {
+func (mi *machinesIndex) AddIndex(m *sabakan.Machine) {
 	mi.mux.Lock()
-	defer mi.mux.Unlock()
-	return mi.addNoLock(val)
+	mi.addNoLock(m)
+	mi.mux.Unlock()
 }
 
-func (mi *machinesIndex) addNoLock(val []byte) error {
-	var mc sabakan.MachineJSON
-	err := json.Unmarshal(val, &mc)
-	if err != nil {
-		return err
-	}
-
-	mi.Product[mc.Product] = append(mi.Product[mc.Product], mc.Serial)
-	mi.Datacenter[mc.Datacenter] = append(mi.Datacenter[mc.Datacenter], mc.Serial)
-	mcrack := fmt.Sprint(*mc.Rack)
-	mi.Rack[mcrack] = append(mi.Rack[mcrack], mc.Serial)
-	mi.Role[mc.Role] = append(mi.Role[mc.Role], mc.Serial)
-	for _, ifn := range mc.Network {
+func (mi *machinesIndex) addNoLock(m *sabakan.Machine) {
+	mi.Product[m.Product] = append(mi.Product[m.Product], m.Serial)
+	mi.Datacenter[m.Datacenter] = append(mi.Datacenter[m.Datacenter], m.Serial)
+	mcrack := fmt.Sprint(m.Rack)
+	mi.Rack[mcrack] = append(mi.Rack[mcrack], m.Serial)
+	mi.Role[m.Role] = append(mi.Role[m.Role], m.Serial)
+	for _, ifn := range m.Network {
 		for _, v := range ifn.IPv4 {
-			mi.IPv4[v] = mc.Serial
+			mi.IPv4[v] = m.Serial
 		}
 		for _, v := range ifn.IPv6 {
-			mi.IPv6[v] = mc.Serial
+			mi.IPv6[v] = m.Serial
 		}
 	}
-	for _, v := range mc.BMC.IPv4 {
-		mi.IPv4[v] = mc.Serial
+	for _, v := range m.BMC.IPv4 {
+		mi.IPv4[v] = m.Serial
 	}
-	return nil
 }
 
 func indexOf(data []string, element string) int {
@@ -86,32 +93,26 @@ func indexOf(data []string, element string) int {
 			return k
 		}
 	}
-	return -1 //not found.
+	panic("element not found")
 }
 
-func (mi *machinesIndex) DeleteIndex(val []byte) error {
+func (mi *machinesIndex) DeleteIndex(m *sabakan.Machine) {
 	mi.mux.Lock()
-	defer mi.mux.Unlock()
-	return mi.deleteNoLock(val)
+	mi.deleteNoLock(m)
+	mi.mux.Unlock()
 }
 
-func (mi *machinesIndex) deleteNoLock(val []byte) error {
-	var mc sabakan.MachineJSON
-	err := json.Unmarshal(val, &mc)
-	if err != nil {
-		return err
-	}
-
-	i := indexOf(mi.Product[mc.Product], mc.Serial)
-	mi.Product[mc.Product] = append(mi.Product[mc.Product][:i], mi.Product[mc.Product][i+1:]...)
-	i = indexOf(mi.Datacenter[mc.Datacenter], mc.Serial)
-	mi.Datacenter[mc.Datacenter] = append(mi.Datacenter[mc.Datacenter][:i], mi.Datacenter[mc.Datacenter][i+1:]...)
-	mcrack := fmt.Sprint(*mc.Rack)
-	i = indexOf(mi.Rack[mcrack], mc.Serial)
+func (mi *machinesIndex) deleteNoLock(m *sabakan.Machine) {
+	i := indexOf(mi.Product[m.Product], m.Serial)
+	mi.Product[m.Product] = append(mi.Product[m.Product][:i], mi.Product[m.Product][i+1:]...)
+	i = indexOf(mi.Datacenter[m.Datacenter], m.Serial)
+	mi.Datacenter[m.Datacenter] = append(mi.Datacenter[m.Datacenter][:i], mi.Datacenter[m.Datacenter][i+1:]...)
+	mcrack := fmt.Sprint(m.Rack)
+	i = indexOf(mi.Rack[mcrack], m.Serial)
 	mi.Rack[mcrack] = append(mi.Rack[mcrack][:i], mi.Rack[mcrack][i+1:]...)
-	i = indexOf(mi.Role[mc.Role], mc.Serial)
-	mi.Role[mc.Role] = append(mi.Role[mc.Role][:i], mi.Role[mc.Role][i+1:]...)
-	for _, ifn := range mc.Network {
+	i = indexOf(mi.Role[m.Role], m.Serial)
+	mi.Role[m.Role] = append(mi.Role[m.Role][:i], mi.Role[m.Role][i+1:]...)
+	for _, ifn := range m.Network {
 		for _, v := range ifn.IPv4 {
 			mi.IPv4[v] = ""
 		}
@@ -119,23 +120,17 @@ func (mi *machinesIndex) deleteNoLock(val []byte) error {
 			mi.IPv4[v] = ""
 		}
 	}
-	for _, v := range mc.BMC.IPv4 {
+	for _, v := range m.BMC.IPv4 {
 		mi.IPv4[v] = ""
 	}
-	return nil
 }
 
 // UpdateIndex updates target machine on the index
-// BUG: should hold a lock while updating.
-func (mi *machinesIndex) UpdateIndex(pval []byte, nval []byte) error {
+func (mi *machinesIndex) UpdateIndex(prevM *sabakan.Machine, newM *sabakan.Machine) {
 	mi.mux.Lock()
-	defer mi.mux.Unlock()
-
-	err := mi.deleteNoLock(pval)
-	if err != nil {
-		return err
-	}
-	return mi.addNoLock(nval)
+	mi.deleteNoLock(prevM)
+	mi.addNoLock(newM)
+	mi.mux.Unlock()
 }
 
 func (d *Driver) startWatching(ctx context.Context) error {
@@ -144,27 +139,43 @@ func (d *Driver) startWatching(ctx context.Context) error {
 		return err
 	}
 
+	f := func(val []byte) (*sabakan.Machine, error) {
+		var mc sabakan.MachineJSON
+		err := json.Unmarshal(val, &mc)
+		if err != nil {
+			return nil, err
+		}
+		return mc.ToMachine(), nil
+	}
+
 	key := path.Join(d.prefix, KeyMachines)
 	rch := d.watcher.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
-				err := d.mi.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
+				prevM, err := f(ev.PrevKv.Value)
 				if err != nil {
-					return err
+					panic(err)
 				}
+				newM, err := f(ev.Kv.Value)
+				if err != nil {
+					panic(err)
+				}
+				d.mi.UpdateIndex(prevM, newM)
 			}
 			if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
-				err := d.mi.AddIndex(ev.Kv.Value)
+				m, err := f(ev.Kv.Value)
 				if err != nil {
-					return err
+					panic(err)
 				}
+				d.mi.AddIndex(m)
 			}
 			if ev.Type == mvccpb.DELETE {
-				err := d.mi.DeleteIndex(ev.PrevKv.Value)
+				m, err := f(ev.PrevKv.Value)
 				if err != nil {
-					return err
+					panic(err)
 				}
+				d.mi.DeleteIndex(m)
 			}
 		}
 	}
