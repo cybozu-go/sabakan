@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
+	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -60,6 +62,57 @@ func testRegister(t *testing.T) {
 }
 
 func testQuery(t *testing.T) {
+	d := testNewDriver(t)
+	cmd.Go(d.Run)
+	time.Sleep(1 * time.Millisecond)
+
+	config := &sabakan.IPAMConfig{
+		NodeIPv4Offset: "10.0.0.0/24",
+		NodeRackShift:  4,
+		BMCIPv4Offset:  "10.10.0.0/24",
+		BMCRackShift:   2,
+		NodeIPPerNode:  3,
+		BMCIPPerNode:   1,
+	}
+	err := d.PutConfig(context.Background(), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	machines := []*sabakan.Machine{
+		&sabakan.Machine{Serial: "12345678", Product: "R630"},
+		&sabakan.Machine{Serial: "12345679", Product: "R630"},
+		&sabakan.Machine{Serial: "12345680", Product: "R730"},
+	}
+	time.Sleep(1 * time.Millisecond)
+	err = d.Register(context.Background(), machines)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	q := sabakan.QueryBySerial("12345678")
+	resp, err := d.Query(context.Background(), q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp) != 1 {
+		t.Fatalf("unexpected query result: %#v", resp)
+	}
+	if !q.Match(resp[0]) {
+		t.Errorf("unexpected responsed machine: %#v", resp[0])
+	}
+
+	q = &sabakan.Query{Product: "R630"}
+	resp, err = d.Query(context.Background(), q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp) != 2 {
+		t.Fatalf("unexpected query result: %#v", resp)
+	}
+	if !(q.Match(resp[0]) && q.Match(resp[1])) {
+		t.Errorf("unexpected responsed machine: %#v", resp)
+	}
 }
 
 func TestMachine(t *testing.T) {
