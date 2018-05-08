@@ -22,7 +22,6 @@ func (r *machinesCmd) Usage() string {
 	return `Usage:
 	machines get [options]
 	machines create -f <machines-file.json>
-	machines update -f <machines-file.json>
 `
 }
 func (r *machinesCmd) SetFlags(f *flag.FlagSet) {}
@@ -31,7 +30,6 @@ func (r *machinesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 	cmdr := subcommands.NewCommander(f, "machines")
 	cmdr.Register(&machinesGetCmd{c: r.c}, "")
 	cmdr.Register(&machinesCreateCmd{c: r.c}, "")
-	cmdr.Register(&machinesUpdateCmd{c: r.c}, "")
 	return cmdr.Execute(ctx)
 }
 
@@ -50,7 +48,6 @@ var machinesGetQuery = map[string]string{
 	"serial":     "Serial name",
 	"datacenter": "Datacenter name",
 	"rack":       "Rack name",
-	"cluster":    "Cluster name",
 	"product":    "Product name (e.g. 'R630')",
 	"ipv4":       "IPv4 address",
 	"ipv6":       "IPv6 address",
@@ -113,43 +110,6 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 	}
 
 	err = r.c.MachinesCreate(ctx, machines)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
-	}
-	return 0
-}
-
-type machinesUpdateCmd struct {
-	c    *sabactl.Client
-	file string
-}
-
-func (r *machinesUpdateCmd) Name() string     { return "update" }
-func (r *machinesUpdateCmd) Synopsis() string { return "update machines information." }
-func (r *machinesUpdateCmd) Usage() string {
-	return "machines update -f <machines-file.json>\n"
-}
-func (r *machinesUpdateCmd) SetFlags(f *flag.FlagSet) {
-	f.StringVar(&r.file, "f", "", "machine file in JSON")
-}
-
-func (r *machinesUpdateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	file, err := os.Open(r.file)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
-	}
-	defer file.Close()
-
-	var machines []sabakan.Machine
-	err = json.NewDecoder(file).Decode(&machines)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
-	}
-
-	err = r.c.MachinesUpdate(ctx, machines)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1

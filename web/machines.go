@@ -21,7 +21,6 @@ func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderError(r.Context(), w, APIErrBadMethod)
-	return
 }
 
 func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
@@ -112,4 +111,5 @@ func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleMachinesDelete(w http.ResponseWriter, r *http.Request) {
+	//TODO
 }

@@ -37,7 +37,7 @@ func (c *Client) RemoteConfigGet(ctx context.Context) (*sabakan.IPAMConfig, erro
 
 // RemoteConfigSet sets a remote config
 func (c *Client) RemoteConfigSet(ctx context.Context, conf *sabakan.IPAMConfig) error {
-	return c.sendRequestWithJSON(ctx, "POST", "/config", conf)
+	return c.sendRequestWithJSON(ctx, "PUT", "/config", conf)
 }
 
 // MachinesGet get machine information from sabakan server
@@ -53,11 +53,6 @@ func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]s
 // MachinesCreate create machines information to sabakan server
 func (c *Client) MachinesCreate(ctx context.Context, machines []sabakan.Machine) error {
 	return c.sendRequestWithJSON(ctx, "POST", "/machines", machines)
-}
-
-// MachinesUpdate update machines information on sabakan server
-func (c *Client) MachinesUpdate(ctx context.Context, machines []sabakan.Machine) error {
-	return c.sendRequestWithJSON(ctx, "PUT", "/machines", machines)
 }
 
 func (c *Client) getJSON(ctx context.Context, path string, params map[string]string, data interface{}) error {

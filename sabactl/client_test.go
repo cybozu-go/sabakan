@@ -45,7 +45,7 @@ func TestRemoteConfigGet(t *testing.T) {
 
 }
 
-func TestRemoteConfigPost(t *testing.T) {
+func TestRemoteConfigPut(t *testing.T) {
 	var method, path string
 	var record sabakan.IPAMConfig
 	conf := sabakan.IPAMConfig{
@@ -67,7 +67,7 @@ func TestRemoteConfigPost(t *testing.T) {
 	if err != nil {
 		t.Error("err == nil")
 	}
-	if method != "POST" || path != "/api/v1/config" {
+	if method != "PUT" || path != "/api/v1/config" {
 		t.Errorf("%s != GET, nor %s != /api/v1/config", method, path)
 	}
 	if !reflect.DeepEqual(record, conf) {
@@ -124,24 +124,6 @@ func TestMachinesCreate(t *testing.T) {
 	}
 	if method != "POST" || path != "/api/v1/machines" {
 		t.Errorf("%s != POST, nor %s != /api/v1/machines", method, path)
-	}
-}
-
-func TestMachinesUpdate(t *testing.T) {
-	var method, path string
-
-	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		method = r.Method
-		path = r.URL.Path
-	}))
-	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
-
-	err := c.MachinesUpdate(context.Background(), []sabakan.Machine{})
-	if err != nil {
-		t.Error("err == nil")
-	}
-	if method != "PUT" || path != "/api/v1/machines" {
-		t.Errorf("%s != PUT, nor %s != /api/v1/machines", method, path)
 	}
 }
 

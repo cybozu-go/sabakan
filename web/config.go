@@ -18,7 +18,6 @@ func (s Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderError(r.Context(), w, APIErrBadMethod)
-	return
 }
 
 func (s Server) handleConfigGet(w http.ResponseWriter, r *http.Request) {
