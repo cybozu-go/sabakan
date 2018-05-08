@@ -16,7 +16,7 @@ const (
 	etcdPeerURL   = "http://localhost:12380"
 )
 
-func TestMain(m *testing.M) {
+func testMain(m *testing.M) int {
 	circleci := os.Getenv("CIRCLECI") == "true"
 	if circleci {
 		code := m.Run()
@@ -41,11 +41,17 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	code := m.Run()
-	cmd.Process.Kill()
-	cmd.Wait()
-	os.RemoveAll(etcdPath)
-	os.Exit(code)
+	defer func() {
+		cmd.Process.Kill()
+		cmd.Wait()
+		os.RemoveAll(etcdPath)
+	}()
+
+	return m.Run()
+}
+
+func TestMain(m *testing.M) {
+	os.Exit(testMain(m))
 }
 
 func newEtcdClient() (*clientv3.Client, error) {
