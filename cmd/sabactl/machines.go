@@ -102,7 +102,7 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 	}
 	defer file.Close()
 
-	var machines []sabakan.Machine
+	var machines []sabakan.MachineJSON
 	err = json.NewDecoder(file).Decode(&machines)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

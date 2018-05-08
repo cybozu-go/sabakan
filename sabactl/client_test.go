@@ -78,7 +78,7 @@ func TestRemoteConfigPut(t *testing.T) {
 
 func TestMachinesGet(t *testing.T) {
 	var method, path, rawQuery string
-	machines := []sabakan.Machine{{Serial: "123abc"}}
+	machines := []sabakan.MachineJSON{{Serial: "123abc"}}
 
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
@@ -118,7 +118,7 @@ func TestMachinesCreate(t *testing.T) {
 	}))
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err := c.MachinesCreate(context.Background(), []sabakan.Machine{})
+	err := c.MachinesCreate(context.Background(), []sabakan.MachineJSON{})
 	if err != nil {
 		t.Error("err == nil")
 	}
