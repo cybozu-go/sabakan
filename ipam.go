@@ -41,11 +41,6 @@ func (c *IPAMConfig) Validate() error {
 	return nil
 }
 
-func offsetToInt(offset string) uint32 {
-	ip, _, _ := net.ParseCIDR(offset)
-	return netutil.IP4ToInt(ip)
-}
-
 // GenerateIP generates IP addresses for a machine.
 // Generated IP addresses are stored in mc.
 func (c *IPAMConfig) GenerateIP(mc *Machine) {
