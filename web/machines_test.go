@@ -1,0 +1,214 @@
+package web
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/models/mock"
+)
+
+func testMachinesPost(t *testing.T) {
+
+	m := mock.NewModel()
+	handler := Server{m}
+
+	cases := []struct {
+		machine  string
+		expected int
+	}{
+		{`[{
+  "serial": "1234abcd",
+  "product": "R630",
+  "datacenter": "ty3",
+  "rack": 1,
+  "role": "boot",
+  "node-number-of-rack": 1
+}]`, http.StatusCreated},
+		{`[{
+  "serial": "1234abcd",
+  "product": "R630",
+  "datacenter": "ty3",
+  "rack": 1,
+  "role": "boot",
+  "node-number-of-rack": 1
+}]`, http.StatusConflict},
+		{`[{
+  "product": "R630",
+  "datacenter": "ty3",
+  "rack": 1,
+  "role": "boot",
+  "node-number-of-rack": 1
+}]`, http.StatusBadRequest},
+		{`[{
+  "serial": "5678abcd",
+  "datacenter": "ty3",
+  "rack": 1,
+  "role": "boot",
+  "node-number-of-rack": 1
+}]`, http.StatusBadRequest},
+		{`[{
+  "serial": "0000abcd",
+  "product": "R630",
+  "rack": 1,
+  "role": "boot",
+  "node-number-of-rack": 1
+}]`, http.StatusBadRequest},
+		{`[{
+  "serial": "1111abcd",
+  "product": "R630",
+  "datacenter": "ty3",
+  "role": "boot",
+  "node-number-of-rack": 1
+}]`, http.StatusBadRequest},
+		{`[{
+  "serial": "2222abcd",
+  "product": "R630",
+  "datacenter": "ty3",
+  "rack": 1,
+  "node-number-of-rack": 1
+}]`, http.StatusBadRequest},
+		{`[{
+  "serial": "3333abcd",
+  "product": "R630",
+  "datacenter": "ty3",
+  "rack": 1,
+  "role": "boot"
+}]`, http.StatusBadRequest},
+	}
+
+	for _, c := range cases {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("POST", "/api/v1/machines", strings.NewReader(c.machine))
+		handler.ServeHTTP(w, r)
+
+		resp := w.Result()
+		if resp.StatusCode != c.expected {
+			t.Error("wrong status code:", resp.StatusCode)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusCreated {
+			continue
+		}
+
+		machines, err := m.Machine.Query(context.Background(), sabakan.QueryBySerial("1234abcd"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(machines) != 1 {
+			t.Error("machine not register")
+		}
+	}
+
+}
+
+func testMachinesGet(t *testing.T) {
+	m := mock.NewModel()
+	handler := Server{m}
+
+	m.Machine.Register(context.Background(), []*sabakan.Machine{
+		{
+			Serial:           "1234abcd",
+			Product:          "R630",
+			Datacenter:       "ty3",
+			Rack:             1,
+			Role:             "boot",
+			NodeNumberOfRack: 1,
+		},
+		{
+			Serial:           "5678abcd",
+			Product:          "R740",
+			Datacenter:       "ty3",
+			Rack:             1,
+			Role:             "worker",
+			NodeNumberOfRack: 1,
+		},
+		{
+			Serial:           "1234efgh",
+			Product:          "R630",
+			Datacenter:       "ty3",
+			Rack:             2,
+			Role:             "boot",
+			NodeNumberOfRack: 1,
+		},
+	})
+
+	cases := []struct {
+		query    url.Values
+		status   int
+		expected map[string]bool
+	}{
+		{
+			query:    map[string][]string{"serial": {"1234abcd"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true},
+		},
+		{
+			query:    map[string][]string{"product": {"R630"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "1234efgh": true},
+		},
+		{
+			query:    map[string][]string{"datacenter": {"ty3"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true, "1234efgh": true},
+		},
+		{
+			query:    map[string][]string{"rack": {"1"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
+		},
+		{
+			query:    map[string][]string{"role": {"boot"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "1234efgh": true},
+		},
+
+		{
+			query:    map[string][]string{"serial": {"5689abcd"}},
+			status:   http.StatusNotFound,
+			expected: nil,
+		},
+	}
+	for _, c := range cases {
+		w := httptest.NewRecorder()
+		u := url.URL{Path: "/api/v1/machines", RawQuery: c.query.Encode()}
+		r := httptest.NewRequest("GET", u.String(), nil)
+
+		handler.ServeHTTP(w, r)
+
+		resp := w.Result()
+		if resp.StatusCode != c.status {
+			t.Error("wrong status code:", resp.StatusCode)
+		}
+		if resp.StatusCode != http.StatusOK {
+			continue
+		}
+		var machines []*sabakan.MachineJSON
+		err := json.NewDecoder(resp.Body).Decode(&machines)
+		resp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		serials := make(map[string]bool)
+		for _, m := range machines {
+			serials[m.Serial] = true
+		}
+		if !reflect.DeepEqual(serials, c.expected) {
+			t.Errorf("wrong query result: %#v", serials)
+		}
+	}
+}
+
+func TestMachines(t *testing.T) {
+	t.Run("Get", testMachinesGet)
+	t.Run("Post", testMachinesPost)
+	//t.Run("Delete", testMachinesDelete)
+}

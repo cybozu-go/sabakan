@@ -1,32 +1,57 @@
 package sabakan
 
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"net"
-	"net/http"
-	"path"
-	"reflect"
-
-	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/clientv3/clientv3util"
-	"github.com/coreos/etcd/mvcc/mvccpb"
-	"github.com/cybozu-go/netutil"
-	"github.com/gorilla/mux"
-)
-
-// Machine is a machine struct
-type Machine struct {
+// MachineJSON is a struct to encode/decode Machine as JSON.
+type MachineJSON struct {
 	Serial           string                    `json:"serial"`
 	Product          string                    `json:"product"`
 	Datacenter       string                    `json:"datacenter"`
-	Rack             uint32                    `json:"rack"`
-	NodeNumberOfRack uint32                    `json:"node-number-of-rack"`
+	Rack             *uint32                   `json:"rack"`
+	NodeNumberOfRack *uint32                   `json:"node-number-of-rack"`
 	Role             string                    `json:"role"`
-	Cluster          string                    `json:"cluster"`
 	Network          map[string]MachineNetwork `json:"network"`
 	BMC              MachineBMC                `json:"bmc"`
+}
+
+// ToMachine creates *Machine.
+func (mj *MachineJSON) ToMachine() *Machine {
+	return &Machine{
+		Serial:           mj.Serial,
+		Product:          mj.Product,
+		Datacenter:       mj.Datacenter,
+		Rack:             *mj.Rack,
+		NodeNumberOfRack: *mj.NodeNumberOfRack,
+		Role:             mj.Role,
+		Network:          mj.Network,
+		BMC:              mj.BMC,
+	}
+}
+
+// Machine represents a server hardware.
+type Machine struct {
+	Serial           string
+	Product          string
+	Datacenter       string
+	Rack             uint32
+	NodeNumberOfRack uint32
+	Role             string
+	Network          map[string]MachineNetwork
+	BMC              MachineBMC
+}
+
+// ToJSON creates *MachineJSON
+func (m *Machine) ToJSON() *MachineJSON {
+	rack := m.Rack
+	num := m.NodeNumberOfRack
+	return &MachineJSON{
+		Serial:           m.Serial,
+		Product:          m.Product,
+		Datacenter:       m.Datacenter,
+		Rack:             &rack,
+		NodeNumberOfRack: &num,
+		Role:             m.Role,
+		Network:          m.Network,
+		BMC:              m.BMC,
+	}
 }
 
 // MachineNetwork is a network interface struct for Machine
@@ -36,499 +61,25 @@ type MachineNetwork struct {
 	Mac  string   `json:"mac"`
 }
 
+func (n MachineNetwork) hasIPv4(ipv4 string) bool {
+	for _, t := range n.IPv4 {
+		if t == ipv4 {
+			return true
+		}
+	}
+	return false
+}
+
+func (n MachineNetwork) hasIPv6(ipv6 string) bool {
+	for _, t := range n.IPv6 {
+		if t == ipv6 {
+			return true
+		}
+	}
+	return false
+}
+
 // MachineBMC is a bmc interface struct for Machine
 type MachineBMC struct {
 	IPv4 []string `json:"ipv4"`
-}
-
-// Query is an URL query
-type Query struct {
-	Serial     string
-	Product    string
-	Datacenter string
-	Rack       string
-	Role       string
-	Cluster    string
-	IPv4       string
-	IPv6       string
-}
-
-// InitMachines is initilization of the sabakan API /machines
-func InitMachines(r *mux.Router, e *EtcdClient) {
-	e.initMachinesFunc(r)
-}
-
-func (e *EtcdClient) initMachinesFunc(r *mux.Router) {
-	r.HandleFunc("/machines", e.handlePostMachines).Methods("POST")
-	r.HandleFunc("/machines", e.handlePutMachines).Methods("PUT")
-	r.HandleFunc("/machines", e.handleGetMachines).Methods("GET")
-}
-
-func offsetToInt(offset string) uint32 {
-	ip, _, _ := net.ParseCIDR(offset)
-	return netutil.IP4ToInt(ip)
-}
-
-func generateIP(ctx context.Context, mc Machine, e *EtcdClient) (Machine, int, error) {
-	/*
-		Generate IP addresses by sabakan config
-		Example:
-			net0 = node-ipv4-offset + (1 << node-rack-shift * 1 * rack-number) + node-number-of-a-rack
-			net1 = node-ipv4-offset + (1 << node-rack-shift * 2 * rack-number) + node-number-of-a-rack
-			net2 = node-ipv4-offset + (1 << node-rack-shift * 3 * rack-number) + node-number-of-a-rack
-			bmc  = bmc-ipv4-offset + (1 << bmc-rack-shift * 1 * rack-number) + node-number-of-a-rack
-	*/
-	key := path.Join(e.Prefix, EtcdKeyConfig)
-	resp, err := e.Client.Get(ctx, key)
-	if err != nil {
-		return Machine{}, http.StatusInternalServerError, err
-	}
-	if resp == nil {
-		return Machine{}, http.StatusNotFound, fmt.Errorf(ErrorValueNotFound)
-	}
-	if len(resp.Kvs) == 0 {
-		return Machine{}, http.StatusNotFound, fmt.Errorf(ErrorValueNotFound)
-	}
-
-	var sc Config
-	err = json.Unmarshal(resp.Kvs[0].Value, &sc)
-	if err != nil {
-		return Machine{}, http.StatusBadRequest, err
-	}
-
-	mc.Network = map[string]MachineNetwork{}
-	for i := 0; i < int(sc.NodeIPPerNode); i++ {
-		uintip := offsetToInt(sc.NodeIPv4Offset) + (uint32(1) << uint32(sc.NodeRackShift) * uint32(i+1) * mc.Rack) + mc.NodeNumberOfRack
-		ip := netutil.IntToIP4(uintip)
-		ifname := fmt.Sprintf("net%d", i)
-		mc.Network[ifname] = MachineNetwork{
-			IPv4: []string{ip.String()},
-			IPv6: []string{},
-			Mac:  "",
-		}
-	}
-	for i := 0; i < int(sc.BMCIPPerNode); i++ {
-		uintip := offsetToInt(sc.BMCIPv4Offset) + (uint32(1) << uint32(sc.BMCRackShift) * uint32(i+1) * mc.Rack) + mc.NodeNumberOfRack
-		ip := netutil.IntToIP4(uintip)
-		mc.BMC = MachineBMC{
-			IPv4: []string{ip.String()},
-		}
-	}
-
-	return Machine{
-		mc.Serial,
-		mc.Product,
-		mc.Datacenter,
-		mc.Rack,
-		mc.NodeNumberOfRack,
-		mc.Role,
-		mc.Cluster,
-		mc.Network,
-		mc.BMC,
-	}, http.StatusOK, nil
-}
-
-func (e *EtcdClient) handlePostMachines(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	var rmcs []Machine
-
-	err := json.NewDecoder(r.Body).Decode(&rmcs)
-	if err != nil {
-		renderError(w, err, http.StatusBadRequest)
-		return
-	}
-
-	// Validation
-	for _, mc := range rmcs {
-		if mc.Serial == "" {
-			renderError(w, fmt.Errorf("serial: "+ErrorValueNotFound), http.StatusBadRequest)
-			return
-		}
-		if mc.Product == "" {
-			renderError(w, fmt.Errorf("product: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
-			return
-		}
-		if mc.Datacenter == "" {
-			renderError(w, fmt.Errorf("datacenter: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
-			return
-		}
-		if mc.Rack == 0 {
-			renderError(w, fmt.Errorf("rack: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
-			return
-		}
-		if mc.Role == "" {
-			renderError(w, fmt.Errorf("role: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
-			return
-		}
-		if mc.NodeNumberOfRack == 0 {
-			renderError(w, fmt.Errorf("node-number-of-rack: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
-			return
-		}
-		if mc.Cluster == "" {
-			renderError(w, fmt.Errorf("cluster: "+ErrorValueNotFound+" in the serial "+mc.Serial), http.StatusBadRequest)
-			return
-		}
-	}
-
-	for _, mc := range rmcs {
-		key := path.Join(e.Prefix, EtcdKeyMachines, mc.Serial)
-		resp, err := e.Client.Get(r.Context(), key)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		if resp.Count != 0 {
-			renderError(w, fmt.Errorf("serial: "+mc.Serial+" "+ErrorMachineExists), http.StatusBadRequest)
-			return
-		}
-	}
-
-	wmcs := make([]Machine, len(rmcs))
-	for i, rmc := range rmcs {
-		status := 0
-		wmcs[i], status, err = generateIP(r.Context(), rmc, e)
-		if err != nil {
-			renderError(w, err, status)
-		}
-	}
-
-	// Put machines into etcd
-	txnIfOps := []clientv3.Cmp{}
-	txnThenOps := []clientv3.Op{}
-	for _, wmc := range wmcs {
-		key := path.Join(e.Prefix, EtcdKeyMachines, wmc.Serial)
-		txnIfOps = append(txnIfOps, clientv3util.KeyMissing(key))
-		j, err := json.Marshal(wmc)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
-	}
-	tresp, err := e.Client.Txn(r.Context()).
-		If(
-			txnIfOps...,
-		).
-		Then(
-			txnThenOps...,
-		).
-		Else().
-		Commit()
-	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-		return
-	}
-	if !tresp.Succeeded {
-		renderError(w, fmt.Errorf(ErrorEtcdTxnFailed), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func (e *EtcdClient) handlePutMachines(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	var rmcs []Machine
-
-	err := json.NewDecoder(r.Body).Decode(&rmcs)
-	if err != nil {
-		renderError(w, err, http.StatusBadRequest)
-		return
-	}
-
-	// Validation
-	for _, mc := range rmcs {
-		if mc.Serial == "" {
-			renderError(w, fmt.Errorf("serial: "+ErrorValueNotFound), http.StatusBadRequest)
-			return
-		}
-	}
-
-	// Update []Machine
-	wmcs := make([]Machine, len(rmcs))
-	for i, rmc := range rmcs {
-		key := path.Join(e.Prefix, EtcdKeyMachines, rmc.Serial)
-		resp, err := e.Client.Get(r.Context(), key)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		if resp.Count == 0 {
-			renderError(w, fmt.Errorf("Serial "+rmc.Serial+" "+ErrorMachineNotExists), http.StatusNotFound)
-			return
-		}
-
-		var emc Machine
-		err = json.Unmarshal(resp.Kvs[0].Value, &emc)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		wmcs[i] = emc
-
-		if rmc.Product != "" && emc.Product != rmc.Product {
-			wmcs[i].Product = rmc.Product
-		}
-		if rmc.Datacenter != "" && emc.Datacenter != rmc.Datacenter {
-			wmcs[i].Datacenter = rmc.Datacenter
-		}
-		if rmc.Rack != 0 && emc.Rack != rmc.Rack {
-			wmcs[i].Rack = rmc.Rack
-		}
-		if rmc.Role != "" && emc.Role != rmc.Role {
-			wmcs[i].Role = rmc.Role
-		}
-		if rmc.NodeNumberOfRack != 0 && emc.NodeNumberOfRack != rmc.NodeNumberOfRack {
-			wmcs[i].NodeNumberOfRack = rmc.NodeNumberOfRack
-		}
-		if rmc.Cluster != "" && emc.Cluster != rmc.Cluster {
-			wmcs[i].Cluster = rmc.Cluster
-		}
-
-		status := 0
-		wmcs[i], status, err = generateIP(r.Context(), wmcs[i], e)
-		if err != nil {
-			renderError(w, err, status)
-		}
-	}
-
-	// Put machines into etcd
-	txnIfOps := []clientv3.Cmp{}
-	txnThenOps := []clientv3.Op{}
-	for _, wmc := range wmcs {
-		key := path.Join(e.Prefix, EtcdKeyMachines, wmc.Serial)
-		txnIfOps = append(txnIfOps, clientv3util.KeyExists(key))
-		j, err := json.Marshal(wmc)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
-	}
-	tresp, err := e.Client.Txn(r.Context()).
-		If(
-			txnIfOps...,
-		).
-		Then(
-			txnThenOps...,
-		).
-		Else().
-		Commit()
-	if err != nil {
-		renderError(w, err, http.StatusInternalServerError)
-		return
-	}
-	if !tresp.Succeeded {
-		renderError(w, fmt.Errorf(ErrorEtcdTxnFailed), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func getMachinesQuery(q *Query, r *http.Request) {
-	q.Serial = r.URL.Query().Get("serial")
-	q.Product = r.URL.Query().Get("product")
-	q.Datacenter = r.URL.Query().Get("datacenter")
-	q.Rack = r.URL.Query().Get("rack")
-	q.Role = r.URL.Query().Get("role")
-	q.Cluster = r.URL.Query().Get("cluster")
-	q.IPv4 = r.URL.Query().Get("ipv4")
-	q.IPv6 = r.URL.Query().Get("ipv6")
-}
-
-func intersectMachines(mcs1 []Machine, mcs2 []Machine) []Machine {
-	var newmcs []Machine
-	for _, mc1 := range mcs1 {
-		for _, mc2 := range mcs2 {
-			if mc1.Serial == mc2.Serial {
-				newmcs = append(newmcs, mc2)
-			}
-		}
-	}
-	return newmcs
-}
-
-func (e *EtcdClient) handleGetMachines(w http.ResponseWriter, r *http.Request) {
-	var q Query
-
-	getMachinesQuery(&q, r)
-	w.Header().Set("Content-Type", "application/json")
-	result := []Machine{}
-
-	if q.Serial != "" {
-		mcs, err := GetMachinesBySerial(r.Context(), e, []string{q.Serial})
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		if len(mcs) != 0 {
-			result = mcs
-		}
-		renderJSON(w, result, http.StatusOK)
-		return
-	}
-
-	if q.IPv4 != "" {
-		mcs, err := GetMachinesByIPv4(r.Context(), e, q.IPv4)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		if len(mcs) != 0 {
-			result = mcs
-		}
-		renderJSON(w, result, http.StatusOK)
-		return
-	}
-
-	if q.IPv6 != "" {
-		mcs, err := GetMachinesByIPv4(r.Context(), e, q.IPv6)
-		if err != nil {
-			renderError(w, err, http.StatusInternalServerError)
-			return
-		}
-		if len(mcs) != 0 {
-			result = mcs
-		}
-		renderJSON(w, result, http.StatusOK)
-		return
-	}
-
-	resultByQuery := map[string][]Machine{}
-	queryCount := 0
-	qelem := reflect.ValueOf(&q).Elem()
-
-	for i := 0; i < qelem.NumField(); i++ {
-		if qelem.Field(i).Interface().(string) != "" {
-			queryCount++
-		}
-	}
-
-	mi.mux.Lock()
-	for i := 0; i < qelem.NumField(); i++ {
-		qv := qelem.Field(i).Interface().(string)
-
-		if q.Product != "" && mi.Product[qv] != nil {
-			mcs, err := GetMachinesByProduct(r.Context(), e, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-
-		if q.Datacenter != "" && mi.Datacenter[qv] != nil {
-			mcs, err := GetMachinesByDatacenter(r.Context(), e, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-
-		if q.Rack != "" && mi.Rack[qv] != nil {
-			mcs, err := GetMachinesByRack(r.Context(), e, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-
-		if q.Role != "" && mi.Role[qv] != nil {
-			mcs, err := GetMachinesByRole(r.Context(), e, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-
-		if q.Cluster != "" && mi.Cluster[qv] != nil {
-			mcs, err := GetMachinesByCluster(r.Context(), e, qv)
-			if err != nil {
-				renderError(w, err, http.StatusInternalServerError)
-				mi.mux.Unlock()
-				return
-			}
-			if mcs != nil {
-				resultByQuery[qv] = mcs
-			}
-			continue
-		}
-	}
-	mi.mux.Unlock()
-
-	if queryCount > 1 && queryCount == len(resultByQuery) {
-		// Intersect machines of each query result
-		for _, v := range resultByQuery {
-			if len(result) == 0 {
-				result = v
-				continue
-			}
-			result = intersectMachines(result, v)
-		}
-	}
-	if queryCount == 1 && queryCount == len(resultByQuery) {
-		for _, v := range resultByQuery {
-			result = v
-		}
-	}
-
-	renderJSON(w, result, http.StatusOK)
-}
-
-// EtcdWatcher launch etcd client session to monitor changes to keys and update index
-func EtcdWatcher(ctx context.Context, e EtcdConfig) error {
-	cfg := clientv3.Config{
-		Endpoints: e.Servers,
-	}
-	c, err := clientv3.New(cfg)
-	if err != nil {
-		return err
-	}
-	defer c.Close()
-
-	key := path.Join(e.Prefix, EtcdKeyMachines)
-	rch := c.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
-	for wresp := range rch {
-		for _, ev := range wresp.Events {
-			if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
-				err := mi.UpdateIndex(ev.PrevKv.Value, ev.Kv.Value)
-				if err != nil {
-					return err
-				}
-			}
-			if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
-				err := mi.AddIndex(ev.Kv.Value)
-				if err != nil {
-					return err
-				}
-			}
-			if ev.Type == mvccpb.DELETE {
-				err := mi.DeleteIndex(ev.PrevKv.Value)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
 }

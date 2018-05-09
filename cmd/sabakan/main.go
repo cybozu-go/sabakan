@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -14,8 +13,14 @@ import (
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/dhcp4"
-	"github.com/gorilla/mux"
+	"github.com/cybozu-go/sabakan/models/etcd"
+	"github.com/cybozu-go/sabakan/web"
 )
+
+type etcdConfig struct {
+	Servers []string
+	Prefix  string
+}
 
 var (
 	flagHTTP        = flag.String("http", "0.0.0.0:8888", "<Listen IP>:<Port number>")
@@ -38,7 +43,7 @@ func main() {
 		log.ErrorExit(fmt.Errorf("-dhcp-interface option required"))
 	}
 
-	var e sabakan.EtcdConfig
+	var e etcdConfig
 	e.Servers = strings.Split(*flagEtcdServers, ",")
 	e.Prefix = "/" + *flagEtcdPrefix
 
@@ -56,32 +61,27 @@ func main() {
 		log.ErrorExit(err)
 	}
 	defer c.Close()
-
-	ctx := context.Background()
-	err = sabakan.Indexing(ctx, c, e.Prefix)
+	c2, err := clientv3.New(cfg)
 	if err != nil {
 		log.ErrorExit(err)
 	}
+	defer c2.Close()
 
-	r := mux.NewRouter()
-	etcdClient := &sabakan.EtcdClient{Client: c, Prefix: e.Prefix}
-	sabakan.InitConfig(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
-	sabakan.InitCrypts(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
-	sabakan.InitMachines(r.PathPrefix("/api/v1/").Subrouter(), etcdClient)
-
-	cmd.Go(func(ctx context.Context) error {
-		return sabakan.EtcdWatcher(ctx, e)
-	})
+	driver := etcd.NewDriver(c, c2, e.Prefix)
+	cmd.Go(driver.Run)
+	model := sabakan.Model{
+		Storage: driver,
+		Machine: driver,
+		Config:  driver,
+	}
 
 	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, dhcp4Begin, dhcp4End)
-	cmd.Go(func(ctx context.Context) error {
-		return dhcps.Serve(ctx)
-	})
+	cmd.Go(dhcps.Serve)
 
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
 			Addr:    *flagHTTP,
-			Handler: r,
+			Handler: web.Server{model},
 		},
 		ShutdownTimeout: 3 * time.Minute,
 	}

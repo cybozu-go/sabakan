@@ -1,4 +1,4 @@
-package sabakan
+package sabactl
 
 import (
 	"context"
@@ -12,11 +12,12 @@ import (
 	"testing"
 
 	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/sabakan"
 )
 
 func TestRemoteConfigGet(t *testing.T) {
 	var method, path string
-	conf := &Config{
+	conf := &sabakan.IPAMConfig{
 		NodeIPv4Offset: "10.0.0.0",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.1.0.0",
@@ -44,10 +45,10 @@ func TestRemoteConfigGet(t *testing.T) {
 
 }
 
-func TestRemoteConfigPost(t *testing.T) {
+func TestRemoteConfigPut(t *testing.T) {
 	var method, path string
-	var record Config
-	conf := Config{
+	var record sabakan.IPAMConfig
+	conf := sabakan.IPAMConfig{
 		NodeIPv4Offset: "10.0.0.0",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.1.0.0",
@@ -66,7 +67,7 @@ func TestRemoteConfigPost(t *testing.T) {
 	if err != nil {
 		t.Error("err == nil")
 	}
-	if method != "POST" || path != "/api/v1/config" {
+	if method != "PUT" || path != "/api/v1/config" {
 		t.Errorf("%s != GET, nor %s != /api/v1/config", method, path)
 	}
 	if !reflect.DeepEqual(record, conf) {
@@ -77,7 +78,7 @@ func TestRemoteConfigPost(t *testing.T) {
 
 func TestMachinesGet(t *testing.T) {
 	var method, path, rawQuery string
-	machines := []Machine{{Serial: "123abc"}}
+	machines := []sabakan.MachineJSON{{Serial: "123abc"}}
 
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
@@ -117,30 +118,12 @@ func TestMachinesCreate(t *testing.T) {
 	}))
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err := c.MachinesCreate(context.Background(), []Machine{})
+	err := c.MachinesCreate(context.Background(), []sabakan.MachineJSON{})
 	if err != nil {
 		t.Error("err == nil")
 	}
 	if method != "POST" || path != "/api/v1/machines" {
 		t.Errorf("%s != POST, nor %s != /api/v1/machines", method, path)
-	}
-}
-
-func TestMachinesUpdate(t *testing.T) {
-	var method, path string
-
-	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		method = r.Method
-		path = r.URL.Path
-	}))
-	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
-
-	err := c.MachinesUpdate(context.Background(), []Machine{})
-	if err != nil {
-		t.Error("err == nil")
-	}
-	if method != "PUT" || path != "/api/v1/machines" {
-		t.Errorf("%s != PUT, nor %s != /api/v1/machines", method, path)
 	}
 }
 

@@ -1,69 +1,73 @@
 package sabakan
 
-import (
-	"context"
-	"encoding/json"
-	"path"
+import "fmt"
 
-	"github.com/coreos/etcd/clientv3"
-)
+// Query is an URL query
+type Query struct {
+	Serial     string
+	Product    string
+	Datacenter string
+	Rack       string
+	Role       string
+	IPv4       string
+	IPv6       string
+}
 
-// GetMachinesBySerial returns values of the etcd keys by serial
-func GetMachinesBySerial(ctx context.Context, e *EtcdClient, ss []string) ([]Machine, error) {
-	var mcs []Machine
-	key := path.Join(e.Prefix, EtcdKeyMachines)
-	resp, err := e.Client.Get(ctx, key, clientv3.WithPrefix())
-	if err != nil {
-		return nil, err
+// Match returns true if all non-empty fields matches Machine
+func (q *Query) Match(m *Machine) bool {
+	if len(q.Serial) > 0 && q.Serial != m.Serial {
+		return false
 	}
-	for _, s := range ss {
-		var mc Machine
-		for _, m := range resp.Kvs {
-			_, k := path.Split(string(m.Key))
-			if k == s {
-				err = json.Unmarshal(m.Value, &mc)
-				if err != nil {
-					return nil, err
-				}
-				mcs = append(mcs, mc)
+	if len(q.IPv4) > 0 {
+		ok := false
+		for _, n := range m.Network {
+			if n.hasIPv4(q.IPv4) {
+				ok = true
 				break
 			}
 		}
+		if !ok {
+			return false
+		}
 	}
-	return mcs, nil
+	if len(q.IPv6) > 0 {
+		ok := false
+		for _, n := range m.Network {
+			if n.hasIPv6(q.IPv6) {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			return false
+		}
+	}
+	if len(q.Product) > 0 && q.Product != m.Product {
+		return false
+	}
+	if len(q.Datacenter) > 0 && q.Datacenter != m.Datacenter {
+		return false
+	}
+	if len(q.Rack) > 0 && q.Rack != fmt.Sprint(m.Rack) {
+		return false
+	}
+	if len(q.Role) > 0 && q.Role != m.Role {
+		return false
+	}
+
+	return true
 }
 
-// GetMachinesByIPv4 returns type []Machine from the etcd and serial by IPv4
-func GetMachinesByIPv4(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, []string{mi.IPv4[q]})
+// QueryBySerial create Query by serial
+func QueryBySerial(serial string) *Query {
+	return &Query{
+		Serial: serial,
+	}
 }
 
-// GetMachinesByIPv6 returns type []Machine from the etcd and serial by IPv6
-func GetMachinesByIPv6(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, []string{mi.IPv6[q]})
-}
-
-// GetMachinesByProduct returns type []Machine from the etcd and serial by product
-func GetMachinesByProduct(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, mi.Product[q])
-}
-
-// GetMachinesByDatacenter returns type []Machine from the etcd and serial by datacenter
-func GetMachinesByDatacenter(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, mi.Datacenter[q])
-}
-
-// GetMachinesByRack returns type []Machine from the etcd and serial by rack
-func GetMachinesByRack(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, mi.Rack[q])
-}
-
-// GetMachinesByRole returns type []Machine from the etcd and serial by role
-func GetMachinesByRole(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, mi.Role[q])
-}
-
-// GetMachinesByCluster returns type []Machine from the etcd and serial by cluster
-func GetMachinesByCluster(ctx context.Context, e *EtcdClient, q string) ([]Machine, error) {
-	return GetMachinesBySerial(ctx, e, mi.Cluster[q])
+// QueryByIPv4 create Query by IPv4 address
+func QueryByIPv4(ipv4 string) *Query {
+	return &Query{
+		IPv4: ipv4,
+	}
 }
