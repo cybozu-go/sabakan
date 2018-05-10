@@ -3,6 +3,7 @@ package etcd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
@@ -21,9 +22,13 @@ func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) erro
 	configKey := path.Join(d.prefix, KeyConfig)
 	machinesKey := path.Join(d.prefix, KeyMachines)
 
+	txnThenOps := []clientv3.Op{}
+	txnThenOps = append(txnThenOps, clientv3.OpPut(configKey, string(j)))
+	// delete all indices before put, because number of racks may be decreased in config
+	txnThenOps = append(txnThenOps, clientv3.OpDelete(path.Join(d.prefix, KeyNodeIndices), clientv3.WithPrefix()))
 	tresp, err := d.client.Txn(ctx).
 		If(clientv3util.KeyMissing(machinesKey).WithPrefix()).
-		Then(clientv3.OpPut(configKey, string(j))).
+		Then(txnThenOps...).
 		Else().
 		Commit()
 	if err != nil {
@@ -32,6 +37,17 @@ func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) erro
 
 	if !tresp.Succeeded {
 		return errors.New("machines already exists")
+	}
+
+	// we can put keys outside transaction
+	for rackIdx := 0; uint(rackIdx) < config.MaxRacks; rackIdx++ {
+		for nodeIdx := 0; uint(nodeIdx) < config.MaxNodesInRack; nodeIdx++ {
+			key := path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rackIdx), fmt.Sprintf("%02d", nodeIdx))
+			_, err := d.client.Put(ctx, key, fmt.Sprint(nodeIdx))
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return err

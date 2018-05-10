@@ -3,9 +3,11 @@ package etcd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -43,6 +45,31 @@ func testPutConfig(t *testing.T) {
 	if !reflect.DeepEqual(config, &actual) {
 		t.Errorf("unexpected saved config %#v", actual)
 	}
+
+	resp, err = d.client.Get(context.Background(), t.Name()+"/node-indices", clientv3.WithPrefix())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(resp.Kvs) != int(config.MaxRacks*config.MaxNodesInRack) {
+		t.Errorf("number of node indices should be %d but %d", config.MaxRacks*config.MaxNodesInRack, len(resp.Kvs))
+	}
+
+	resp, err = d.client.Get(context.Background(), t.Name()+"/node-indices/0/00")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(resp.Kvs) != 1 {
+		t.Error("node index 0/0 not found")
+	}
+
+	dresp, err := d.client.Delete(context.Background(), t.Name()+"/node-indices/0/", clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend), clientv3.WithLimit(1), clientv3.WithPrevKV())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Print(dresp.PrevKvs)
 
 	d.Register(context.Background(), []*sabakan.Machine{{Serial: "1234abcd"}})
 	err = d.PutConfig(context.Background(), config)

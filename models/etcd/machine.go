@@ -8,12 +8,33 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/sabakan"
+	"github.com/pkg/errors"
 )
+
+func (d *Driver) getNodeIndex(ctx context.Context, machine *sabakan.Machine) (uint32, error) {
+	key := path.Join(d.prefix, KeyNodeIndices, string(machine.Rack)) + "/"
+
+	resp, err := d.client.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		return 0, err
+	}
+
+	if len(resp.Kvs) == 0 {
+		return 0, errors.New("no node index is available for new machine")
+	}
+
+	return 0, nil
+}
+
+func releaseNodeIndices(is []uint32) {
+	return
+}
 
 // Register implements sabakan.MachineModel
 func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
 
 	wmcs := make([]*sabakan.MachineJSON, len(machines))
+	nodeIndices := []uint32{}
 
 	cfg, err := d.GetConfig(ctx)
 	if err != nil {
@@ -21,6 +42,14 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 	}
 
 	for i, rmc := range machines {
+		nodeIndex, err := d.getNodeIndex(ctx, rmc)
+		if err != nil {
+			releaseNodeIndices(nodeIndices)
+			return err
+		}
+		nodeIndices = append(nodeIndices, nodeIndex)
+		//rmc.NodeIndexInRack = nodeIndex
+
 		cfg.GenerateIP(rmc)
 		wmcs[i] = rmc.ToJSON()
 	}
@@ -33,6 +62,7 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 		txnIfOps = append(txnIfOps, clientv3util.KeyMissing(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
+			releaseNodeIndices(nodeIndices)
 			return err
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
@@ -48,9 +78,11 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 		Else().
 		Commit()
 	if err != nil {
+		releaseNodeIndices(nodeIndices)
 		return err
 	}
 	if !tresp.Succeeded {
+		releaseNodeIndices(nodeIndices)
 		return sabakan.ErrConflicted
 	}
 	return nil
