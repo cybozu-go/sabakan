@@ -58,7 +58,6 @@ func (m *Machine) ToJSON() *MachineJSON {
 type MachineNetwork struct {
 	IPv4 []string `json:"ipv4"`
 	IPv6 []string `json:"ipv6"`
-	Mac  string   `json:"mac"`
 }
 
 func (n MachineNetwork) hasIPv4(ipv4 string) bool {
