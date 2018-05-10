@@ -12,6 +12,8 @@ import (
 func testPutConfig(t *testing.T) {
 	d := testNewDriver(t)
 	config := &sabakan.IPAMConfig{
+		MaxRacks:       80,
+		MaxNodesInRack: 28,
 		NodeIPv4Offset: "10.0.0.0/24",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.10.0.0/24",
@@ -41,12 +43,20 @@ func testPutConfig(t *testing.T) {
 	if !reflect.DeepEqual(config, &actual) {
 		t.Errorf("unexpected saved config %#v", actual)
 	}
+
+	d.Register(context.Background(), []*sabakan.Machine{{Serial: "1234abcd"}})
+	err = d.PutConfig(context.Background(), config)
+	if err == nil {
+		t.Error("should be failed, because machines is already registered")
+	}
 }
 
 func testGetConfig(t *testing.T) {
 	d := testNewDriver(t)
 
 	config := &sabakan.IPAMConfig{
+		MaxRacks:       80,
+		MaxNodesInRack: 28,
 		NodeIPv4Offset: "10.0.0.0/24",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.10.0.0/24",
