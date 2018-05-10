@@ -3,7 +3,6 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -64,17 +63,13 @@ func testPutConfig(t *testing.T) {
 		t.Error("node index 0/0 not found")
 	}
 
-	dresp, err := d.client.Delete(context.Background(), t.Name()+"/node-indices/0/", clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend), clientv3.WithLimit(1), clientv3.WithPrevKV())
+	err = d.Register(context.Background(), []*sabakan.Machine{{Serial: "1234abcd"}})
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	fmt.Print(dresp.PrevKvs)
-
-	d.Register(context.Background(), []*sabakan.Machine{{Serial: "1234abcd"}})
 	err = d.PutConfig(context.Background(), config)
 	if err == nil {
-		t.Error("should be failed, because machines is already registered")
+		t.Error("should be failed, because some machine is already registered")
 	}
 }
 

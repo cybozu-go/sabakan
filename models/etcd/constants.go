@@ -5,5 +5,5 @@ const (
 	KeyCrypts      = "/crypts"
 	KeyMachines    = "/machines"
 	KeyConfig      = "/config"
-	KeyNodeIndices = "/node-indicies"
+	KeyNodeIndices = "/node-indices"
 )

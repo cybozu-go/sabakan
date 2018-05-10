@@ -13,6 +13,8 @@ import (
 func testRegister(t *testing.T) {
 	d := testNewDriver(t)
 	config := &sabakan.IPAMConfig{
+		MaxRacks:       80,
+		MaxNodesInRack: 28,
 		NodeIPv4Offset: "10.0.0.0/24",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.10.0.0/24",
@@ -29,6 +31,9 @@ func testRegister(t *testing.T) {
 		&sabakan.Machine{
 			Serial: "1234abcd",
 		},
+		&sabakan.Machine{
+			Serial: "5678efgh",
+		},
 	}
 
 	err = d.Register(context.Background(), machines)
@@ -36,7 +41,7 @@ func testRegister(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := d.client.Get(context.Background(), t.Name()+"/machines/1234abcd")
+	resp, err := d.client.Get(context.Background(), t.Name()+"/machines/5678efgh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,6 +58,9 @@ func testRegister(t *testing.T) {
 	if len(saved.Network) != 3 {
 		t.Errorf("unexpected assigned IP addresses: %v", len(saved.Network))
 	}
+	if *saved.NodeIndexInRack != uint32(1) {
+		t.Errorf("node index of 2nd machine should be 1 but %v", *saved.NodeIndexInRack)
+	}
 
 	err = d.Register(context.Background(), machines)
 	if err != sabakan.ErrConflicted {
@@ -67,6 +75,8 @@ func testQuery(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 
 	config := &sabakan.IPAMConfig{
+		MaxRacks:       80,
+		MaxNodesInRack: 28,
 		NodeIPv4Offset: "10.0.0.0/24",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.10.0.0/24",
@@ -118,6 +128,8 @@ func testQuery(t *testing.T) {
 func testDelete(t *testing.T) {
 	d := testNewDriver(t)
 	config := &sabakan.IPAMConfig{
+		MaxRacks:       80,
+		MaxNodesInRack: 28,
 		NodeIPv4Offset: "10.0.0.0/24",
 		NodeRackShift:  4,
 		BMCIPv4Offset:  "10.10.0.0/24",
@@ -152,6 +164,14 @@ func testDelete(t *testing.T) {
 	}
 	if len(resp.Kvs) != 0 {
 		t.Error("machine was not deleted")
+	}
+
+	resp, err = d.client.Get(context.Background(), t.Name()+"/node-indices/0/00")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Kvs) != 1 {
+		t.Error("node index was not released")
 	}
 
 	err = d.Delete(context.Background(), "1234abcd")
