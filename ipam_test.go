@@ -15,9 +15,9 @@ func testGenerateIP(t *testing.T) {
 	}{
 		{
 			&Machine{
-				Serial:           "1234",
-				Rack:             1,
-				NodeNumberOfRack: 3,
+				Serial:          "1234",
+				Rack:            1,
+				NodeIndexInRack: 3,
 			},
 			map[string]string{
 				"node0": "10.69.0.195",
@@ -30,9 +30,9 @@ func testGenerateIP(t *testing.T) {
 		},
 		{
 			&Machine{
-				Serial:           "5678",
-				Rack:             0,
-				NodeNumberOfRack: 5,
+				Serial:          "5678",
+				Rack:            0,
+				NodeIndexInRack: 5,
 			},
 			map[string]string{
 				"node0": "10.69.0.5",

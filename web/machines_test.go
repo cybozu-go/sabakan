@@ -30,7 +30,7 @@ func testMachinesPost(t *testing.T) {
   "datacenter": "ty3",
   "rack": 1,
   "role": "boot",
-  "node-number-of-rack": 1
+  "node-index-in-rack": 1
 }]`, http.StatusCreated},
 		{`[{
   "serial": "1234abcd",
@@ -38,42 +38,42 @@ func testMachinesPost(t *testing.T) {
   "datacenter": "ty3",
   "rack": 1,
   "role": "boot",
-  "node-number-of-rack": 1
+  "node-index-in-rack": 1
 }]`, http.StatusConflict},
 		{`[{
   "product": "R630",
   "datacenter": "ty3",
   "rack": 1,
   "role": "boot",
-  "node-number-of-rack": 1
+  "node-index-in-rack": 1
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "5678abcd",
   "datacenter": "ty3",
   "rack": 1,
   "role": "boot",
-  "node-number-of-rack": 1
+  "node-index-in-rack": 1
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "0000abcd",
   "product": "R630",
   "rack": 1,
   "role": "boot",
-  "node-number-of-rack": 1
+  "node-index-in-rack": 1
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "1111abcd",
   "product": "R630",
   "datacenter": "ty3",
   "role": "boot",
-  "node-number-of-rack": 1
+  "node-index-in-rack": 1
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "2222abcd",
   "product": "R630",
   "datacenter": "ty3",
   "rack": 1,
-  "node-number-of-rack": 1
+  "node-index-in-rack": 1
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "3333abcd",
@@ -115,28 +115,28 @@ func testMachinesGet(t *testing.T) {
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
 		{
-			Serial:           "1234abcd",
-			Product:          "R630",
-			Datacenter:       "ty3",
-			Rack:             1,
-			Role:             "boot",
-			NodeNumberOfRack: 1,
+			Serial:          "1234abcd",
+			Product:         "R630",
+			Datacenter:      "ty3",
+			Rack:            1,
+			Role:            "boot",
+			NodeIndexInRack: 1,
 		},
 		{
-			Serial:           "5678abcd",
-			Product:          "R740",
-			Datacenter:       "ty3",
-			Rack:             1,
-			Role:             "worker",
-			NodeNumberOfRack: 1,
+			Serial:          "5678abcd",
+			Product:         "R740",
+			Datacenter:      "ty3",
+			Rack:            1,
+			Role:            "worker",
+			NodeIndexInRack: 1,
 		},
 		{
-			Serial:           "1234efgh",
-			Product:          "R630",
-			Datacenter:       "ty3",
-			Rack:             2,
-			Role:             "boot",
-			NodeNumberOfRack: 1,
+			Serial:          "1234efgh",
+			Product:         "R630",
+			Datacenter:      "ty3",
+			Rack:            2,
+			Role:            "boot",
+			NodeIndexInRack: 1,
 		},
 	})
 
@@ -214,12 +214,12 @@ func testMachinesDelete(t *testing.T) {
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
 		{
-			Serial:           "1234abcd",
-			Product:          "R630",
-			Datacenter:       "ty3",
-			Rack:             1,
-			Role:             "boot",
-			NodeNumberOfRack: 1,
+			Serial:          "1234abcd",
+			Product:         "R630",
+			Datacenter:      "ty3",
+			Rack:            1,
+			Role:            "boot",
+			NodeIndexInRack: 1,
 		},
 	})
 

@@ -45,10 +45,10 @@ func (c *IPAMConfig) Validate() error {
 // Generated IP addresses are stored in mc.
 func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	// IP addresses are calculated as following:
-	// node0: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-number-of-rack)
-	// node1: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-number-of-rack + 2^NodeRackShift)
-	// node2: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-number-of-rack + 2^NodeRackShift * 2)
-	// BMC: INET_NTOA(INET_ATON(BMCIPv4Offset) + (2^BMCRackShift * BMCIPPerNode * rack-number) + node-number-of-rack)
+	// node0: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-index-in-rack)
+	// node1: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-index-in-rack + 2^NodeRackShift)
+	// node2: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-index-in-rack + 2^NodeRackShift * 2)
+	// BMC: INET_NTOA(INET_ATON(BMCIPv4Offset) + (2^BMCRackShift * BMCIPPerNode * rack-number) + node-index-in-rack)
 
 	calc := func(cidr string, shift uint, numip uint, lrn uint32, nodeIndex uint32) []net.IP {
 		result := make([]net.IP, numip)
@@ -63,7 +63,7 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 		return result
 	}
 
-	ips := calc(c.NodeIPv4Offset, c.NodeRackShift, c.NodeIPPerNode, mc.Rack, mc.NodeNumberOfRack)
+	ips := calc(c.NodeIPv4Offset, c.NodeRackShift, c.NodeIPPerNode, mc.Rack, mc.NodeIndexInRack)
 	res := map[string]MachineNetwork{}
 	for i := 0; i < int(c.NodeIPPerNode); i++ {
 		name := fmt.Sprintf("node%d", i)
@@ -73,7 +73,7 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	}
 	mc.Network = res
 
-	bmcIPs := calc(c.BMCIPv4Offset, c.BMCRackShift, c.BMCIPPerNode, mc.Rack, mc.NodeNumberOfRack)
+	bmcIPs := calc(c.BMCIPv4Offset, c.BMCRackShift, c.BMCIPPerNode, mc.Rack, mc.NodeIndexInRack)
 	for _, ip := range bmcIPs {
 		mc.BMC.IPv4 = append(mc.BMC.IPv4, ip.String())
 	}
