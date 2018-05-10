@@ -97,6 +97,17 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 }
 
 // Delete implements sabakan.MachineModel
-func (d *Driver) Delete(ctx context.Context, serials []string) error {
+func (d *Driver) Delete(ctx context.Context, serial string) error {
+	key := path.Join(d.prefix, KeyMachines, serial)
+
+	resp, err := d.client.Delete(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	if resp.Deleted == 0 {
+		return sabakan.ErrNotFound
+	}
+
 	return nil
 }

@@ -8,6 +8,7 @@ import (
 // ErrConflicted is a special error for models.
 // A model should return this when it fails to update a resouce due to conflicts.
 var ErrConflicted = errors.New("key conflicted")
+var ErrNotFound = errors.New("not found")
 
 // StorageModel is an interface for disk encryption keys.
 type StorageModel interface {
@@ -20,7 +21,7 @@ type StorageModel interface {
 type MachineModel interface {
 	Register(ctx context.Context, machines []*Machine) error
 	Query(ctx context.Context, query *Query) ([]*Machine, error)
-	Delete(ctx context.Context, serials []string) error
+	Delete(ctx context.Context, serial string) error
 }
 
 // ConfigModel is an interface for IPAMConfig.

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"path"
 	"reflect"
 	"strings"
 	"testing"
@@ -207,8 +208,50 @@ func testMachinesGet(t *testing.T) {
 	}
 }
 
+func testMachinesDelete(t *testing.T) {
+	m := mock.NewModel()
+	handler := Server{m}
+
+	m.Machine.Register(context.Background(), []*sabakan.Machine{
+		{
+			Serial:           "1234abcd",
+			Product:          "R630",
+			Datacenter:       "ty3",
+			Rack:             1,
+			Role:             "boot",
+			NodeNumberOfRack: 1,
+		},
+	})
+
+	cases := []struct {
+		serial string
+		status int
+	}{
+		{
+			serial: "1234abcd",
+			status: http.StatusOK,
+		},
+		{
+			serial: "5678efgh",
+			status: http.StatusNotFound,
+		},
+	}
+	for _, c := range cases {
+		w := httptest.NewRecorder()
+		u := path.Join("/api/v1/machines", c.serial)
+		r := httptest.NewRequest("DELETE", u, nil)
+
+		handler.ServeHTTP(w, r)
+
+		resp := w.Result()
+		if resp.StatusCode != c.status {
+			t.Error("wrong status code:", resp.StatusCode, c.serial)
+		}
+	}
+}
+
 func TestMachines(t *testing.T) {
 	t.Run("Get", testMachinesGet)
 	t.Run("Post", testMachinesPost)
-	//t.Run("Delete", testMachinesDelete)
+	t.Run("Delete", testMachinesDelete)
 }

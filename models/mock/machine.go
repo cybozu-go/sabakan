@@ -34,13 +34,15 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 	return res, nil
 }
 
-func (d *driver) Delete(ctx context.Context, serials []string) error {
+func (d *driver) Delete(ctx context.Context, serial string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	for _, serial := range serials {
-		delete(d.machines, serial)
+	_, ok := d.machines[serial]
+	if !ok {
+		return sabakan.ErrNotFound
 	}
 
+	delete(d.machines, serial)
 	return nil
 }

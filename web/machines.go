@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/cybozu-go/sabakan"
 )
@@ -111,5 +112,20 @@ func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleMachinesDelete(w http.ResponseWriter, r *http.Request) {
-	//TODO
+	params := strings.Split(r.URL.Path[len("/api/v1/machines/"):], "/")
+
+	if len(params) != 1 {
+		renderError(r.Context(), w, APIErrBadRequest)
+		return
+	}
+
+	err := s.Model.Machine.Delete(r.Context(), params[0])
+	switch err {
+	case nil:
+		w.WriteHeader(http.StatusOK)
+	case sabakan.ErrNotFound:
+		renderError(r.Context(), w, APIErrNotFound)
+	default:
+		renderError(r.Context(), w, InternalServerError(err))
+	}
 }
