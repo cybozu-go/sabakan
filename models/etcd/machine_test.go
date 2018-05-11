@@ -51,8 +51,8 @@ func testRegister(t *testing.T) {
 	if len(saved.Network) != 3 {
 		t.Errorf("unexpected assigned IP addresses: %v", len(saved.Network))
 	}
-	if *saved.NodeIndexInRack != uint(5) {
-		t.Errorf("node index of 2nd machine should be 5 but %v", *saved.NodeIndexInRack)
+	if saved.NodeIndexInRack != uint(5) {
+		t.Errorf("node index of 2nd machine should be 5 but %v", saved.NodeIndexInRack)
 	}
 
 	err = d.Register(context.Background(), machines)

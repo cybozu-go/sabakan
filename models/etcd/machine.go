@@ -21,6 +21,7 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 	}
 
 RETRY:
+	// Assign node indices temporarily
 	err = d.assignNodeIndex(ctx, machines)
 	if err != nil {
 		return err
@@ -63,9 +64,11 @@ RETRY:
 		return err
 	}
 	if !tresp.Succeeded {
+		// availableNodeIndexIfOps evaluated to false; node indices retrieved before transaction are now used by some others
 		goto RETRY
 	}
 	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+		// conflictMachinesIfOps evaluated to false
 		return sabakan.ErrConflicted
 	}
 

@@ -41,8 +41,12 @@ func (c *IPAMConfig) Validate() error {
 		return errors.New("node-rack-shift must not be zero")
 	}
 
-	if _, _, err := net.ParseCIDR(c.BMCIPv4Offset); err != nil {
+	ip, ipNet, err = net.ParseCIDR(c.BMCIPv4Offset)
+	if err != nil {
 		return errors.New("invalid bmc-ipv4-offset")
+	}
+	if !ip.Equal(ipNet.IP) {
+		return errors.New("host part of bmc-ipv4-offset must be 0s")
 	}
 	if c.BMCRackShift == 0 {
 		return errors.New("bmc-rack-shift must not be zero")

@@ -57,10 +57,6 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("role is empty"))
 			return
 		}
-		if mc.NodeIndexInRack == nil {
-			renderError(r.Context(), w, BadRequest("number of rack is empty"))
-			return
-		}
 		machines[i] = mc.ToMachine()
 	}
 

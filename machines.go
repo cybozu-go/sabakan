@@ -6,7 +6,7 @@ type MachineJSON struct {
 	Product         string                    `json:"product"`
 	Datacenter      string                    `json:"datacenter"`
 	Rack            *uint                     `json:"rack"`
-	NodeIndexInRack *uint                     `json:"node-index-in-rack"`
+	NodeIndexInRack uint                      `json:"node-index-in-rack"`
 	Role            string                    `json:"role"`
 	Network         map[string]MachineNetwork `json:"network"`
 	BMC             MachineBMC                `json:"bmc"`
@@ -19,7 +19,7 @@ func (mj *MachineJSON) ToMachine() *Machine {
 		Product:         mj.Product,
 		Datacenter:      mj.Datacenter,
 		Rack:            *mj.Rack,
-		NodeIndexInRack: *mj.NodeIndexInRack,
+		NodeIndexInRack: mj.NodeIndexInRack,
 		Role:            mj.Role,
 		Network:         mj.Network,
 		BMC:             mj.BMC,
@@ -41,13 +41,12 @@ type Machine struct {
 // ToJSON creates *MachineJSON
 func (m *Machine) ToJSON() *MachineJSON {
 	rack := m.Rack
-	num := m.NodeIndexInRack
 	return &MachineJSON{
 		Serial:          m.Serial,
 		Product:         m.Product,
 		Datacenter:      m.Datacenter,
 		Rack:            &rack,
-		NodeIndexInRack: &num,
+		NodeIndexInRack: m.NodeIndexInRack,
 		Role:            m.Role,
 		Network:         m.Network,
 		BMC:             m.BMC,
