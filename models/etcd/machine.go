@@ -15,35 +15,52 @@ import (
 )
 
 type assignedIndex struct {
-	rack  uint32
-	index uint32
+	rack  uint
+	index uint
+}
+
+func (d *Driver) getNodeIndexKey(rack, index uint) string {
+	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack), fmt.Sprintf("%02d", index))
+}
+
+func (d *Driver) getNodeIndicesInRackKey(rack uint) string {
+	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack)) + "/"
+}
+
+func encodeNodeIndex(index uint) string {
+	return fmt.Sprint(index)
+}
+
+func decodeNodeIndex(indexString string) (uint, error) {
+	index, err := strconv.Atoi(indexString)
+	if err != nil {
+		return uint(0), err
+	}
+	return uint(index), nil
 }
 
 func (d *Driver) assignNodeIndex(ctx context.Context, machine *sabakan.Machine) error {
-	key := path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(machine.Rack)) + "/"
-	fmt.Println(key)
-
+	key := d.getNodeIndicesInRackKey(machine.Rack)
 	resp, err := d.client.Get(ctx, key, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 	if err != nil {
 		return err
 	}
-
 	if len(resp.Kvs) == 0 {
-		fmt.Println("foo")
 		return errors.New("no node index is available for new machine")
 	}
 
+	// indices retrieved above may be deleted by others, so ensure index by delete
 	for _, kv := range resp.Kvs {
 		dresp, err := d.client.Delete(ctx, string(kv.Key))
 		if err != nil {
 			return err
 		}
 		if dresp.Deleted > 0 {
-			nodeIndex, err := strconv.Atoi(string(kv.Value))
+			nodeIndex, err := decodeNodeIndex(string(kv.Value))
 			if err != nil {
 				return err
 			}
-			machine.NodeIndexInRack = uint32(nodeIndex)
+			machine.NodeIndexInRack = nodeIndex
 			return nil
 		}
 	}
@@ -51,15 +68,15 @@ func (d *Driver) assignNodeIndex(ctx context.Context, machine *sabakan.Machine) 
 	return errors.New("no node index is available for new machine")
 }
 
-func (d *Driver) releaseNodeIndices(ctx context.Context, nodeIndices []assignedIndex) {
-	for _, nodeIndex := range nodeIndices {
-		key := path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(nodeIndex.rack), fmt.Sprintf("%02d", nodeIndex.index))
-		_, err := d.client.Put(ctx, key, fmt.Sprint(nodeIndex.index))
+func (d *Driver) releaseNodeIndices(ctx context.Context, assignedIndices []assignedIndex) {
+	for _, assigned := range assignedIndices {
+		key := d.getNodeIndexKey(assigned.rack, assigned.index)
+		_, err := d.client.Put(ctx, key, encodeNodeIndex(assigned.index))
 		if err != nil {
 			log.Error("failed to release node index", map[string]interface{}{
 				log.FnError: err,
-				"rack":      nodeIndex.rack,
-				"index":     nodeIndex.index,
+				"rack":      assigned.rack,
+				"index":     assigned.index,
 			})
 		}
 	}
@@ -67,9 +84,8 @@ func (d *Driver) releaseNodeIndices(ctx context.Context, nodeIndices []assignedI
 
 // Register implements sabakan.MachineModel
 func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
-
 	wmcs := make([]*sabakan.MachineJSON, len(machines))
-	nodeIndices := []assignedIndex{}
+	assignedIndices := []assignedIndex{}
 
 	cfg, err := d.GetConfig(ctx)
 	if err != nil {
@@ -79,10 +95,10 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 	for i, rmc := range machines {
 		err = d.assignNodeIndex(ctx, rmc)
 		if err != nil {
-			d.releaseNodeIndices(ctx, nodeIndices)
+			d.releaseNodeIndices(ctx, assignedIndices)
 			return err
 		}
-		nodeIndices = append(nodeIndices, assignedIndex{rack: rmc.Rack, index: rmc.NodeIndexInRack})
+		assignedIndices = append(assignedIndices, assignedIndex{rack: rmc.Rack, index: rmc.NodeIndexInRack})
 
 		cfg.GenerateIP(rmc)
 		wmcs[i] = rmc.ToJSON()
@@ -96,7 +112,7 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 		txnIfOps = append(txnIfOps, clientv3util.KeyMissing(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
-			d.releaseNodeIndices(ctx, nodeIndices)
+			d.releaseNodeIndices(ctx, assignedIndices)
 			return err
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
@@ -112,11 +128,11 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 		Else().
 		Commit()
 	if err != nil {
-		d.releaseNodeIndices(ctx, nodeIndices)
+		d.releaseNodeIndices(ctx, assignedIndices)
 		return err
 	}
 	if !tresp.Succeeded {
-		d.releaseNodeIndices(ctx, nodeIndices)
+		d.releaseNodeIndices(ctx, assignedIndices)
 		return sabakan.ErrConflicted
 	}
 	return nil
@@ -171,8 +187,8 @@ func (d *Driver) Delete(ctx context.Context, serial string) error {
 	if len(machines) != 1 {
 		return sabakan.ErrNotFound
 	}
-	indexKey := path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(machines[0].Rack), fmt.Sprintf("%02d", machines[0].NodeIndexInRack))
-	indexValue := fmt.Sprint(machines[0].NodeIndexInRack)
+	indexKey := d.getNodeIndexKey(machines[0].Rack, machines[0].NodeIndexInRack)
+	indexValue := encodeNodeIndex(machines[0].NodeIndexInRack)
 
 	key := path.Join(d.prefix, KeyMachines, serial)
 

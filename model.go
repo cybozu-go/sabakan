@@ -6,8 +6,11 @@ import (
 )
 
 // ErrConflicted is a special error for models.
-// A model should return this when it fails to update a resouce due to conflicts.
+// A model should return this when it fails to update a resource due to conflicts.
 var ErrConflicted = errors.New("key conflicted")
+
+// ErrNotFound is a special err for models.
+// A model should return this when it cannot find a resource by a specified key.
 var ErrNotFound = errors.New("not found")
 
 // StorageModel is an interface for disk encryption keys.

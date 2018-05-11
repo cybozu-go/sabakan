@@ -3,7 +3,6 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
@@ -40,10 +39,10 @@ func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) erro
 	}
 
 	// we can put keys outside transaction
-	for rackIdx := 0; uint(rackIdx) < config.MaxRacks; rackIdx++ {
-		for nodeIdx := 0; uint(nodeIdx) < config.MaxNodesInRack; nodeIdx++ {
-			key := path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rackIdx), fmt.Sprintf("%02d", nodeIdx))
-			_, err := d.client.Put(ctx, key, fmt.Sprint(nodeIdx))
+	for rackIdx := uint(0); rackIdx < config.MaxRacks; rackIdx++ {
+		for nodeIdx := uint(0); nodeIdx < config.MaxNodesInRack; nodeIdx++ {
+			key := d.getNodeIndexKey(rackIdx, nodeIdx)
+			_, err := d.client.Put(ctx, key, encodeNodeIndex(nodeIdx))
 			if err != nil {
 				return err
 			}
