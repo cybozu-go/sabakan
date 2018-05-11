@@ -40,12 +40,21 @@ func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) erro
 
 	// we can put keys outside transaction
 	for rackIdx := uint(0); rackIdx < config.MaxRacks; rackIdx++ {
-		for nodeIdx := uint(0); nodeIdx < config.MaxNodesInRack; nodeIdx++ {
-			key := d.getNodeIndexKey(rackIdx, nodeIdx)
+		// put worker keys
+		for node := uint(0); node < config.MaxNodesInRack; node++ {
+			nodeIdx := node + config.NodeIndexOffset + 1
+			key := d.getWorkerNodeIndexKey(rackIdx, nodeIdx)
 			_, err := d.client.Put(ctx, key, encodeNodeIndex(nodeIdx))
 			if err != nil {
 				return err
 			}
+		}
+
+		// put boot server key
+		key := d.getBootNodeIndexKey(rackIdx)
+		_, err := d.client.Put(ctx, key, encodeNodeIndex(config.NodeIndexOffset))
+		if err != nil {
+			return err
 		}
 	}
 

@@ -17,16 +17,7 @@ import (
 
 func TestRemoteConfigGet(t *testing.T) {
 	var method, path string
-	conf := &sabakan.IPAMConfig{
-		MaxRacks:       80,
-		MaxNodesInRack: 28,
-		NodeIPv4Offset: "10.0.0.0",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.1.0.0",
-		BMCRackShift:   2,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
-	}
+	conf := &sabakan.DefaultTestConfig
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
 		path = r.URL.Path
@@ -50,16 +41,7 @@ func TestRemoteConfigGet(t *testing.T) {
 func TestRemoteConfigPut(t *testing.T) {
 	var method, path string
 	var record sabakan.IPAMConfig
-	conf := sabakan.IPAMConfig{
-		MaxRacks:       80,
-		MaxNodesInRack: 28,
-		NodeIPv4Offset: "10.0.0.0",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.1.0.0",
-		BMCRackShift:   2,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
-	}
+	conf := sabakan.DefaultTestConfig
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
 		path = r.URL.Path

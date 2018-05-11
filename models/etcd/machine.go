@@ -36,7 +36,10 @@ RETRY:
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
 		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
-		indexKey := d.getNodeIndexKey(*wmc.Rack, *wmc.NodeIndexInRack)
+		indexKey, err := d.getNodeIndexKey(wmc.ToMachine())
+		if err != nil {
+			return err
+		}
 		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
 		availableNodeIndexIfOps = append(availableNodeIndexIfOps, clientv3util.KeyExists(indexKey))
 		j, err := json.Marshal(wmc)
@@ -118,14 +121,17 @@ func (d *Driver) Delete(ctx context.Context, serial string) error {
 	if len(machines) != 1 {
 		return sabakan.ErrNotFound
 	}
-	indexKey := d.getNodeIndexKey(machines[0].Rack, machines[0].NodeIndexInRack)
+
+	machineKey := path.Join(d.prefix, KeyMachines, serial)
+	indexKey, err := d.getNodeIndexKey(machines[0])
+	if err != nil {
+		return err
+	}
 	indexValue := encodeNodeIndex(machines[0].NodeIndexInRack)
 
-	key := path.Join(d.prefix, KeyMachines, serial)
-
 	resp, err := d.client.Txn(ctx).
-		If(clientv3util.KeyExists(key)).
-		Then(clientv3.OpDelete(key), clientv3.OpPut(indexKey, indexValue)).
+		If(clientv3util.KeyExists(machineKey), clientv3util.KeyMissing(indexKey)).
+		Then(clientv3.OpDelete(machineKey), clientv3.OpPut(indexKey, indexValue)).
 		Else().
 		Commit()
 	if err != nil {

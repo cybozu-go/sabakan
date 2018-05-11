@@ -44,14 +44,7 @@ func testGenerateIP(t *testing.T) {
 			},
 		},
 	}
-	config := IPAMConfig{
-		NodeIPv4Offset: "10.69.0.0/26",
-		NodeRackShift:  6,
-		NodeIPPerNode:  3,
-		BMCIPv4Offset:  "10.72.17.0/27",
-		BMCRackShift:   5,
-		BMCIPPerNode:   1,
-	}
+	config := DefaultTestConfig
 
 	for _, c := range cases {
 		config.GenerateIP(c.machine)

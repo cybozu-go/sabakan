@@ -19,16 +19,7 @@ func testConfigGet(t *testing.T) {
 	m := mock.NewModel()
 	handler := Server{m}
 
-	config := &sabakan.IPAMConfig{
-		MaxRacks:       80,
-		MaxNodesInRack: 28,
-		NodeIPv4Offset: "10.69.0.4/26",
-		NodeRackShift:  6,
-		BMCIPv4Offset:  "10.72.17.4/27",
-		BMCRackShift:   5,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
-	}
+	config := &sabakan.DefaultTestConfig
 
 	err := m.Config.PutConfig(context.Background(), config)
 	if err != nil {
@@ -65,9 +56,10 @@ func testConfigPut(t *testing.T) {
 {
    "max-racks": 80,
    "max-nodes-in-rack": 28,
-   "node-ipv4-offset": "10.69.0.4/26",
+   "node-ipv4-offset": "10.69.0.0/26",
    "node-rack-shift": 6,
-   "bmc-ipv4-offset": "10.72.17.4/27",
+   "node-index-offset": 3,
+   "bmc-ipv4-offset": "10.72.17.0/27",
    "bmc-rack-shift": 5,
    "node-ip-per-node": 3,
    "bmc-ip-per-node": 1
@@ -97,14 +89,15 @@ func testConfigPut(t *testing.T) {
 		t.Fatal(err)
 	}
 	expected := &sabakan.IPAMConfig{
-		MaxRacks:       80,
-		MaxNodesInRack: 28,
-		NodeIPv4Offset: "10.69.0.4/26",
-		NodeRackShift:  6,
-		BMCIPv4Offset:  "10.72.17.4/27",
-		BMCRackShift:   5,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
+		MaxRacks:        80,
+		MaxNodesInRack:  28,
+		NodeIPv4Offset:  "10.69.0.0/26",
+		NodeRackShift:   6,
+		NodeIndexOffset: 3,
+		BMCIPv4Offset:   "10.72.17.0/27",
+		BMCRackShift:    5,
+		NodeIPPerNode:   3,
+		BMCIPPerNode:    1,
 	}
 	if !reflect.DeepEqual(conf, expected) {
 		t.Errorf("mismatch: %#v", conf)

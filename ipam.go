@@ -10,14 +10,15 @@ import (
 
 // IPAMConfig is structure of the sabakan option
 type IPAMConfig struct {
-	MaxRacks       uint   `json:"max-racks"`
-	MaxNodesInRack uint   `json:"max-nodes-in-rack"`
-	NodeIPv4Offset string `json:"node-ipv4-offset"`
-	NodeRackShift  uint   `json:"node-rack-shift"`
-	NodeIPPerNode  uint   `json:"node-ip-per-node"`
-	BMCIPv4Offset  string `json:"bmc-ipv4-offset"`
-	BMCRackShift   uint   `json:"bmc-rack-shift"`
-	BMCIPPerNode   uint   `json:"bmc-ip-per-node"`
+	MaxRacks        uint   `json:"max-racks"`
+	MaxNodesInRack  uint   `json:"max-nodes-in-rack"`
+	NodeIPv4Offset  string `json:"node-ipv4-offset"`
+	NodeRackShift   uint   `json:"node-rack-shift"`
+	NodeIndexOffset uint   `json:"node-index-offset"`
+	NodeIPPerNode   uint   `json:"node-ip-per-node"`
+	BMCIPv4Offset   string `json:"bmc-ipv4-offset"`
+	BMCRackShift    uint   `json:"bmc-rack-shift"`
+	BMCIPPerNode    uint   `json:"bmc-ip-per-node"`
 }
 
 // Validate validates configurations
@@ -28,18 +29,29 @@ func (c *IPAMConfig) Validate() error {
 	if c.MaxNodesInRack == 0 {
 		return errors.New("max-nodes-in-rack must not be zero")
 	}
-	if _, _, err := net.ParseCIDR(c.NodeIPv4Offset); err != nil {
+
+	ip, ipNet, err := net.ParseCIDR(c.NodeIPv4Offset)
+	if err != nil {
 		return errors.New("invalid node-ipv4-offset")
+	}
+	if !ip.Equal(ipNet.IP) {
+		return errors.New("host part of node-ipv4-offset must be 0s")
 	}
 	if c.NodeRackShift == 0 {
 		return errors.New("node-rack-shift must not be zero")
 	}
+
 	if _, _, err := net.ParseCIDR(c.BMCIPv4Offset); err != nil {
 		return errors.New("invalid bmc-ipv4-offset")
 	}
 	if c.BMCRackShift == 0 {
 		return errors.New("bmc-rack-shift must not be zero")
 	}
+
+	if c.NodeIndexOffset == 0 {
+		return errors.New("node-index-offset must not be zero")
+	}
+
 	if c.NodeIPPerNode == 0 {
 		return errors.New("node-ip-per-node must not be zero")
 	}

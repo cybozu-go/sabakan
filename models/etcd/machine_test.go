@@ -12,16 +12,7 @@ import (
 
 func testRegister(t *testing.T) {
 	d := testNewDriver(t)
-	config := &sabakan.IPAMConfig{
-		MaxRacks:       80,
-		MaxNodesInRack: 28,
-		NodeIPv4Offset: "10.0.0.0/24",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.10.0.0/24",
-		BMCRackShift:   2,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
-	}
+	config := &sabakan.DefaultTestConfig
 	err := d.PutConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
@@ -30,9 +21,11 @@ func testRegister(t *testing.T) {
 	machines := []*sabakan.Machine{
 		&sabakan.Machine{
 			Serial: "1234abcd",
+			Role:   "worker",
 		},
 		&sabakan.Machine{
 			Serial: "5678efgh",
+			Role:   "worker",
 		},
 	}
 
@@ -58,8 +51,8 @@ func testRegister(t *testing.T) {
 	if len(saved.Network) != 3 {
 		t.Errorf("unexpected assigned IP addresses: %v", len(saved.Network))
 	}
-	if *saved.NodeIndexInRack != uint(1) {
-		t.Errorf("node index of 2nd machine should be 1 but %v", *saved.NodeIndexInRack)
+	if *saved.NodeIndexInRack != uint(5) {
+		t.Errorf("node index of 2nd machine should be 5 but %v", *saved.NodeIndexInRack)
 	}
 
 	err = d.Register(context.Background(), machines)
@@ -74,25 +67,16 @@ func testQuery(t *testing.T) {
 	cmd.Go(d.Run)
 	time.Sleep(1 * time.Millisecond)
 
-	config := &sabakan.IPAMConfig{
-		MaxRacks:       80,
-		MaxNodesInRack: 28,
-		NodeIPv4Offset: "10.0.0.0/24",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.10.0.0/24",
-		BMCRackShift:   2,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
-	}
+	config := &sabakan.DefaultTestConfig
 	err := d.PutConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	machines := []*sabakan.Machine{
-		&sabakan.Machine{Serial: "12345678", Product: "R630"},
-		&sabakan.Machine{Serial: "12345679", Product: "R630"},
-		&sabakan.Machine{Serial: "12345680", Product: "R730"},
+		&sabakan.Machine{Serial: "12345678", Product: "R630", Role: "worker"},
+		&sabakan.Machine{Serial: "12345679", Product: "R630", Role: "worker"},
+		&sabakan.Machine{Serial: "12345680", Product: "R730", Role: "worker"},
 	}
 	time.Sleep(1 * time.Millisecond)
 	err = d.Register(context.Background(), machines)
@@ -127,16 +111,7 @@ func testQuery(t *testing.T) {
 
 func testDelete(t *testing.T) {
 	d := testNewDriver(t)
-	config := &sabakan.IPAMConfig{
-		MaxRacks:       80,
-		MaxNodesInRack: 28,
-		NodeIPv4Offset: "10.0.0.0/24",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.10.0.0/24",
-		BMCRackShift:   2,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
-	}
+	config := &sabakan.DefaultTestConfig
 	err := d.PutConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
@@ -145,6 +120,7 @@ func testDelete(t *testing.T) {
 	machines := []*sabakan.Machine{
 		&sabakan.Machine{
 			Serial: "1234abcd",
+			Role:   "worker",
 		},
 	}
 
@@ -166,7 +142,7 @@ func testDelete(t *testing.T) {
 		t.Error("machine was not deleted")
 	}
 
-	resp, err = d.client.Get(context.Background(), t.Name()+"/node-indices/0/00")
+	resp, err = d.client.Get(context.Background(), t.Name()+"/node-indices/0/worker/04")
 	if err != nil {
 		t.Fatal(err)
 	}

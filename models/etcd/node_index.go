@@ -16,12 +16,27 @@ type assignedIndex struct {
 	index uint
 }
 
-func (d *Driver) getNodeIndexKey(rack, index uint) string {
-	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack), fmt.Sprintf("%02d", index))
+func (d *Driver) getNodeIndexKey(machine *sabakan.Machine) (string, error) {
+	switch machine.Role {
+	case "worker":
+		return d.getWorkerNodeIndexKey(machine.Rack, machine.NodeIndexInRack), nil
+	case "boot":
+		return d.getBootNodeIndexKey(machine.Rack), nil
+	default:
+		return "", errors.New("unknown role: " + machine.Role)
+	}
+}
+
+func (d *Driver) getWorkerNodeIndexKey(rack, index uint) string {
+	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack), "worker", fmt.Sprintf("%02d", index))
+}
+
+func (d *Driver) getBootNodeIndexKey(rack uint) string {
+	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack), "boot")
 }
 
 func (d *Driver) getNodeIndicesInRackKey(rack uint) string {
-	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack)) + "/"
+	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack), "worker") + "/"
 }
 
 func encodeNodeIndex(index uint) string {
@@ -37,12 +52,23 @@ func decodeNodeIndex(indexString string) (uint, error) {
 }
 
 func (d *Driver) assignNodeIndex(ctx context.Context, machines []*sabakan.Machine) error {
+	bootServers := map[uint]*sabakan.Machine{}
 	machinesGroupedByRack := map[uint][]*sabakan.Machine{}
 	for _, m := range machines {
-		if _, ok := machinesGroupedByRack[m.Rack]; ok {
-			machinesGroupedByRack[m.Rack] = append(machinesGroupedByRack[m.Rack], m)
-		} else {
-			machinesGroupedByRack[m.Rack] = []*sabakan.Machine{m}
+		switch m.Role {
+		case "boot":
+			if _, ok := bootServers[m.Rack]; ok {
+				return sabakan.ErrConflicted
+			}
+			bootServers[m.Rack] = m
+		case "worker":
+			if _, ok := machinesGroupedByRack[m.Rack]; ok {
+				machinesGroupedByRack[m.Rack] = append(machinesGroupedByRack[m.Rack], m)
+			} else {
+				machinesGroupedByRack[m.Rack] = []*sabakan.Machine{m}
+			}
+		default:
+			return errors.New("unknown role: " + m.Role)
 		}
 	}
 
@@ -66,6 +92,22 @@ func (d *Driver) assignNodeIndex(ctx context.Context, machines []*sabakan.Machin
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	for rack, m := range bootServers {
+		key := d.getBootNodeIndexKey(rack)
+		resp, err := d.client.Get(ctx, key)
+		if err != nil {
+			return err
+		}
+		if len(resp.Kvs) == 0 {
+			return fmt.Errorf("boot server has been registered for rack %d", rack)
+		}
+
+		m.NodeIndexInRack, err = decodeNodeIndex(string(resp.Kvs[0].Value))
+		if err != nil {
+			return err
 		}
 	}
 
