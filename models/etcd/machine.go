@@ -7,62 +7,65 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
+	"github.com/coreos/etcd/etcdserver/etcdserverpb"
 	"github.com/cybozu-go/sabakan"
 )
 
 // Register implements sabakan.MachineModel
 func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
 	wmcs := make([]*sabakan.MachineJSON, len(machines))
-	assignedIndices := []assignedIndex{}
 
 	cfg, err := d.GetConfig(ctx)
 	if err != nil {
 		return err
 	}
 
+RETRY:
+	err = d.assignNodeIndex(ctx, machines)
+	if err != nil {
+		return err
+	}
 	for i, rmc := range machines {
-		err = d.assignNodeIndex(ctx, rmc)
-		if err != nil {
-			d.releaseNodeIndices(ctx, assignedIndices)
-			return err
-		}
-		assignedIndices = append(assignedIndices, assignedIndex{rack: rmc.Rack, index: rmc.NodeIndexInRack})
-
 		cfg.GenerateIP(rmc)
 		wmcs[i] = rmc.ToJSON()
 	}
 
 	// Put machines into etcd
-	txnIfOps := []clientv3.Cmp{}
+	conflictMachinesIfOps := []clientv3.Cmp{}
+	availableNodeIndexIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
 		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
-		txnIfOps = append(txnIfOps, clientv3util.KeyMissing(key))
+		indexKey := d.getNodeIndexKey(*wmc.Rack, *wmc.NodeIndexInRack)
+		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
+		availableNodeIndexIfOps = append(availableNodeIndexIfOps, clientv3util.KeyExists(indexKey))
 		j, err := json.Marshal(wmc)
 		if err != nil {
-			d.releaseNodeIndices(ctx, assignedIndices)
 			return err
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
+		txnThenOps = append(txnThenOps, clientv3.OpDelete(indexKey))
 	}
 
 	tresp, err := d.client.Txn(ctx).
 		If(
-			txnIfOps...,
+			availableNodeIndexIfOps...,
 		).
 		Then(
-			txnThenOps...,
+			clientv3.OpTxn(conflictMachinesIfOps, txnThenOps, nil),
 		).
 		Else().
 		Commit()
 	if err != nil {
-		d.releaseNodeIndices(ctx, assignedIndices)
 		return err
 	}
 	if !tresp.Succeeded {
-		d.releaseNodeIndices(ctx, assignedIndices)
+		goto RETRY
+	}
+	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
 		return sabakan.ErrConflicted
 	}
+
 	return nil
 }
 

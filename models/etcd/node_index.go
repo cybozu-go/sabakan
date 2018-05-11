@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -37,45 +36,38 @@ func decodeNodeIndex(indexString string) (uint, error) {
 	return uint(index), nil
 }
 
-func (d *Driver) assignNodeIndex(ctx context.Context, machine *sabakan.Machine) error {
-	key := d.getNodeIndicesInRackKey(machine.Rack)
-	resp, err := d.client.Get(ctx, key, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
-	if err != nil {
-		return err
-	}
-	if len(resp.Kvs) == 0 {
-		return errors.New("no node index is available for new machine")
+func (d *Driver) assignNodeIndex(ctx context.Context, machines []*sabakan.Machine) error {
+	machinesGroupedByRack := map[uint][]*sabakan.Machine{}
+	for _, m := range machines {
+		if _, ok := machinesGroupedByRack[m.Rack]; ok {
+			machinesGroupedByRack[m.Rack] = append(machinesGroupedByRack[m.Rack], m)
+		} else {
+			machinesGroupedByRack[m.Rack] = []*sabakan.Machine{m}
+		}
 	}
 
-	// indices retrieved above may be deleted by others, so ensure index by delete
-	for _, kv := range resp.Kvs {
-		dresp, err := d.client.Delete(ctx, string(kv.Key))
+	for rack, ms := range machinesGroupedByRack {
+		key := d.getNodeIndicesInRackKey(rack)
+		resp, err := d.client.Get(
+			ctx, key,
+			clientv3.WithPrefix(),
+			clientv3.WithLimit(int64(len(ms))),
+			clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend),
+		)
 		if err != nil {
 			return err
 		}
-		if dresp.Deleted > 0 {
-			nodeIndex, err := decodeNodeIndex(string(kv.Value))
+		if len(resp.Kvs) < len(ms) {
+			return errors.New("no node index is available for new machine")
+		}
+
+		for i, m := range ms {
+			m.NodeIndexInRack, err = decodeNodeIndex(string(resp.Kvs[i].Value))
 			if err != nil {
 				return err
 			}
-			machine.NodeIndexInRack = nodeIndex
-			return nil
 		}
 	}
 
-	return errors.New("no node index is available for new machine")
-}
-
-func (d *Driver) releaseNodeIndices(ctx context.Context, assignedIndices []assignedIndex) {
-	for _, assigned := range assignedIndices {
-		key := d.getNodeIndexKey(assigned.rack, assigned.index)
-		_, err := d.client.Put(ctx, key, encodeNodeIndex(assigned.index))
-		if err != nil {
-			log.Error("failed to release node index", map[string]interface{}{
-				log.FnError: err,
-				"rack":      assigned.rack,
-				"index":     assigned.index,
-			})
-		}
-	}
+	return nil
 }
