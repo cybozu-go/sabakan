@@ -38,7 +38,6 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if len(resp.Kvs) != 1 {
 		t.Error("machine was not saved")
 	}
@@ -48,11 +47,11 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(saved.Network) != 3 {
+	if len(saved.Network) != int(sabakan.DefaultTestConfig.NodeIPPerNode) {
 		t.Errorf("unexpected assigned IP addresses: %v", len(saved.Network))
 	}
-	if saved.NodeIndexInRack != uint(5) {
-		t.Errorf("node index of 2nd machine should be 5 but %v", saved.NodeIndexInRack)
+	if saved.NodeIndexInRack != sabakan.DefaultTestConfig.NodeIndexOffset+2 {
+		t.Errorf("node index of 2nd worker should be %v but %v", sabakan.DefaultTestConfig.NodeIndexOffset+2, saved.NodeIndexInRack)
 	}
 
 	err = d.Register(context.Background(), machines)
@@ -60,6 +59,41 @@ func testRegister(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 
+	bootServer := []*sabakan.Machine{
+		&sabakan.Machine{
+			Serial: "00000000",
+			Role:   "boot",
+		},
+	}
+	bootServer2 := []*sabakan.Machine{
+		&sabakan.Machine{
+			Serial: "00000001",
+			Role:   "boot",
+		},
+	}
+
+	err = d.Register(context.Background(), bootServer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err = d.client.Get(context.Background(), t.Name()+"/machines/00000000")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = json.Unmarshal(resp.Kvs[0].Value, &saved)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if saved.NodeIndexInRack != sabakan.DefaultTestConfig.NodeIndexOffset {
+		t.Errorf("node index of boot server should be %v but %v", sabakan.DefaultTestConfig.NodeIndexOffset, saved.NodeIndexInRack)
+	}
+
+	err = d.Register(context.Background(), bootServer2)
+	if err == nil {
+		t.Error("adding 2nd boot server should fail but succeeded")
+	}
 }
 
 func testQuery(t *testing.T) {
