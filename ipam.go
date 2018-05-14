@@ -64,26 +64,26 @@ func (c *IPAMConfig) Validate() error {
 // GenerateIP generates IP addresses for a machine.
 // Generated IP addresses are stored in mc.
 func (c *IPAMConfig) GenerateIP(mc *Machine) {
-	// IP addresses are calculated as following:
-	// node0: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-index-in-rack)
-	// node1: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-index-in-rack + 2^NodeRackShift)
-	// node2: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-index-in-rack + 2^NodeRackShift * 2)
-	// BMC: INET_NTOA(INET_ATON(BMCIPv4Offset) + (2^BMCRackShift * BMCIPPerNode * rack-number) + node-index-in-rack)
+	// IP addresses are calculated as following (LRN=Logical Rack Number):
+	// node0: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * LRN) + index-in-rack)
+	// node1: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRackShift)
+	// node2: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRackShift * 2)
+	// BMC: INET_NTOA(INET_ATON(BMCIPv4Offset) + (2^BMCRackShift * BMCIPPerNode * LRN) + index-in-rack)
 
-	calc := func(cidr string, shift, numip, lrn, nodeIndex uint) []net.IP {
+	calc := func(cidr string, shift, numip, lrn, idx uint) []net.IP {
 		result := make([]net.IP, numip)
 
 		offset, _, _ := net.ParseCIDR(cidr)
 		a := netutil.IP4ToInt(offset)
 		su := uint(1) << shift
 		for i := uint(0); i < numip; i++ {
-			ip := netutil.IntToIP4(a + uint32(su*numip*lrn+nodeIndex+i*su))
+			ip := netutil.IntToIP4(a + uint32(su*numip*lrn+idx+i*su))
 			result[i] = ip
 		}
 		return result
 	}
 
-	ips := calc(c.NodeIPv4Offset, c.NodeRackShift, c.NodeIPPerNode, mc.Rack, mc.NodeIndexInRack)
+	ips := calc(c.NodeIPv4Offset, c.NodeRackShift, c.NodeIPPerNode, mc.Rack, mc.IndexInRack)
 	res := map[string]MachineNetwork{}
 	for i := 0; i < int(c.NodeIPPerNode); i++ {
 		name := fmt.Sprintf("node%d", i)
@@ -93,7 +93,7 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	}
 	mc.Network = res
 
-	bmcIPs := calc(c.BMCIPv4Offset, c.BMCRackShift, c.BMCIPPerNode, mc.Rack, mc.NodeIndexInRack)
+	bmcIPs := calc(c.BMCIPv4Offset, c.BMCRackShift, c.BMCIPPerNode, mc.Rack, mc.IndexInRack)
 	for _, ip := range bmcIPs {
 		mc.BMC.IPv4 = append(mc.BMC.IPv4, ip.String())
 	}

@@ -50,8 +50,8 @@ func testRegister(t *testing.T) {
 	if len(saved.Network) != int(defaultTestConfig.NodeIPPerNode) {
 		t.Errorf("unexpected assigned IP addresses: %v", len(saved.Network))
 	}
-	if saved.NodeIndexInRack != defaultTestConfig.NodeIndexOffset+2 {
-		t.Errorf("node index of 2nd worker should be %v but %v", defaultTestConfig.NodeIndexOffset+2, saved.NodeIndexInRack)
+	if saved.IndexInRack != defaultTestConfig.NodeIndexOffset+2 {
+		t.Errorf("node index of 2nd worker should be %v but %v", defaultTestConfig.NodeIndexOffset+2, saved.IndexInRack)
 	}
 
 	err = d.Register(context.Background(), machines)
@@ -86,8 +86,8 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if saved.NodeIndexInRack != defaultTestConfig.NodeIndexOffset {
-		t.Errorf("node index of boot server should be %v but %v", defaultTestConfig.NodeIndexOffset, saved.NodeIndexInRack)
+	if saved.IndexInRack != defaultTestConfig.NodeIndexOffset {
+		t.Errorf("node index of boot server should be %v but %v", defaultTestConfig.NodeIndexOffset, saved.IndexInRack)
 	}
 
 	err = d.Register(context.Background(), bootServer2)

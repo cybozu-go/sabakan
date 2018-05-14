@@ -41,7 +41,7 @@ func (r *rackIndexUsage) assign(m *sabakan.Machine, c *sabakan.IPAMConfig) error
 		}
 		r.indexMap[c.NodeIndexOffset] = true
 		r.usedIndices = append(r.usedIndices, c.NodeIndexOffset)
-		m.NodeIndexInRack = c.NodeIndexOffset
+		m.IndexInRack = c.NodeIndexOffset
 		return nil
 	}
 
@@ -52,7 +52,7 @@ func (r *rackIndexUsage) assign(m *sabakan.Machine, c *sabakan.IPAMConfig) error
 		}
 		r.indexMap[idx] = true
 		r.usedIndices = append(r.usedIndices, idx)
-		m.NodeIndexInRack = idx
+		m.IndexInRack = idx
 		return nil
 	}
 
@@ -60,14 +60,14 @@ func (r *rackIndexUsage) assign(m *sabakan.Machine, c *sabakan.IPAMConfig) error
 }
 
 func (r *rackIndexUsage) release(m *sabakan.Machine) {
-	if _, ok := r.indexMap[m.NodeIndexInRack]; !ok {
+	if _, ok := r.indexMap[m.IndexInRack]; !ok {
 		panic("inconsistent index map")
 	}
-	delete(r.indexMap, m.NodeIndexInRack)
+	delete(r.indexMap, m.IndexInRack)
 
 	used := make([]uint, 0, len(r.usedIndices)-1)
 	for _, idx := range r.usedIndices {
-		if idx == m.NodeIndexInRack {
+		if idx == m.IndexInRack {
 			continue
 		}
 		used = append(used, idx)
