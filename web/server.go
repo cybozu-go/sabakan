@@ -29,13 +29,13 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	case p == "config":
 		s.handleConfig(w, r)
 		return
-	case strings.HasPrefix(p, "crypts"):
+	case strings.HasPrefix(p, "crypts/"):
 		s.handleCrypts(w, r)
 		return
 	case strings.HasPrefix(p, "ignitions"):
 		//s.handleIgnitions(w, r)
 		//return
-	case p == "machines":
+	case strings.HasPrefix(p, "machines"):
 		s.handleMachines(w, r)
 		return
 	}

@@ -3,47 +3,67 @@ package etcd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
+	"github.com/coreos/etcd/etcdserver/etcdserverpb"
 	"github.com/cybozu-go/sabakan"
 )
 
 // Register implements sabakan.MachineModel
 func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
-
-	wmcs := make([]*sabakan.MachineJSON, len(machines))
+	wmcs := make([]*sabakan.Machine, len(machines))
 
 	cfg, err := d.GetConfig(ctx)
 	if err != nil {
 		return err
 	}
+	if cfg == nil {
+		return errors.New("configuration not found")
+	}
 
+RETRY:
+	// Assign node indices temporarily
+	usageMap, err := d.assignNodeIndex(ctx, machines, cfg)
+	if err != nil {
+		return err
+	}
 	for i, rmc := range machines {
 		cfg.GenerateIP(rmc)
-		wmcs[i] = rmc.ToJSON()
+		wmcs[i] = rmc
 	}
 
 	// Put machines into etcd
-	txnIfOps := []clientv3.Cmp{}
+	conflictMachinesIfOps := []clientv3.Cmp{}
+	usageCASIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
 		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
-		txnIfOps = append(txnIfOps, clientv3util.KeyMissing(key))
+		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
 			return err
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
+	for rack, usage := range usageMap {
+		key := d.indexInRackKey(rack)
+		j, err := json.Marshal(usage)
+		if err != nil {
+			return err
+		}
+		usageCASIfOps = append(usageCASIfOps, clientv3.Compare(clientv3.ModRevision(key), "=", usage.revision))
+		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
+	}
 
 	tresp, err := d.client.Txn(ctx).
 		If(
-			txnIfOps...,
+			usageCASIfOps...,
 		).
 		Then(
-			txnThenOps...,
+			clientv3.OpTxn(conflictMachinesIfOps, txnThenOps, nil),
 		).
 		Else().
 		Commit()
@@ -51,8 +71,14 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 		return err
 	}
 	if !tresp.Succeeded {
+		// usageCASIfOps evaluated to false; index usage was updated by another txn.
+		goto RETRY
+	}
+	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+		// conflictMachinesIfOps evaluated to false
 		return sabakan.ErrConflicted
 	}
+
 	return nil
 }
 
@@ -77,13 +103,12 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 			continue
 		}
 
-		var mj sabakan.MachineJSON
-		err = json.Unmarshal(resp.Kvs[0].Value, &mj)
+		m := new(sabakan.Machine)
+		err = json.Unmarshal(resp.Kvs[0].Value, m)
 		if err != nil {
 			return nil, err
 		}
 
-		m := mj.ToMachine()
 		if q.Match(m) {
 			res = append(res, m)
 		}
@@ -97,6 +122,58 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 }
 
 // Delete implements sabakan.MachineModel
-func (d *Driver) Delete(ctx context.Context, serials []string) error {
+func (d *Driver) Delete(ctx context.Context, serial string) error {
+	machines, err := d.Query(ctx, sabakan.QueryBySerial(serial))
+	if err != nil {
+		return err
+	}
+	if len(machines) != 1 {
+		return sabakan.ErrNotFound
+	}
+
+	m := machines[0]
+
+	machineKey := path.Join(d.prefix, KeyMachines, serial)
+	indexKey := d.indexInRackKey(m.Rack)
+
+RETRY:
+	usage, err := d.getRackIndexUsage(ctx, m.Rack)
+	if err != nil {
+		return err
+	}
+	usage.release(m)
+
+	j, err := json.Marshal(usage)
+	if err != nil {
+		return err
+	}
+
+	resp, err := d.client.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(indexKey), "=", usage.revision)).
+		Then(
+			clientv3.OpTxn(
+				[]clientv3.Cmp{clientv3util.KeyExists(machineKey)},
+				[]clientv3.Op{
+					clientv3.OpDelete(machineKey),
+					clientv3.OpPut(indexKey, string(j)),
+				},
+				nil),
+		).
+		Else().
+		Commit()
+	if err != nil {
+		return err
+	}
+
+	if !resp.Succeeded {
+		// revision mismatch
+		goto RETRY
+	}
+
+	if !resp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+		// KeyExists(machineKey) failed
+		return sabakan.ErrNotFound
+	}
+
 	return nil
 }

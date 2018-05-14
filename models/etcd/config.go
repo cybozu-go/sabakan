@@ -7,28 +7,34 @@ import (
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/sabakan"
 )
 
 // PutConfig implements sabakan.ConfigModel
 func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) error {
-	key := path.Join(d.prefix, KeyMachines)
-	resp, err := d.client.Get(ctx, key, clientv3.WithPrefix())
-	if err != nil {
-		return err
-	}
-	if resp.Count != 0 {
-		return errors.New("machine already exists")
-	}
-
 	j, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	key = path.Join(d.prefix, KeyConfig)
-	_, err = d.client.Put(ctx, key, string(j))
-	return err
+	configKey := path.Join(d.prefix, KeyConfig)
+	machinesKey := path.Join(d.prefix, KeyMachines)
+
+	tresp, err := d.client.Txn(ctx).
+		If(clientv3util.KeyMissing(machinesKey).WithPrefix()).
+		Then(clientv3.OpPut(configKey, string(j))).
+		Else().
+		Commit()
+	if err != nil {
+		return err
+	}
+
+	if !tresp.Succeeded {
+		return errors.New("machines already exists")
+	}
+
+	return nil
 }
 
 // GetConfig implements sabakan.ConfigModel

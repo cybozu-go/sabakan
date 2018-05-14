@@ -18,12 +18,14 @@ import (
 func TestRemoteConfigGet(t *testing.T) {
 	var method, path string
 	conf := &sabakan.IPAMConfig{
-		NodeIPv4Offset: "10.0.0.0",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.1.0.0",
-		BMCRackShift:   2,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
+		MaxNodesInRack:  28,
+		NodeIPv4Offset:  "10.69.0.0/26",
+		NodeRackShift:   6,
+		NodeIndexOffset: 3,
+		BMCIPv4Offset:   "10.72.17.0/27",
+		BMCRackShift:    5,
+		NodeIPPerNode:   3,
+		BMCIPPerNode:    1,
 	}
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
@@ -49,12 +51,14 @@ func TestRemoteConfigPut(t *testing.T) {
 	var method, path string
 	var record sabakan.IPAMConfig
 	conf := sabakan.IPAMConfig{
-		NodeIPv4Offset: "10.0.0.0",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.1.0.0",
-		BMCRackShift:   2,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
+		MaxNodesInRack:  28,
+		NodeIPv4Offset:  "10.69.0.0/26",
+		NodeRackShift:   6,
+		NodeIndexOffset: 3,
+		BMCIPv4Offset:   "10.72.17.0/27",
+		BMCRackShift:    5,
+		NodeIPPerNode:   3,
+		BMCIPPerNode:    1,
 	}
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
@@ -78,7 +82,7 @@ func TestRemoteConfigPut(t *testing.T) {
 
 func TestMachinesGet(t *testing.T) {
 	var method, path, rawQuery string
-	machines := []sabakan.MachineJSON{{Serial: "123abc"}}
+	machines := []sabakan.Machine{{Serial: "123abc"}}
 
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
@@ -118,7 +122,7 @@ func TestMachinesCreate(t *testing.T) {
 	}))
 	c := Client{endpoint: s1.URL, http: &cmd.HTTPClient{Client: &http.Client{}}}
 
-	err := c.MachinesCreate(context.Background(), []sabakan.MachineJSON{})
+	err := c.MachinesCreate(context.Background(), []sabakan.Machine{})
 	if err != nil {
 		t.Error("err == nil")
 	}

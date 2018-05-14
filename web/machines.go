@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/cybozu-go/sabakan"
 )
@@ -25,7 +26,7 @@ func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var rmcs []sabakan.MachineJSON
+	var rmcs []sabakan.Machine
 
 	err := json.NewDecoder(r.Body).Decode(&rmcs)
 	if err != nil {
@@ -48,19 +49,11 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("datacenter is empty"))
 			return
 		}
-		if mc.Rack == nil {
-			renderError(r.Context(), w, BadRequest("rack is empty"))
-			return
-		}
 		if mc.Role == "" {
 			renderError(r.Context(), w, BadRequest("role is empty"))
 			return
 		}
-		if mc.NodeNumberOfRack == nil {
-			renderError(r.Context(), w, BadRequest("number of rack is empty"))
-			return
-		}
-		machines[i] = mc.ToMachine()
+		machines[i] = &mc
 	}
 
 	err = s.Model.Machine.Register(r.Context(), machines)
@@ -102,14 +95,30 @@ func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	j := make([]*sabakan.MachineJSON, len(machines))
+	j := make([]*sabakan.Machine, len(machines))
 	for i, m := range machines {
-		j[i] = m.ToJSON()
+		j[i] = m
 	}
 
 	renderJSON(w, j, http.StatusOK)
 }
 
 func (s Server) handleMachinesDelete(w http.ResponseWriter, r *http.Request) {
-	//TODO
+	if !strings.HasPrefix(r.URL.Path, "/api/v1/machines/") {
+		renderError(r.Context(), w, APIErrBadRequest)
+	}
+	serial := r.URL.Path[len("/api/v1/machines/"):]
+	if len(serial) == 0 {
+		renderError(r.Context(), w, APIErrBadRequest)
+	}
+
+	err := s.Model.Machine.Delete(r.Context(), serial)
+	switch err {
+	case nil:
+		w.WriteHeader(http.StatusOK)
+	case sabakan.ErrNotFound:
+		renderError(r.Context(), w, APIErrNotFound)
+	default:
+		renderError(r.Context(), w, InternalServerError(err))
+	}
 }

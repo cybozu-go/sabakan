@@ -15,9 +15,9 @@ func testGenerateIP(t *testing.T) {
 	}{
 		{
 			&Machine{
-				Serial:           "1234",
-				Rack:             1,
-				NodeNumberOfRack: 3,
+				Serial:      "1234",
+				Rack:        1,
+				IndexInRack: 3,
 			},
 			map[string]string{
 				"node0": "10.69.0.195",
@@ -30,9 +30,9 @@ func testGenerateIP(t *testing.T) {
 		},
 		{
 			&Machine{
-				Serial:           "5678",
-				Rack:             0,
-				NodeNumberOfRack: 5,
+				Serial:      "5678",
+				Rack:        0,
+				IndexInRack: 5,
 			},
 			map[string]string{
 				"node0": "10.69.0.5",
@@ -45,12 +45,14 @@ func testGenerateIP(t *testing.T) {
 		},
 	}
 	config := IPAMConfig{
-		NodeIPv4Offset: "10.69.0.0/26",
-		NodeRackShift:  6,
-		NodeIPPerNode:  3,
-		BMCIPv4Offset:  "10.72.17.0/27",
-		BMCRackShift:   5,
-		BMCIPPerNode:   1,
+		MaxNodesInRack:  28,
+		NodeIPv4Offset:  "10.69.0.0/26",
+		NodeRackShift:   6,
+		NodeIndexOffset: 3,
+		BMCIPv4Offset:   "10.72.17.0/27",
+		BMCRackShift:    5,
+		NodeIPPerNode:   3,
+		BMCIPPerNode:    1,
 	}
 
 	for _, c := range cases {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"path"
 	"reflect"
 	"strings"
 	"testing"
@@ -28,58 +29,38 @@ func testMachinesPost(t *testing.T) {
   "product": "R630",
   "datacenter": "ty3",
   "rack": 1,
-  "role": "boot",
-  "node-number-of-rack": 1
+  "role": "boot"
 }]`, http.StatusCreated},
 		{`[{
   "serial": "1234abcd",
   "product": "R630",
   "datacenter": "ty3",
   "rack": 1,
-  "role": "boot",
-  "node-number-of-rack": 1
+  "role": "boot"
 }]`, http.StatusConflict},
 		{`[{
   "product": "R630",
   "datacenter": "ty3",
   "rack": 1,
-  "role": "boot",
-  "node-number-of-rack": 1
+  "role": "boot"
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "5678abcd",
   "datacenter": "ty3",
   "rack": 1,
-  "role": "boot",
-  "node-number-of-rack": 1
+  "role": "boot"
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "0000abcd",
   "product": "R630",
   "rack": 1,
-  "role": "boot",
-  "node-number-of-rack": 1
-}]`, http.StatusBadRequest},
-		{`[{
-  "serial": "1111abcd",
-  "product": "R630",
-  "datacenter": "ty3",
-  "role": "boot",
-  "node-number-of-rack": 1
+  "role": "boot"
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "2222abcd",
   "product": "R630",
   "datacenter": "ty3",
-  "rack": 1,
-  "node-number-of-rack": 1
-}]`, http.StatusBadRequest},
-		{`[{
-  "serial": "3333abcd",
-  "product": "R630",
-  "datacenter": "ty3",
-  "rack": 1,
-  "role": "boot"
+  "rack": 1
 }]`, http.StatusBadRequest},
 	}
 
@@ -114,28 +95,25 @@ func testMachinesGet(t *testing.T) {
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
 		{
-			Serial:           "1234abcd",
-			Product:          "R630",
-			Datacenter:       "ty3",
-			Rack:             1,
-			Role:             "boot",
-			NodeNumberOfRack: 1,
+			Serial:     "1234abcd",
+			Product:    "R630",
+			Datacenter: "ty3",
+			Rack:       1,
+			Role:       "boot",
 		},
 		{
-			Serial:           "5678abcd",
-			Product:          "R740",
-			Datacenter:       "ty3",
-			Rack:             1,
-			Role:             "worker",
-			NodeNumberOfRack: 1,
+			Serial:     "5678abcd",
+			Product:    "R740",
+			Datacenter: "ty3",
+			Rack:       1,
+			Role:       "worker",
 		},
 		{
-			Serial:           "1234efgh",
-			Product:          "R630",
-			Datacenter:       "ty3",
-			Rack:             2,
-			Role:             "boot",
-			NodeNumberOfRack: 1,
+			Serial:     "1234efgh",
+			Product:    "R630",
+			Datacenter: "ty3",
+			Rack:       2,
+			Role:       "boot",
 		},
 	})
 
@@ -190,7 +168,7 @@ func testMachinesGet(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			continue
 		}
-		var machines []*sabakan.MachineJSON
+		var machines []*sabakan.Machine
 		err := json.NewDecoder(resp.Body).Decode(&machines)
 		resp.Body.Close()
 		if err != nil {
@@ -207,8 +185,49 @@ func testMachinesGet(t *testing.T) {
 	}
 }
 
+func testMachinesDelete(t *testing.T) {
+	m := mock.NewModel()
+	handler := Server{m}
+
+	m.Machine.Register(context.Background(), []*sabakan.Machine{
+		{
+			Serial:     "1234abcd",
+			Product:    "R630",
+			Datacenter: "ty3",
+			Rack:       1,
+			Role:       "boot",
+		},
+	})
+
+	cases := []struct {
+		serial string
+		status int
+	}{
+		{
+			serial: "1234abcd",
+			status: http.StatusOK,
+		},
+		{
+			serial: "5678efgh",
+			status: http.StatusNotFound,
+		},
+	}
+	for _, c := range cases {
+		w := httptest.NewRecorder()
+		u := path.Join("/api/v1/machines", c.serial)
+		r := httptest.NewRequest("DELETE", u, nil)
+
+		handler.ServeHTTP(w, r)
+
+		resp := w.Result()
+		if resp.StatusCode != c.status {
+			t.Error("wrong status code:", resp.StatusCode, c.serial)
+		}
+	}
+}
+
 func TestMachines(t *testing.T) {
 	t.Run("Get", testMachinesGet)
 	t.Run("Post", testMachinesPost)
-	//t.Run("Delete", testMachinesDelete)
+	t.Run("Delete", testMachinesDelete)
 }

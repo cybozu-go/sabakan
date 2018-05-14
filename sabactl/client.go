@@ -41,8 +41,8 @@ func (c *Client) RemoteConfigSet(ctx context.Context, conf *sabakan.IPAMConfig) 
 }
 
 // MachinesGet get machine information from sabakan server
-func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]sabakan.MachineJSON, error) {
-	var machines []sabakan.MachineJSON
+func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]sabakan.Machine, error) {
+	var machines []sabakan.Machine
 	err := c.getJSON(ctx, "/machines", params, &machines)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]s
 }
 
 // MachinesCreate create machines information to sabakan server
-func (c *Client) MachinesCreate(ctx context.Context, machines []sabakan.MachineJSON) error {
+func (c *Client) MachinesCreate(ctx context.Context, machines []sabakan.Machine) error {
 	return c.sendRequestWithJSON(ctx, "POST", "/machines", machines)
 }
 

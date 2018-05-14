@@ -9,22 +9,26 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
+var defaultTestConfig = sabakan.IPAMConfig{
+	MaxNodesInRack:  28,
+	NodeIPv4Offset:  "10.69.0.0/26",
+	NodeRackShift:   6,
+	NodeIndexOffset: 3,
+	BMCIPv4Offset:   "10.72.17.0/27",
+	BMCRackShift:    5,
+	NodeIPPerNode:   3,
+	BMCIPPerNode:    1,
+}
+
 func testPutConfig(t *testing.T) {
 	d := testNewDriver(t)
-	config := &sabakan.IPAMConfig{
-		NodeIPv4Offset: "10.0.0.0/24",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.10.0.0/24",
-		BMCRackShift:   2,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
-	}
+	config := &defaultTestConfig
 	err := d.PutConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	resp, err := d.client.Get(context.Background(), t.Name()+"/config")
+	resp, err := d.client.Get(context.Background(), t.Name()+KeyConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,25 +45,27 @@ func testPutConfig(t *testing.T) {
 	if !reflect.DeepEqual(config, &actual) {
 		t.Errorf("unexpected saved config %#v", actual)
 	}
+
+	err = d.Register(context.Background(), []*sabakan.Machine{{Serial: "1234abcd", Role: "worker"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = d.PutConfig(context.Background(), config)
+	if err == nil {
+		t.Error("should be failed, because some machine is already registered")
+	}
 }
 
 func testGetConfig(t *testing.T) {
 	d := testNewDriver(t)
 
-	config := &sabakan.IPAMConfig{
-		NodeIPv4Offset: "10.0.0.0/24",
-		NodeRackShift:  4,
-		BMCIPv4Offset:  "10.10.0.0/24",
-		BMCRackShift:   2,
-		NodeIPPerNode:  3,
-		BMCIPPerNode:   1,
-	}
+	config := &defaultTestConfig
 
 	bytes, err := json.Marshal(config)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.client.Put(context.Background(), t.Name()+"/config", string(bytes))
+	_, err = d.client.Put(context.Background(), t.Name()+KeyConfig, string(bytes))
 	if err != nil {
 		t.Fatal(err)
 	}
