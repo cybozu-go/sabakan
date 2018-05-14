@@ -12,7 +12,7 @@ import (
 
 func testRegister(t *testing.T) {
 	d := testNewDriver(t)
-	config := &sabakan.DefaultTestConfig
+	config := &defaultTestConfig
 	err := d.PutConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
@@ -47,11 +47,11 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(saved.Network) != int(sabakan.DefaultTestConfig.NodeIPPerNode) {
+	if len(saved.Network) != int(defaultTestConfig.NodeIPPerNode) {
 		t.Errorf("unexpected assigned IP addresses: %v", len(saved.Network))
 	}
-	if saved.NodeIndexInRack != sabakan.DefaultTestConfig.NodeIndexOffset+2 {
-		t.Errorf("node index of 2nd worker should be %v but %v", sabakan.DefaultTestConfig.NodeIndexOffset+2, saved.NodeIndexInRack)
+	if saved.NodeIndexInRack != defaultTestConfig.NodeIndexOffset+2 {
+		t.Errorf("node index of 2nd worker should be %v but %v", defaultTestConfig.NodeIndexOffset+2, saved.NodeIndexInRack)
 	}
 
 	err = d.Register(context.Background(), machines)
@@ -86,8 +86,8 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if saved.NodeIndexInRack != sabakan.DefaultTestConfig.NodeIndexOffset {
-		t.Errorf("node index of boot server should be %v but %v", sabakan.DefaultTestConfig.NodeIndexOffset, saved.NodeIndexInRack)
+	if saved.NodeIndexInRack != defaultTestConfig.NodeIndexOffset {
+		t.Errorf("node index of boot server should be %v but %v", defaultTestConfig.NodeIndexOffset, saved.NodeIndexInRack)
 	}
 
 	err = d.Register(context.Background(), bootServer2)
@@ -101,7 +101,7 @@ func testQuery(t *testing.T) {
 	cmd.Go(d.Run)
 	time.Sleep(1 * time.Millisecond)
 
-	config := &sabakan.DefaultTestConfig
+	config := &defaultTestConfig
 	err := d.PutConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
@@ -145,7 +145,7 @@ func testQuery(t *testing.T) {
 
 func testDelete(t *testing.T) {
 	d := testNewDriver(t)
-	config := &sabakan.DefaultTestConfig
+	config := &defaultTestConfig
 	err := d.PutConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
