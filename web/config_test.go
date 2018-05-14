@@ -20,7 +20,6 @@ func testConfigGet(t *testing.T) {
 	handler := Server{m}
 
 	config := &sabakan.IPAMConfig{
-		MaxRacks:        80,
 		MaxNodesInRack:  28,
 		NodeIPv4Offset:  "10.69.0.0/26",
 		NodeRackShift:   6,
@@ -64,7 +63,6 @@ func testConfigPut(t *testing.T) {
 	bad := "{}"
 	good := `
 {
-   "max-racks": 80,
    "max-nodes-in-rack": 28,
    "node-ipv4-offset": "10.69.0.0/26",
    "node-rack-shift": 6,
@@ -99,7 +97,6 @@ func testConfigPut(t *testing.T) {
 		t.Fatal(err)
 	}
 	expected := &sabakan.IPAMConfig{
-		MaxRacks:        80,
 		MaxNodesInRack:  28,
 		NodeIPv4Offset:  "10.69.0.0/26",
 		NodeRackShift:   6,

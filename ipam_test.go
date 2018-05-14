@@ -45,7 +45,6 @@ func testGenerateIP(t *testing.T) {
 		},
 	}
 	config := IPAMConfig{
-		MaxRacks:        80,
 		MaxNodesInRack:  28,
 		NodeIPv4Offset:  "10.69.0.0/26",
 		NodeRackShift:   6,

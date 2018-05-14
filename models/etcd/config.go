@@ -21,13 +21,9 @@ func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) erro
 	configKey := path.Join(d.prefix, KeyConfig)
 	machinesKey := path.Join(d.prefix, KeyMachines)
 
-	txnThenOps := []clientv3.Op{}
-	txnThenOps = append(txnThenOps, clientv3.OpPut(configKey, string(j)))
-	// delete all indices before put, because number of racks may be decreased in config
-	txnThenOps = append(txnThenOps, clientv3.OpDelete(path.Join(d.prefix, KeyNodeIndices), clientv3.WithPrefix()))
 	tresp, err := d.client.Txn(ctx).
 		If(clientv3util.KeyMissing(machinesKey).WithPrefix()).
-		Then(txnThenOps...).
+		Then(clientv3.OpPut(configKey, string(j))).
 		Else().
 		Commit()
 	if err != nil {
@@ -38,27 +34,7 @@ func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) erro
 		return errors.New("machines already exists")
 	}
 
-	// we can put keys outside transaction
-	for rackIdx := uint(0); rackIdx < config.MaxRacks; rackIdx++ {
-		// put worker keys
-		for node := uint(0); node < config.MaxNodesInRack; node++ {
-			nodeIdx := node + config.NodeIndexOffset + 1
-			key := d.getWorkerNodeIndexKey(rackIdx, nodeIdx)
-			_, err := d.client.Put(ctx, key, encodeNodeIndex(nodeIdx))
-			if err != nil {
-				return err
-			}
-		}
-
-		// put boot server key
-		key := d.getBootNodeIndexKey(rackIdx)
-		_, err := d.client.Put(ctx, key, encodeNodeIndex(config.NodeIndexOffset))
-		if err != nil {
-			return err
-		}
-	}
-
-	return err
+	return nil
 }
 
 // GetConfig implements sabakan.ConfigModel

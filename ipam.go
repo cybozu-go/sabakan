@@ -10,7 +10,6 @@ import (
 
 // IPAMConfig is structure of the sabakan option
 type IPAMConfig struct {
-	MaxRacks        uint   `json:"max-racks"`
 	MaxNodesInRack  uint   `json:"max-nodes-in-rack"`
 	NodeIPv4Offset  string `json:"node-ipv4-offset"`
 	NodeRackShift   uint   `json:"node-rack-shift"`
@@ -23,9 +22,6 @@ type IPAMConfig struct {
 
 // Validate validates configurations
 func (c *IPAMConfig) Validate() error {
-	if c.MaxRacks == 0 {
-		return errors.New("max-racks must not be zero")
-	}
 	if c.MaxNodesInRack == 0 {
 		return errors.New("max-nodes-in-rack must not be zero")
 	}

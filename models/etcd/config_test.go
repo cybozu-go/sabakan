@@ -6,12 +6,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/sabakan"
 )
 
 var defaultTestConfig = sabakan.IPAMConfig{
-	MaxRacks:        80,
 	MaxNodesInRack:  28,
 	NodeIPv4Offset:  "10.69.0.0/26",
 	NodeRackShift:   6,
@@ -46,24 +44,6 @@ func testPutConfig(t *testing.T) {
 
 	if !reflect.DeepEqual(config, &actual) {
 		t.Errorf("unexpected saved config %#v", actual)
-	}
-
-	resp, err = d.client.Get(context.Background(), t.Name()+KeyNodeIndices, clientv3.WithPrefix())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(resp.Kvs) != int(config.MaxRacks*(config.MaxNodesInRack+1)) {
-		t.Errorf("number of node indices should be %d but %d", config.MaxRacks*(config.MaxNodesInRack+1), len(resp.Kvs))
-	}
-
-	resp, err = d.client.Get(context.Background(), t.Name()+KeyNodeIndices+"/0/worker/04")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(resp.Kvs) != 1 {
-		t.Error("node index 0/worker/04 not found")
 	}
 
 	err = d.Register(context.Background(), []*sabakan.Machine{{Serial: "1234abcd", Role: "worker"}})

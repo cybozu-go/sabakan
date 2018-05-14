@@ -2,109 +2,145 @@ package etcd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path"
-	"strconv"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/sabakan"
 )
 
-func (d *Driver) getNodeIndexKey(machine *sabakan.Machine) (string, error) {
-	switch machine.Role {
-	case "worker":
-		return d.getWorkerNodeIndexKey(machine.Rack, machine.NodeIndexInRack), nil
-	case "boot":
-		return d.getBootNodeIndexKey(machine.Rack), nil
-	default:
-		return "", errors.New("unknown role: " + machine.Role)
+type rackIndexUsage struct {
+	revision    int64
+	usedIndices []uint
+	indexMap    map[uint]bool
+}
+
+func (r *rackIndexUsage) MarshalJSON() ([]byte, error) {
+	data, err := json.Marshal(r.usedIndices)
+	return data, err
+}
+
+func (r *rackIndexUsage) UnmarshalJSON(data []byte) error {
+	err := json.Unmarshal(data, &r.usedIndices)
+	if err == nil {
+		r.indexMap = make(map[uint]bool)
+		for _, idx := range r.usedIndices {
+			r.indexMap[idx] = true
+		}
 	}
+	return err
 }
 
-func (d *Driver) getWorkerNodeIndexKey(rack, index uint) string {
-	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack), "worker", fmt.Sprintf("%02d", index))
+func (r *rackIndexUsage) assign(m *sabakan.Machine, c *sabakan.IPAMConfig) error {
+	if m.Role == "boot" {
+		if r.indexMap[c.NodeIndexOffset] {
+			return sabakan.ErrConflicted
+		}
+		r.indexMap[c.NodeIndexOffset] = true
+		r.usedIndices = append(r.usedIndices, c.NodeIndexOffset)
+		m.NodeIndexInRack = c.NodeIndexOffset
+		return nil
+	}
+
+	for i := uint(0); i < c.MaxNodesInRack; i++ {
+		idx := i + c.NodeIndexOffset + 1
+		if r.indexMap[idx] {
+			continue
+		}
+		r.indexMap[idx] = true
+		r.usedIndices = append(r.usedIndices, idx)
+		m.NodeIndexInRack = idx
+		return nil
+	}
+
+	return errors.New("no node index is available for new machine")
 }
 
-func (d *Driver) getBootNodeIndexKey(rack uint) string {
-	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack), "boot")
+func (r *rackIndexUsage) release(m *sabakan.Machine) {
+	if _, ok := r.indexMap[m.NodeIndexInRack]; !ok {
+		panic("inconsistent index map")
+	}
+	delete(r.indexMap, m.NodeIndexInRack)
+
+	used := make([]uint, 0, len(r.usedIndices)-1)
+	for _, idx := range r.usedIndices {
+		if idx == m.NodeIndexInRack {
+			continue
+		}
+		used = append(used, idx)
+	}
+	r.usedIndices = used
 }
 
-func (d *Driver) getNodeIndicesInRackKey(rack uint) string {
-	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack), "worker") + "/"
-}
-
-func encodeNodeIndex(index uint) string {
-	return fmt.Sprint(index)
-}
-
-func decodeNodeIndex(indexString string) (uint, error) {
-	index, err := strconv.Atoi(indexString)
+func (d *Driver) initializeNodeIndices(ctx context.Context, rack uint) error {
+	usage := new(rackIndexUsage)
+	j, err := json.Marshal(usage)
 	if err != nil {
-		return uint(0), err
+		return err
 	}
-	return uint(index), nil
+
+	key := d.nodeIndicesInRackKey(rack)
+	_, err = d.client.Txn(ctx).
+		If(clientv3util.KeyMissing(key)).
+		Then(clientv3.OpPut(key, string(j))).
+		Else().
+		Commit()
+
+	return err
 }
 
-func (d *Driver) assignNodeIndex(ctx context.Context, machines []*sabakan.Machine) error {
-	bootServers := map[uint]*sabakan.Machine{}
-	machinesGroupedByRack := map[uint][]*sabakan.Machine{}
+func (d *Driver) nodeIndicesInRackKey(rack uint) string {
+	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack))
+}
+
+func (d *Driver) getRackIndexUsage(ctx context.Context, rack uint) (*rackIndexUsage, error) {
+RETRY:
+	key := d.nodeIndicesInRackKey(rack)
+	resp, err := d.client.Get(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.Kvs) == 0 {
+		err = d.initializeNodeIndices(ctx, rack)
+		if err != nil {
+			return nil, err
+		}
+		goto RETRY
+	}
+
+	kv := resp.Kvs[0]
+	usage := new(rackIndexUsage)
+	err = json.Unmarshal(kv.Value, usage)
+	if err != nil {
+		return nil, err
+	}
+
+	usage.revision = kv.ModRevision
+
+	return usage, nil
+}
+
+func (d *Driver) assignNodeIndex(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) (map[uint]*rackIndexUsage, error) {
+	usageMap := make(map[uint]*rackIndexUsage)
 	for _, m := range machines {
-		switch m.Role {
-		case "boot":
-			if _, ok := bootServers[m.Rack]; ok {
-				return sabakan.ErrConflicted
-			}
-			bootServers[m.Rack] = m
-		case "worker":
-			if _, ok := machinesGroupedByRack[m.Rack]; ok {
-				machinesGroupedByRack[m.Rack] = append(machinesGroupedByRack[m.Rack], m)
-			} else {
-				machinesGroupedByRack[m.Rack] = []*sabakan.Machine{m}
-			}
-		default:
-			return errors.New("unknown role: " + m.Role)
-		}
-	}
-
-	for rack, ms := range machinesGroupedByRack {
-		key := d.getNodeIndicesInRackKey(rack)
-		resp, err := d.client.Get(
-			ctx, key,
-			clientv3.WithPrefix(),
-			clientv3.WithLimit(int64(len(ms))),
-			clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend),
-		)
-		if err != nil {
-			return err
-		}
-		if len(resp.Kvs) < len(ms) {
-			return errors.New("no node index is available for new machine")
-		}
-
-		for i, m := range ms {
-			m.NodeIndexInRack, err = decodeNodeIndex(string(resp.Kvs[i].Value))
+		usage := usageMap[m.Rack]
+		if usage == nil {
+			u, err := d.getRackIndexUsage(ctx, m.Rack)
 			if err != nil {
-				return err
+				return nil, err
 			}
+			usageMap[m.Rack] = u
+			usage = u
+		}
+
+		err := usage.assign(m, config)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	for rack, m := range bootServers {
-		key := d.getBootNodeIndexKey(rack)
-		resp, err := d.client.Get(ctx, key)
-		if err != nil {
-			return err
-		}
-		if len(resp.Kvs) == 0 {
-			return fmt.Errorf("boot server has been registered for rack %d", rack)
-		}
-
-		m.NodeIndexInRack, err = decodeNodeIndex(string(resp.Kvs[0].Value))
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return usageMap, nil
 }

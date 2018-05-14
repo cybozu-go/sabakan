@@ -18,7 +18,6 @@ import (
 func TestRemoteConfigGet(t *testing.T) {
 	var method, path string
 	conf := &sabakan.IPAMConfig{
-		MaxRacks:        80,
 		MaxNodesInRack:  28,
 		NodeIPv4Offset:  "10.69.0.0/26",
 		NodeRackShift:   6,
@@ -52,7 +51,6 @@ func TestRemoteConfigPut(t *testing.T) {
 	var method, path string
 	var record sabakan.IPAMConfig
 	conf := sabakan.IPAMConfig{
-		MaxRacks:        80,
 		MaxNodesInRack:  28,
 		NodeIPv4Offset:  "10.69.0.0/26",
 		NodeRackShift:   6,

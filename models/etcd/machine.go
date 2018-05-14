@@ -26,7 +26,7 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 
 RETRY:
 	// Assign node indices temporarily
-	err = d.assignNodeIndex(ctx, machines)
+	usageMap, err := d.assignNodeIndex(ctx, machines, cfg)
 	if err != nil {
 		return err
 	}
@@ -37,27 +37,30 @@ RETRY:
 
 	// Put machines into etcd
 	conflictMachinesIfOps := []clientv3.Cmp{}
-	availableNodeIndexIfOps := []clientv3.Cmp{}
+	latestNodeIndexIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
 		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
-		indexKey, err := d.getNodeIndexKey(wmc)
-		if err != nil {
-			return err
-		}
 		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
-		availableNodeIndexIfOps = append(availableNodeIndexIfOps, clientv3util.KeyExists(indexKey))
 		j, err := json.Marshal(wmc)
 		if err != nil {
 			return err
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
-		txnThenOps = append(txnThenOps, clientv3.OpDelete(indexKey))
+	}
+	for rack, usage := range usageMap {
+		key := d.nodeIndicesInRackKey(rack)
+		j, err := json.Marshal(usage)
+		if err != nil {
+			return err
+		}
+		latestNodeIndexIfOps = append(latestNodeIndexIfOps, clientv3.Compare(clientv3.ModRevision(key), "=", usage.revision))
+		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
 
 	tresp, err := d.client.Txn(ctx).
 		If(
-			availableNodeIndexIfOps...,
+			latestNodeIndexIfOps...,
 		).
 		Then(
 			clientv3.OpTxn(conflictMachinesIfOps, txnThenOps, nil),
@@ -68,7 +71,7 @@ RETRY:
 		return err
 	}
 	if !tresp.Succeeded {
-		// availableNodeIndexIfOps evaluated to false; node indices retrieved before transaction are now used by some others
+		// latestNodeIndexIfOps evaluated to false; node indices retrieved before transaction are now used by some others
 		goto RETRY
 	}
 	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
@@ -128,16 +131,34 @@ func (d *Driver) Delete(ctx context.Context, serial string) error {
 		return sabakan.ErrNotFound
 	}
 
+	m := machines[0]
+
 	machineKey := path.Join(d.prefix, KeyMachines, serial)
-	indexKey, err := d.getNodeIndexKey(machines[0])
+	indexKey := d.nodeIndicesInRackKey(m.Rack)
+
+RETRY:
+	usage, err := d.getRackIndexUsage(ctx, m.Rack)
 	if err != nil {
 		return err
 	}
-	indexValue := encodeNodeIndex(machines[0].NodeIndexInRack)
+	usage.release(m)
+
+	j, err := json.Marshal(usage)
+	if err != nil {
+		return err
+	}
 
 	resp, err := d.client.Txn(ctx).
-		If(clientv3util.KeyExists(machineKey), clientv3util.KeyMissing(indexKey)).
-		Then(clientv3.OpDelete(machineKey), clientv3.OpPut(indexKey, indexValue)).
+		If(clientv3.Compare(clientv3.ModRevision(indexKey), "=", usage.revision)).
+		Then(
+			clientv3.OpTxn(
+				[]clientv3.Cmp{clientv3util.KeyExists(machineKey)},
+				[]clientv3.Op{
+					clientv3.OpDelete(machineKey),
+					clientv3.OpPut(indexKey, string(j)),
+				},
+				nil),
+		).
 		Else().
 		Commit()
 	if err != nil {
@@ -145,6 +166,12 @@ func (d *Driver) Delete(ctx context.Context, serial string) error {
 	}
 
 	if !resp.Succeeded {
+		// revision mismatch
+		goto RETRY
+	}
+
+	if !resp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+		// KeyExists(machineKey) failed
 		return sabakan.ErrNotFound
 	}
 

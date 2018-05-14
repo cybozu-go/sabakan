@@ -91,8 +91,8 @@ func testRegister(t *testing.T) {
 	}
 
 	err = d.Register(context.Background(), bootServer2)
-	if err == nil {
-		t.Error("adding 2nd boot server should fail but succeeded")
+	if err != sabakan.ErrConflicted {
+		t.Errorf("unexpected error: %v", err)
 	}
 }
 
@@ -174,14 +174,6 @@ func testDelete(t *testing.T) {
 	}
 	if len(resp.Kvs) != 0 {
 		t.Error("machine was not deleted")
-	}
-
-	resp, err = d.client.Get(context.Background(), t.Name()+KeyNodeIndices+"/0/worker/04")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(resp.Kvs) != 1 {
-		t.Error("node index was not released")
 	}
 
 	err = d.Delete(context.Background(), "1234abcd")
