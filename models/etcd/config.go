@@ -3,12 +3,12 @@ package etcd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/sabakan"
-	"github.com/pkg/errors"
 )
 
 // PutConfig implements sabakan.ConfigModel
