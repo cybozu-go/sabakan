@@ -82,7 +82,7 @@ func (d *Driver) initializeNodeIndices(ctx context.Context, rack uint) error {
 		return err
 	}
 
-	key := d.nodeIndicesInRackKey(rack)
+	key := d.indexInRackKey(rack)
 	_, err = d.client.Txn(ctx).
 		If(clientv3util.KeyMissing(key)).
 		Then(clientv3.OpPut(key, string(j))).
@@ -92,13 +92,13 @@ func (d *Driver) initializeNodeIndices(ctx context.Context, rack uint) error {
 	return err
 }
 
-func (d *Driver) nodeIndicesInRackKey(rack uint) string {
+func (d *Driver) indexInRackKey(rack uint) string {
 	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack))
 }
 
 func (d *Driver) getRackIndexUsage(ctx context.Context, rack uint) (*rackIndexUsage, error) {
 RETRY:
-	key := d.nodeIndicesInRackKey(rack)
+	key := d.indexInRackKey(rack)
 	resp, err := d.client.Get(ctx, key)
 	if err != nil {
 		return nil, err

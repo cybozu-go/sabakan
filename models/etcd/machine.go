@@ -49,7 +49,7 @@ RETRY:
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
 	for rack, usage := range usageMap {
-		key := d.nodeIndicesInRackKey(rack)
+		key := d.indexInRackKey(rack)
 		j, err := json.Marshal(usage)
 		if err != nil {
 			return err
@@ -134,7 +134,7 @@ func (d *Driver) Delete(ctx context.Context, serial string) error {
 	m := machines[0]
 
 	machineKey := path.Join(d.prefix, KeyMachines, serial)
-	indexKey := d.nodeIndicesInRackKey(m.Rack)
+	indexKey := d.indexInRackKey(m.Rack)
 
 RETRY:
 	usage, err := d.getRackIndexUsage(ctx, m.Rack)
