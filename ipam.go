@@ -74,7 +74,7 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	// node2: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * rack-number) + node-index-in-rack + 2^NodeRackShift * 2)
 	// BMC: INET_NTOA(INET_ATON(BMCIPv4Offset) + (2^BMCRackShift * BMCIPPerNode * rack-number) + node-index-in-rack)
 
-	calc := func(cidr string, shift uint, numip uint, lrn uint, nodeIndex uint) []net.IP {
+	calc := func(cidr string, shift, numip, lrn, nodeIndex uint) []net.IP {
 		result := make([]net.IP, numip)
 
 		offset, _, _ := net.ParseCIDR(cidr)
