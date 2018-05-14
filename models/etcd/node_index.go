@@ -76,6 +76,10 @@ func (r *rackIndexUsage) release(m *sabakan.Machine) {
 	r.usedIndices = used
 }
 
+func (d *Driver) indexInRackKey(rack uint) string {
+	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack))
+}
+
 func (d *Driver) initializeNodeIndices(ctx context.Context, rack uint) error {
 	var usage rackIndexUsage
 	j, err := json.Marshal(usage)
@@ -91,10 +95,6 @@ func (d *Driver) initializeNodeIndices(ctx context.Context, rack uint) error {
 		Commit()
 
 	return err
-}
-
-func (d *Driver) indexInRackKey(rack uint) string {
-	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack))
 }
 
 func (d *Driver) getRackIndexUsage(ctx context.Context, rack uint) (*rackIndexUsage, error) {
