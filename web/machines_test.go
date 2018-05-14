@@ -57,12 +57,6 @@ func testMachinesPost(t *testing.T) {
   "role": "boot"
 }]`, http.StatusBadRequest},
 		{`[{
-  "serial": "1111abcd",
-  "product": "R630",
-  "datacenter": "ty3",
-  "role": "boot"
-}]`, http.StatusBadRequest},
-		{`[{
   "serial": "2222abcd",
   "product": "R630",
   "datacenter": "ty3",
@@ -174,7 +168,7 @@ func testMachinesGet(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			continue
 		}
-		var machines []*sabakan.MachineJSON
+		var machines []*sabakan.Machine
 		err := json.NewDecoder(resp.Body).Decode(&machines)
 		resp.Body.Close()
 		if err != nil {

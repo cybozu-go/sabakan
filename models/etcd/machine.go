@@ -14,7 +14,7 @@ import (
 
 // Register implements sabakan.MachineModel
 func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
-	wmcs := make([]*sabakan.MachineJSON, len(machines))
+	wmcs := make([]*sabakan.Machine, len(machines))
 
 	cfg, err := d.GetConfig(ctx)
 	if err != nil {
@@ -32,7 +32,7 @@ RETRY:
 	}
 	for i, rmc := range machines {
 		cfg.GenerateIP(rmc)
-		wmcs[i] = rmc.ToJSON()
+		wmcs[i] = rmc
 	}
 
 	// Put machines into etcd
@@ -41,7 +41,7 @@ RETRY:
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
 		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
-		indexKey, err := d.getNodeIndexKey(wmc.ToMachine())
+		indexKey, err := d.getNodeIndexKey(wmc)
 		if err != nil {
 			return err
 		}
@@ -100,15 +100,14 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 			continue
 		}
 
-		var mj sabakan.MachineJSON
-		err = json.Unmarshal(resp.Kvs[0].Value, &mj)
+		var m sabakan.Machine
+		err = json.Unmarshal(resp.Kvs[0].Value, &m)
 		if err != nil {
 			return nil, err
 		}
 
-		m := mj.ToMachine()
-		if q.Match(m) {
-			res = append(res, m)
+		if q.Match(&m) {
+			res = append(res, &m)
 		}
 	}
 

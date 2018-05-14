@@ -45,12 +45,12 @@ func (mi *machinesIndex) init(ctx context.Context, client *clientv3.Client, pref
 	}
 
 	f := func(val []byte) (*sabakan.Machine, error) {
-		var mc sabakan.MachineJSON
+		var mc sabakan.Machine
 		err := json.Unmarshal(val, &mc)
 		if err != nil {
 			return nil, err
 		}
-		return mc.ToMachine(), nil
+		return &mc, nil
 	}
 	for _, kv := range resp.Kvs {
 		m, err := f(kv.Value)
@@ -140,12 +140,12 @@ func (d *Driver) startWatching(ctx context.Context) error {
 	}
 
 	f := func(val []byte) (*sabakan.Machine, error) {
-		var mc sabakan.MachineJSON
+		var mc sabakan.Machine
 		err := json.Unmarshal(val, &mc)
 		if err != nil {
 			return nil, err
 		}
-		return mc.ToMachine(), nil
+		return &mc, nil
 	}
 
 	key := path.Join(d.prefix, KeyMachines)

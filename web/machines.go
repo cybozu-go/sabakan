@@ -26,7 +26,7 @@ func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var rmcs []sabakan.MachineJSON
+	var rmcs []sabakan.Machine
 
 	err := json.NewDecoder(r.Body).Decode(&rmcs)
 	if err != nil {
@@ -49,15 +49,11 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("datacenter is empty"))
 			return
 		}
-		if mc.Rack == nil {
-			renderError(r.Context(), w, BadRequest("rack is empty"))
-			return
-		}
 		if mc.Role == "" {
 			renderError(r.Context(), w, BadRequest("role is empty"))
 			return
 		}
-		machines[i] = mc.ToMachine()
+		machines[i] = &mc
 	}
 
 	err = s.Model.Machine.Register(r.Context(), machines)
@@ -99,9 +95,9 @@ func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	j := make([]*sabakan.MachineJSON, len(machines))
+	j := make([]*sabakan.Machine, len(machines))
 	for i, m := range machines {
-		j[i] = m.ToJSON()
+		j[i] = m
 	}
 
 	renderJSON(w, j, http.StatusOK)

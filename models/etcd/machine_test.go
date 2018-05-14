@@ -42,7 +42,7 @@ func testRegister(t *testing.T) {
 		t.Error("machine was not saved")
 	}
 
-	var saved sabakan.MachineJSON
+	var saved sabakan.Machine
 	err = json.Unmarshal(resp.Kvs[0].Value, &saved)
 	if err != nil {
 		t.Fatal(err)
