@@ -30,7 +30,7 @@ func testPutConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := d.client.Get(context.Background(), t.Name()+"/config")
+	resp, err := d.client.Get(context.Background(), t.Name()+KeyConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func testPutConfig(t *testing.T) {
 		t.Errorf("unexpected saved config %#v", actual)
 	}
 
-	resp, err = d.client.Get(context.Background(), t.Name()+"/node-indices", clientv3.WithPrefix())
+	resp, err = d.client.Get(context.Background(), t.Name()+KeyNodeIndices, clientv3.WithPrefix())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func testPutConfig(t *testing.T) {
 		t.Errorf("number of node indices should be %d but %d", config.MaxRacks*(config.MaxNodesInRack+1), len(resp.Kvs))
 	}
 
-	resp, err = d.client.Get(context.Background(), t.Name()+"/node-indices/0/worker/04")
+	resp, err = d.client.Get(context.Background(), t.Name()+KeyNodeIndices+"/0/worker/04")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func testGetConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.client.Put(context.Background(), t.Name()+"/config", string(bytes))
+	_, err = d.client.Put(context.Background(), t.Name()+KeyConfig, string(bytes))
 	if err != nil {
 		t.Fatal(err)
 	}

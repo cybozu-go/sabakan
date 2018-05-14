@@ -11,11 +11,6 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
-type assignedIndex struct {
-	rack  uint
-	index uint
-}
-
 func (d *Driver) getNodeIndexKey(machine *sabakan.Machine) (string, error) {
 	switch machine.Role {
 	case "worker":

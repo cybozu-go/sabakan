@@ -34,7 +34,7 @@ func testRegister(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := d.client.Get(context.Background(), t.Name()+"/machines/5678efgh")
+	resp, err := d.client.Get(context.Background(), t.Name()+KeyMachines+"/5678efgh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func testRegister(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err = d.client.Get(context.Background(), t.Name()+"/machines/00000000")
+	resp, err = d.client.Get(context.Background(), t.Name()+KeyMachines+"/00000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +168,7 @@ func testDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := d.client.Get(context.Background(), t.Name()+"/machines/1234abcd")
+	resp, err := d.client.Get(context.Background(), t.Name()+KeyMachines+"/1234abcd")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,7 +176,7 @@ func testDelete(t *testing.T) {
 		t.Error("machine was not deleted")
 	}
 
-	resp, err = d.client.Get(context.Background(), t.Name()+"/node-indices/0/worker/04")
+	resp, err = d.client.Get(context.Background(), t.Name()+KeyNodeIndices+"/0/worker/04")
 	if err != nil {
 		t.Fatal(err)
 	}
