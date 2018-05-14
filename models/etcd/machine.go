@@ -3,6 +3,7 @@ package etcd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
@@ -18,6 +19,9 @@ func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 	cfg, err := d.GetConfig(ctx)
 	if err != nil {
 		return err
+	}
+	if cfg == nil {
+		return errors.New("configuration not found")
 	}
 
 RETRY:
