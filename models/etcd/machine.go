@@ -37,7 +37,7 @@ RETRY:
 
 	// Put machines into etcd
 	conflictMachinesIfOps := []clientv3.Cmp{}
-	latestNodeIndexIfOps := []clientv3.Cmp{}
+	usageCASIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
 		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
@@ -54,13 +54,13 @@ RETRY:
 		if err != nil {
 			return err
 		}
-		latestNodeIndexIfOps = append(latestNodeIndexIfOps, clientv3.Compare(clientv3.ModRevision(key), "=", usage.revision))
+		usageCASIfOps = append(usageCASIfOps, clientv3.Compare(clientv3.ModRevision(key), "=", usage.revision))
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
 
 	tresp, err := d.client.Txn(ctx).
 		If(
-			latestNodeIndexIfOps...,
+			usageCASIfOps...,
 		).
 		Then(
 			clientv3.OpTxn(conflictMachinesIfOps, txnThenOps, nil),
@@ -71,7 +71,7 @@ RETRY:
 		return err
 	}
 	if !tresp.Succeeded {
-		// latestNodeIndexIfOps evaluated to false; node indices retrieved before transaction are now used by some others
+		// usageCASIfOps evaluated to false; index usage was updated by another txn.
 		goto RETRY
 	}
 	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
@@ -103,14 +103,14 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 			continue
 		}
 
-		var m sabakan.Machine
-		err = json.Unmarshal(resp.Kvs[0].Value, &m)
+		m := new(sabakan.Machine)
+		err = json.Unmarshal(resp.Kvs[0].Value, m)
 		if err != nil {
 			return nil, err
 		}
 
-		if q.Match(&m) {
-			res = append(res, &m)
+		if q.Match(m) {
+			res = append(res, m)
 		}
 	}
 

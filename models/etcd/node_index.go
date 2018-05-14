@@ -18,7 +18,7 @@ type rackIndexUsage struct {
 	indexMap    map[uint]bool
 }
 
-func (r *rackIndexUsage) MarshalJSON() ([]byte, error) {
+func (r rackIndexUsage) MarshalJSON() ([]byte, error) {
 	data, err := json.Marshal(r.usedIndices)
 	return data, err
 }
@@ -35,28 +35,29 @@ func (r *rackIndexUsage) UnmarshalJSON(data []byte) error {
 }
 
 func (r *rackIndexUsage) assign(m *sabakan.Machine, c *sabakan.IPAMConfig) error {
-	if m.Role == "boot" {
-		if r.indexMap[c.NodeIndexOffset] {
+	var idx uint
+
+OUT:
+	switch m.Role {
+	case "boot":
+		idx = c.NodeIndexOffset
+		if r.indexMap[idx] {
 			return sabakan.ErrConflicted
 		}
-		r.indexMap[c.NodeIndexOffset] = true
-		r.usedIndices = append(r.usedIndices, c.NodeIndexOffset)
-		m.IndexInRack = c.NodeIndexOffset
-		return nil
-	}
-
-	for i := uint(0); i < c.MaxNodesInRack; i++ {
-		idx := i + c.NodeIndexOffset + 1
-		if r.indexMap[idx] {
-			continue
+	default:
+		for i := uint(0); i < c.MaxNodesInRack; i++ {
+			idx = i + c.NodeIndexOffset + 1
+			if !r.indexMap[idx] {
+				break OUT
+			}
 		}
-		r.indexMap[idx] = true
-		r.usedIndices = append(r.usedIndices, idx)
-		m.IndexInRack = idx
-		return nil
+		return errors.New("no node index is available for new machine")
 	}
 
-	return errors.New("no node index is available for new machine")
+	r.indexMap[idx] = true
+	r.usedIndices = append(r.usedIndices, idx)
+	m.IndexInRack = idx
+	return nil
 }
 
 func (r *rackIndexUsage) release(m *sabakan.Machine) {
@@ -76,7 +77,7 @@ func (r *rackIndexUsage) release(m *sabakan.Machine) {
 }
 
 func (d *Driver) initializeNodeIndices(ctx context.Context, rack uint) error {
-	usage := new(rackIndexUsage)
+	var usage rackIndexUsage
 	j, err := json.Marshal(usage)
 	if err != nil {
 		return err
