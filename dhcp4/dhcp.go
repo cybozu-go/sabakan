@@ -8,9 +8,9 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 )
 
-func (s *dhcpServer) offer(pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error) {
+func (s *DHCPServer) offer(pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error) {
 
-	ip, err := s.lessor.Lease()
+	ip, err := s.leaser.Lease()
 	if err != nil {
 		log.Info("DHCP: Couldn't allocate ip address", map[string]interface{}{
 			"mac_address": pkt.HardwareAddr,
@@ -38,7 +38,7 @@ func (s *dhcpServer) offer(pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packe
 	return resp, nil
 }
 
-func (s *dhcpServer) acknowledge(pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error) {
+func (s *DHCPServer) acknowledge(pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error) {
 	ip := pkt.Options[dhcp4.OptRequestedIP]
 
 	serverIP, err := s.interfaceIP(intf)
@@ -60,7 +60,7 @@ func (s *dhcpServer) acknowledge(pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4
 	return resp, nil
 }
 
-func (s *dhcpServer) interfaceIP(intf *net.Interface) (net.IP, error) {
+func (s *DHCPServer) interfaceIP(intf *net.Interface) (net.IP, error) {
 	addrs, err := intf.Addrs()
 	if err != nil {
 		return nil, err

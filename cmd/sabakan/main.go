@@ -76,8 +76,8 @@ func main() {
 		Config:  driver,
 	}
 
-	lessor := mock.NewLessor(dhcp4Begin, dhcp4End)
-	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, lessor)
+	leaser := mock.NewLeaser(dhcp4Begin, dhcp4End)
+	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, leaser)
 	cmd.Go(dhcps.Serve)
 
 	s := &cmd.HTTPServer{

@@ -8,7 +8,8 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
-func NewLessor(begin, end net.IP) sabakan.Lessor {
+// NewLeaser returns a mocked sabakan.Leaser
+func NewLeaser(begin, end net.IP) sabakan.Leaser {
 	return &assignment{
 		begin:  begin,
 		end:    end,

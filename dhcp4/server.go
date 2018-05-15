@@ -10,25 +10,26 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 )
 
-// Server is a DHCP server
-type dhcpServer struct {
+// DHCPServer is a DHCP server
+type DHCPServer struct {
 	bind   string
 	ifname string
 	ipxe   string
-	lessor sabakan.Lessor
+	leaser sabakan.Leaser
 }
 
 // New creates a new dhcp Server object
-func New(bind string, ifname string, ipxe string, lessor sabakan.Lessor) *dhcpServer {
-	return &dhcpServer{
+func New(bind string, ifname string, ipxe string, leaser sabakan.Leaser) *DHCPServer {
+	return &DHCPServer{
 		bind:   bind,
 		ifname: ifname,
 		ipxe:   ipxe,
-		lessor: lessor,
+		leaser: leaser,
 	}
 }
 
-func (s *dhcpServer) Serve(ctx context.Context) error {
+// Serve launches a DHCP Server
+func (s *DHCPServer) Serve(ctx context.Context) error {
 	conn, err := dhcp4.NewConn(s.bind)
 	if err != nil {
 		return err
@@ -41,7 +42,7 @@ func (s *dhcpServer) Serve(ctx context.Context) error {
 	for {
 		pkt, intf, err := conn.RecvDHCP()
 		if err != nil {
-			return fmt.Errorf("Receiving DHCP packet: %s", err)
+			return fmt.Errorf("receiving DHCP packet: %s", err)
 		}
 		if intf.Name != s.ifname {
 			log.Debug("DHCP: Ignoring packet", map[string]interface{}{
@@ -64,7 +65,7 @@ func (s *dhcpServer) Serve(ctx context.Context) error {
 	}
 }
 
-func (s *dhcpServer) handleDiscover(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *net.Interface) error {
+func (s *DHCPServer) handleDiscover(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *net.Interface) error {
 	resp, err := s.offer(pkt, intf)
 	if err != nil {
 		return err
@@ -73,7 +74,7 @@ func (s *dhcpServer) handleDiscover(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *n
 	return err
 }
 
-func (s *dhcpServer) handleRequest(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *net.Interface) error {
+func (s *DHCPServer) handleRequest(conn *dhcp4.Conn, pkt *dhcp4.Packet, intf *net.Interface) error {
 	resp, err := s.acknowledge(pkt, intf)
 	if err != nil {
 		return err

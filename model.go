@@ -41,6 +41,7 @@ type Model struct {
 	Config  ConfigModel
 }
 
-type Lessor interface {
+// Leaser is an interface to lease IP addresses
+type Leaser interface {
 	Lease() (net.IP, error)
 }
