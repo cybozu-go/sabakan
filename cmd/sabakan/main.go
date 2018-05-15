@@ -14,6 +14,7 @@ import (
 	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/dhcp4"
 	"github.com/cybozu-go/sabakan/models/etcd"
+	"github.com/cybozu-go/sabakan/models/mock"
 	"github.com/cybozu-go/sabakan/web"
 )
 
@@ -75,7 +76,8 @@ func main() {
 		Config:  driver,
 	}
 
-	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, dhcp4Begin, dhcp4End)
+	lessor := mock.NewLessor(dhcp4Begin, dhcp4End)
+	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, lessor)
 	cmd.Go(dhcps.Serve)
 
 	s := &cmd.HTTPServer{

@@ -3,6 +3,7 @@ package sabakan
 import (
 	"context"
 	"errors"
+	"net"
 )
 
 // ErrConflicted is a special error for models.
@@ -38,4 +39,8 @@ type Model struct {
 	Storage StorageModel
 	Machine MachineModel
 	Config  ConfigModel
+}
+
+type Lessor interface {
+	Lease() (net.IP, error)
 }
