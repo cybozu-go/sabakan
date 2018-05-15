@@ -2,33 +2,41 @@
 [![GoDoc](https://godoc.org/github.com/cybozu-go/sabakan?status.svg)][godoc]
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/sabakan)](https://goreportcard.com/report/github.com/cybozu-go/sabakan)
 
-# Sabakan
+Sabakan
+=======
 
-Sabakan is the Bare-metal management system to organize hardware information using etcd3 as a backend distributed database.
+![sabakan architecture](http://www.plantuml.com/plantuml/svg/TP3DIWCn58NtUOh32EukWtPNH4frqOMBWds1T7BxWvca93Tr8RwxYI4w3hZ9uhjVphd9AeeEaaQh0W-YtT4oEfR1OB0f2eSE7memMlHUHqOPtSt1_HmiCb2eCiZuTqTLdC4cro68B1-46lvKqwNMtWjUELpRJh-pc9lVjCFDo_buahLDh7wA7cfcSrhNFtmnvsK9vqtkBsUd_fOEOgUb3H65meWUMymIsfYUpLdwmAE_CafSJQPqcOhFcwSjRh7PxROu-82zzwBQ2xDOxYmHJqdA5_Q1luKLEvD6-mK0)
+<!-- go to http://www.plantuml.com/plantuml/ and enter the above URL to edit the diagram. -->
 
-## Features
+Sabakan is an integration service to automate bare-metal server management.
+It uses [etcd][] as a backend datastore for strong consistency and high availability.
+
+Features
+--------
 
 * Server inventory
 
-    Sabakan provides helpful information depending on an organization's requirements.
+    Servers in a data center can be registered with sabakan's inventory.
+    In addition, sabakan assigns IP addresses automatically to servers.
 
-* Disc encryption inventory
+* DHCP service
 
-    Sabakan managed servers requires disk encryption for variable data. When a server initializes the Operating system, It formats target storage with an encryption key. Sabakan stores its key, and a server retrieve it before mounts encrypted storage.
+    Sabakan provides DHCP server service for network boot of servers.
+    The DHCP implementation is primarily for [UEFI HTTP Boot][HTTPBoot].
 
-## Plan
+* HTTP service
 
-* HTTP server
+    Sabakan provides HTTP service for network boot of servers.
 
-    All Sabakan managed servers are started up by HTTP boot. HTTP server provides kernel and initramfs to boot them.
+* Encryption key store
 
-* DHCP server
+    Server storages often need to be encrypted.
+    Sabakan provides REST API to store and retrieve encryption keys.
 
-    Sabakan(or another software) distributes IP address to servers for HTTP boot. Administrators have to define machines in Sabakan before servers start. DHCP server get defined IP addresses in Sabakan, then set them as static DHCP IP addresses.
+Usage
+-----
 
-## Usage
-
-This project provides two commands, `sabakan` and `sabactl`.
+This repository contains two programs: `sabakan` and `sabactl`.
 `sabakan` is a daemon to manage servers.
 `sabactl` is a helper command to control `sabakan`.
 
@@ -82,7 +90,7 @@ Subcommands:
 
 ### Prerequisites
 
-- [etcd3](https://github.com/coreos/etcd)
+- [etcd3][]
 
 ### Install sabakan and sabactl
 
@@ -115,8 +123,10 @@ See [SPEC](SPEC.md).
 License
 -------
 
-Sabakan is licensed upder MIT
+Sabakan is licensed under MIT license.
 
 The source code contains a [Netboot](https://github.com/google/netboot) which is licensed under Apache License 2.0.
 
 [godoc]: https://godoc.org/github.com/cybozu-go/sabakan
+[etcd]: https://coreos.com/etcd/
+[HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
