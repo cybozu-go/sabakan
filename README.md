@@ -4,6 +4,34 @@
 
 # Sabakan
 
+![sabakan architecture](http://www.plantuml.com/plantuml/svg/TP3DIWCn58NtUOh32EukWtPNH4frqOMBWds1T7BxWvca93Tr8RwxYI4w3hZ9uhjVphd9AeeEaaQh0W-YtT4oEfR1OB0f2eSE7memMlHUHqOPtSt1_HmiCb2eCiZuTqTLdC4cro68B1-46lvKqwNMtWjUELpRJh-pc9lVjCFDo_buahLDh7wA7cfcSrhNFtmnvsK9vqtkBsUd_fOEOgUb3H65meWUMymIsfYUpLdwmAE_CafSJQPqcOhFcwSjRh7PxROu-82zzwBQ2xDOxYmHJqdA5_Q1luKLEvD6-mK0)
+<!--
+@startuml
+rectangle "etcd cluster" {
+  database etcd1
+  database etcd2
+  database etcd3
+  
+  etcd1 -down- etcd2
+  etcd1 -down- etcd3
+  etcd2 --left-- etcd3
+}
+
+rectangle "Boot Server" {
+  rectangle sabakan #LightBlue
+
+  etcd1 <-left- sabakan
+  etcd2 <-left- sabakan
+  etcd3 <-left- sabakan
+}
+
+node "node"
+rectangle sabactl #LightBlue
+sabactl --right--> sabakan: add/edit/remove node
+node -up-> sabakan: DHCP & HTTP for boot
+sabakan -> node: shutdown/reboot
+@enduml-->
+
 Sabakan is the Bare-metal management system to organize hardware information using etcd3 as a backend distributed database.
 
 ## Features
