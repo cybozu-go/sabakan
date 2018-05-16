@@ -18,12 +18,14 @@ func testSabactlRemoteConfig(t *testing.T) {
 	defer os.Remove(f.Name())
 
 	var conf = sabakan.IPAMConfig{
-		NodeIPv4Offset: "10.0.0.0/24",
-		NodeRackShift:  4,
-		NodeIPPerNode:  3,
-		BMCIPv4Offset:  "10.10.0.0/24",
-		BMCRackShift:   2,
-		BMCIPPerNode:   1,
+		MaxNodesInRack:  28,
+		NodeIPv4Offset:  "10.69.0.0/26",
+		NodeRackShift:   6,
+		NodeIndexOffset: 3,
+		BMCIPv4Offset:   "10.72.17.0/27",
+		BMCRackShift:    5,
+		NodeIPPerNode:   3,
+		BMCIPPerNode:    1,
 	}
 	err = json.NewEncoder(f).Encode(conf)
 	if err != nil {
