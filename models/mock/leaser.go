@@ -1,10 +1,21 @@
-package dhcp4
+package mock
 
 import (
 	"encoding/binary"
 	"errors"
 	"net"
+
+	"github.com/cybozu-go/sabakan"
 )
+
+// NewLeaser returns a mocked sabakan.Leaser
+func NewLeaser(begin, end net.IP) sabakan.Leaser {
+	return &assignment{
+		begin:  begin,
+		end:    end,
+		leases: make(map[uint32]struct{}),
+	}
+}
 
 // TODO this is a temporary on-memory DHCP leases for the mock
 type assignment struct {
@@ -14,7 +25,7 @@ type assignment struct {
 	leases map[uint32]struct{}
 }
 
-func (a *assignment) next() (net.IP, error) {
+func (a *assignment) Lease() (net.IP, error) {
 	ibegin := ip2int(a.begin)
 	iend := ip2int(a.end)
 	for n := ibegin; n <= iend; n++ {
