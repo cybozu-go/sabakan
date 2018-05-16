@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"path"
 
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/sabakan"
@@ -54,6 +55,11 @@ func (c *Client) MachinesCreate(ctx context.Context, machines []sabakan.Machine)
 	return c.sendRequestWithJSON(ctx, "POST", "/machines", machines)
 }
 
+// MachinesDelete deletes machine information from sabakan server
+func (c *Client) MachinesDelete(ctx context.Context, serial string) *Status {
+	return c.sendRequest(ctx, "DELETE", path.Join("/machines", serial))
+}
+
 func (c *Client) getJSON(ctx context.Context, path string, params map[string]string, data interface{}) *Status {
 	req, err := http.NewRequest("GET", c.endpoint+"/api/v1"+path, nil)
 	if err != nil {
@@ -92,6 +98,21 @@ func (c *Client) sendRequestWithJSON(ctx context.Context, method string, path st
 	}
 
 	req, err := http.NewRequest(method, c.endpoint+"/api/v1"+path, b)
+	if err != nil {
+		return ErrorStatus(err)
+	}
+	req = req.WithContext(ctx)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return ErrorStatus(err)
+	}
+	defer res.Body.Close()
+
+	return ErrorHTTPStatus(res)
+}
+
+func (c *Client) sendRequest(ctx context.Context, method, path string) *Status {
+	req, err := http.NewRequest(method, c.endpoint+"/api/v1"+path, nil)
 	if err != nil {
 		return ErrorStatus(err)
 	}

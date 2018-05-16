@@ -19,14 +19,12 @@ func exitCode(err error) subcommands.ExitStatus {
 		if e2, ok := err.(*exec.ExitError); ok {
 			if s, ok := e2.Sys().(syscall.WaitStatus); ok {
 				return subcommands.ExitStatus(s.ExitStatus())
-			} else {
-				// unexpected error; not Unix?
-				panic(err)
 			}
-		} else {
-			// exec itself failed, e.g. command not found
+			// unexpected error; not Unix?
 			panic(err)
 		}
+		// exec itself failed, e.g. command not found
+		panic(err)
 	}
 	return client.ExitSuccess
 }
