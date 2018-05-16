@@ -11,8 +11,16 @@ Sabakan
 Sabakan is an integration service to automate bare-metal server management.
 It uses [etcd][] as a backend datastore for strong consistency and high availability.
 
-Features
---------
+**Project Status**: Initial development.
+
+Planned features
+----------------
+
+* High availability
+
+    Thanks to etcd, sabakan can run multiple instances while maintaining
+    strong consistency.  For instance, DHCP lease information are shared
+    among sabakan instances to avoid conflicts.
 
 * Server inventory
 
@@ -33,64 +41,31 @@ Features
     Server storages often need to be encrypted.
     Sabakan provides REST API to store and retrieve encryption keys.
 
-Usage
------
+* Server life-cycle management
 
-This repository contains two programs: `sabakan` and `sabactl`.
-`sabakan` is a daemon to manage servers.
-`sabactl` is a helper command to control `sabakan`.
+    Sabakan provides API to change server status for life-cycle management.
 
-### sabakan
+* Logs
 
-`sabakan` requires etcd endpoints to control data in the key-value store.
+    To track problems and life-cycle events, sabakan keeps operation logs
+    within its etcd storage.
 
-```console
-$ sabakan \
-   --http 0.0.0.0:8888 \
-   --etcd-servers http://etcd1.example.com:2379,http://etcd2.example.com:2379 \
-   --etcd-prefix sabakan
+Programs
+--------
 
-Options:
-   --http
-      <Listen IP>:<Port number> (default "0.0.0.0:8888")
-   --etcd-servers
-      URLs of the backend etcd (default "http://localhost:2379")
-   --etcd-prefix
-      etcd prefix
-```
+This repository contains two programs:
 
-### sabactl command
+* `sabakan`: the network service to manage servers.
+* `sabactl`: CLI tool for `sabakan`.
 
-`sabactl` reads a json file in command-line arguments, then create Sabakan config and server inventory, or update and delete them.
+To see their usage, run them with `-h` option.
 
+Getting started
+---------------
 
-```console
-$ sabactl <flags> <subcommand> <subcommand args>
+### Prepare etcd
 
-Subcommands:
-   commands         list all command names
-   flags            describe all known top-level flags
-   help             describe subcommands and their syntax
-   remote-config    Configure a sabakan server.
-
-$ sabactl flags
-
-Options:
-   -server
-      <Listen IP>:<Port number> (default "http://localhost:8888")
-
-$ sabactl remote-config
-
-Subcommands:
-   get              Get a sabakan server config.
-   set              Set a sabakan server config.
-```
-
-## Getting started
-
-### Prerequisites
-
-- [etcd3][]
+Sabakan requires [etcd][].  Install and run it at somewhere.
 
 ### Install sabakan and sabactl
 
@@ -100,6 +75,16 @@ Install `sabakan` and `sabactl`:
 $ go get -u github.com/cybozu-go/sabakan/cmd/sabakan
 $ go get -u github.com/cybozu-go/sabakan/cmd/sabactl
 ```
+
+### Run sabakan
+
+**ToDo**
+
+### Configure sabakan
+
+Use `sabactl` to configure `sabakan`.
+
+**ToDo**
 
 ### Debugging with a DHCP client
 

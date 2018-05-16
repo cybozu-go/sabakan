@@ -26,7 +26,7 @@ type etcdConfig struct {
 var (
 	flagHTTP        = flag.String("http", "0.0.0.0:8888", "<Listen IP>:<Port number>")
 	flagEtcdServers = flag.String("etcd-servers", "http://localhost:2379", "URLs of the backend etcd")
-	flagEtcdPrefix  = flag.String("etcd-prefix", "", "etcd prefix")
+	flagEtcdPrefix  = flag.String("etcd-prefix", "/sabakan", "etcd prefix")
 	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
 
 	flagDHCPBind         = flag.String("dhcp-bind", "0.0.0.0:67", "bound ip addresses and port for dhcp server")

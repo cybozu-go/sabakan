@@ -1,12 +1,76 @@
 Specifications
 ==============
 
-## IPアドレスの生成ルール
+Concepts
+--------
 
-sabakanの設定は引数以外にも用意されている。etcdの`<prefix>/config`に保存されており、etcd memberから常に参照可能である。
-これらはIPアドレス算出などに使用される。機材が登録された後に変更をすると**登録された機材のIPアドレスの全てに影響があるため、一つでも機材が登録されている場合は変更できない。**
+### Node / Machine
 
-IPアドレスの算出式 ([IPAM設定](#prefixconfig) と [機材情報](#prefixmachinesserial) をもとに算出をおこなう)
+The primary purpose of sabakan is to manage tons of physical servers in a data center.
+A physical server is called a *node* or a *machine* in sabakan.
+
+### BMC
+
+Sabakan assumes each physical server equips a [baseboard management controller][BMC].
+BMC is a dedicated hardware to manage the server remotely via network.
+
+### Rack
+
+Sabakan assumes that nodes are located in *racks*.  A rack can have limited number
+of servers.  Sabacan divides a range of network address space into small ranges.
+Each divided range is for a rack and should have enough capacity to allocate IP
+address to all servers in the rack.
+
+### Role
+
+Each node has *role* attribute.  Roles can be defined arbitrary as string values,
+except for **"boot"**.  Role "boot" is special; only one **boot** node can exit
+in a rack.
+
+### UEFI HTTP Boot
+
+[UEFI HTTP Boot][HTTPBoot] is a modern network boot technology that replaces
+legacy [PXE boot](https://en.wikipedia.org/wiki/Preboot_Execution_Environment).
+
+UEFI HTTP Boot requires DHCP to configure the initial networking.  However,
+unlike PXE, HTTP boot does not use TFTP to load boot loaders.  Instead of TFTP,
+HTTP is used.
+
+Sabakan is optimized for UEFI HTTP Boot.  It speaks DHCP and HTTP, but does
+not speak TFTP.
+
+### Ignition
+
+[Ignition][] is a provisioning utility for [CoreOS Container Linux][CoreOS].
+Sabakan can generate ignition config file for each node to provision CoreOS
+Container Linux into nodes via network.
+
+IP address management (IPAM)
+----------------------------
+
+### Overview
+
+Sabakan assigns IP addresses to nodes for two purposes.  One is for DHCP, and another is for static assignment.  DHCP is used for the initial network boot.
+
+Each machine may have one or more IP addresses for OS, and one or more addresses for its [baseboard management controller][BMC].  
+
+### IPAMConfig
+
+`IPAMConfig` is a set of configurations to assign IP addresses automatically.
+It is given as JSON object with the following fields:
+
+Field               | Type   | Description
+------------------- | ------ | -----------
+`max-nodes-in-rack` | int    | The maximum number of nodes in a rack, excluding "boot" node.
+`node-ipv4-offset`  | string | CIDR IPv4 network for node IP pool.
+`node-rack-shift`   | int    | The size of IPv4 subnets for nodes in a rack.
+`node-index-offset` | int    | The offset in a subnet for nodes.
+`node-ip-per-node`  | int    | The number of IP addresses for each node.
+`bmc-ipv4-offset`   | string | CIDR IPv4 network for BMC IP pool.
+`bmc-rack-shift`    | int    | The size of IPv4 subnets for [BMC][] in a rack.
+`bmc-ip-per-node`   | int    | The number of IP addresses for each [BMC][].
+
+### Algorithm
 
 ```
 node0 = INET_NTOA(INET_ATON(config.NodeIPv4Offset) + 2^(config.NodeRackShift) * config.NodeIPPerNode * machine.Rack + machine.IndexInRack)
@@ -447,3 +511,8 @@ $ etcdctl get /sabakan/config/ --print-value-only | jq .
 $ etcdctl get "/sabakan/node-indices/0"
 [3, 4, 5]
 ```
+
+[BMC]: https://en.wikipedia.org/wiki/Intelligent_Platform_Management_Interface#Baseboard_management_controller
+[HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
+[Ignition]: https://coreos.com/ignition/docs/latest/
+[CoreOS]: https://coreos.com/os/docs/latest/
