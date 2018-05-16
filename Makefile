@@ -10,7 +10,7 @@ OVMF_VARS_PATH=/tmp/sabakan-dhcp-debug-vm.fd
 ORIGINAL_OVMF_VARS_PATH=/usr/share/OVMF/OVMF_VARS.fd
 
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
-BUILT_TARGET=sabakan
+BUILT_TARGET=sabakan sabactl
 
 .DEFAULT_GOAL := build
 
@@ -35,7 +35,10 @@ dhcp-debug-network: clean-vm
 
 build: $(BUILT_TARGET)
 $(BUILT_TARGET): $(GO_FILES)
-	go build ./cmd/sabakan
+	go build ./cmd/$@
+
+e2e: $(BUILT_TARGET)
+	go test -v -count=1 ./e2e
 
 $(OVMF_VARS_PATH): $(ORIGINAL_OVMF_VARS_PATH)
 	cp $(ORIGINAL_OVMF_VARS_PATH) $(OVMF_VARS_PATH)

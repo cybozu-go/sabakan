@@ -22,6 +22,7 @@ func (r *machinesCmd) Usage() string {
 	return `Usage:
 	machines get [options]
 	machines create -f <machines-file.json>
+	machines delete <machines-serial>
 `
 }
 func (r *machinesCmd) SetFlags(f *flag.FlagSet) {}
@@ -30,6 +31,7 @@ func (r *machinesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 	cmdr := subcommands.NewCommander(f, "machines")
 	cmdr.Register(&machinesGetCmd{c: r.c}, "")
 	cmdr.Register(&machinesCreateCmd{c: r.c}, "")
+	cmdr.Register(&machinesDeleteCmd{c: r.c}, "")
 	return cmdr.Execute(ctx)
 }
 
