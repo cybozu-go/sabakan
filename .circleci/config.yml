@@ -12,7 +12,8 @@ jobs:
       - run: test -z "$(goimports -d . | tee /dev/stderr)"
       - run: $GOPATH/bin/golint -set_exit_status ./...
       - run: go get -v -t -d ./...
-      - run: go build ./...
+      - run: go build ./cmd/sabakan
+      - run: go build ./cmd/sabactl
       - run:
           command: ./sabakan -dhcp-bind 0.0.0.0:10067 -dhcp-interface lo -etcd-server=http://localhost:2379
           background: true
