@@ -4,11 +4,32 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"reflect"
+	"syscall"
 	"testing"
 
 	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/client"
+	"github.com/google/subcommands"
 )
+
+func exitCode(err error) subcommands.ExitStatus {
+	if err != nil {
+		if e2, ok := err.(*exec.ExitError); ok {
+			if s, ok := e2.Sys().(syscall.WaitStatus); ok {
+				return subcommands.ExitStatus(s.ExitStatus())
+			} else {
+				// unexpected error; not Unix?
+				panic(err)
+			}
+		} else {
+			// exec itself failed, e.g. command not found
+			panic(err)
+		}
+	}
+	return client.ExitSuccess
+}
 
 func testSabactlRemoteConfig(t *testing.T) {
 	f, err := ioutil.TempFile("", "sabakan-test")
@@ -34,17 +55,19 @@ func testSabactlRemoteConfig(t *testing.T) {
 	f.Close()
 
 	stdout, stderr, err := runSabactl("remote-config", "set", "-f", f.Name())
-	if err != nil {
+	code := exitCode(err)
+	if code != client.ExitSuccess {
 		t.Error("stdout:", stdout.String())
 		t.Error("stderr:", stderr.String())
-		t.Fatal(err)
+		t.Fatal("exit code:", code)
 	}
 
 	stdout, stderr, err = runSabactl("remote-config", "get")
-	if err != nil {
+	code = exitCode(err)
+	if code != client.ExitSuccess {
 		t.Error("stdout:", stdout.String())
 		t.Error("stderr:", stderr.String())
-		t.Fatal(err)
+		t.Fatal("exit code:", code)
 	}
 
 	var got sabakan.IPAMConfig

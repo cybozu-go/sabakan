@@ -3,7 +3,6 @@ package e2e
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/sabakan/client"
 )
 
 const (
@@ -38,6 +37,7 @@ func testMain(m *testing.M) int {
 
 	stopSabakan, err := runSabakan()
 	if err != nil {
+		// log.Fatal() uses os.Exit(), and it does not process defer.
 		stopEtcd()
 		log.Fatal(err)
 	}
@@ -45,9 +45,20 @@ func testMain(m *testing.M) int {
 		stopSabakan()
 	}()
 
-	time.Sleep(1 * time.Second)
+	// wait for sabakan
+	for i := 0; i < 10; i++ {
+		_, _, err = runSabactl("remote-config", "get")
+		code := exitCode(err)
+		if code == client.ExitNotFound {
+			return m.Run()
+		}
+		time.Sleep(1 * time.Second)
+	}
 
-	return m.Run()
+	stopEtcd()
+	stopSabakan()
+	log.Fatal(err)
+	panic("unreachable")
 }
 
 func runEtcd() func() {
@@ -104,14 +115,8 @@ func runSabakan() (func(), error) {
 
 func runSabactl(args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
 	var stdout, stderr bytes.Buffer
-	env := cmd.NewEnvironment(context.Background())
-	env.Go(func(ctx context.Context) error {
-		command := cmd.CommandContext(ctx, "../sabactl", args...)
-		command.Stdout = bufio.NewWriter(&stdout)
-		command.Stderr = bufio.NewWriter(&stderr)
-		return command.Run()
-	})
-	env.Stop()
-	err := env.Wait()
-	return &stdout, &stderr, err
+	command := exec.Command("../sabactl", args...)
+	command.Stdout = bufio.NewWriter(&stdout)
+	command.Stderr = bufio.NewWriter(&stderr)
+	return &stdout, &stderr, command.Run()
 }
