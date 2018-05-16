@@ -11,8 +11,6 @@ import (
 )
 
 func testSabactlRemoteConfig(t *testing.T) {
-	runSabakan()
-
 	f, err := ioutil.TempFile("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)

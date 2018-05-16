@@ -31,54 +31,75 @@ func testMain(m *testing.M) int {
 		os.Exit(code)
 	}
 
+	stopEtcd := runEtcd()
+	defer func() {
+		stopEtcd()
+	}()
+
+	stopSabakan, err := runSabakan()
+	if err != nil {
+		stopEtcd()
+		log.Fatal(err)
+	}
+	defer func() {
+		stopSabakan()
+	}()
+
+	time.Sleep(1 * time.Second)
+
+	return m.Run()
+}
+
+func runEtcd() func() {
 	etcdPath, err := ioutil.TempDir("", "sabakan-test")
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	cmd := exec.Command("etcd",
+	command := exec.Command("etcd",
 		"--data-dir", etcdPath,
 		"--initial-cluster", "default="+etcdPeerURL,
 		"--listen-peer-urls", etcdPeerURL,
 		"--initial-advertise-peer-urls", etcdPeerURL,
 		"--listen-client-urls", etcdClientURL,
 		"--advertise-client-urls", etcdClientURL)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Start()
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	err = command.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func() {
-		cmd.Process.Kill()
-		cmd.Wait()
-		os.RemoveAll(etcdPath)
-	}()
 
-	return m.Run()
+	return func() {
+		command.Process.Kill()
+		command.Wait()
+		os.RemoveAll(etcdPath)
+	}
 }
 
 func TestMain(m *testing.M) {
 	os.Exit(testMain(m))
 }
 
-func runSabakan() {
+func runSabakan() (func(), error) {
 	servers := etcdClientURL
 	if circleci {
 		servers = "http://localhost:2379"
 	}
-	cmd.Go(func(ctx context.Context) error {
-		command := cmd.CommandContext(ctx,
-			"go", "run", "../cmd/sabakan/main.go",
-			"-dhcp-interface", "lo", "-dhcp-bind", "0.0.0.0:10067",
-			"-etcd-servers", servers,
-		)
-		command.Stdout = os.Stdout
-		command.Stderr = os.Stderr
-		return command.Run()
-	})
+	command := exec.Command("../sabakan",
+		"-dhcp-interface", "lo", "-dhcp-bind", "0.0.0.0:10067",
+		"-etcd-servers", servers,
+	)
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	err := command.Start()
+	if err != nil {
+		return nil, err
+	}
 
-	time.Sleep(1 * time.Second)
+	return func() {
+		command.Process.Kill()
+		command.Wait()
+	}, nil
 }
 
 func runSabactl(args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
