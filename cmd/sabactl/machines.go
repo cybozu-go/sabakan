@@ -22,7 +22,7 @@ func (r *machinesCmd) Usage() string {
 	return `Usage:
 	machines get [options]
 	machines create -f <machines-file.json>
-	machines delete <machines-serial>
+	machines remove <machines-serial>
 `
 }
 func (r *machinesCmd) SetFlags(f *flag.FlagSet) {}
@@ -31,7 +31,7 @@ func (r *machinesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 	cmdr := subcommands.NewCommander(f, "machines")
 	cmdr.Register(&machinesGetCmd{c: r.c}, "")
 	cmdr.Register(&machinesCreateCmd{c: r.c}, "")
-	cmdr.Register(&machinesDeleteCmd{c: r.c}, "")
+	cmdr.Register(&machinesRemoveCmd{c: r.c}, "")
 	return cmdr.Execute(ctx)
 }
 
@@ -119,24 +119,24 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 	return client.ExitSuccess
 }
 
-type machinesDeleteCmd struct {
+type machinesRemoveCmd struct {
 	c      *client.Client
 	serial string
 }
 
-func (r *machinesDeleteCmd) Name() string     { return "delete" }
-func (r *machinesDeleteCmd) Synopsis() string { return "delete machine information." }
-func (r *machinesDeleteCmd) Usage() string {
-	return "machines delete <machine-serial>\n"
+func (r *machinesRemoveCmd) Name() string     { return "remove" }
+func (r *machinesRemoveCmd) Synopsis() string { return "remove machine information." }
+func (r *machinesRemoveCmd) Usage() string {
+	return "machines remove <machine-serial>\n"
 }
-func (r *machinesDeleteCmd) SetFlags(f *flag.FlagSet) {}
+func (r *machinesRemoveCmd) SetFlags(f *flag.FlagSet) {}
 
-func (r *machinesDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (r *machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
 		return client.ExitBadUsage
 	}
 
-	errorStatus := r.c.MachinesDelete(ctx, f.Args()[0])
+	errorStatus := r.c.MachinesRemove(ctx, f.Args()[0])
 	if errorStatus != nil {
 		fmt.Fprintln(os.Stderr, errorStatus)
 		return errorStatus.Code()

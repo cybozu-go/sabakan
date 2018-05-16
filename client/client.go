@@ -55,8 +55,8 @@ func (c *Client) MachinesCreate(ctx context.Context, machines []sabakan.Machine)
 	return c.sendRequestWithJSON(ctx, "POST", "/machines", machines)
 }
 
-// MachinesDelete deletes machine information from sabakan server
-func (c *Client) MachinesDelete(ctx context.Context, serial string) *Status {
+// MachinesRemove removes machine information from sabakan server
+func (c *Client) MachinesRemove(ctx context.Context, serial string) *Status {
 	return c.sendRequest(ctx, "DELETE", path.Join("/machines", serial))
 }
 

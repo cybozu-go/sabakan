@@ -156,7 +156,7 @@ func testSabactlMachines(t *testing.T) {
 		t.Fatal("machine not found")
 	}
 
-	stdout, stderr, err = runSabactl("machines", "delete", "12345678")
+	stdout, stderr, err = runSabactl("machines", "remove", "12345678")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
 		t.Error("stdout:", stdout.String())
@@ -169,7 +169,7 @@ func testSabactlMachines(t *testing.T) {
 	if code != client.ExitNotFound {
 		t.Error("stdout:", stdout.String())
 		t.Error("stderr:", stderr.String())
-		t.Fatal("machine not deleted", code)
+		t.Fatal("machine not removed", code)
 	}
 }
 
