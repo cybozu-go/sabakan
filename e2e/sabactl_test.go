@@ -128,12 +128,12 @@ func testSabactlMachines(t *testing.T) {
 			Datacenter: "ty3",
 			Role:       "worker",
 		},
-		//{
-		//	Serial:     "abcdefg",
-		//	Product:    "R730xd",
-		//	Datacenter: "ty3",
-		//	Role:       "boot",
-		//},
+		{
+			Serial:     "abcdefg",
+			Product:    "R730xd",
+			Datacenter: "ty3",
+			Role:       "boot",
+		},
 	}
 	stdout, stderr, err = runSabactlWithFile(t, &machines, "machines", "create")
 	code = exitCode(err)
@@ -166,14 +166,10 @@ func testSabactlMachines(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("machines", "get", "--serial", "12345678")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != client.ExitNotFound {
 		t.Error("stdout:", stdout.String())
 		t.Error("stderr:", stderr.String())
-		t.Fatal("exit code:", code)
-	}
-	json.Unmarshal(stdout.Bytes(), &gotMachines)
-	if len(gotMachines) != 0 {
-		t.Fatal("machine not deleted")
+		t.Fatal("machine not deleted", code)
 	}
 }
 

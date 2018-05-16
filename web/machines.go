@@ -53,7 +53,7 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("role is empty"))
 			return
 		}
-		machines[i] = &mc
+		machines[i] = &rmcs[i]
 	}
 
 	err = s.Model.Machine.Register(r.Context(), machines)
