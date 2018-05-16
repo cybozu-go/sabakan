@@ -72,12 +72,12 @@ func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 	machines, err := r.c.MachinesGet(ctx, r.getParams())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return 1
+		return err.Code()
 	}
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	e.Encode(machines)
-	return 0
+	return sabactl.ExitSuccess
 }
 
 type machinesCreateCmd struct {
@@ -98,7 +98,7 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 	file, err := os.Open(r.file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return 1
+		return sabactl.ExitError
 	}
 	defer file.Close()
 
@@ -106,13 +106,13 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 	err = json.NewDecoder(file).Decode(&machines)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return 1
+		return sabactl.ExitInvalidParams
 	}
 
-	err = r.c.MachinesCreate(ctx, machines)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
+	errorStatus := r.c.MachinesCreate(ctx, machines)
+	if errorStatus != nil {
+		fmt.Fprintln(os.Stderr, errorStatus)
+		return errorStatus.Code()
 	}
-	return 0
+	return sabactl.ExitSuccess
 }

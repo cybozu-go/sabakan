@@ -48,12 +48,12 @@ func (r *remoteConfigGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 	conf, err := r.c.RemoteConfigGet(ctx)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return 1
+		return err.Code()
 	}
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	e.Encode(conf)
-	return 0
+	return sabactl.ExitSuccess
 }
 
 type remoteConfigSetCmd struct {
@@ -74,7 +74,7 @@ func (r *remoteConfigSetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 	file, err := os.Open(r.file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return 1
+		return sabactl.ExitError
 	}
 	defer file.Close()
 
@@ -82,13 +82,13 @@ func (r *remoteConfigSetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 	err = json.NewDecoder(file).Decode(&conf)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return 1
+		return sabactl.ExitInvalidParams
 	}
 
-	err = r.c.RemoteConfigSet(ctx, &conf)
+	errorStatus := r.c.RemoteConfigSet(ctx, &conf)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
+		fmt.Fprintln(os.Stderr, errorStatus)
+		return errorStatus.Code()
 	}
-	return 0
+	return sabactl.ExitSuccess
 }
