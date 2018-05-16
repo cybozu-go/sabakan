@@ -8,12 +8,12 @@ import (
 	"os"
 
 	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/sabactl"
+	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
 type machinesCmd struct {
-	c *sabactl.Client
+	c *client.Client
 }
 
 func (r *machinesCmd) Name() string     { return "machines" }
@@ -34,7 +34,7 @@ func (r *machinesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 }
 
 type machinesGetCmd struct {
-	c     *sabactl.Client
+	c     *client.Client
 	query map[string]*string
 }
 
@@ -77,11 +77,11 @@ func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	e.Encode(machines)
-	return sabactl.ExitSuccess
+	return client.ExitSuccess
 }
 
 type machinesCreateCmd struct {
-	c    *sabactl.Client
+	c    *client.Client
 	file string
 }
 
@@ -98,7 +98,7 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 	file, err := os.Open(r.file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return sabactl.ExitError
+		return client.ExitError
 	}
 	defer file.Close()
 
@@ -106,7 +106,7 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 	err = json.NewDecoder(file).Decode(&machines)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return sabactl.ExitInvalidParams
+		return client.ExitInvalidParams
 	}
 
 	errorStatus := r.c.MachinesCreate(ctx, machines)
@@ -114,5 +114,5 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 		fmt.Fprintln(os.Stderr, errorStatus)
 		return errorStatus.Code()
 	}
-	return sabactl.ExitSuccess
+	return client.ExitSuccess
 }

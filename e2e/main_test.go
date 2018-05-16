@@ -106,14 +106,7 @@ func runSabactl(args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
 	var stdout, stderr bytes.Buffer
 	env := cmd.NewEnvironment(context.Background())
 	env.Go(func(ctx context.Context) error {
-		params := []string{
-			"run",
-			"../cmd/sabactl/main.go",
-			"../cmd/sabactl/machines.go",
-			"../cmd/sabactl/remote_config.go",
-		}
-		params = append(params, args...)
-		command := cmd.CommandContext(ctx, "go", params...)
+		command := cmd.CommandContext(ctx, "../sabactl", args...)
 		command.Stdout = bufio.NewWriter(&stdout)
 		command.Stderr = bufio.NewWriter(&stderr)
 		return command.Run()
