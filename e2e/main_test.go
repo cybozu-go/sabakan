@@ -5,12 +5,11 @@ import (
 	"bytes"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
-
-	"github.com/cybozu-go/sabakan/client"
 )
 
 const (
@@ -73,6 +72,10 @@ func TestMain(m *testing.M) {
 		os.Exit(code)
 	}
 
+	if len(os.Getenv("RUN_E2E")) == 0 {
+		os.Exit(0)
+	}
+
 	status, err := testMain(m)
 	if err != nil {
 		log.Fatal(err)
@@ -99,9 +102,9 @@ func runSabakan() (func(), error) {
 
 	// wait for startup
 	for i := 0; i < 10; i++ {
-		_, _, err = runSabactl("remote-config", "get")
-		code := exitCode(err)
-		if code == client.ExitNotFound {
+		resp, err := http.Get("http://localhost:8888/api/v1/config/ipam")
+		if err == nil {
+			resp.Body.Close()
 			return func() {
 				command.Process.Kill()
 				command.Wait()

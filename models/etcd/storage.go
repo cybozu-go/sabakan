@@ -10,7 +10,7 @@ import (
 )
 
 // GetEncryptionKey implements sabakan.StorageModel
-func (d *Driver) GetEncryptionKey(ctx context.Context, serial string, diskByPath string) ([]byte, error) {
+func (d *driver) GetEncryptionKey(ctx context.Context, serial string, diskByPath string) ([]byte, error) {
 	target := path.Join(d.prefix, KeyCrypts, serial, diskByPath)
 	resp, err := d.client.Get(ctx, target)
 	if err != nil {
@@ -25,7 +25,7 @@ func (d *Driver) GetEncryptionKey(ctx context.Context, serial string, diskByPath
 }
 
 // PutEncryptionKey implements sabakan.StorageModel
-func (d *Driver) PutEncryptionKey(ctx context.Context, serial string, diskByPath string, key []byte) error {
+func (d *driver) PutEncryptionKey(ctx context.Context, serial string, diskByPath string, key []byte) error {
 	target := path.Join(d.prefix, KeyCrypts, serial, diskByPath)
 
 	tresp, err := d.client.Txn(ctx).
@@ -46,7 +46,7 @@ func (d *Driver) PutEncryptionKey(ctx context.Context, serial string, diskByPath
 }
 
 // DeleteEncryptionKeys implements sabakan.StorageModel
-func (d *Driver) DeleteEncryptionKeys(ctx context.Context, serial string) ([]string, error) {
+func (d *driver) DeleteEncryptionKeys(ctx context.Context, serial string) ([]string, error) {
 	target := path.Join(d.prefix, KeyCrypts, serial) + "/"
 
 	dresp, err := d.client.Delete(ctx, target, clientv3.WithPrefix(), clientv3.WithPrevKV())

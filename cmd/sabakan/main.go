@@ -11,7 +11,6 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/dhcp4"
 	"github.com/cybozu-go/sabakan/models/etcd"
 	"github.com/cybozu-go/sabakan/models/mock"
@@ -68,13 +67,8 @@ func main() {
 	}
 	defer c2.Close()
 
-	driver := etcd.NewDriver(c, c2, e.Prefix)
-	cmd.Go(driver.Run)
-	model := sabakan.Model{
-		Storage: driver,
-		Machine: driver,
-		Config:  driver,
-	}
+	model := etcd.NewModel(c, c2, e.Prefix)
+	cmd.Go(model.Run)
 
 	leaser := mock.NewLeaser(dhcp4Begin, dhcp4End)
 	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, leaser)

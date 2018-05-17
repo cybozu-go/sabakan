@@ -11,14 +11,13 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
-// PutConfig implements sabakan.ConfigModel
-func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) error {
+func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) error {
 	j, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	configKey := path.Join(d.prefix, KeyConfig)
+	configKey := path.Join(d.prefix, KeyIPAM)
 	machinesKey := path.Join(d.prefix, KeyMachines)
 
 	tresp, err := d.client.Txn(ctx).
@@ -37,9 +36,8 @@ func (d *Driver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) erro
 	return nil
 }
 
-// GetConfig implements sabakan.ConfigModel
-func (d *Driver) GetConfig(ctx context.Context) (*sabakan.IPAMConfig, error) {
-	key := path.Join(d.prefix, KeyConfig)
+func (d *driver) getIPAMConfig(ctx context.Context) (*sabakan.IPAMConfig, error) {
+	key := path.Join(d.prefix, KeyIPAM)
 	resp, err := d.client.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -53,4 +51,16 @@ func (d *Driver) GetConfig(ctx context.Context) (*sabakan.IPAMConfig, error) {
 		return nil, err
 	}
 	return &config, nil
+}
+
+type ipamDriver struct {
+	*driver
+}
+
+func (d ipamDriver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) error {
+	return d.putIPAMConfig(ctx, config)
+}
+
+func (d ipamDriver) GetConfig(ctx context.Context) (*sabakan.IPAMConfig, error) {
+	return d.getIPAMConfig(ctx)
 }

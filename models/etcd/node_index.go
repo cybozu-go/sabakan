@@ -76,11 +76,11 @@ func (r *rackIndexUsage) release(m *sabakan.Machine) {
 	r.usedIndices = used
 }
 
-func (d *Driver) indexInRackKey(rack uint) string {
+func (d *driver) indexInRackKey(rack uint) string {
 	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack))
 }
 
-func (d *Driver) initializeNodeIndices(ctx context.Context, rack uint) error {
+func (d *driver) initializeNodeIndices(ctx context.Context, rack uint) error {
 	var usage rackIndexUsage
 	j, err := json.Marshal(usage)
 	if err != nil {
@@ -97,7 +97,7 @@ func (d *Driver) initializeNodeIndices(ctx context.Context, rack uint) error {
 	return err
 }
 
-func (d *Driver) getRackIndexUsage(ctx context.Context, rack uint) (*rackIndexUsage, error) {
+func (d *driver) getRackIndexUsage(ctx context.Context, rack uint) (*rackIndexUsage, error) {
 RETRY:
 	key := d.indexInRackKey(rack)
 	resp, err := d.client.Get(ctx, key)
@@ -124,7 +124,7 @@ RETRY:
 	return usage, nil
 }
 
-func (d *Driver) assignNodeIndex(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) (map[uint]*rackIndexUsage, error) {
+func (d *driver) assignNodeIndex(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) (map[uint]*rackIndexUsage, error) {
 	usageMap := make(map[uint]*rackIndexUsage)
 	for _, m := range machines {
 		usage := usageMap[m.Rack]

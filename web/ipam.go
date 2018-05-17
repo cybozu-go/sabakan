@@ -7,22 +7,22 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
-func (s Server) handleConfig(w http.ResponseWriter, r *http.Request) {
+func (s Server) handleConfigIPAM(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		s.handleConfigGet(w, r)
+		s.handleConfigIPAMGet(w, r)
 		return
 	case "PUT":
-		s.handleConfigPut(w, r)
+		s.handleConfigIPAMPut(w, r)
 		return
 	}
 
 	renderError(r.Context(), w, APIErrBadMethod)
 }
 
-func (s Server) handleConfigGet(w http.ResponseWriter, r *http.Request) {
+func (s Server) handleConfigIPAMGet(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	config, err := s.Model.Config.GetConfig(ctx)
+	config, err := s.Model.IPAM.GetConfig(ctx)
 	if err != nil {
 		renderError(ctx, w, InternalServerError(err))
 		return
@@ -35,7 +35,7 @@ func (s Server) handleConfigGet(w http.ResponseWriter, r *http.Request) {
 	renderJSON(w, config, http.StatusOK)
 }
 
-func (s Server) handleConfigPut(w http.ResponseWriter, r *http.Request) {
+func (s Server) handleConfigIPAMPut(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var sc sabakan.IPAMConfig
 	err := json.NewDecoder(r.Body).Decode(&sc)
@@ -49,7 +49,7 @@ func (s Server) handleConfigPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.Model.Config.PutConfig(ctx, &sc)
+	err = s.Model.IPAM.PutConfig(ctx, &sc)
 	if err != nil {
 		renderError(ctx, w, InternalServerError(err))
 		return

@@ -26,8 +26,8 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	p := r.URL.Path[len("/api/v1/"):]
 
 	switch {
-	case p == "config":
-		s.handleConfig(w, r)
+	case p == "config/ipam":
+		s.handleConfigIPAM(w, r)
 		return
 	case strings.HasPrefix(p, "crypts/"):
 		s.handleCrypts(w, r)

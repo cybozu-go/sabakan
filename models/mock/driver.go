@@ -2,6 +2,7 @@
 package mock
 
 import (
+	"context"
 	"sync"
 
 	"github.com/cybozu-go/sabakan"
@@ -22,8 +23,13 @@ func NewModel() sabakan.Model {
 		machines: make(map[string]*sabakan.Machine),
 	}
 	return sabakan.Model{
+		Runner:  d,
 		Storage: d,
 		Machine: d,
-		Config:  d,
+		IPAM:    ipamDriver{d},
 	}
+}
+
+func (d *driver) Run(ctx context.Context) error {
+	return nil
 }

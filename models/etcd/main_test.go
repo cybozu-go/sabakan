@@ -68,7 +68,7 @@ func newEtcdClient() (*clientv3.Client, error) {
 	})
 }
 
-func testNewDriver(t *testing.T) *Driver {
+func testNewDriver(t *testing.T) *driver {
 	client, err := newEtcdClient()
 	if err != nil {
 		t.Fatal(err)
@@ -77,5 +77,5 @@ func testNewDriver(t *testing.T) *Driver {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return NewDriver(client, watcher, t.Name())
+	return &driver{client, watcher, t.Name(), newMachinesIndex()}
 }

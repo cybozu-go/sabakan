@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/cybozu-go/cmd"
-	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
@@ -18,17 +17,17 @@ var (
 
 func main() {
 	c := client.NewClient(*flagServer, &cmd.HTTPClient{
-		Client:   &http.Client{},
-		Severity: log.LvDebug,
+		Client: &http.Client{},
 	})
 
 	subcommands.Register(subcommands.HelpCommand(), "")
 	subcommands.Register(subcommands.FlagsCommand(), "")
 	subcommands.Register(subcommands.CommandsCommand(), "")
-	subcommands.Register(&remoteConfigCmd{c: c}, "")
-	subcommands.Register(&machinesCmd{c: c}, "")
+	subcommands.Register(ipamCommand(c), "")
+	subcommands.Register(machinesCommand(c), "")
 
 	flag.Parse()
+	cmd.LogConfig{}.Apply()
 
 	ctx := context.Background()
 	os.Exit(int(subcommands.Execute(ctx)))

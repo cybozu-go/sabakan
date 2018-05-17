@@ -16,34 +16,28 @@ type machinesCmd struct {
 	c *client.Client
 }
 
-func (r *machinesCmd) Name() string     { return "machines" }
-func (r *machinesCmd) Synopsis() string { return "manage machines." }
-func (r *machinesCmd) Usage() string {
-	return `Usage:
-	machines get [options]
-	machines create -f <machines-file.json>
-	machines remove <machines-serial>
-`
-}
-func (r *machinesCmd) SetFlags(f *flag.FlagSet) {}
+func (r machinesCmd) SetFlags(f *flag.FlagSet) {}
 
-func (r *machinesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	cmdr := subcommands.NewCommander(f, "machines")
-	cmdr.Register(&machinesGetCmd{c: r.c}, "")
-	cmdr.Register(&machinesCreateCmd{c: r.c}, "")
-	cmdr.Register(&machinesRemoveCmd{c: r.c}, "")
+func (r machinesCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	cmdr := newCommander(f, "machines")
+	cmdr.Register(machinesGetCommand(r.c), "")
+	cmdr.Register(machinesCreateCommand(r.c), "")
+	cmdr.Register(machinesRemoveCommand(r.c), "")
 	return cmdr.Execute(ctx)
+}
+
+func machinesCommand(c *client.Client) subcommands.Command {
+	return subcmd{
+		machinesCmd{c},
+		"machines",
+		"manage machines",
+		"machines ACTION ...",
+	}
 }
 
 type machinesGetCmd struct {
 	c     *client.Client
 	query map[string]*string
-}
-
-func (r *machinesGetCmd) Name() string     { return "get" }
-func (r *machinesGetCmd) Synopsis() string { return "get machines information." }
-func (r *machinesGetCmd) Usage() string {
-	return "sabactl machines get [options]\n"
 }
 
 var machinesGetQuery = map[string]string{
@@ -70,7 +64,7 @@ func (r *machinesGetCmd) getParams() map[string]string {
 	return params
 }
 
-func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	machines, err := r.c.MachinesGet(ctx, r.getParams())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -82,21 +76,25 @@ func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 	return client.ExitSuccess
 }
 
+func machinesGetCommand(c *client.Client) subcommands.Command {
+	return subcmd{
+		&machinesGetCmd{c: c},
+		"get",
+		"get machines information",
+		"get",
+	}
+}
+
 type machinesCreateCmd struct {
 	c    *client.Client
 	file string
 }
 
-func (r *machinesCreateCmd) Name() string     { return "create" }
-func (r *machinesCreateCmd) Synopsis() string { return "create machines information." }
-func (r *machinesCreateCmd) Usage() string {
-	return "machines create -f <machines-file.json>\n"
-}
 func (r *machinesCreateCmd) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&r.file, "f", "", "machine file in JSON")
 }
 
-func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	file, err := os.Open(r.file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -119,19 +117,22 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 	return client.ExitSuccess
 }
 
+func machinesCreateCommand(c *client.Client) subcommands.Command {
+	return subcmd{
+		&machinesCreateCmd{c: c},
+		"create",
+		"create machines information",
+		"create",
+	}
+}
+
 type machinesRemoveCmd struct {
-	c      *client.Client
-	serial string
+	c *client.Client
 }
 
-func (r *machinesRemoveCmd) Name() string     { return "remove" }
-func (r *machinesRemoveCmd) Synopsis() string { return "remove machine information." }
-func (r *machinesRemoveCmd) Usage() string {
-	return "machines remove <machine-serial>\n"
-}
-func (r *machinesRemoveCmd) SetFlags(f *flag.FlagSet) {}
+func (r machinesRemoveCmd) SetFlags(f *flag.FlagSet) {}
 
-func (r *machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (r machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
 		return client.ExitUsageError
 	}
@@ -142,4 +143,13 @@ func (r *machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 		return errorStatus.Code()
 	}
 	return client.ExitSuccess
+}
+
+func machinesRemoveCommand(c *client.Client) subcommands.Command {
+	return subcmd{
+		machinesRemoveCmd{c},
+		"remove",
+		"remove a machine information",
+		"remove SERIAL",
+	}
 }

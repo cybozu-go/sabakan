@@ -13,7 +13,7 @@ import (
 func testRegister(t *testing.T) {
 	d := testNewDriver(t)
 	config := &defaultTestConfig
-	err := d.PutConfig(context.Background(), config)
+	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func testQuery(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 
 	config := &defaultTestConfig
-	err := d.PutConfig(context.Background(), config)
+	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func testQuery(t *testing.T) {
 func testDelete(t *testing.T) {
 	d := testNewDriver(t)
 	config := &defaultTestConfig
-	err := d.PutConfig(context.Background(), config)
+	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}

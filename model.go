@@ -28,17 +28,23 @@ type MachineModel interface {
 	Delete(ctx context.Context, serial string) error
 }
 
-// ConfigModel is an interface for IPAMConfig.
-type ConfigModel interface {
+// IPAMModel is an interface for IPAMConfig.
+type IPAMModel interface {
 	PutConfig(ctx context.Context, config *IPAMConfig) error
 	GetConfig(ctx context.Context) (*IPAMConfig, error)
 }
 
+// Runner is an interface to run the underlying threads.
+type Runner interface {
+	Run(ctx context.Context) error
+}
+
 // Model is a struct that consists of sub-models.
 type Model struct {
+	Runner
 	Storage StorageModel
 	Machine MachineModel
-	Config  ConfigModel
+	IPAM    IPAMModel
 }
 
 // Leaser is an interface to lease IP addresses
