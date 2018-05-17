@@ -1,4 +1,4 @@
-package sabactl
+package client
 
 import (
 	"context"
