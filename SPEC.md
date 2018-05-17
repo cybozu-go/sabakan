@@ -27,6 +27,16 @@ Each node has *role* attribute.  Roles can be defined arbitrary as string values
 except for **"boot"**.  Role "boot" is special; only one **boot** node can exist
 in a rack.
 
+### Node index in rack
+
+Every node has an index that indicates a logical position in a rack.
+No two nodes share the same index if they are in the same rack.
+
+The index is used to calculate IP addresses to be assigned to the node.
+
+The index cannot be specified externally; sabakan sets the index of a node
+when the node is registered.
+
 ### UEFI HTTP Boot
 
 [UEFI HTTP Boot][HTTPBoot] is a modern network boot technology that replaces
@@ -71,9 +81,16 @@ Field                  | Type   | Description
 `bmc-ipv4-range-size`  | int    | Size of the address range to divide the pool (bit counts).
 `bmc-ipv4-range-mask`  | int    | The subnet mask for a divided range.
 
+### Setting the index of a node
+
+Upon node registration, sabakan sets the index in rack of the node.
+
+Nodes whose role is "boot" will have `node-index-offset` as its index in rack.
+Other nodes will have an index ranging from `node-index-offset + 1` to `node-index-offset + max-nodes-in-rack`.
+
 ### Assigning static IPv4 addresses to Node OS
 
-Sabakan computes static IP addresses for a node OS as follows (pseudo code):
+Sabakan computes static IPv4 addresses for a node OS as follows (pseudo code):
 
 ```go
 rack := node.RackNumber
@@ -89,13 +106,9 @@ for i := 0; i < node-ip-per-node; i++ {
 }
 ```
 
-### DHCP lease range for Node OS
-
-TODO
-
 ### Assigning static IPv4 address to BMC
 
-Sabakan computes static IP addresses for BMC as follows (pseudo code):
+Sabakan computes static IPv4 addresses for BMC as follows (pseudo code):
 
 ```go
 rack := node.RackNumber
@@ -106,6 +119,20 @@ base := INET_ATON(bmc-ipv4-pool)
 
 bmc_addr := INET_NTOA(base + range_size * rack + idx)
 ```
+
+### DHCP lease range
+
+In short, sabakan leases IP addresses for DHCP that are never assigned
+statically to nodes.
+
+Specifically, the range of IP addresses for lease begins from the next
+address of the node whose index in rack is `node-index-offset + max-nodes-in-rack`,
+and ends at the second last address of the divided range of the IP address pool.
+
+Note that the divided range to be used can be determined by the interface
+address that accepts the DHCP request because the interface address must
+belong to the range.  If the request was relayed by another DHCP server,
+the interface address of the relaying server should be used instead.
 
 ### Examples
 
