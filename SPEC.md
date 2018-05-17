@@ -366,22 +366,45 @@ Content-Length: 18
 ### Usage
 
 ```console
-$ sabactl [--server http://localhost:8888]
+$ sabactl [--server http://localhost:8888] <subcommand> <args>...
 ```
 
 Option     | Default value           | Description
 ------     | -------------           | -----------
-`--server` | `http://localhost:8888` | sabakanのURL
+`--server` | `http://localhost:8888` | URL of sabakan
+
+### `sabactl remote-config set`
+
+Set/update the sabakan configurations.
+
+```console
+$ sabactl remote-config set -f <sabakan_configurations.json>
+```
+
+!!! Note
+    This will be refined for multiple types of configurations.
+
+### `sabactl remote-config get`
+
+Get the sabakan configurations.
+
+```console
+$ sabactl remote-config get
+```
+
+!!! Note
+    This will be refined for multiple types of configurations.
 
 ### `sabactl machines create`
 
-新しい機材の追加
+Register new machines.
 
 ```console
 $ sabactl machines create -f <machine_informations.json>
 ```
 
-一括で対象機材を追加するときは、以下のようなJSONを用意する。
+You can register multiple machines by giving a list of machine specs as shown below.
+Detailed specification of the input JSON file is same as that of the `POST /api/v1/machines` API.
 
 ```json
 [
@@ -390,36 +413,32 @@ $ sabactl machines create -f <machine_informations.json>
 ]
 ```
 
-!!! Caution
-    現在未実装
-
 ### `sabactl machines get`
 
-マッチする機材の一覧表示
+Show machines filtered by query parameters.
 
 ```console
 $ sabactl machines get [--serial <serial>] [--state <state>] [--datacenter <datacenter>] [--rack <rack>] [--product <product>] [--ipv4 <ip address>] [--ipv6 <ip address>]
 ```
 
-!!! Caution
-    `--state <state>`は機材ライフサイクルが決まるまで実装しない
+Detailed specification of the query parameters and the output JSON content is same as those of the `GET /api/v1/machines` API.
 
-!!! Caution
-    現在未実装
+!!! Note
+    `--state <state>` will not be implemented until the policy of machines life-cycle management is fixed.
 
 ### `sabactl machines remove`
 
-指定したシリアル番号の機材または条件にマッチする機材のエントリーの削除
+Unregister a machine specified by a serial number.
 
 ```console
-$ sabactl machines remove [--state <state>]
+$ sabactl machines remove <serial>
 ```
 
 !!! Note
-    removeが必要なのは修理待ちや破棄予定の機材で、それらはstatusで表現する。そのためシリアル番号やラック単位でエントリを削除することはないので、stateのみで指定する。オペレーションミスも防げる。対象の機材を削除したい場合は、statusを変更してから行う。
-
-!!! Caution
-    機材ライフサイクルが決まるまで実装しない
+    This will be refined for machines life-cycle management.
+    We should not unregister machines by their serials, but by their statuses.
+    We can unregister machines only if their statuses are "to be repaired" or "to be discarded" or anythin like those.
+    So the parameters of this command should be `--state <state>`.
 
 ## etcd のスキーマ設計
 
