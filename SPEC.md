@@ -24,7 +24,7 @@ address to all servers in the rack.
 ### Role
 
 Each node has *role* attribute.  Roles can be defined arbitrary as string values,
-except for **"boot"**.  Role "boot" is special; only one **boot** node can exit
+except for **"boot"**.  Role "boot" is special; only one **boot** node can exist
 in a rack.
 
 ### UEFI HTTP Boot
@@ -79,7 +79,7 @@ node2 = INET_NTOA(INET_ATON(config.NodeIPv4Offset) + 2^(config.NodeRackShift) * 
 BMC   = INET_NTOA(INET_ATON(config.BMCIPv4Offset) + 2^(config.BMCRackShift) * config.BMCIPPerNode * machine.Rack + machine.IndexInRack)
 ```
 
-例:
+Example:
 ```
 IPAMConfig:
   NodeIPv4Offset:      10.69.0.0/26
@@ -92,7 +92,7 @@ IPAMConfig:
 WorkerNode1:
   Rack:                0
   IndexInRack:         4
-  割り当てられるIPアドレス:
+  Assigned IP addresses:
     node0:             10.69.0.4
     node1:             10.69.0.68
     node2:             10.69.0.132
@@ -101,7 +101,7 @@ WorkerNode1:
 WorkerNode2:
   Rack:                1
   IndexInRack:         5
-  割り当てられるIPアドレス:
+  Assigned IP addresses:
     node0:             10.69.0.197
     node1:             10.69.0.5
     node2:             10.69.0.69
@@ -110,22 +110,24 @@ WorkerNode2:
 
 ## REST API
 
-### 共通仕様
+### Common status code
 
-- JSONパース失敗時: 400 Bad Request
-- 内部エラー: 500 Internal Server Error
+- JSON parse failure: 400 Bad Request
+- `sabakan` internal error: 500 Internal Server Error
 
 ### `PUT /api/v1/config`
 
-sabakan用設定パラメータの追加。IPアドレス算出などに使用される。**機材が登録された後に変更をすると登録されたIPアドレスの全てに影響があるため、一つでも機材が登録されている場合は変更できない。**
+Register `sabakan` configuration. For example, IPAM uses it to generate IP addresses. **Updating config for the IPAM is denied because it affects all of the assigned IP addresses.**
 
-**成功時のレスポンス**
+**Successful response**
 
-- ステータスコード: 200 OK
+- HTTP status code: 200 OK
 
-**失敗ケース**
+**Failure responses**
 
-- 既に機材が登録されている。 (500 Internal Server Error)
+- A machine is already registered.
+
+  HTTP status code: 500 Internal Server Error
 
 ```console
 $ curl -XPUT localhost:8888/api/v1/config -d '
@@ -143,16 +145,19 @@ $ curl -XPUT localhost:8888/api/v1/config -d '
 
 ### `GET /api/v1/config`
 
-sabakan用設定パラメータの取得。
+Get sabakan configuration.
 
-**成功時のレスポンス**
+**Successful response**
 
-- ステータスコード: 200 OK
-- レスポンスボディ: `application/json` 設定のJSON
+- HTTP status code: 200 OK
+- HTTP response header: `application/json`
+- HTTP response body: JSON
 
-**失敗ケース**
+**Failure responses**
 
-- etcdに `/<prefix>/config` が存在しない(404 Not Found)
+- `/<prefix>/config` does not exist in etcd
+
+  HTTP status code: 404 Not Found
 
 ```console
 $ curl -XGET localhost:8888/api/v1/config
@@ -170,27 +175,31 @@ $ curl -XGET localhost:8888/api/v1/config
 
 ### `POST /api/v1/machines`
 
-機材エントリーの追加。`status`は`running`にセットされ、`index-in-rack`(ラック内でのノードのインデックス) および、ホストのIPアドレスとBMCのIPアドレスを自動で割り当てる。
-全ての機材の追加はatomicに行われ、一つでも機材の追加に失敗すると、全て失敗する。つまり全機材が登録されていないか、されている状態のみで、一部の機材が登録されるということはない。
+Register machines. Sabakan automatically set the `status` to `running,` and `index-in-rack` which is the index number of its machine in the rack and IP addresses. All of the machines in the requested JSON is an atomic operation to register. If Sabakan fails to register at least one machine, it all fails. In other words, the result will be registered all machines or not registered at all. There is no possibility that part of machines will be registered.
 
-リクエストのボディには、以下の機材情報のリストをJSON形式で指定する。
+In the HTTP request body, specify the following list of the machine information in JSON format.
 
 Field                        | Description
 -----                        | -----------
-`serial=<serial>`            | 機材のシリアル番号
-`datacenter=<datacenter>`    | 機材が置かれているデータセンター
-`rack=<rack>`                | 機材が置かれているラック番号(省略した場合は `0` が割り当てられる)
-`role=<role>`                | 機材のロール(`boot` or `worker`)
-`product=<product>`          | 機材の製品名(`R630` 等)
+`serial=<serial>`            | The serial number of the machine
+`datacenter=<datacenter>`    | The data center name where the machine is in
+`rack=<rack>`                | The rack number where the machine is in. If it is omitted, value set to `0`
+`role=<role>`                | The role of the machine(`boot` or `worker`)
+`product=<product>`          | The product name of the machine(e.g. `R630`)
 
-**成功時のレスポンス**
+**Successful response**
 
-- ステータスコード: 201 Created
+- HTTP status code: 201 Created
 
-**失敗ケース**
+**Failure responses**
 
-- 既に同じシリアルの機材が登録されている: 409 Conflict
-- 指定したラックにすでにブートサーバ用の機材が登録されている: 409 Conflict
+- The same serial number of the machine is already registered.
+
+  HTTP status code: 409 Conflict
+
+- The boot server in the specified `rack` is already registered.
+
+  HTTP status code: 409 Conflict
 
 ```console
 $ curl -i -X POST \
@@ -208,27 +217,30 @@ $ curl -i -X POST \
 
 ### `GET /api/v1/machines`
 
-機材エントリーの検索。以下のクエリパラメータを指定して、検索できる。
+Search registered machines. A user can specify the following URL queries.
 
 Query                      | Description
 -----                      | -----------
-`serial=<serial>`          | 機材のシリアル番号
-`datacenter=<datacenter>`  | 機材が置かれているデータセンター
-`rack=<rack>`              | 機材が置かれているラック番号
-`role=<role>`              | 機材のロール
-`index-in-rack=<rack>`     | ラック内の機材を一意に示すインデックス(物理的な場所とは無関係)
-`product=<product>`        | 機材の製品名(R630等)
-`ipv4=<ip address>`        | IPv4アドレス
-`ipv6=<ip address>`        | IPv6アドレス
+`serial=<serial>`          | The serial number of the machine
+`datacenter=<datacenter>`  | The data center name where the machine is in
+`rack=<rack>`              | The rack number where the machine is in
+`role=<role>`              | The role of the machine
+`index-in-rack=<rack>`     | The unique index number of the machine. It is not relevant with the physical location
+`product=<product>`        | The product name of the machine(e.g. `R630`)
+`ipv4=<ip address>`        | IPv4 address
+`ipv6=<ip address>`        | IPv6 address
 
-**成功時のレスポンス**
+**Successful response**
 
-- ステータスコード: 200 OK
-- ボディ: 機材情報の配列
+- HTTP status code: 200 OK
+- HTTP response header: `application/json`
+- HTTP response body: Machines of an array of the JSON
 
-**失敗ケース**
+**Failure responses**
 
-- 機材が1件も見つからなかった: 404 Not Found
+- No such machines found.
+
+  HTTP status code: 404 Not Found
 
 ```console
 $ curl -XGET 'localhost:8888/api/v1/machines?serial=1234abcd'
@@ -241,51 +253,57 @@ $ curl -XGET 'localhost:8888/api/v1/machines?ipv4=10.20.30.40'
 
 ### `DELETE /api/v1/machines/<serial>`
 
-機材エントリーの削除。
-`<serial>`で指定された機材を削除する。
+Delete registered machine of the `<serial>`.
 
-**成功時のレスポンス**
+**Successful response**
 
-- ステータスコード: 200 OK
+- HTTP status code: 200 OK
+- HTTP response header: `application/json`
+- HTTP response body: JSON
 
-**失敗ケース**
+**Failure responses**
 
-- 指定された`<serial>`の機材がなかった: 404 Not Found
+- No specified machine found.
+
+  HTTP status code: 404 Not Found
 
 ```console
 $ curl -i -X DELETE 'localhost:8888/api/v1/machines/1234abcd'
-(出力なし)
+(No output in stdout)
 ```
 
 ### `GET /api/v1/ignitions/<serial>`
 
-CoreOSのIgnition形式で取得
+Get CoreOS ignition.
 
 ```console
 $ curl -XGET localhost:8888/api/v1/ignitions/1234abcd
 ```
 !!! Caution
-    現在未実装
+    Not implemented.
 
 ### `PUT /api/v1/crypts/<serial>/<path>`
 
-暗号鍵を追加。リクエストボディは生バイナリの鍵データ。
+Register disk encryption key. The request body is raw binary format of the key.
 
-** 成功時のレスポンス **
+**Successful response**
 
-- ステータスコード: 201 Created
-- レスポンスボディ: `application/json`
+- HTTP status code: 201 Created
+- HTTP response header: `application/json`
+- HTTP response body: JSON
 
-    ```json
-    {"status": 201, "path": <path>}
-    ```
+```json
+{"status": 201, "path": <path>}
+```
 
-** 失敗ケース **
+**Failure responses**
 
-- etcd に `/<prefix>/crypts/<serial>/<path>` が既に存在する(409 Conflict)
+- `/<prefix>/crypts/<serial>/<path>` already exists.
+
+  HTTP status code: 409 Conflict
 
 ```console
-$ echo "バイナリ鍵データ" | curl -i -X PUT -d - \
+$ echo "binary key data" | curl -i -X PUT -d - \
    'http://localhost:8888/api/v1/crypts/1/aaaaa'
 HTTP/1.1 201 Created
 Content-Type: application/json
@@ -297,17 +315,19 @@ Content-Length: 31
 
 ### `GET /api/v1/crypts/<serial>/<path>`
 
-機材の特定のディスクの暗号鍵を取得
+Get an encryption key of the particular disk.
 
-**成功時のレスポンス**
+**Successful response**
 
-- ステータスコード: 200 OK
-- レスポンスボディ: `application/octet-stream` 生バイナリの鍵データ
+- HTTP status code: 200 OK
+- HTTP response header: `application/octet-stream`
+- HTTP response body: A raw key data
 
-**失敗ケース**
+**Failure responses**
 
-- etcdに `/<prefix>/crypts/<serial>/<path>` が存在しない(404 Not Found)
+- No specified `/<prefix>/crypts/<serial>/<path>` found in etcd.
 
+  HTTP status code: 404 Not Found
 
 ```console
 $ curl -i -X GET \
@@ -322,13 +342,13 @@ Content-Length: 64
 
 ### `DELETE /api/v1/crypts/<serial>`
 
-特定の機材の全てのディスクの暗号鍵の削除。
-機材の情報自体は削除しないので、後からシリアル番号から再び登録できる。
+Delete all disk encryption keys of the specified machine. This request does not delete `/api/v1/machines/<serial>`, User can re-register encryption keys using `<serial>`.
 
-**成功時のレスポンス**
+**Successful response**
 
-- ステータスコードは 200 OK
-- ボディは削除に成功した鍵の path の配列
+- HTTP status code: 200 OK
+- HTTP response header: `application/json`
+- HTTP response body: Array of the `<path>` which are deleted successfully.
 
 ```console
 $ curl -i -X DELETE \
