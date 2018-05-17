@@ -74,7 +74,7 @@ func (r *remoteConfigSetCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 	file, err := os.Open(r.file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return client.ExitError
+		return client.ExitFailure
 	}
 	defer file.Close()
 

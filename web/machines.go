@@ -26,34 +26,32 @@ func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var rmcs []sabakan.Machine
+	var machines []*sabakan.Machine
 
-	err := json.NewDecoder(r.Body).Decode(&rmcs)
+	err := json.NewDecoder(r.Body).Decode(&machines)
 	if err != nil {
 		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	}
 
-	machines := make([]*sabakan.Machine, len(rmcs))
 	// Validation
-	for i, mc := range rmcs {
-		if mc.Serial == "" {
+	for _, m := range machines {
+		if m.Serial == "" {
 			renderError(r.Context(), w, BadRequest("serial is empty"))
 			return
 		}
-		if mc.Product == "" {
+		if m.Product == "" {
 			renderError(r.Context(), w, BadRequest("product is empty"))
 			return
 		}
-		if mc.Datacenter == "" {
+		if m.Datacenter == "" {
 			renderError(r.Context(), w, BadRequest("datacenter is empty"))
 			return
 		}
-		if mc.Role == "" {
+		if m.Role == "" {
 			renderError(r.Context(), w, BadRequest("role is empty"))
 			return
 		}
-		machines[i] = &rmcs[i]
 	}
 
 	err = s.Model.Machine.Register(r.Context(), machines)

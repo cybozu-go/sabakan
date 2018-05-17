@@ -100,7 +100,7 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 	file, err := os.Open(r.file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return client.ExitError
+		return client.ExitFailure
 	}
 	defer file.Close()
 
@@ -133,7 +133,7 @@ func (r *machinesRemoveCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r *machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
-		return client.ExitBadUsage
+		return client.ExitUsageError
 	}
 
 	errorStatus := r.c.MachinesRemove(ctx, f.Args()[0])

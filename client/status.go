@@ -9,11 +9,11 @@ import (
 
 const (
 	// ExitSuccess represents no error.
-	ExitSuccess subcommands.ExitStatus = 0
-	// ExitError represents general error.
-	ExitError = 1
-	// ExitBadUsage represents bad usage of command.
-	ExitBadUsage = 2
+	ExitSuccess subcommands.ExitStatus = subcommands.ExitSuccess
+	// ExitFailure represents general error.
+	ExitFailure = subcommands.ExitFailure
+	// ExitUsageError represents bad usage of command.
+	ExitUsageError = subcommands.ExitUsageError
 	// ExitInvalidParams represents invalid input parameters for command.
 	ExitInvalidParams = 3
 	// ExitResponse4xx represents HTTP status 4xx.
@@ -49,26 +49,26 @@ func NewStatus(code subcommands.ExitStatus, err error) *Status {
 
 // ErrorStatus creates new Status with general error code and native error.
 func ErrorStatus(err error) *Status {
-	return NewStatus(ExitError, err)
+	return NewStatus(ExitFailure, err)
 }
 
 // ErrorHTTPStatus creates new Status from HTTP response.
 func ErrorHTTPStatus(res *http.Response) *Status {
 	err := fmt.Errorf("Server returned HTTP status %s", res.Status)
 
-	switch res.StatusCode / 100 {
-	case 2:
+	switch {
+	case 200 <= res.StatusCode && res.StatusCode < 300:
 		return nil
-	case 4:
+	case 400 <= res.StatusCode && res.StatusCode < 500:
 		switch res.StatusCode {
-		case 404:
+		case http.StatusNotFound:
 			return NewStatus(ExitNotFound, err)
-		case 409:
+		case http.StatusConflict:
 			return NewStatus(ExitConflicted, err)
 		default:
 			return NewStatus(ExitResponse4xx, err)
 		}
-	case 5:
+	case 500 <= res.StatusCode && res.StatusCode < 600:
 		return NewStatus(ExitResponse5xx, err)
 	default:
 		return ErrorStatus(err)

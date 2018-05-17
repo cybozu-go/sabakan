@@ -24,12 +24,7 @@ func init() {
 	circleci = os.Getenv("CIRCLECI") == "true"
 }
 
-func testMain(m *testing.M) int {
-	if circleci {
-		code := m.Run()
-		os.Exit(code)
-	}
-
+func testMain(m *testing.M) (int, error) {
 	stopEtcd := runEtcd()
 	defer func() {
 		stopEtcd()
@@ -37,28 +32,13 @@ func testMain(m *testing.M) int {
 
 	stopSabakan, err := runSabakan()
 	if err != nil {
-		// log.Fatal() uses os.Exit(), and it does not process defer.
-		stopEtcd()
-		log.Fatal(err)
+		return 0, err
 	}
 	defer func() {
 		stopSabakan()
 	}()
 
-	// wait for sabakan
-	for i := 0; i < 10; i++ {
-		_, _, err = runSabactl("remote-config", "get")
-		code := exitCode(err)
-		if code == client.ExitNotFound {
-			return m.Run()
-		}
-		time.Sleep(1 * time.Second)
-	}
-
-	stopEtcd()
-	stopSabakan()
-	log.Fatal(err)
-	panic("unreachable")
+	return m.Run(), nil
 }
 
 func runEtcd() func() {
@@ -88,7 +68,17 @@ func runEtcd() func() {
 }
 
 func TestMain(m *testing.M) {
-	os.Exit(testMain(m))
+	if circleci {
+		code := m.Run()
+		os.Exit(code)
+	}
+
+	status, err := testMain(m)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	os.Exit(status)
 }
 
 func runSabakan() (func(), error) {
@@ -107,10 +97,20 @@ func runSabakan() (func(), error) {
 		return nil, err
 	}
 
-	return func() {
-		command.Process.Kill()
-		command.Wait()
-	}, nil
+	// wait for startup
+	for i := 0; i < 10; i++ {
+		_, _, err = runSabactl("remote-config", "get")
+		code := exitCode(err)
+		if code == client.ExitNotFound {
+			return func() {
+				command.Process.Kill()
+				command.Wait()
+			}, nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil, err
 }
 
 func runSabactl(args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
