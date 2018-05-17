@@ -213,7 +213,7 @@ $ curl -XGET localhost:8888/api/v1/config
 }
 ```
 
-### `POST /api/v1/machines`
+### <a name="post-machines"></a> `POST /api/v1/machines`
 
 Register machines. Sabakan automatically set the `status` to `running,` and `index-in-rack` which is the index number of its machine in the rack and IP addresses. All of the machines in the requested JSON is an atomic operation to register. If Sabakan fails to register at least one machine, it all fails. In other words, the result will be registered all machines or not registered at all. There is no possibility that part of machines will be registered.
 
@@ -255,7 +255,7 @@ $ curl -i -X POST \
  'http://localhost:8888/api/v1/machines'
 ```
 
-### `GET /api/v1/machines`
+### <a name="get-machines"></a>`GET /api/v1/machines`
 
 Search registered machines. A user can specify the following URL queries.
 
@@ -333,7 +333,7 @@ Register disk encryption key. The request body is raw binary format of the key.
 - HTTP response body: JSON
 
 ```json
-{"status": 201, "path": <path>}
+{"status": 201, "path": "<path>"}
 ```
 
 **Failure responses**
@@ -401,7 +401,8 @@ Content-Length: 18
 ["abdef", "aaaaa"]
 ```
 
-## `sabactl`
+`sabactl`
+---------
 
 ### Usage
 
@@ -438,12 +439,12 @@ $ sabactl machines create -f <machine_informations.json>
 ```
 
 You can register multiple machines by giving a list of machine specs as shown below.
-Detailed specification of the input JSON file is same as that of the `POST /api/v1/machines` API.
+Detailed specification of the input JSON file is same as that of the [`POST /api/v1/machines` API](#post-machines).
 
 ```json
 [
-  { "serial": "<serial1>", "datacenter": "<datacenter1>", "rack": <rack1>, "product": "<product1>", "role": "<role1>" },
-  { "serial": "<serial2>", "datacenter": "<datacenter2>", "rack": <rack2>, "product": "<product2>", "role": "<role2>" }
+  { "serial": "<serial1>", "datacenter": "<datacenter1>", "rack": "<rack1>", "product": "<product1>", "role": "<role1>" },
+  { "serial": "<serial2>", "datacenter": "<datacenter2>", "rack": "<rack2>", "product": "<product2>", "role": "<role2>" }
 ]
 ```
 
@@ -455,7 +456,7 @@ Show machines filtered by query parameters.
 $ sabactl machines get [--serial <serial>] [--state <state>] [--datacenter <datacenter>] [--rack <rack>] [--product <product>] [--ipv4 <ip address>] [--ipv6 <ip address>]
 ```
 
-Detailed specification of the query parameters and the output JSON content is same as those of the `GET /api/v1/machines` API.
+Detailed specification of the query parameters and the output JSON content is same as those of the [`GET /api/v1/machines` API](#get-machines).
 
 !!! Note
     `--state <state>` will not be implemented until the policy of machines life-cycle management is fixed.
@@ -474,17 +475,24 @@ $ sabactl machines remove <serial>
     We can unregister machines only if their statuses are "to be repaired" or "to be discarded" or anythin like those.
     So the parameters of this command should be `--state <state>`.
 
-## etcd のスキーマ設計
+Data Schema in etcd
+-------------------
 
-以下のキー/バリューをetcdに作成する。
+Sabakan stores various types of data in etcd.
+Keys and values in etcd are described below.
+
+All keys are prefixed with a string specified in the sabakan command-line option.
+This prefix string is denoted as '<prefix>' in the following.
 
 ### `<prefix>/machines/<serial>`
 
+Name   | Description
+----   | -----------
+prefix | Common prefix
+serial | Serial number of a machine
 
-- prefix:   sabakan などの文字列
-- serial:   機材のシリアル番号
-
-各機材の情報。データはJSON。
+This type of key holds the information of a machine.
+The value is formatted in JSON.
 
 ```console
 $ etcdctl get /sabakan/machines/1234abcd --print-value-only | jq .
@@ -510,48 +518,54 @@ $ etcdctl get /sabakan/machines/1234abcd --print-value-only | jq .
     }
   },
   "bmc": {
-    "ipv4": [
-      "10.72.17.37"
-    ]
+    "ipv4": "10.72.17.37"
   }
 ```
 
 Key              | Description
 ---              | -----------
-`serial`         | 機材のシリアル番号
-`product`        | 機材の製品名(R630等)
-`datacenter`     | 機材が置かれているデータセンター
-`rack`           | 機材が置かれているラックの論理ラック番号(LRN)
-`index-in-rack`  | ラック内の機材を一意に示すインデックス(物理的な場所とは無関係)
-`network`        | NIC名がKeyでIPアドレスがvalueの辞書
-`bmc`            | BMC(iDRAC)のIPアドレス
+`serial`         | Serial number of the machine
+`product`        | Product name of the machine
+`datacenter`     | Data center name where the machine is in
+`rack`           | Logical rack number (LRN) where the machine is in
+`index-in-rack`  | Index number of the machine in a rack; this does not correspond to physical position
+`network`        | IP addresses of the machine indexed with NIC names and protocol names (IPv4/IPv6)
+`bmc`            | IP addresses of the machine's BMC indexed with protocol names (IPv4/IPv6)
 
 ### `<prefix>/crypts/<serial>/<path>`
 
 Name   | Description
 ----   | -----------
-prefix | sabakan などの文字列
-serial | 機材のシリアル番号
-path   | `/dev/disk/by-path` の下のファイル名
+prefix | Common prefix
+serial | Serial number of a machine
+path   | Name of an encrypted disk, in the format shown in `/dev/disk/by-path`
 
-機材の各ディスクの暗号鍵。
-データは生バイナリの鍵データ。
+This type of key holds the encryption key of a disk.
+The value is a raw binary key.
 
 ```console
 $ etcdctl get /sabakan/crypts/1234abcd/pci-0000:00:1f.2-ata-3 --print-value-only
-(バイナリ鍵)
+(This returns a binary key.)
 ```
 
 ### `<prefix>/ipam`
 
-IPAMの設定。JSON 形式の `sabakan.IPAMConfig`.
+Name   | Description
+----   | -----------
+prefix | Common prefix
+
+This type of key holds IPAM configurations.
+The value is [IPAMConfig](#IPAMConfig) formatted in JSON.
 
 ### `<prefix>/node-indices/<rack>`
 
-* rack: ラックの番号
+Name   | Description
+----   | -----------
+prefix | Common prefix
+rack   | Rack nubmer
 
-ラックごとのノード割り当て情報を登録する。
-割り当てたノードインデックスのリストを値とする。
+This type of key holds assignment of node indices per rack.
+The value is a list of assigned indices formatted in JSON.
 
 例:
 ```
