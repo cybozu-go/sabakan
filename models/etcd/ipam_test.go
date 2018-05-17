@@ -3,7 +3,6 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -30,8 +29,7 @@ func testIPAMPutConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := d.client.Get(context.Background(), t.Name()+KeyConfig)
-	fmt.Println(t.Name() + KeyConfig)
+	resp, err := d.client.Get(context.Background(), t.Name()+KeyIPAM)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +66,7 @@ func testIPAMGetConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.client.Put(context.Background(), t.Name()+KeyConfig, string(bytes))
+	_, err = d.client.Put(context.Background(), t.Name()+KeyIPAM, string(bytes))
 	if err != nil {
 		t.Fatal(err)
 	}

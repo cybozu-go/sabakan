@@ -17,7 +17,7 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 		return err
 	}
 
-	configKey := path.Join(d.prefix, KeyConfig)
+	configKey := path.Join(d.prefix, KeyIPAM)
 	machinesKey := path.Join(d.prefix, KeyMachines)
 
 	tresp, err := d.client.Txn(ctx).
@@ -37,7 +37,7 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 }
 
 func (d *driver) getIPAMConfig(ctx context.Context) (*sabakan.IPAMConfig, error) {
-	key := path.Join(d.prefix, KeyConfig)
+	key := path.Join(d.prefix, KeyIPAM)
 	resp, err := d.client.Get(ctx, key)
 	if err != nil {
 		return nil, err

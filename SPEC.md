@@ -542,35 +542,9 @@ $ etcdctl get /sabakan/crypts/1234abcd/pci-0000:00:1f.2-ata-3 --print-value-only
 (バイナリ鍵)
 ```
 
-### `<prefix>/config`
+### `<prefix>/ipam`
 
-IPAMの設定。
-
-Field                      | Description
-------                     | -----------
-`max-nodes-in-rack`        | ラック内のWorker Nodeの最大数。Boot Serverは含めない。
-`node-ipv4-offset`         | Nodeに割り当てるIPアドレス範囲。
-`node-rack-shift`          | `node-ipv4-offset`で指定した範囲を元にNode毎のIPアドレスを算出するための値。
-`node-index-offset`        | Nodeに割り当てるインデックスのオフセット。Role が `boot` の Node にはインデックスとして `node-index-offset` を割り当てる。その他の Node には `node-index-offset + 1` 以降の値を割り当てる。 [ネットワーク設計を参照](network_design.md#node-0)
-`bmc-ipv4-offset`          | BMC(Baseboard Management Controller)のIPアドレス範囲。NecoではiDRACのIPアドレスに使用する。
-`bmc-rack-shift`           | `bmc-ipv4-offset`で指定した範囲を元にBMC毎のIPアドレスを算出するための値。
-`node-ip-per-node`         | Node毎に割り当てるIPアドレスの数。BMCは含めない。
-`bmc-ip-per-node`          | BMC毎に割り当てるIPアドレスの数。
-
-
-```console
-$ etcdctl get /sabakan/config/ --print-value-only | jq .
-{
-  "max-nodes-in-rack": 28,
-  "node-ipv4-offset": "10.69.0.0/26",
-  "node-rack-shift": 6,
-  "node-index-offset": 3,
-  "node-ip-per-node": 3,
-  "bmc-ipv4-offset": "10.72.16.0/27",
-  "bmc-rack-shift": 5,
-  "bmc-ip-per-node": 1
-}
-```
+IPAMの設定。JSON 形式の `sabakan.IPAMConfig`.
 
 ### `<prefix>/node-indices/<rack>`
 
