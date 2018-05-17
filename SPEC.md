@@ -119,7 +119,7 @@ Field                  | Value
 `node-ipv4-range-mask` | 26
 `node-ip-per-node`     | 3
 `node-index-offset`    | 3
-`bmc-ipv4-pool`        | 10.72.17.0/20
+`bmc-ipv4-pool`        | 10.72.16.0/20
 `bmc-ipv4-range-size`  | 5
 `bmc-ipv4-range-mask`  | 20
 
@@ -171,19 +171,20 @@ Create or update IPAM configurations.  If one or more nodes have been registered
 $ curl -XPUT localhost:8888/api/v1/config -d '
 {
    "max-nodes-in-rack": 28,
-   "node-ipv4-offset": "10.69.0.0/26",
-   "node-rack-shift": 6,
-   "node-index-offset": 3,
-   "bmc-ipv4-offset": "10.72.17.0/27",
-   "bmc-rack-shift": 5,
+   "node-ipv4-pool": "10.69.0.0/16",
+   "node-ipv4-range-size": 6,
+   "node-ipv4-range-mask": 26,
    "node-ip-per-node": 3,
-   "bmc-ip-per-node": 1
+   "node-index-offset": 3,
+   "bmc-ipv4-pool": "10.72.16.0/20",
+   "bmc-ipv4-range-size": 5,
+   "bmc-ipv4-range-mask": 20
 }'
 ```
 
-### `GET /api/v1/config`
+### `GET /api/v1/config/ipam`
 
-Get sabakan configuration.
+Get IPAM configurations.
 
 **Successful response**
 
@@ -201,13 +202,14 @@ Get sabakan configuration.
 $ curl -XGET localhost:8888/api/v1/config
 {
    "max-nodes-in-rack": 28,
-   "node-ipv4-offset": "10.69.0.0/26",
-   "node-rack-shift": 6,
-   "node-index-offset": 3,
-   "bmc-ipv4-offset": "10.72.17.0/27",
-   "bmc-rack-shift": 5,
+   "node-ipv4-pool": "10.69.0.0/16",
+   "node-ipv4-range-size": 6,
+   "node-ipv4-range-mask": 26,
    "node-ip-per-node": 3,
-   "bmc-ip-per-node": 1
+   "node-index-offset": 3,
+   "bmc-ipv4-pool": "10.72.16.0/20",
+   "bmc-ipv4-range-size": 5,
+   "bmc-ipv4-range-mask": 20
 }
 ```
 
@@ -570,7 +572,7 @@ $ etcdctl get /sabakan/config/ --print-value-only | jq .
   "node-rack-shift": 6,
   "node-index-offset": 3,
   "node-ip-per-node": 3,
-  "bmc-ipv4-offset": "10.72.17.0/27",
+  "bmc-ipv4-offset": "10.72.16.0/27",
   "bmc-rack-shift": 5,
   "bmc-ip-per-node": 1
 }
