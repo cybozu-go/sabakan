@@ -38,5 +38,6 @@ func (n MachineNetwork) hasIPv6(ipv6 string) bool {
 
 // MachineBMC is a bmc interface struct for Machine
 type MachineBMC struct {
-	IPv4 []string `json:"ipv4"`
+	IPv4 string `json:"ipv4"`
+	IPv6 string `json:"ipv6"`
 }

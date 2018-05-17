@@ -11,13 +11,14 @@ import (
 // IPAMConfig is structure of the sabakan option
 type IPAMConfig struct {
 	MaxNodesInRack  uint   `json:"max-nodes-in-rack"`
-	NodeIPv4Offset  string `json:"node-ipv4-offset"`
-	NodeRackShift   uint   `json:"node-rack-shift"`
-	NodeIndexOffset uint   `json:"node-index-offset"`
+	NodeIPv4Pool    string `json:"node-ipv4-pool"`
+	NodeRangeSize   uint   `json:"node-ipv4-range-size"`
+	NodeRangeMask   uint   `json:"node-ipv4-range-mask"`
 	NodeIPPerNode   uint   `json:"node-ip-per-node"`
-	BMCIPv4Offset   string `json:"bmc-ipv4-offset"`
-	BMCRackShift    uint   `json:"bmc-rack-shift"`
-	BMCIPPerNode    uint   `json:"bmc-ip-per-node"`
+	NodeIndexOffset uint   `json:"node-index-offset"`
+	BMCIPv4Pool     string `json:"bmc-ipv4-pool"`
+	BMCRangeSize    uint   `json:"bmc-ipv4-range-size"`
+	BMCRangeMask    uint   `json:"bmc-ipv4-range-mask"`
 }
 
 // Validate validates configurations
@@ -26,38 +27,40 @@ func (c *IPAMConfig) Validate() error {
 		return errors.New("max-nodes-in-rack must not be zero")
 	}
 
-	ip, ipNet, err := net.ParseCIDR(c.NodeIPv4Offset)
+	ip, ipNet, err := net.ParseCIDR(c.NodeIPv4Pool)
 	if err != nil {
-		return errors.New("invalid node-ipv4-offset")
+		return errors.New("invalid node-ipv4-pool")
 	}
 	if !ip.Equal(ipNet.IP) {
-		return errors.New("host part of node-ipv4-offset must be 0s")
+		return errors.New("host part of node-ipv4-pool must be cleared")
 	}
-	if c.NodeRackShift == 0 {
-		return errors.New("node-rack-shift must not be zero")
+	if c.NodeRangeSize == 0 {
+		return errors.New("node-ipv4-range-size must not be zero")
 	}
-
-	ip, ipNet, err = net.ParseCIDR(c.BMCIPv4Offset)
-	if err != nil {
-		return errors.New("invalid bmc-ipv4-offset")
+	if c.NodeRangeMask < 8 || 32 < c.NodeRangeMask {
+		return errors.New("invalid node-ipv4-range-mask")
 	}
-	if !ip.Equal(ipNet.IP) {
-		return errors.New("host part of bmc-ipv4-offset must be 0s")
+	if c.NodeIPPerNode == 0 {
+		return errors.New("node-ip-per-node must not be zero")
 	}
-	if c.BMCRackShift == 0 {
-		return errors.New("bmc-rack-shift must not be zero")
-	}
-
 	if c.NodeIndexOffset == 0 {
 		return errors.New("node-index-offset must not be zero")
 	}
 
-	if c.NodeIPPerNode == 0 {
-		return errors.New("node-ip-per-node must not be zero")
+	ip, ipNet, err = net.ParseCIDR(c.BMCIPv4Pool)
+	if err != nil {
+		return errors.New("invalid bmc-ipv4-pool")
 	}
-	if c.BMCIPPerNode == 0 {
-		return errors.New("bmc-ip-per-node must not be zero")
+	if !ip.Equal(ipNet.IP) {
+		return errors.New("host part of bmc-ipv4-pool must be cleared")
 	}
+	if c.BMCRangeSize == 0 {
+		return errors.New("bmc-ipv4-range-size must not be zero")
+	}
+	if c.BMCRangeMask < 8 || 32 < c.BMCRangeMask {
+		return errors.New("invalid bmc-ipv4-range-mask")
+	}
+
 	return nil
 }
 
@@ -65,10 +68,10 @@ func (c *IPAMConfig) Validate() error {
 // Generated IP addresses are stored in mc.
 func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	// IP addresses are calculated as following (LRN=Logical Rack Number):
-	// node0: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * LRN) + index-in-rack)
-	// node1: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRackShift)
-	// node2: INET_NTOA(INET_ATON(NodeIPv4Offset) + (2^NodeRackShift * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRackShift * 2)
-	// BMC: INET_NTOA(INET_ATON(BMCIPv4Offset) + (2^BMCRackShift * BMCIPPerNode * LRN) + index-in-rack)
+	// node0: INET_NTOA(INET_ATON(NodeIPv4Pool) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack)
+	// node1: INET_NTOA(INET_ATON(NodeIPv4Pool) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRangeSize)
+	// node2: INET_NTOA(INET_ATON(NodeIPv4Pool) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRangeSize * 2)
+	// BMC: INET_NTOA(INET_ATON(BMCIPv4Pool) + (2^BMCRangeSize * LRN) + index-in-rack)
 
 	calc := func(cidr string, shift, numip, lrn, idx uint) []net.IP {
 		result := make([]net.IP, numip)
@@ -83,7 +86,7 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 		return result
 	}
 
-	ips := calc(c.NodeIPv4Offset, c.NodeRackShift, c.NodeIPPerNode, mc.Rack, mc.IndexInRack)
+	ips := calc(c.NodeIPv4Pool, c.NodeRangeSize, c.NodeIPPerNode, mc.Rack, mc.IndexInRack)
 	res := map[string]MachineNetwork{}
 	for i := 0; i < int(c.NodeIPPerNode); i++ {
 		name := fmt.Sprintf("node%d", i)
@@ -93,8 +96,6 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	}
 	mc.Network = res
 
-	bmcIPs := calc(c.BMCIPv4Offset, c.BMCRackShift, c.BMCIPPerNode, mc.Rack, mc.IndexInRack)
-	for _, ip := range bmcIPs {
-		mc.BMC.IPv4 = append(mc.BMC.IPv4, ip.String())
-	}
+	bmcIPs := calc(c.BMCIPv4Pool, c.BMCRangeSize, 1, mc.Rack, mc.IndexInRack)
+	mc.BMC.IPv4 = bmcIPs[0].String()
 }

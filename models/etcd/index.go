@@ -82,8 +82,11 @@ func (mi *machinesIndex) addNoLock(m *sabakan.Machine) {
 			mi.IPv6[v] = m.Serial
 		}
 	}
-	for _, v := range m.BMC.IPv4 {
-		mi.IPv4[v] = m.Serial
+	if len(m.BMC.IPv4) > 0 {
+		mi.IPv4[m.BMC.IPv4] = m.Serial
+	}
+	if len(m.BMC.IPv6) > 0 {
+		mi.IPv6[m.BMC.IPv6] = m.Serial
 	}
 }
 
@@ -114,15 +117,14 @@ func (mi *machinesIndex) deleteNoLock(m *sabakan.Machine) {
 	mi.Role[m.Role] = append(mi.Role[m.Role][:i], mi.Role[m.Role][i+1:]...)
 	for _, ifn := range m.Network {
 		for _, v := range ifn.IPv4 {
-			mi.IPv4[v] = ""
+			delete(mi.IPv4, v)
 		}
 		for _, v := range ifn.IPv6 {
-			mi.IPv4[v] = ""
+			delete(mi.IPv6, v)
 		}
 	}
-	for _, v := range m.BMC.IPv4 {
-		mi.IPv4[v] = ""
-	}
+	delete(mi.IPv4, m.BMC.IPv4)
+	delete(mi.IPv6, m.BMC.IPv6)
 }
 
 // UpdateIndex updates target machine on the index
