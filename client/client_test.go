@@ -19,13 +19,14 @@ func TestRemoteConfigGet(t *testing.T) {
 	var method, path string
 	conf := &sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
-		NodeIPv4Offset:  "10.69.0.0/26",
-		NodeRackShift:   6,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
-		BMCIPv4Offset:   "10.72.17.0/27",
-		BMCRackShift:    5,
 		NodeIPPerNode:   3,
-		BMCIPPerNode:    1,
+		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
 	}
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method
@@ -52,13 +53,14 @@ func TestRemoteConfigPut(t *testing.T) {
 	var record sabakan.IPAMConfig
 	conf := sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
-		NodeIPv4Offset:  "10.69.0.0/26",
-		NodeRackShift:   6,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
-		BMCIPv4Offset:   "10.72.17.0/27",
-		BMCRackShift:    5,
 		NodeIPPerNode:   3,
-		BMCIPPerNode:    1,
+		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
 	}
 	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		method = r.Method

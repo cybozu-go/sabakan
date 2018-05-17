@@ -21,13 +21,14 @@ func testConfigGet(t *testing.T) {
 
 	config := &sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
-		NodeIPv4Offset:  "10.69.0.0/26",
-		NodeRackShift:   6,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
-		BMCIPv4Offset:   "10.72.17.0/27",
-		BMCRackShift:    5,
 		NodeIPPerNode:   3,
-		BMCIPPerNode:    1,
+		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
 	}
 
 	err := m.Config.PutConfig(context.Background(), config)
@@ -64,13 +65,14 @@ func testConfigPut(t *testing.T) {
 	good := `
 {
    "max-nodes-in-rack": 28,
-   "node-ipv4-offset": "10.69.0.0/26",
-   "node-rack-shift": 6,
+   "node-ipv4-pool": "10.69.0.0/20",
+   "node-ipv4-range-size": 6,
+   "node-ipv4-range-mask": 26,
    "node-index-offset": 3,
-   "bmc-ipv4-offset": "10.72.17.0/27",
-   "bmc-rack-shift": 5,
    "node-ip-per-node": 3,
-   "bmc-ip-per-node": 1
+   "bmc-ipv4-pool": "10.72.16.0/20",
+   "bmc-ipv4-range-size": 5,
+   "bmc-ipv4-range-mask": 20
 }
 `
 
@@ -98,13 +100,14 @@ func testConfigPut(t *testing.T) {
 	}
 	expected := &sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
-		NodeIPv4Offset:  "10.69.0.0/26",
-		NodeRackShift:   6,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
-		BMCIPv4Offset:   "10.72.17.0/27",
-		BMCRackShift:    5,
 		NodeIPPerNode:   3,
-		BMCIPPerNode:    1,
+		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
 	}
 	if !reflect.DeepEqual(conf, expected) {
 		t.Errorf("mismatch: %#v", conf)

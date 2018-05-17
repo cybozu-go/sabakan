@@ -1,7 +1,6 @@
 package sabakan
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -11,7 +10,7 @@ func testGenerateIP(t *testing.T) {
 	cases := []struct {
 		machine       *Machine
 		nodeAddresses map[string]string
-		bmcAddresses  []string
+		bmcAddress    string
 	}{
 		{
 			&Machine{
@@ -24,9 +23,7 @@ func testGenerateIP(t *testing.T) {
 				"node1": "10.69.1.3",
 				"node2": "10.69.1.67",
 			},
-			[]string{
-				"10.72.17.35",
-			},
+			"10.72.17.35",
 		},
 		{
 			&Machine{
@@ -39,20 +36,19 @@ func testGenerateIP(t *testing.T) {
 				"node1": "10.69.0.69",
 				"node2": "10.69.0.133",
 			},
-			[]string{
-				"10.72.17.5",
-			},
+			"10.72.17.5",
 		},
 	}
 	config := IPAMConfig{
 		MaxNodesInRack:  28,
-		NodeIPv4Offset:  "10.69.0.0/26",
-		NodeRackShift:   6,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
-		BMCIPv4Offset:   "10.72.17.0/27",
-		BMCRackShift:    5,
 		NodeIPPerNode:   3,
-		BMCIPPerNode:    1,
+		BMCIPv4Pool:     "10.72.17.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
 	}
 
 	for _, c := range cases {
@@ -66,7 +62,7 @@ func testGenerateIP(t *testing.T) {
 				t.Error("wrong IP Address: ", c.machine.Network[k].IPv4[0])
 			}
 		}
-		if !reflect.DeepEqual(c.machine.BMC.IPv4, c.bmcAddresses) {
+		if c.machine.BMC.IPv4 != c.bmcAddress {
 			t.Errorf("wrong IP Address: %v", c.machine.BMC.IPv4)
 		}
 	}

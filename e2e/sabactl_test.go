@@ -51,13 +51,14 @@ func runSabactlWithFile(t *testing.T, data interface{}, args ...string) (*bytes.
 func testSabactlRemoteConfig(t *testing.T) {
 	var conf = sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
-		NodeIPv4Offset:  "10.69.0.0/26",
-		NodeRackShift:   6,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
-		BMCIPv4Offset:   "10.72.17.0/27",
-		BMCRackShift:    5,
 		NodeIPPerNode:   3,
-		BMCIPPerNode:    1,
+		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
 	}
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "remote-config", "set")
 	code := exitCode(err)
@@ -85,13 +86,15 @@ func testSabactlRemoteConfig(t *testing.T) {
 	}
 
 	var badConf = sabakan.IPAMConfig{
-		NodeIPv4Offset:  "10.69.0.0/26",
-		NodeRackShift:   6,
+		MaxNodesInRack:  0,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
-		BMCIPv4Offset:   "10.72.17.0/27",
-		BMCRackShift:    5,
 		NodeIPPerNode:   3,
-		BMCIPPerNode:    1,
+		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
 	}
 	stdout, stderr, err = runSabactlWithFile(t, &badConf, "remote-config", "set")
 	code = exitCode(err)
@@ -105,13 +108,14 @@ func testSabactlRemoteConfig(t *testing.T) {
 func testSabactlMachines(t *testing.T) {
 	var conf = sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
-		NodeIPv4Offset:  "10.69.0.0/26",
-		NodeRackShift:   6,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
-		BMCIPv4Offset:   "10.72.17.0/27",
-		BMCRackShift:    5,
 		NodeIPPerNode:   3,
-		BMCIPPerNode:    1,
+		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
 	}
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "remote-config", "set")
 	code := exitCode(err)
