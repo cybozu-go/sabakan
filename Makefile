@@ -8,7 +8,7 @@ $(BUILT_TARGET): $(GO_FILES)
 	go build ./cmd/$@
 
 e2e: $(BUILT_TARGET)
-	go test -v -count=1 ./e2e
+	RUN_E2E=1 go test -v -count=1 ./e2e
 
 clean:
 	rm -f $(BUILT_TARGET)

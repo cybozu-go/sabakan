@@ -413,27 +413,21 @@ Option     | Default value           | Description
 ------     | -------------           | -----------
 `--server` | `http://localhost:8888` | URL of sabakan
 
-### `sabactl remote-config set`
+### `sabactl ipam set`
 
-Set/update the sabakan configurations.
-
-```console
-$ sabactl remote-config set -f <sabakan_configurations.json>
-```
-
-!!! Note
-    This will be refined for multiple types of configurations.
-
-### `sabactl remote-config get`
-
-Get the sabakan configurations.
+Set/update IPAM configurations.
 
 ```console
-$ sabactl remote-config get
+$ sabactl ipam set -f <sabakan_configurations.json>
 ```
 
-!!! Note
-    This will be refined for multiple types of configurations.
+### `sabactl ipam get`
+
+Get IPAM configurations.
+
+```console
+$ sabactl iapm get
+```
 
 ### `sabactl machines create`
 

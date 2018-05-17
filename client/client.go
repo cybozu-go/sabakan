@@ -25,19 +25,19 @@ func NewClient(endpoint string, http *cmd.HTTPClient) *Client {
 	}
 }
 
-// RemoteConfigGet gets a remote config
-func (c *Client) RemoteConfigGet(ctx context.Context) (*sabakan.IPAMConfig, *Status) {
+// IPAMConfigGet retrieves IPAM configurations
+func (c *Client) IPAMConfigGet(ctx context.Context) (*sabakan.IPAMConfig, *Status) {
 	var conf sabakan.IPAMConfig
-	err := c.getJSON(ctx, "/config", nil, &conf)
+	err := c.getJSON(ctx, "/config/ipam", nil, &conf)
 	if err != nil {
 		return nil, err
 	}
 	return &conf, nil
 }
 
-// RemoteConfigSet sets a remote config
-func (c *Client) RemoteConfigSet(ctx context.Context, conf *sabakan.IPAMConfig) *Status {
-	return c.sendRequestWithJSON(ctx, "PUT", "/config", conf)
+// IPAMConfigSet sets a remote config
+func (c *Client) IPAMConfigSet(ctx context.Context, conf *sabakan.IPAMConfig) *Status {
+	return c.sendRequestWithJSON(ctx, "PUT", "/config/ipam", conf)
 }
 
 // MachinesGet get machine information from sabakan server

@@ -72,6 +72,10 @@ func TestMain(m *testing.M) {
 		os.Exit(code)
 	}
 
+	if len(os.Getenv("RUN_E2E")) == 0 {
+		os.Exit(0)
+	}
+
 	status, err := testMain(m)
 	if err != nil {
 		log.Fatal(err)
