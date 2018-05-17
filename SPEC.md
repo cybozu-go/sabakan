@@ -555,7 +555,7 @@ Name   | Description
 prefix | Common prefix
 
 This type of key holds IPAM configurations.
-The value is [IPAMConfig](#IPAMConfig) formatted in JSON.
+The value is [IPAMConfig](#ipamconfig) formatted in JSON.
 
 ### `<prefix>/node-indices/<rack>`
 
