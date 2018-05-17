@@ -13,7 +13,7 @@ import (
 	"github.com/cybozu-go/sabakan/models/mock"
 )
 
-func testConfigGet(t *testing.T) {
+func testConfigIPAMGet(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
@@ -31,13 +31,13 @@ func testConfigGet(t *testing.T) {
 		BMCRangeMask:    20,
 	}
 
-	err := m.Config.PutConfig(context.Background(), config)
+	err := m.IPAM.PutConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("GET", "/api/v1/config", nil)
+	r := httptest.NewRequest("GET", "/api/v1/config/ipam", nil)
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -55,7 +55,7 @@ func testConfigGet(t *testing.T) {
 	}
 }
 
-func testConfigPut(t *testing.T) {
+func testConfigIPAMPut(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
@@ -77,7 +77,7 @@ func testConfigPut(t *testing.T) {
 `
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("PUT", "/api/v1/config", strings.NewReader(bad))
+	r := httptest.NewRequest("PUT", "/api/v1/config/ipam", strings.NewReader(bad))
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -85,7 +85,7 @@ func testConfigPut(t *testing.T) {
 		t.Error("resp.StatusCode == http.StatusBadRequest")
 	}
 
-	r = httptest.NewRequest("PUT", "/api/v1/config", strings.NewReader(good))
+	r = httptest.NewRequest("PUT", "/api/v1/config/ipam", strings.NewReader(good))
 	w = httptest.NewRecorder()
 	handler.ServeHTTP(w, r)
 
@@ -94,7 +94,7 @@ func testConfigPut(t *testing.T) {
 		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
 	}
 
-	conf, err := m.Config.GetConfig(context.Background())
+	conf, err := m.IPAM.GetConfig(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func testConfigPut(t *testing.T) {
 		t.Errorf("mismatch: %#v", conf)
 	}
 
-	r = httptest.NewRequest("PUT", "/api/v1/config", strings.NewReader(good))
+	r = httptest.NewRequest("PUT", "/api/v1/config/ipam", strings.NewReader(good))
 	w = httptest.NewRecorder()
 	handler.ServeHTTP(w, r)
 
@@ -130,7 +130,7 @@ func testConfigPut(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r = httptest.NewRequest("PUT", "/api/v1/config", strings.NewReader(good))
+	r = httptest.NewRequest("PUT", "/api/v1/config/ipam", strings.NewReader(good))
 	w = httptest.NewRecorder()
 	handler.ServeHTTP(w, r)
 
@@ -140,7 +140,7 @@ func testConfigPut(t *testing.T) {
 	}
 }
 
-func TestConfig(t *testing.T) {
-	t.Run("Get", testConfigGet)
-	t.Run("Put", testConfigPut)
+func TestConfigIPAM(t *testing.T) {
+	t.Run("Get", testConfigIPAMGet)
+	t.Run("Put", testConfigIPAMPut)
 }

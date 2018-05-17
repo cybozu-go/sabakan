@@ -5,22 +5,28 @@ import (
 	"context"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/cybozu-go/sabakan"
 )
 
-// Driver implements sabakan model.
-type Driver struct {
+type driver struct {
 	client  *clientv3.Client
 	watcher *clientv3.Client
 	prefix  string
 	mi      *machinesIndex
 }
 
-// NewDriver returns an object that implements all interfaces required for sabakan.Model.
-func NewDriver(client, watcher *clientv3.Client, prefix string) *Driver {
-	return &Driver{client, watcher, prefix, newMachinesIndex()}
+// NewModel returns sabakan.Model
+func NewModel(client, watcher *clientv3.Client, prefix string) sabakan.Model {
+	d := &driver{client, watcher, prefix, newMachinesIndex()}
+	return sabakan.Model{
+		Runner:  d,
+		Storage: d,
+		Machine: d,
+		IPAM:    ipamDriver{d},
+	}
 }
 
 // Run starts etcd watcher.  This should be called as a goroutine.
-func (d *Driver) Run(ctx context.Context) error {
+func (d *driver) Run(ctx context.Context) error {
 	return d.startWatching(ctx)
 }

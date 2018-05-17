@@ -22,10 +22,10 @@ var defaultTestConfig = sabakan.IPAMConfig{
 	BMCRangeMask:    20,
 }
 
-func testPutConfig(t *testing.T) {
+func testIPAMPutConfig(t *testing.T) {
 	d := testNewDriver(t)
 	config := &defaultTestConfig
-	err := d.PutConfig(context.Background(), config)
+	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,13 +53,13 @@ func testPutConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = d.PutConfig(context.Background(), config)
+	err = d.putIPAMConfig(context.Background(), config)
 	if err == nil {
 		t.Error("should be failed, because some machine is already registered")
 	}
 }
 
-func testGetConfig(t *testing.T) {
+func testIPAMGetConfig(t *testing.T) {
 	d := testNewDriver(t)
 
 	config := &defaultTestConfig
@@ -73,7 +73,7 @@ func testGetConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	actual, err := d.GetConfig(context.Background())
+	actual, err := d.getIPAMConfig(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func testGetConfig(t *testing.T) {
 	}
 }
 
-func TestConfig(t *testing.T) {
-	t.Run("Put", testPutConfig)
-	t.Run("Get", testGetConfig)
+func TestIPAM(t *testing.T) {
+	t.Run("Put", testIPAMPutConfig)
+	t.Run("Get", testIPAMGetConfig)
 }

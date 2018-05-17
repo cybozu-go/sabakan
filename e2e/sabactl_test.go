@@ -178,6 +178,10 @@ func testSabactlMachines(t *testing.T) {
 }
 
 func TestSabactl(t *testing.T) {
+	_, err := os.Stat("../sabactl")
+	if err != nil {
+		t.Skip("sabactl executable not found")
+	}
 	t.Run("sabactl remote-config", testSabactlRemoteConfig)
 	t.Run("sabactl machines", testSabactlMachines)
 }

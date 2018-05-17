@@ -13,15 +13,15 @@ import (
 )
 
 // Register implements sabakan.MachineModel
-func (d *Driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
+func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
 	wmcs := make([]*sabakan.Machine, len(machines))
 
-	cfg, err := d.GetConfig(ctx)
+	cfg, err := d.getIPAMConfig(ctx)
 	if err != nil {
 		return err
 	}
 	if cfg == nil {
-		return errors.New("configuration not found")
+		return errors.New("IPAM configuration not found")
 	}
 
 RETRY:
@@ -83,7 +83,7 @@ RETRY:
 }
 
 // Query implements sabakan.MachineModel
-func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
+func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
 	if len(q.Serial) > 0 {
 		serials = []string{q.Serial}
@@ -122,7 +122,7 @@ func (d *Driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 }
 
 // Delete implements sabakan.MachineModel
-func (d *Driver) Delete(ctx context.Context, serial string) error {
+func (d *driver) Delete(ctx context.Context, serial string) error {
 	machines, err := d.Query(ctx, sabakan.QueryBySerial(serial))
 	if err != nil {
 		return err

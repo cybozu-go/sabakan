@@ -135,7 +135,7 @@ func (mi *machinesIndex) UpdateIndex(prevM *sabakan.Machine, newM *sabakan.Machi
 	mi.mux.Unlock()
 }
 
-func (d *Driver) startWatching(ctx context.Context) error {
+func (d *driver) startWatching(ctx context.Context) error {
 	err := d.mi.init(ctx, d.watcher, d.prefix)
 	if err != nil {
 		return err
