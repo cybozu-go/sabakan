@@ -15,10 +15,10 @@ Option     | Default value           | Description
 `sabactl ipam set`
 ------------------
 
-Set/update IPAM configurations.
+Set/update IPAM configurations.  See [IPAMConfig](ipam.md#ipamconfig) for JSON fields.
 
 ```console
-$ sabactl ipam set -f <sabakan_configurations.json>
+$ sabactl ipam set -f <ipam_configurations.json>
 ```
 
 `sabactl ipam get`
@@ -27,7 +27,25 @@ $ sabactl ipam set -f <sabakan_configurations.json>
 Get IPAM configurations.
 
 ```console
-$ sabactl iapm get
+$ sabactl ipam get
+```
+
+`sabactl dhcp set`
+------------------
+
+Set/update DHCP configurations.  See [DHCPConfig](dhcp.md#dhcpconfig) for JSON fields.
+
+```console
+$ sabactl dhcp set -f <dhcp_configurations.json>
+```
+
+`sabactl dhcp get`
+------------------
+
+Get DHCP configurations.
+
+```console
+$ sabactl dhcp get
 ```
 
 `sabactl machines create`

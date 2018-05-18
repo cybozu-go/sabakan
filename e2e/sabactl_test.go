@@ -48,6 +48,45 @@ func runSabactlWithFile(t *testing.T, data interface{}, args ...string) (*bytes.
 	return runSabactl(args...)
 }
 
+func testSabactlDHCP(t *testing.T) {
+	var conf = sabakan.DHCPConfig{
+		GatewayOffset: 100,
+	}
+	stdout, stderr, err := runSabactlWithFile(t, &conf, "dhcp", "set")
+	code := exitCode(err)
+	if code != client.ExitSuccess {
+		t.Error("stdout:", stdout.String())
+		t.Error("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
+	stdout, stderr, err = runSabactl("dhcp", "get")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Error("stdout:", stdout.String())
+		t.Error("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
+	var got sabakan.DHCPConfig
+	err = json.Unmarshal(stdout.Bytes(), &got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(conf, got) {
+		t.Error("unexpected config", got)
+	}
+
+	var badConf = sabakan.DHCPConfig{}
+	stdout, stderr, err = runSabactlWithFile(t, &badConf, "dhcp", "set")
+	code = exitCode(err)
+	if code != client.ExitResponse4xx {
+		t.Error("stdout:", stdout.String())
+		t.Error("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+}
+
 func testSabactlIPAM(t *testing.T) {
 	var conf = sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
@@ -182,6 +221,7 @@ func TestSabactl(t *testing.T) {
 	if err != nil {
 		t.Skip("sabactl executable not found")
 	}
+	t.Run("DHCP", testSabactlDHCP)
 	t.Run("IPAM", testSabactlIPAM)
 	t.Run("Machines", testSabactlMachines)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/cybozu-go/netutil"
 )
 
-// IPAMConfig is structure of the sabakan option
+// IPAMConfig is a set of IPAM configurations.
 type IPAMConfig struct {
 	MaxNodesInRack  uint   `json:"max-nodes-in-rack"`
 	NodeIPv4Pool    string `json:"node-ipv4-pool"`

@@ -14,14 +14,14 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 	if len(d.machines) > 0 {
 		return errors.New("machines already exist")
 	}
-	d.config = *config
+	d.ipam = *config
 	return nil
 }
 
 func (d *driver) getIPAMConfig(ctx context.Context) (*sabakan.IPAMConfig, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	copied := d.config
+	copied := d.ipam
 	return &copied, nil
 }
 

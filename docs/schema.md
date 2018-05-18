@@ -12,7 +12,6 @@ This prefix string is denoted as `<prefix>` in the following.
 
 Name   | Description
 ----   | -----------
-prefix | Common prefix
 serial | Serial number of a machine
 
 This type of key holds the information of a machine.
@@ -61,7 +60,6 @@ Key              | Description
 
 Name   | Description
 ----   | -----------
-prefix | Common prefix
 serial | Serial number of a machine
 path   | Name of an encrypted disk, in the format shown in `/dev/disk/by-path`
 
@@ -76,19 +74,20 @@ $ etcdctl get /sabakan/crypts/1234abcd/pci-0000:00:1f.2-ata-3 --print-value-only
 `<prefix>/ipam`
 ---------------
 
-Name   | Description
-----   | -----------
-prefix | Common prefix
-
 This type of key holds IPAM configurations.
 The value is [IPAMConfig](ipam.md#ipamconfig) formatted in JSON.
+
+`<prefix>/dhcp`
+---------------
+
+This type of key holds DHCP configurations.
+The value is [DHCPConfig](dhcp.md#dhcpconfig) formatted in JSON.
 
 `<prefix>/node-indices/<rack>`
 ------------------------------
 
 Name   | Description
 ----   | -----------
-prefix | Common prefix
 rack   | Rack nubmer
 
 This type of key holds assignment of node indices per rack.
