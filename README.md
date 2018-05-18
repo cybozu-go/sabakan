@@ -60,32 +60,6 @@ This repository contains two programs:
 
 To see their usage, run them with `-h` option.
 
-Getting started
----------------
-
-### Prepare etcd
-
-Sabakan requires [etcd][].  Install and run it at somewhere.
-
-### Install sabakan and sabactl
-
-Install `sabakan` and `sabactl`:
-
-```console
-$ go get -u github.com/cybozu-go/sabakan/cmd/sabakan
-$ go get -u github.com/cybozu-go/sabakan/cmd/sabactl
-```
-
-### Run sabakan
-
-**ToDo**
-
-### Configure sabakan
-
-Use `sabactl` to configure `sabakan`.
-
-**ToDo**
-
 ### Debugging with a DHCP client
 
 `make debug` launch a DHCP client note for the debugging:
@@ -100,10 +74,10 @@ It launch etcd on rkt, create a bridge, and launch VM by QEMU.  Use `make connec
 $ make connect
 ```
 
-Specification
+Documentation
 -------------
 
-See [SPEC](SPEC.md).
+[docs](docs/) directory contains tutorials and specifications.
 
 License
 -------
