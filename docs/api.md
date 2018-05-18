@@ -11,9 +11,7 @@ REST API
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
 
-<a name="putipam" />
-`PUT /api/v1/config/ipam`
--------------------------
+## <a name="putipam" />`PUT /api/v1/config/ipam`
 
 Create or update IPAM configurations.  If one or more nodes have been registered in sabakan, IPAM configurations cannot be updated.
 
@@ -42,9 +40,7 @@ $ curl -XPUT localhost:8888/api/v1/config -d '
 }'
 ```
 
-<a name="getipam" />
-`GET /api/v1/config/ipam`
--------------------------
+## <a name="getipam" />`GET /api/v1/config/ipam`
 
 Get IPAM configurations.
 
@@ -75,9 +71,7 @@ $ curl -XGET localhost:8888/api/v1/config
 }
 ```
 
-<a name="postmachines" />
-`POST /api/v1/machines`
------------------------
+## <a name="postmachines" />`POST /api/v1/machines`
 
 Register machines. Sabakan automatically set the `status` to `running,` and `index-in-rack` which is the index number of its machine in the rack and IP addresses. All of the machines in the requested JSON is an atomic operation to register. If Sabakan fails to register at least one machine, it all fails. In other words, the result will be registered all machines or not registered at all. There is no possibility that part of machines will be registered.
 
@@ -119,9 +113,7 @@ $ curl -i -X POST \
  'http://localhost:8888/api/v1/machines'
 ```
 
-<a name="getmachines" />
-`GET /api/v1/machines`
-----------------------
+## <a name="getmachines" />`GET /api/v1/machines`
 
 Search registered machines. A user can specify the following URL queries.
 
@@ -157,9 +149,7 @@ $ curl -XGET 'localhost:8888/api/v1/machines?ipv4=10.20.30.40'
 [{"serial":"20000000","product":"R630","datacenter":"us","rack":1,"index-in-rack":1,"role":"boot","network":{"node0":{"ipv4":["10.69.0.197"],"ipv6":null},"node1":{"ipv4":["10.20.30.40"],"ipv6":null},"node2":{"ipv4":["10.69.1.69"],"ipv6":null}},"bmc":{"ipv4":["10.72.17.37"]}}]
 ```
 
-<a name="deletemachines" />
-`DELETE /api/v1/machines/<serial>`
-----------------------------------
+## <a name="deletemachines" />`DELETE /api/v1/machines/<serial>`
 
 Delete registered machine of the `<serial>`.
 
@@ -180,9 +170,7 @@ $ curl -i -X DELETE 'localhost:8888/api/v1/machines/1234abcd'
 (No output in stdout)
 ```
 
-<a name="getignitions" />
-`GET /api/v1/ignitions/<serial>`
---------------------------------
+## <a name="getignitions" />`GET /api/v1/ignitions/<serial>`
 
 Get CoreOS ignition.
 
@@ -192,9 +180,7 @@ $ curl -XGET localhost:8888/api/v1/ignitions/1234abcd
 !!! Caution
     Not implemented.
 
-<a name="putcrypts" />
-`PUT /api/v1/crypts/<serial>/<path>`
-------------------------------------
+## <a name="putcrypts" />`PUT /api/v1/crypts/<serial>/<path>`
 
 Register disk encryption key. The request body is raw binary format of the key.
 
@@ -225,9 +211,7 @@ Content-Length: 31
 {"status": 201, "path":"aaaaa"}
 ```
 
-<a name="getcrypts" />
-`GET /api/v1/crypts/<serial>/<path>`
-------------------------------------
+## <a name="getcrypts" />`GET /api/v1/crypts/<serial>/<path>`
 
 Get an encryption key of the particular disk.
 
@@ -254,9 +238,7 @@ Content-Length: 64
 .....
 ```
 
-<a name="deletecrypts" />
-`DELETE /api/v1/crypts/<serial>`
---------------------------------
+## <a name="deletecrypts" />`DELETE /api/v1/crypts/<serial>`
 
 Delete all disk encryption keys of the specified machine. This request does not delete `/api/v1/machines/<serial>`, User can re-register encryption keys using `<serial>`.
 
