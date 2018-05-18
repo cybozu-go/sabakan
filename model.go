@@ -34,6 +34,12 @@ type IPAMModel interface {
 	GetConfig(ctx context.Context) (*IPAMConfig, error)
 }
 
+// DHCPModel is an interface for DHCPConfig.
+type DHCPModel interface {
+	PutConfig(ctx context.Context, config *DHCPConfig) error
+	GetConfig(ctx context.Context) (*DHCPConfig, error)
+}
+
 // Runner is an interface to run the underlying threads.
 type Runner interface {
 	Run(ctx context.Context) error
@@ -45,6 +51,7 @@ type Model struct {
 	Storage StorageModel
 	Machine MachineModel
 	IPAM    IPAMModel
+	DHCP    DHCPModel
 }
 
 // Leaser is an interface to lease IP addresses

@@ -5,10 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"path"
 
 	"github.com/cybozu-go/cmd"
-	"github.com/cybozu-go/sabakan"
 )
 
 // Client is a sabakan client
@@ -23,41 +21,6 @@ func NewClient(endpoint string, http *cmd.HTTPClient) *Client {
 		endpoint: endpoint,
 		http:     http,
 	}
-}
-
-// IPAMConfigGet retrieves IPAM configurations
-func (c *Client) IPAMConfigGet(ctx context.Context) (*sabakan.IPAMConfig, *Status) {
-	var conf sabakan.IPAMConfig
-	err := c.getJSON(ctx, "/config/ipam", nil, &conf)
-	if err != nil {
-		return nil, err
-	}
-	return &conf, nil
-}
-
-// IPAMConfigSet sets a remote config
-func (c *Client) IPAMConfigSet(ctx context.Context, conf *sabakan.IPAMConfig) *Status {
-	return c.sendRequestWithJSON(ctx, "PUT", "/config/ipam", conf)
-}
-
-// MachinesGet get machine information from sabakan server
-func (c *Client) MachinesGet(ctx context.Context, params map[string]string) ([]sabakan.Machine, *Status) {
-	var machines []sabakan.Machine
-	err := c.getJSON(ctx, "/machines", params, &machines)
-	if err != nil {
-		return nil, err
-	}
-	return machines, nil
-}
-
-// MachinesCreate create machines information to sabakan server
-func (c *Client) MachinesCreate(ctx context.Context, machines []sabakan.Machine) *Status {
-	return c.sendRequestWithJSON(ctx, "POST", "/machines", machines)
-}
-
-// MachinesRemove removes machine information from sabakan server
-func (c *Client) MachinesRemove(ctx context.Context, serial string) *Status {
-	return c.sendRequest(ctx, "DELETE", path.Join("/machines", serial))
 }
 
 func (c *Client) getJSON(ctx context.Context, path string, params map[string]string, data interface{}) *Status {

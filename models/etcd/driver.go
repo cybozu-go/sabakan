@@ -23,6 +23,7 @@ func NewModel(client, watcher *clientv3.Client, prefix string) sabakan.Model {
 		Storage: d,
 		Machine: d,
 		IPAM:    ipamDriver{d},
+		DHCP:    dhcpDriver{d},
 	}
 }
 

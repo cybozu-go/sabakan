@@ -82,7 +82,7 @@ func testConfigIPAMPut(t *testing.T) {
 
 	resp := w.Result()
 	if resp.StatusCode != http.StatusBadRequest {
-		t.Error("resp.StatusCode == http.StatusBadRequest")
+		t.Error("resp.StatusCode != http.StatusBadRequest")
 	}
 
 	r = httptest.NewRequest("PUT", "/api/v1/config/ipam", strings.NewReader(good))

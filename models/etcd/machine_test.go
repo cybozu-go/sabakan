@@ -12,7 +12,7 @@ import (
 
 func testRegister(t *testing.T) {
 	d := testNewDriver(t)
-	config := &defaultTestConfig
+	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
@@ -47,11 +47,11 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(saved.Network) != int(defaultTestConfig.NodeIPPerNode) {
+	if len(saved.Network) != int(testIPAMConfig.NodeIPPerNode) {
 		t.Errorf("unexpected assigned IP addresses: %v", len(saved.Network))
 	}
-	if saved.IndexInRack != defaultTestConfig.NodeIndexOffset+2 {
-		t.Errorf("node index of 2nd worker should be %v but %v", defaultTestConfig.NodeIndexOffset+2, saved.IndexInRack)
+	if saved.IndexInRack != testIPAMConfig.NodeIndexOffset+2 {
+		t.Errorf("node index of 2nd worker should be %v but %v", testIPAMConfig.NodeIndexOffset+2, saved.IndexInRack)
 	}
 
 	err = d.Register(context.Background(), machines)
@@ -86,8 +86,8 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if saved.IndexInRack != defaultTestConfig.NodeIndexOffset {
-		t.Errorf("node index of boot server should be %v but %v", defaultTestConfig.NodeIndexOffset, saved.IndexInRack)
+	if saved.IndexInRack != testIPAMConfig.NodeIndexOffset {
+		t.Errorf("node index of boot server should be %v but %v", testIPAMConfig.NodeIndexOffset, saved.IndexInRack)
 	}
 
 	err = d.Register(context.Background(), bootServer2)
@@ -101,7 +101,7 @@ func testQuery(t *testing.T) {
 	cmd.Go(d.Run)
 	time.Sleep(1 * time.Millisecond)
 
-	config := &defaultTestConfig
+	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
@@ -145,7 +145,7 @@ func testQuery(t *testing.T) {
 
 func testDelete(t *testing.T) {
 	d := testNewDriver(t)
-	config := &defaultTestConfig
+	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)

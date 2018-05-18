@@ -9,7 +9,7 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
-var defaultTestConfig = sabakan.IPAMConfig{
+var testIPAMConfig = sabakan.IPAMConfig{
 	MaxNodesInRack:  28,
 	NodeIPv4Pool:    "10.69.0.0/20",
 	NodeRangeSize:   6,
@@ -23,7 +23,7 @@ var defaultTestConfig = sabakan.IPAMConfig{
 
 func testIPAMPutConfig(t *testing.T) {
 	d := testNewDriver(t)
-	config := &defaultTestConfig
+	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
@@ -60,7 +60,7 @@ func testIPAMPutConfig(t *testing.T) {
 func testIPAMGetConfig(t *testing.T) {
 	d := testNewDriver(t)
 
-	config := &defaultTestConfig
+	config := &testIPAMConfig
 
 	bytes, err := json.Marshal(config)
 	if err != nil {

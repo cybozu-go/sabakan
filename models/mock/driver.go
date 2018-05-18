@@ -13,7 +13,8 @@ type driver struct {
 	mu       sync.Mutex
 	storage  map[string][]byte
 	machines map[string]*sabakan.Machine
-	config   sabakan.IPAMConfig
+	ipam     sabakan.IPAMConfig
+	dhcp     sabakan.DHCPConfig
 }
 
 // NewModel returns sabakan.Model
@@ -27,6 +28,7 @@ func NewModel() sabakan.Model {
 		Storage: d,
 		Machine: d,
 		IPAM:    ipamDriver{d},
+		DHCP:    dhcpDriver{d},
 	}
 }
 

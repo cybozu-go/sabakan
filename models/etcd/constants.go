@@ -3,7 +3,8 @@ package etcd
 // Internal schema keys.
 const (
 	KeyCrypts      = "/crypts"
-	KeyMachines    = "/machines"
+	KeyDHCP        = "/dhcp"
 	KeyIPAM        = "/ipam"
+	KeyMachines    = "/machines"
 	KeyNodeIndices = "/node-indices"
 )
