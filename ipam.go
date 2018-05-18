@@ -99,3 +99,40 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	bmcIPs := calc(c.BMCIPv4Pool, c.BMCRangeSize, 1, mc.Rack, mc.IndexInRack)
 	mc.BMC.IPv4 = bmcIPs[0].String()
 }
+
+// LeaseRange is a range of IP addresses for DHCP lease.
+type LeaseRange struct {
+	BeginAddress net.IP
+	Count        int
+}
+
+// LeaseRange returns a LeaseRange for the interface that receives DHCP requests.
+// If no range can be assigned, this returns nil.
+func (c *IPAMConfig) LeaseRange(ifaddr net.IP) *LeaseRange {
+	ip1, _, _ := net.ParseCIDR(c.NodeIPv4Pool)
+	nip1 := netutil.IP4ToInt(ip1)
+	nip2 := netutil.IP4ToInt(ifaddr)
+	if nip2 <= nip1 {
+		return nil
+	}
+
+	// Given these configurations,
+	//   MaxNodesInRack  = 28
+	//   NodeRangeSize   = 6
+	//   NodeIndexOffset = 3
+	//
+	// The lease range will start at offset 32, and ends at 62 (64 - 1 - 1).
+	// Therefore the available lease IP address count is 31.
+
+	rangeSize := uint32(1 << c.NodeRangeSize)
+	offset := uint32(c.NodeIndexOffset + c.MaxNodesInRack + 1)
+
+	ranges := (nip2 - nip1) / rangeSize
+	rangeStart := nip1 + rangeSize*ranges + uint32(c.NodeIndexOffset+c.MaxNodesInRack+1)
+	startIP := netutil.IntToIP4(rangeStart)
+	count := (rangeSize - 2) - offset + 1
+	return &LeaseRange{
+		BeginAddress: startIP,
+		Count:        int(count),
+	}
+}

@@ -17,6 +17,7 @@ It is given as JSON object with the following fields:
 Field            | Required | Type   | Description
 ---------------- | -------- | ------ | -----------
 `gateway-offset` | Yes      | int    | The default gateway address offset.  See below.
+`lease-minutes`  | No       | int    | Lease period in minutes.  Default is 60.
 
 ### `gateway-offset`
 
