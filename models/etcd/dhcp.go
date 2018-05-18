@@ -3,6 +3,7 @@ package etcd
 import (
 	"context"
 	"encoding/json"
+	"net"
 	"path"
 
 	"github.com/cybozu-go/sabakan"
@@ -37,6 +38,21 @@ func (d *driver) getDHCPConfig(ctx context.Context) (*sabakan.DHCPConfig, error)
 	return &config, nil
 }
 
+func (d *driver) dhcpLease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error) {
+	// TODO
+	return ifaddr, nil
+}
+
+func (d *driver) dhcpRenew(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	// TODO
+	return nil
+}
+
+func (d *driver) dhcpRelease(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	// TODO
+	return nil
+}
+
 type dhcpDriver struct {
 	*driver
 }
@@ -47,4 +63,16 @@ func (d dhcpDriver) PutConfig(ctx context.Context, config *sabakan.DHCPConfig) e
 
 func (d dhcpDriver) GetConfig(ctx context.Context) (*sabakan.DHCPConfig, error) {
 	return d.getDHCPConfig(ctx)
+}
+
+func (d dhcpDriver) Lease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error) {
+	return d.dhcpLease(ctx, ifaddr, mac)
+}
+
+func (d dhcpDriver) Renew(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	return d.dhcpRenew(ctx, ciaddr, mac)
+}
+
+func (d dhcpDriver) Release(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	return d.dhcpRelease(ctx, ciaddr, mac)
 }

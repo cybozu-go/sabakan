@@ -104,6 +104,21 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 type LeaseRange struct {
 	BeginAddress net.IP
 	Count        int
+	key          string
+}
+
+// IP returns n-th IP address in the range.
+func (l *LeaseRange) IP(n int) net.IP {
+	naddr := netutil.IP4ToInt(l.BeginAddress) + uint32(n)
+	return netutil.IntToIP4(naddr)
+}
+
+// Key return key string.
+func (l *LeaseRange) Key() string {
+	if len(l.key) == 0 {
+		l.key = l.BeginAddress.String()
+	}
+	return l.key
 }
 
 // LeaseRange returns a LeaseRange for the interface that receives DHCP requests.

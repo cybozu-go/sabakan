@@ -91,6 +91,12 @@ func testLeaseRange(t *testing.T) {
 	if r.Count != 31 {
 		t.Error(`r.Count != 31:`, r.Count)
 	}
+	if r.IP(3).String() != "10.69.10.35" {
+		t.Error(`r.IP(3).String() != "10.69.10.35"`, r.IP(3).String())
+	}
+	if r.Key() != "10.69.10.32" {
+		t.Error(`r.Key() != "10.69.10.32:"`, r.Key())
+	}
 }
 
 func TestIPAM(t *testing.T) {
