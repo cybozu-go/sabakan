@@ -3,6 +3,8 @@ REST API
 
 * [PUT /api/v1/config/ipam](#putipam)
 * [GET /api/v1/config/ipam](#getipam)
+* [PUT /api/v1/config/dhcp](#putdhcp)
+* [GET /api/v1/config/dhcp](#getdhcp)
 * [POST /api/v1/machines](#postmachines)
 * [GET /api/v1/machines](#getmachines)
 * [DELETE /api/v1/machines](#deletemachines)
@@ -26,7 +28,7 @@ Create or update IPAM configurations.  If one or more nodes have been registered
   HTTP status code: 500 Internal Server Error
 
 ```console
-$ curl -XPUT localhost:8888/api/v1/config -d '
+$ curl -XPUT localhost:8888/api/v1/config/ipam -d '
 {
    "max-nodes-in-rack": 28,
    "node-ipv4-pool": "10.69.0.0/16",
@@ -52,12 +54,12 @@ Get IPAM configurations.
 
 **Failure responses**
 
-- `/<prefix>/config` does not exist in etcd
+- IPAM configurations have not been created
 
   HTTP status code: 404 Not Found
 
 ```console
-$ curl -XGET localhost:8888/api/v1/config
+$ curl -XGET localhost:8888/api/v1/config/ipam
 {
    "max-nodes-in-rack": 28,
    "node-ipv4-pool": "10.69.0.0/16",
@@ -68,6 +70,48 @@ $ curl -XGET localhost:8888/api/v1/config
    "bmc-ipv4-pool": "10.72.16.0/20",
    "bmc-ipv4-range-size": 5,
    "bmc-ipv4-range-mask": 20
+}
+```
+
+## <a name="putdhcp" />`PUT /api/v1/config/dhcp`
+
+Create or update DHCP configurations.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- HTTP status codes other than 200.
+
+```console
+$ curl -XPUT localhost:8888/api/v1/config/dhcp -d '
+{
+    "gateway-offset": 1
+}'
+```
+
+## <a name="getdhcp" />`GET /api/v1/config/dhcp`
+
+Get DHCP configurations.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `application/json`
+- HTTP response body: JSON
+
+**Failure responses**
+
+- DHCP configuration have not been craeted
+
+  HTTP status code: 404 Not Found
+
+```console
+$ curl -XGET localhost:8888/api/v1/config/dhcp
+{
+    "gateway-offset": 254
 }
 ```
 
