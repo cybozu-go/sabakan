@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -68,7 +69,12 @@ func main() {
 	defer c2.Close()
 
 	model := etcd.NewModel(c, c2, e.Prefix)
-	cmd.Go(model.Run)
+	ch := make(chan struct{})
+	cmd.Go(func(ctx context.Context) error {
+		return model.Run(ctx, ch)
+	})
+	// waiting the driver gets ready
+	<-ch
 
 	leaser := mock.NewLeaser(dhcp4Begin, dhcp4End)
 	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, leaser)

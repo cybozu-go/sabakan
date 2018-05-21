@@ -1,6 +1,7 @@
 package etcd
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -68,7 +69,7 @@ func newEtcdClient() (*clientv3.Client, error) {
 	})
 }
 
-func testNewDriver(t *testing.T) *driver {
+func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 	client, err := newEtcdClient()
 	if err != nil {
 		t.Fatal(err)
@@ -77,5 +78,14 @@ func testNewDriver(t *testing.T) *driver {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &driver{client, watcher, t.Name(), newMachinesIndex()}
+	d := &driver{
+		client:  client,
+		watcher: watcher,
+		prefix:  t.Name(),
+		mi:      newMachinesIndex(),
+	}
+	ch := make(chan struct{}, 1)
+	go d.startWatching(context.Background(), ch)
+	<-ch
+	return d, ch
 }

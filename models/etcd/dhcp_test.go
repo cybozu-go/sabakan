@@ -17,12 +17,13 @@ var testDHCPConfig = sabakan.DHCPConfig{
 }
 
 func testDHCPPutConfig(t *testing.T) {
-	d := testNewDriver(t)
+	d, ch := testNewDriver(t)
 	config := &testDHCPConfig
 	err := d.putDHCPConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
 	resp, err := d.client.Get(context.Background(), t.Name()+KeyDHCP)
 	if err != nil {
@@ -44,7 +45,7 @@ func testDHCPPutConfig(t *testing.T) {
 }
 
 func testDHCPGetConfig(t *testing.T) {
-	d := testNewDriver(t)
+	d, ch := testNewDriver(t)
 
 	config := &testDHCPConfig
 
@@ -56,17 +57,19 @@ func testDHCPGetConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
-	actual, err := d.getDHCPConfig(context.Background())
+	actual, err := d.getDHCPConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !reflect.DeepEqual(config, actual) {
 		t.Errorf("unexpected loaded config %#v", actual)
 	}
 }
 
-func testSetupConfig(t *testing.T, d *driver) {
+func testSetupConfig(t *testing.T, d *driver, ch <-chan struct{}) {
 	ipam := &testIPAMConfig
 	config := &testDHCPConfig
 
@@ -74,17 +77,19 @@ func testSetupConfig(t *testing.T, d *driver) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
 	err = d.putDHCPConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 }
 
 func testDHCPLease(t *testing.T) {
-	d := testNewDriver(t)
+	d, ch := testNewDriver(t)
 
-	testSetupConfig(t, d)
+	testSetupConfig(t, d, ch)
 
 	interfaceip := net.ParseIP("10.69.0.195")
 	mac := net.HardwareAddr([]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66})
@@ -142,9 +147,9 @@ func testDHCPLease(t *testing.T) {
 }
 
 func testDHCPRenew(t *testing.T) {
-	d := testNewDriver(t)
+	d, ch := testNewDriver(t)
 
-	testSetupConfig(t, d)
+	testSetupConfig(t, d, ch)
 
 	leasedip := net.ParseIP("10.69.0.224")
 	mac := net.HardwareAddr([]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66})
@@ -166,9 +171,9 @@ func testDHCPRenew(t *testing.T) {
 }
 
 func testDHCPRelease(t *testing.T) {
-	d := testNewDriver(t)
+	d, ch := testNewDriver(t)
 
-	testSetupConfig(t, d)
+	testSetupConfig(t, d, ch)
 
 	interfaceip := net.ParseIP("10.69.0.195")
 	mac := net.HardwareAddr([]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66})

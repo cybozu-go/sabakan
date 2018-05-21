@@ -94,7 +94,7 @@ func testConfigIPAMPut(t *testing.T) {
 		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
 	}
 
-	conf, err := m.IPAM.GetConfig(context.Background())
+	conf, err := m.IPAM.GetConfig()
 	if err != nil {
 		t.Fatal(err)
 	}

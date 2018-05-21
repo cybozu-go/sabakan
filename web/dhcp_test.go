@@ -84,7 +84,7 @@ func testConfigDHCPPut(t *testing.T) {
 		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
 	}
 
-	conf, err := m.DHCP.GetConfig(context.Background())
+	conf, err := m.DHCP.GetConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func testConfigDHCPPut(t *testing.T) {
 		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
 	}
 
-	conf, err = m.DHCP.GetConfig(context.Background())
+	conf, err = m.DHCP.GetConfig()
 	if err != nil {
 		t.Fatal(err)
 	}

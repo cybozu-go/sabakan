@@ -31,21 +31,29 @@ type MachineModel interface {
 // IPAMModel is an interface for IPAMConfig.
 type IPAMModel interface {
 	PutConfig(ctx context.Context, config *IPAMConfig) error
-	GetConfig(ctx context.Context) (*IPAMConfig, error)
+	GetConfig() (*IPAMConfig, error)
 }
 
 // DHCPModel is an interface for DHCPConfig.
 type DHCPModel interface {
 	PutConfig(ctx context.Context, config *DHCPConfig) error
-	GetConfig(ctx context.Context) (*DHCPConfig, error)
+	GetConfig() (*DHCPConfig, error)
 	Lease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error)
 	Renew(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error
 	Release(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error
 }
 
 // Runner is an interface to run the underlying threads.
+//
+// The caller must pass a channel as follows.
+// Receiving a value from the channel effectively guarantees that
+// the driver gets ready.
+//
+//    ch := make(chan struct{})
+//    cmd.Go(driver.Run, ch)
+//    <-ch
 type Runner interface {
-	Run(ctx context.Context) error
+	Run(ctx context.Context, ch chan<- struct{}) error
 }
 
 // Model is a struct that consists of sub-models.

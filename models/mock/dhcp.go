@@ -62,14 +62,18 @@ func newLeaseUsage(lr *sabakan.LeaseRange) *leaseUsage {
 func (d *driver) putDHCPConfig(ctx context.Context, config *sabakan.DHCPConfig) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	d.dhcp = *config
+	copied := *config
+	d.dhcp = &copied
 	return nil
 }
 
-func (d *driver) getDHCPConfig(ctx context.Context) (*sabakan.DHCPConfig, error) {
+func (d *driver) getDHCPConfig() (*sabakan.DHCPConfig, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	copied := d.dhcp
+	if d.dhcp == nil {
+		return nil, errors.New("DHCPConfig is not set")
+	}
+	copied := *d.dhcp
 	return &copied, nil
 }
 
@@ -77,7 +81,7 @@ func (d *driver) dhcpLease(ctx context.Context, ifaddr net.IP, mac net.HardwareA
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	ipam, err := d.getIPAMConfig(ctx)
+	ipam, err := d.getIPAMConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +105,7 @@ func (d *driver) dhcpRenew(ctx context.Context, ciaddr net.IP, mac net.HardwareA
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	ipam, err := d.getIPAMConfig(ctx)
+	ipam, err := d.getIPAMConfig()
 	if err != nil {
 		return err
 	}
@@ -123,7 +127,7 @@ func (d *driver) dhcpRelease(ctx context.Context, ciaddr net.IP, mac net.Hardwar
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	ipam, err := d.getIPAMConfig(ctx)
+	ipam, err := d.getIPAMConfig()
 	if err != nil {
 		return err
 	}
@@ -149,8 +153,8 @@ func (d dhcpDriver) PutConfig(ctx context.Context, config *sabakan.DHCPConfig) e
 	return d.putDHCPConfig(ctx, config)
 }
 
-func (d dhcpDriver) GetConfig(ctx context.Context) (*sabakan.DHCPConfig, error) {
-	return d.getDHCPConfig(ctx)
+func (d dhcpDriver) GetConfig() (*sabakan.DHCPConfig, error) {
+	return d.getDHCPConfig()
 }
 
 func (d dhcpDriver) Lease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error) {

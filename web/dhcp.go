@@ -22,12 +22,8 @@ func (s Server) handleConfigDHCP(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) handleConfigDHCPGet(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	config, err := s.Model.DHCP.GetConfig(ctx)
+	config, err := s.Model.DHCP.GetConfig()
 	if err != nil {
-		renderError(ctx, w, InternalServerError(err))
-		return
-	}
-	if config == nil {
 		renderError(ctx, w, APIErrNotFound)
 		return
 	}
