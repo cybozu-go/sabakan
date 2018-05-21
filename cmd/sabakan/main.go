@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -46,7 +47,7 @@ func main() {
 
 	var e etcdConfig
 	e.Servers = strings.Split(*flagEtcdServers, ",")
-	e.Prefix = "/" + *flagEtcdPrefix
+	e.Prefix = path.Clean("/" + *flagEtcdPrefix)
 
 	timeout, err := time.ParseDuration(*flagEtcdTimeout)
 	if err != nil {
