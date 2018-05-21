@@ -38,6 +38,9 @@ type IPAMModel interface {
 type DHCPModel interface {
 	PutConfig(ctx context.Context, config *DHCPConfig) error
 	GetConfig(ctx context.Context) (*DHCPConfig, error)
+	Lease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error)
+	Renew(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error
+	Release(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error
 }
 
 // Runner is an interface to run the underlying threads.

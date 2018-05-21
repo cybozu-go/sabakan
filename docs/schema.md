@@ -83,12 +83,24 @@ The value is [IPAMConfig](ipam.md#ipamconfig) formatted in JSON.
 This type of key holds DHCP configurations.
 The value is [DHCPConfig](dhcp.md#dhcpconfig) formatted in JSON.
 
+`<prefix>/lease-usages/<ip>`
+------------------------------
+
+Name | Description
+---- | -----------
+ip   | The first IP address of the lease range.
+
+These keys hold lease address usages for a range of IP addresses.
+The value is a mapping between hardware address and (`index`, `expire`)
+pair where `index` is the index of the leased IP address in the range
+and `expire` is the Go's `time.Time` when the lease expires.
+
 `<prefix>/node-indices/<rack>`
 ------------------------------
 
-Name   | Description
-----   | -----------
-rack   | Rack nubmer
+Name | Description
+---- | -----------
+rack | Rack nubmer
 
 This type of key holds assignment of node indices per rack.
 The value is a list of assigned indices formatted in JSON.
