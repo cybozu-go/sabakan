@@ -59,6 +59,12 @@ func testConfigDHCPPut(t *testing.T) {
    "gateway-offset": 100
 }
 `
+	good2 := `
+{
+   "gateway-offset": 100,
+   "lease-minutes": 30
+}
+`
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PUT", "/api/v1/config/dhcp", strings.NewReader(bad))
@@ -96,6 +102,27 @@ func testConfigDHCPPut(t *testing.T) {
 	resp = w.Result()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
+	}
+
+	r = httptest.NewRequest("PUT", "/api/v1/config/dhcp", strings.NewReader(good2))
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
+	}
+
+	conf, err = m.DHCP.GetConfig(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected = &sabakan.DHCPConfig{
+		GatewayOffset: 100,
+		LeaseMinutes:  30,
+	}
+	if !reflect.DeepEqual(conf, expected) {
+		t.Errorf("mismatch: %#v", conf)
 	}
 }
 

@@ -3,13 +3,18 @@ package sabakan
 import (
 	"errors"
 	"net"
+	"time"
 
 	"github.com/cybozu-go/netutil"
 )
 
+// DefaultLeaseDuration is 60 minutes.
+const DefaultLeaseDuration = 60 * time.Minute
+
 // DHCPConfig is a set of DHCP configurations.
 type DHCPConfig struct {
 	GatewayOffset uint `json:"gateway-offset"`
+	LeaseMinutes  uint `json:"lease-minutes"`
 }
 
 // GatewayAddress returns a gateway address for the given node address
@@ -20,6 +25,14 @@ func (c *DHCPConfig) GatewayAddress(addr *net.IPNet) *net.IPNet {
 		IP:   netutil.IntToIP4(a),
 		Mask: addr.Mask,
 	}
+}
+
+// LeaseDuration returns lease duration for IP addreses.
+func (c *DHCPConfig) LeaseDuration() time.Duration {
+	if c.LeaseMinutes == 0 {
+		return DefaultLeaseDuration
+	}
+	return time.Duration(c.LeaseMinutes) * time.Minute
 }
 
 // Validate validates configurations
