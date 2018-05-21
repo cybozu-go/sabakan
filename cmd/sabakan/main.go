@@ -63,13 +63,8 @@ func main() {
 		log.ErrorExit(err)
 	}
 	defer c.Close()
-	c2, err := clientv3.New(cfg)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-	defer c2.Close()
 
-	model := etcd.NewModel(c, c2, e.Prefix)
+	model := etcd.NewModel(c, e.Prefix)
 	ch := make(chan struct{})
 	cmd.Go(func(ctx context.Context) error {
 		return model.Run(ctx, ch)

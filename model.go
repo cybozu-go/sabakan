@@ -50,7 +50,9 @@ type DHCPModel interface {
 // the driver gets ready.
 //
 //    ch := make(chan struct{})
-//    cmd.Go(driver.Run, ch)
+//    cmd.Go(func(ctx context.Context) error {
+//        driver.Run(ctx, ch)
+//    })
 //    <-ch
 type Runner interface {
 	Run(ctx context.Context, ch chan<- struct{}) error

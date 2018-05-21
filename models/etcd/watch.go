@@ -12,7 +12,7 @@ import (
 
 func (d *driver) initIPAMConfig(ctx context.Context) error {
 	ipamKey := path.Join(d.prefix, KeyIPAM)
-	resp, err := d.watcher.Get(ctx, ipamKey)
+	resp, err := d.client.Get(ctx, ipamKey)
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (d *driver) initIPAMConfig(ctx context.Context) error {
 
 func (d *driver) initDHCPConfig(ctx context.Context) error {
 	dhcpKey := path.Join(d.prefix, KeyDHCP)
-	resp, err := d.watcher.Get(ctx, dhcpKey)
+	resp, err := d.client.Get(ctx, dhcpKey)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (d *driver) initDHCPConfig(ctx context.Context) error {
 
 func (d *driver) startWatching(ctx context.Context, ch chan<- struct{}) error {
 	// obtain the current revision to avoid missing events.
-	resp, err := d.watcher.Get(ctx, "/")
+	resp, err := d.client.Get(ctx, "/")
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (d *driver) startWatching(ctx context.Context, ch chan<- struct{}) error {
 		return err
 	}
 
-	err = d.mi.init(ctx, d.watcher, d.prefix)
+	err = d.mi.init(ctx, d.client, d.prefix)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,11 @@ func (d *driver) startWatching(ctx context.Context, ch chan<- struct{}) error {
 	// notify the caller of the readiness
 	ch <- struct{}{}
 
-	rch := d.watcher.Watch(ctx, d.prefix, clientv3.WithPrefix(), clientv3.WithPrevKV(), clientv3.WithRev(rev))
+	rch := d.client.Watch(ctx, d.prefix,
+		clientv3.WithPrefix(),
+		clientv3.WithPrevKV(),
+		clientv3.WithRev(rev),
+	)
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			var err error

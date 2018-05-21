@@ -74,15 +74,10 @@ func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	watcher, err := newEtcdClient()
-	if err != nil {
-		t.Fatal(err)
-	}
 	d := &driver{
-		client:  client,
-		watcher: watcher,
-		prefix:  t.Name(),
-		mi:      newMachinesIndex(),
+		client: client,
+		prefix: t.Name(),
+		mi:     newMachinesIndex(),
 	}
 	ch := make(chan struct{}, 1)
 	go d.startWatching(context.Background(), ch)
