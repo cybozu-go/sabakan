@@ -46,6 +46,8 @@ $ curl -XPUT localhost:8888/api/v1/config/ipam -d '
 
 Get IPAM configurations.
 
+The body must be JSON representation of [IPAMConfig](ipam.md#ipamconfig).
+
 **Successful response**
 
 - HTTP status code: 200 OK
@@ -76,6 +78,8 @@ $ curl -XGET localhost:8888/api/v1/config/ipam
 ## <a name="putdhcp" />`PUT /api/v1/config/dhcp`
 
 Create or update DHCP configurations.
+
+The body must be JSON representation of [DHCPConfig](dhcp.md#dhcpconfig).
 
 **Successful response**
 

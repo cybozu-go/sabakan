@@ -10,7 +10,7 @@ import (
 
 type leaseUsage struct {
 	leaseRange *sabakan.LeaseRange
-	macMap     map[string]int // MAC address to index-in-rage
+	macMap     map[string]int // MAC address to index-in-range
 	usageMap   map[int]bool
 }
 
@@ -39,17 +39,16 @@ func (l *leaseUsage) renew(mac net.HardwareAddr) error {
 	return nil
 }
 
-func (l *leaseUsage) release(mac net.HardwareAddr) error {
+func (l *leaseUsage) release(mac net.HardwareAddr) {
 	key := mac.String()
 
 	idx, ok := l.macMap[key]
 	if !ok {
-		return nil
+		return
 	}
 
 	delete(l.macMap, key)
 	delete(l.usageMap, idx)
-	return nil
 }
 
 func newLeaseUsage(lr *sabakan.LeaseRange) *leaseUsage {
@@ -136,10 +135,10 @@ func (d *driver) dhcpRelease(ctx context.Context, ciaddr net.IP, mac net.Hardwar
 
 	key := lr.Key()
 	lu := d.leases[key]
-	if lu == nil {
-		return nil
+	if lu != nil {
+		lu.release(mac)
 	}
-	return lu.release(mac)
+	return nil
 }
 
 type dhcpDriver struct {
