@@ -34,7 +34,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 	if ifaddr == nil || ifaddr.IsUnspecified() {
 		ifaddr = serverAddr
 	}
-	yourip, err := h.Model.DHCP.Lease(ctx, ifaddr, pkt.HardwareAddr)
+	yourip, err := h.DHCP.Lease(ctx, ifaddr, pkt.HardwareAddr)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,6 @@ package dhcpd
 
 import (
 	"context"
-	"errors"
 	"net"
 
 	"github.com/cybozu-go/log"
@@ -10,14 +9,14 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 )
 
-// Handler defines interface for dhcp service
+// Handler defines an interface for Server.
 type Handler interface {
 	ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error)
 }
 
-// DHCPHandler implements Handler
+// DHCPHandler is an implementation of Handler using sabakan.Model.
 type DHCPHandler struct {
-	Model sabakan.Model
+	sabakan.Model
 }
 
 // ServeDHCP implements Handler interface
@@ -38,5 +37,5 @@ func (h DHCPHandler) ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf *net
 			"type": pkt.Type.String(),
 		})
 	}
-	return nil, errors.New("unknown message type")
+	return nil, errUnknownMsgType
 }

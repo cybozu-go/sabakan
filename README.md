@@ -84,8 +84,6 @@ License
 
 Sabakan is licensed under MIT license.
 
-The source code contains a [Netboot](https://github.com/google/netboot) which is licensed under Apache License 2.0.
-
 [godoc]: https://godoc.org/github.com/cybozu-go/sabakan
 [etcd]: https://coreos.com/etcd/
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot

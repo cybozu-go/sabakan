@@ -66,7 +66,6 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
-	defer conn.Close()
 	dhcpServer := dhcpd.Server{
 		Handler: dhcpd.DHCPHandler{Model: model},
 		Conn:    conn,
