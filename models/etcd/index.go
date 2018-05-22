@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -135,55 +134,6 @@ func (mi *machinesIndex) UpdateIndex(prevM *sabakan.Machine, newM *sabakan.Machi
 	mi.mux.Unlock()
 }
 
-func (d *driver) startWatching(ctx context.Context) error {
-	err := d.mi.init(ctx, d.watcher, d.prefix)
-	if err != nil {
-		return err
-	}
-
-	f := func(val []byte) (*sabakan.Machine, error) {
-		var mc sabakan.Machine
-		err := json.Unmarshal(val, &mc)
-		if err != nil {
-			return nil, err
-		}
-		return &mc, nil
-	}
-
-	key := path.Join(d.prefix, KeyMachines)
-	rch := d.watcher.Watch(ctx, key, clientv3.WithPrefix(), clientv3.WithPrevKV())
-	for wresp := range rch {
-		for _, ev := range wresp.Events {
-			if ev.Type == mvccpb.PUT && ev.PrevKv != nil {
-				prevM, err := f(ev.PrevKv.Value)
-				if err != nil {
-					panic(err)
-				}
-				newM, err := f(ev.Kv.Value)
-				if err != nil {
-					panic(err)
-				}
-				d.mi.UpdateIndex(prevM, newM)
-			}
-			if ev.Type == mvccpb.PUT && ev.PrevKv == nil {
-				m, err := f(ev.Kv.Value)
-				if err != nil {
-					panic(err)
-				}
-				d.mi.AddIndex(m)
-			}
-			if ev.Type == mvccpb.DELETE {
-				m, err := f(ev.PrevKv.Value)
-				if err != nil {
-					panic(err)
-				}
-				d.mi.DeleteIndex(m)
-			}
-		}
-	}
-	return nil
-}
-
 func (mi *machinesIndex) query(q *sabakan.Query) []string {
 	mi.mux.RLock()
 	defer mi.mux.RUnlock()
@@ -218,4 +168,42 @@ func (mi *machinesIndex) query(q *sabakan.Query) []string {
 		serials = append(serials, serial)
 	}
 	return serials
+}
+
+func decodeMachine(val []byte) (*sabakan.Machine, error) {
+	var mc sabakan.Machine
+	err := json.Unmarshal(val, &mc)
+	if err != nil {
+		return nil, err
+	}
+	return &mc, nil
+}
+
+func (d *driver) handleMachines(ev *clientv3.Event) error {
+	switch {
+	case ev.IsCreate():
+		m, err := decodeMachine(ev.Kv.Value)
+		if err != nil {
+			return err
+		}
+		d.mi.AddIndex(m)
+	case ev.IsModify():
+		prevM, err := decodeMachine(ev.PrevKv.Value)
+		if err != nil {
+			return err
+		}
+		newM, err := decodeMachine(ev.Kv.Value)
+		if err != nil {
+			return err
+		}
+		d.mi.UpdateIndex(prevM, newM)
+	default: // DELETE
+		m, err := decodeMachine(ev.PrevKv.Value)
+		if err != nil {
+			return err
+		}
+		d.mi.DeleteIndex(m)
+	}
+
+	return nil
 }

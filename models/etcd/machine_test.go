@@ -4,19 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
-	"time"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/sabakan"
 )
 
 func testRegister(t *testing.T) {
-	d := testNewDriver(t)
+	d, ch := testNewDriver(t)
 	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
 	machines := []*sabakan.Machine{
 		&sabakan.Machine{
@@ -97,22 +96,20 @@ func testRegister(t *testing.T) {
 }
 
 func testQuery(t *testing.T) {
-	d := testNewDriver(t)
-	cmd.Go(d.Run)
-	time.Sleep(1 * time.Millisecond)
+	d, ch := testNewDriver(t)
 
 	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
 	machines := []*sabakan.Machine{
 		&sabakan.Machine{Serial: "12345678", Product: "R630", Role: "worker"},
 		&sabakan.Machine{Serial: "12345679", Product: "R630", Role: "worker"},
 		&sabakan.Machine{Serial: "12345680", Product: "R730", Role: "worker"},
 	}
-	time.Sleep(1 * time.Millisecond)
 	err = d.Register(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
@@ -144,12 +141,13 @@ func testQuery(t *testing.T) {
 }
 
 func testDelete(t *testing.T) {
-	d := testNewDriver(t)
+	d, ch := testNewDriver(t)
 	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
 	machines := []*sabakan.Machine{
 		&sabakan.Machine{

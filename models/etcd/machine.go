@@ -3,7 +3,6 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
@@ -16,12 +15,9 @@ import (
 func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
 	wmcs := make([]*sabakan.Machine, len(machines))
 
-	cfg, err := d.getIPAMConfig(ctx)
+	cfg, err := d.getIPAMConfig()
 	if err != nil {
 		return err
-	}
-	if cfg == nil {
-		return errors.New("IPAM configuration not found")
 	}
 
 RETRY:

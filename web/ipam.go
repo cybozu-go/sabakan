@@ -22,12 +22,8 @@ func (s Server) handleConfigIPAM(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) handleConfigIPAMGet(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	config, err := s.Model.IPAM.GetConfig(ctx)
+	config, err := s.Model.IPAM.GetConfig()
 	if err != nil {
-		renderError(ctx, w, InternalServerError(err))
-		return
-	}
-	if config == nil {
 		renderError(ctx, w, APIErrNotFound)
 		return
 	}

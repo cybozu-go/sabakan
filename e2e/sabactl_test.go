@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/client"
@@ -60,6 +61,8 @@ func testSabactlDHCP(t *testing.T) {
 		t.Fatal("exit code:", code)
 	}
 
+	time.Sleep(100 * time.Millisecond)
+
 	stdout, stderr, err = runSabactl("dhcp", "get")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
@@ -106,6 +109,8 @@ func testSabactlIPAM(t *testing.T) {
 		t.Error("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
+
+	time.Sleep(100 * time.Millisecond)
 
 	stdout, stderr, err = runSabactl("ipam", "get")
 	code = exitCode(err)
@@ -163,6 +168,8 @@ func testSabactlMachines(t *testing.T) {
 		t.Error("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
+
+	time.Sleep(100 * time.Millisecond)
 
 	machines := []sabakan.Machine{
 		{

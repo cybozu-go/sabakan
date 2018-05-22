@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -45,7 +47,7 @@ func main() {
 
 	var e etcdConfig
 	e.Servers = strings.Split(*flagEtcdServers, ",")
-	e.Prefix = "/" + *flagEtcdPrefix
+	e.Prefix = path.Clean("/" + *flagEtcdPrefix)
 
 	timeout, err := time.ParseDuration(*flagEtcdTimeout)
 	if err != nil {
@@ -61,14 +63,14 @@ func main() {
 		log.ErrorExit(err)
 	}
 	defer c.Close()
-	c2, err := clientv3.New(cfg)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-	defer c2.Close()
 
-	model := etcd.NewModel(c, c2, e.Prefix)
-	cmd.Go(model.Run)
+	model := etcd.NewModel(c, e.Prefix)
+	ch := make(chan struct{})
+	cmd.Go(func(ctx context.Context) error {
+		return model.Run(ctx, ch)
+	})
+	// waiting the driver gets ready
+	<-ch
 
 	leaser := mock.NewLeaser(dhcp4Begin, dhcp4End)
 	dhcps := dhcp4.New(*flagDHCPBind, *flagDHCPInterface, *flagDHCPIPXEFirmware, leaser)

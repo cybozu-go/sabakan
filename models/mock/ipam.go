@@ -14,14 +14,18 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 	if len(d.machines) > 0 {
 		return errors.New("machines already exist")
 	}
-	d.ipam = *config
+	copied := *config
+	d.ipam = &copied
 	return nil
 }
 
-func (d *driver) getIPAMConfig(ctx context.Context) (*sabakan.IPAMConfig, error) {
+func (d *driver) getIPAMConfig() (*sabakan.IPAMConfig, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	copied := d.ipam
+	if d.ipam == nil {
+		return nil, errors.New("IPAMConfig is not set")
+	}
+	copied := *d.ipam
 	return &copied, nil
 }
 
@@ -33,6 +37,6 @@ func (d ipamDriver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) e
 	return d.putIPAMConfig(ctx, config)
 }
 
-func (d ipamDriver) GetConfig(ctx context.Context) (*sabakan.IPAMConfig, error) {
-	return d.getIPAMConfig(ctx)
+func (d ipamDriver) GetConfig() (*sabakan.IPAMConfig, error) {
+	return d.getIPAMConfig()
 }

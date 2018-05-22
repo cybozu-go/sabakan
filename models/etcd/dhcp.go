@@ -25,21 +25,28 @@ func (d *driver) putDHCPConfig(ctx context.Context, config *sabakan.DHCPConfig) 
 	return err
 }
 
-func (d *driver) getDHCPConfig(ctx context.Context) (*sabakan.DHCPConfig, error) {
-	key := path.Join(d.prefix, KeyDHCP)
-	resp, err := d.client.Get(ctx, key)
+func (d *driver) getDHCPConfig() (*sabakan.DHCPConfig, error) {
+	v := d.dhcpConfig.Load()
+	if v == nil {
+		return nil, errors.New("DHCPConfig is not set")
+	}
+
+	return v.(*sabakan.DHCPConfig), nil
+}
+
+func (d *driver) handleDHCPConfig(ev *clientv3.Event) error {
+	if ev.Type == clientv3.EventTypeDelete {
+		return nil
+	}
+
+	config := new(sabakan.DHCPConfig)
+	err := json.Unmarshal(ev.Kv.Value, config)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if len(resp.Kvs) == 0 {
-		return nil, nil
-	}
-	var config sabakan.DHCPConfig
-	err = json.Unmarshal(resp.Kvs[0].Value, &config)
-	if err != nil {
-		return nil, err
-	}
-	return &config, nil
+
+	d.dhcpConfig.Store(config)
+	return nil
 }
 
 type leaseInfo struct {
@@ -201,12 +208,12 @@ func (d *driver) updateLeaseUsage(ctx context.Context, lrkey string, lu *leaseUs
 }
 
 func (d *driver) dhcpLease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error) {
-	ipam, err := d.getIPAMConfig(ctx)
+	ipam, err := d.getIPAMConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	dc, err := d.getDHCPConfig(ctx)
+	dc, err := d.getDHCPConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -241,12 +248,12 @@ RETRY:
 }
 
 func (d *driver) dhcpRenew(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	ipam, err := d.getIPAMConfig(ctx)
+	ipam, err := d.getIPAMConfig()
 	if err != nil {
 		return err
 	}
 
-	dc, err := d.getDHCPConfig(ctx)
+	dc, err := d.getDHCPConfig()
 	if err != nil {
 		return err
 	}
@@ -281,7 +288,7 @@ RETRY:
 }
 
 func (d *driver) dhcpRelease(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	ipam, err := d.getIPAMConfig(ctx)
+	ipam, err := d.getIPAMConfig()
 	if err != nil {
 		return err
 	}
@@ -320,8 +327,8 @@ func (d dhcpDriver) PutConfig(ctx context.Context, config *sabakan.DHCPConfig) e
 	return d.putDHCPConfig(ctx, config)
 }
 
-func (d dhcpDriver) GetConfig(ctx context.Context) (*sabakan.DHCPConfig, error) {
-	return d.getDHCPConfig(ctx)
+func (d dhcpDriver) GetConfig() (*sabakan.DHCPConfig, error) {
+	return d.getDHCPConfig()
 }
 
 func (d dhcpDriver) Lease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error) {

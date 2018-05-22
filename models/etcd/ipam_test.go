@@ -22,12 +22,13 @@ var testIPAMConfig = sabakan.IPAMConfig{
 }
 
 func testIPAMPutConfig(t *testing.T) {
-	d := testNewDriver(t)
+	d, ch := testNewDriver(t)
 	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
 	resp, err := d.client.Get(context.Background(), t.Name()+KeyIPAM)
 	if err != nil {
@@ -58,7 +59,7 @@ func testIPAMPutConfig(t *testing.T) {
 }
 
 func testIPAMGetConfig(t *testing.T) {
-	d := testNewDriver(t)
+	d, ch := testNewDriver(t)
 
 	config := &testIPAMConfig
 
@@ -70,11 +71,13 @@ func testIPAMGetConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
-	actual, err := d.getIPAMConfig(context.Background())
+	actual, err := d.getIPAMConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !reflect.DeepEqual(config, actual) {
 		t.Errorf("unexpected loaded config %#v", actual)
 	}

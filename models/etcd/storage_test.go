@@ -9,7 +9,7 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	d := testNewDriver(t)
+	d, _ := testNewDriver(t)
 
 	err := d.PutEncryptionKey(context.Background(), "1234", "abcd-efgh", []byte("data"))
 	if err != nil {

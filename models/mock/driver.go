@@ -14,8 +14,8 @@ type driver struct {
 	storage  map[string][]byte
 	machines map[string]*sabakan.Machine
 	leases   map[string]*leaseUsage
-	ipam     sabakan.IPAMConfig
-	dhcp     sabakan.DHCPConfig
+	ipam     *sabakan.IPAMConfig
+	dhcp     *sabakan.DHCPConfig
 }
 
 // NewModel returns sabakan.Model
@@ -34,6 +34,7 @@ func NewModel() sabakan.Model {
 	}
 }
 
-func (d *driver) Run(ctx context.Context) error {
+func (d *driver) Run(ctx context.Context, ch chan<- struct{}) error {
+	ch <- struct{}{}
 	return nil
 }
