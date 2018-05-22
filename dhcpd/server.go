@@ -1,4 +1,4 @@
-package dhcp4
+package dhcpd
 
 import (
 	"context"
@@ -17,7 +17,9 @@ type Server struct {
 func (s *Server) Serve(ctx context.Context) error {
 	env := cmd.NewEnvironment(ctx)
 	for {
+		log.Info("now to receive packet", nil)
 		pkt, intf, err := s.Conn.RecvDHCP()
+		log.Info("packet received", nil)
 		if err != nil {
 			return fmt.Errorf("Receiving DHCP packet: %s", err)
 		}
@@ -26,7 +28,7 @@ func (s *Server) Serve(ctx context.Context) error {
 		}
 
 		env.Go(func(ctx context.Context) error {
-			resp, err := s.Handler.handleDHCP(ctx, pkt, intf)
+			resp, err := s.Handler.ServeDHCP(ctx, pkt, intf)
 			if err != nil {
 				log.Error("handler returns an error", map[string]interface{}{
 					log.FnError: err.Error(),

@@ -1,4 +1,4 @@
-package dhcp4
+package dhcpd
 
 import (
 	"context"

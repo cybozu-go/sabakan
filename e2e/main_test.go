@@ -37,6 +37,7 @@ func testMain(m *testing.M) (int, error) {
 		stopSabakan()
 	}()
 
+	time.Sleep(1000 * time.Second)
 	return m.Run(), nil
 }
 
@@ -90,7 +91,7 @@ func runSabakan() (func(), error) {
 		servers = "http://localhost:2379"
 	}
 	command := exec.Command("../sabakan",
-		"-dhcp-interface", "lo", "-dhcp-bind", "0.0.0.0:10067",
+		"-dhcp-bind", "0.0.0.0:10067",
 		"-etcd-servers", servers,
 	)
 	command.Stdout = os.Stdout
@@ -102,7 +103,7 @@ func runSabakan() (func(), error) {
 
 	// wait for startup
 	for i := 0; i < 10; i++ {
-		resp, err := http.Get("http://localhost:8888/api/v1/config/ipam")
+		resp, err := http.Get("http://localhost:10080/api/v1/config/ipam")
 		if err == nil {
 			resp.Body.Close()
 			return func() {

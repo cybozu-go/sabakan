@@ -5,12 +5,12 @@ Usage
 -----
 
 ```console
-$ sabactl [--server http://localhost:8888] <subcommand> <args>...
+$ sabactl [--server http://localhost:10080] <subcommand> <args>...
 ```
 
-Option     | Default value           | Description
-------     | -------------           | -----------
-`--server` | `http://localhost:8888` | URL of sabakan
+Option     | Default value            | Description
+------     | -------------            | -----------
+`--server` | `http://localhost:10080` | URL of sabakan
 
 `sabactl ipam set`
 ------------------
