@@ -28,8 +28,8 @@ var (
 	flagEtcdPrefix  = flag.String("etcd-prefix", "/sabakan", "etcd prefix")
 	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
 
-	flagDHCPBind         = flag.String("dhcp-bind", "0.0.0.0:10067", "bound ip addresses and port for dhcp server")
-	flagDHCPIPXEFirmware = flag.String("dhcp-ipxe-firmware-url", "", "URL to iPXE firmware")
+	flagDHCPBind = flag.String("dhcp-bind", "0.0.0.0:10067", "bound ip addresses and port for dhcp server")
+	flagIPXEPath = flag.String("ipxe-efi-path", "/usr/lib/ipxe/ipxe.efi", "path to ipxe.efi")
 )
 
 func main() {
@@ -67,15 +67,19 @@ func main() {
 		log.ErrorExit(err)
 	}
 	dhcpServer := dhcpd.Server{
-		Handler: dhcpd.DHCPHandler{Model: model},
+		Handler: dhcpd.DHCPHandler{model},
 		Conn:    conn,
 	}
 	cmd.Go(dhcpServer.Serve)
 
+	webServer := web.Server{
+		Model:        model,
+		IPXEFirmware: *flagIPXEPath,
+	}
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
 			Addr:    *flagHTTP,
-			Handler: web.Server{model},
+			Handler: webServer,
 		},
 		ShutdownTimeout: 3 * time.Minute,
 	}

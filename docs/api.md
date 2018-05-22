@@ -8,7 +8,8 @@ REST API
 * [POST /api/v1/machines](#postmachines)
 * [GET /api/v1/machines](#getmachines)
 * [DELETE /api/v1/machines](#deletemachines)
-* [GET /api/v1/ignitions](#getignitions)
+* [GET /api/v1/boot/ipxe.efi](#getipxe)
+* [GET /api/v1/boot/ignitions](#getignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
@@ -218,12 +219,16 @@ $ curl -i -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 (No output in stdout)
 ```
 
-## <a name="getignitions" />`GET /api/v1/ignitions/<serial>`
+## <a name="getipxe" />`GET /api/v1/boot/ipxe.efi`
+
+Get `ipxe.efi` firmware.
+
+## <a name="getignitions" />`GET /api/v1/boot/ignitions/<serial>`
 
 Get CoreOS ignition.
 
 ```console
-$ curl -XGET localhost:10080/api/v1/ignitions/1234abcd
+$ curl -XGET localhost:10080/api/v1/boot/ignitions/1234abcd
 ```
 !!! Caution
     Not implemented.
