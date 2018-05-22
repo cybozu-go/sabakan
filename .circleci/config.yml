@@ -2,15 +2,13 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1-stretch
+      - image: quay.io/cybozu/golang:1.10-bionic
       - image: quay.io/coreos/etcd:v3.3
     working_directory: /go/src/github.com/cybozu-go/sabakan
     steps:
       - checkout
-      - run: go get github.com/golang/lint/golint
-      - run: go get golang.org/x/tools/cmd/goimports
       - run: test -z "$(goimports -d . | tee /dev/stderr)"
-      - run: $GOPATH/bin/golint -set_exit_status ./...
+      - run: golint -set_exit_status ./...
       - run: go get -v -t -d ./...
       - run: go build ./cmd/sabakan
       - run: go build ./cmd/sabactl
