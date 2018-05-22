@@ -2,6 +2,8 @@ package dhcpd
 
 import (
 	"context"
+	"encoding/binary"
+	"errors"
 	"net"
 
 	"github.com/cybozu-go/log"
@@ -24,8 +26,8 @@ func (h DHCPHandler) ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf *net
 	switch pkt.Type {
 	case dhcp4.MsgDiscover:
 		return h.handleDiscover(ctx, pkt, intf)
-		//	case dhcp4.MsgRequest:
-		//		return h.handleRequest(ctx, pkt, intf)
+	case dhcp4.MsgRequest:
+		return h.handleRequest(ctx, pkt, intf)
 		//	case dhcp4.MsgDecline:
 		//		return h.handleDecline(ctx, pkt, intf)
 		//	case dhcp4.MsgRelease:
@@ -38,4 +40,32 @@ func (h DHCPHandler) ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf *net
 		})
 	}
 	return nil, errUnknownMsgType
+}
+
+func getIPv4AddrForInterface(intf *net.Interface) (net.IP, error) {
+	addrs, err := intf.Addrs()
+	if err != nil {
+		return nil, err
+	}
+	for _, addr := range addrs {
+		ipaddr, ok := addr.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		if ipaddr.IP.To4() != nil {
+			return ipaddr.IP, nil
+		}
+	}
+	return nil, errors.New("No IPv4 address for " + intf.Name)
+}
+
+func leaseSeconds(m sabakan.Model) ([]byte, error) {
+	config, err := m.DHCP.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	buf := make([]byte, 4)
+	binary.BigEndian.PutUint32(buf, uint32(config.LeaseMinutes)*60)
+	return buf, nil
 }

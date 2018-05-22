@@ -40,12 +40,22 @@ func (s *Server) Serve(ctx context.Context) error {
 
 		env.Go(func(ctx context.Context) error {
 			resp, err := s.Handler.ServeDHCP(ctx, pkt, intf)
-			if err != nil {
+			switch err {
+			case errNotChosen, errNoRecord:
+				// do nothing
+				return nil
+			case errUnknownMsgType:
+				// already logged
+				return nil
+			case nil:
+				// continue to SendDHCP
+			default:
 				log.Error("handler returns an error", map[string]interface{}{
 					log.FnError: err.Error(),
 				})
 				return nil
 			}
+
 			err = s.Conn.SendDHCP(resp, intf)
 			if err != nil {
 				log.Error("handler returns an error", map[string]interface{}{
