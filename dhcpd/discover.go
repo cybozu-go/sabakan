@@ -3,6 +3,7 @@ package dhcpd
 import (
 	"context"
 	"net"
+	"time"
 
 	"go.universe.tf/netboot/dhcp4"
 )
@@ -16,15 +17,20 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 	ifaddr := pkt.RelayAddr
 	if ifaddr == nil || ifaddr.IsUnspecified() {
 		ifaddr = serverAddr
+	} else {
+		// To delay answer to relayed requests, sleep shortly.
+		time.Sleep(50 * time.Millisecond)
 	}
+
 	yourip, err := h.DHCP.Lease(ctx, ifaddr, pkt.HardwareAddr)
 	if err != nil {
 		return nil, err
 	}
-	secs, err := leaseSeconds(h.Model)
+	opts, err := h.makeOptions(yourip)
 	if err != nil {
 		return nil, err
 	}
+	opts[dhcp4.OptServerIdentifier] = serverAddr
 	resp := &dhcp4.Packet{
 		Type:           dhcp4.MsgOffer,
 		TransactionID:  pkt.TransactionID,
@@ -34,10 +40,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 		ServerAddr:     serverAddr,
 		RelayAddr:      pkt.RelayAddr,
 		BootServerName: serverAddr.String(),
-		Options: dhcp4.Options{
-			dhcp4.OptLeaseTime:        secs,
-			dhcp4.OptServerIdentifier: serverAddr,
-		},
+		Options:        opts,
 	}
 	return resp, nil
 }

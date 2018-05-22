@@ -7,7 +7,7 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 )
 
-// DHCPREQUEST has two way to be used:
+// DHCPREQUEST has three use-cases.
 //   1. accept offer from a server.
 //   2. confirm previously assigned IP address.
 //   3. renew/rebind lease for an already received address.
@@ -16,10 +16,6 @@ import (
 // "requested IP address" option (50) are used.
 func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error) {
 	serverAddr, err := getIPv4AddrForInterface(intf)
-	if err != nil {
-		return nil, err
-	}
-	secs, err := leaseSeconds(h.Model)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +48,11 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 			return nil, errNoRecord
 		}
 
+		opts, err := h.makeOptions(requestedIP)
+		if err != nil {
+			return nil, err
+		}
+		opts[dhcp4.OptServerIdentifier] = serverAddr
 		resp := &dhcp4.Packet{
 			Type:           dhcp4.MsgAck,
 			TransactionID:  pkt.TransactionID,
@@ -61,10 +62,7 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 			ServerAddr:     serverAddr,
 			RelayAddr:      pkt.RelayAddr,
 			BootServerName: serverAddr.String(),
-			Options: dhcp4.Options{
-				dhcp4.OptLeaseTime:        secs,
-				dhcp4.OptServerIdentifier: serverAddr,
-			},
+			Options:        opts,
 		}
 		return resp, nil
 	}
@@ -75,6 +73,11 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 		return nil, errNoRecord
 	}
 
+	opts, err := h.makeOptions(pkt.ClientAddr)
+	if err != nil {
+		return nil, err
+	}
+	opts[dhcp4.OptServerIdentifier] = serverAddr
 	resp := &dhcp4.Packet{
 		Type:           dhcp4.MsgAck,
 		TransactionID:  pkt.TransactionID,
@@ -85,10 +88,7 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 		ServerAddr:     serverAddr,
 		RelayAddr:      pkt.RelayAddr,
 		BootServerName: serverAddr.String(),
-		Options: dhcp4.Options{
-			dhcp4.OptLeaseTime:        secs,
-			dhcp4.OptServerIdentifier: serverAddr,
-		},
+		Options:        opts,
 	}
 	return resp, nil
 }
