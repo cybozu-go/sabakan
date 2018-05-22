@@ -16,7 +16,7 @@ import (
 
 func testCryptsGet(t *testing.T) {
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	serial := "1"
 	diskPath := "exists-path"
@@ -60,7 +60,7 @@ func testCryptsGet(t *testing.T) {
 
 func testCryptsPut(t *testing.T) {
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	serial := "1"
 
@@ -122,7 +122,7 @@ func testCryptsPut(t *testing.T) {
 
 func testCryptsDelete(t *testing.T) {
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	ctx := context.Background()
 	expected := make(map[string]struct{})

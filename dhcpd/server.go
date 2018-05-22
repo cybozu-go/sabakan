@@ -17,7 +17,7 @@ type Server struct {
 // Serve runs until context is canceled.
 //
 // Once ctx is canceled, s.Conn will be closed.
-func (s *Server) Serve(ctx context.Context) error {
+func (s Server) Serve(ctx context.Context) error {
 	env := cmd.NewEnvironment(ctx)
 	env.Go(func(ctx context.Context) error {
 		<-ctx.Done()

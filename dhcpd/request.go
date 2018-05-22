@@ -64,6 +64,7 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 			BootServerName: serverAddr.String(),
 			Options:        opts,
 		}
+
 		return resp, nil
 	}
 

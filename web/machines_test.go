@@ -18,7 +18,7 @@ import (
 func testMachinesPost(t *testing.T) {
 
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	cases := []struct {
 		machine  string
@@ -91,7 +91,7 @@ func testMachinesPost(t *testing.T) {
 
 func testMachinesGet(t *testing.T) {
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
 		{
@@ -187,7 +187,7 @@ func testMachinesGet(t *testing.T) {
 
 func testMachinesDelete(t *testing.T) {
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
 		{

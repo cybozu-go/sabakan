@@ -24,6 +24,7 @@ type etcdConfig struct {
 
 var (
 	flagHTTP        = flag.String("http", "0.0.0.0:10080", "<Listen IP>:<Port number>")
+	flagURLPort     = flag.String("url-port", "10080", "port number used to construct boot API URL")
 	flagEtcdServers = flag.String("etcd-servers", "http://localhost:2379", "comma-separated URLs of the backend etcd")
 	flagEtcdPrefix  = flag.String("etcd-prefix", "/sabakan", "etcd prefix")
 	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
@@ -67,7 +68,7 @@ func main() {
 		log.ErrorExit(err)
 	}
 	dhcpServer := dhcpd.Server{
-		Handler: dhcpd.DHCPHandler{model},
+		Handler: dhcpd.DHCPHandler{Model: model, URLPort: *flagURLPort},
 		Conn:    conn,
 	}
 	cmd.Go(dhcpServer.Serve)

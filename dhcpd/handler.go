@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"net"
 
 	"github.com/cybozu-go/log"
@@ -20,6 +21,7 @@ type Handler interface {
 // DHCPHandler is an implementation of Handler using sabakan.Model.
 type DHCPHandler struct {
 	sabakan.Model
+	URLPort string
 }
 
 // ServeDHCP implements Handler interface
@@ -93,4 +95,8 @@ func (h DHCPHandler) makeOptions(ciaddr net.IP) (dhcp4.Options, error) {
 	opts[dhcp4.OptLeaseTime] = buf
 
 	return opts, nil
+}
+
+func (h DHCPHandler) makeBootAPIURL(siaddr net.IP, p string) string {
+	return fmt.Sprintf("http://%s:%s/api/v1/boot/%s", siaddr.String(), h.URLPort, p)
 }
