@@ -41,6 +41,7 @@ func (s *Server) Serve(ctx context.Context) error {
 				log.Error("handler returns an error", map[string]interface{}{
 					log.FnError: err.Error(),
 				})
+				return nil
 			}
 			err = s.Conn.SendDHCP(resp, intf)
 			if err != nil {
