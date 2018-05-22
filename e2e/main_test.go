@@ -37,7 +37,6 @@ func testMain(m *testing.M) (int, error) {
 		stopSabakan()
 	}()
 
-	time.Sleep(1000 * time.Second)
 	return m.Run(), nil
 }
 
