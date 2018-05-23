@@ -34,9 +34,9 @@ func (s Server) handleCoreOS(w http.ResponseWriter, r *http.Request) {
 		s.handleCoreOSKernel(w, r)
 	case "initrd.gz":
 		s.handleCoreOSInitRD(w, r)
+	default:
+		renderError(r.Context(), w, APIErrNotFound)
 	}
-
-	renderError(r.Context(), w, APIErrNotFound)
 }
 
 func (s Server) handleCoreOSiPXE(w http.ResponseWriter, r *http.Request) {
