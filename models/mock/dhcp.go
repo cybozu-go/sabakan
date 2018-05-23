@@ -78,13 +78,13 @@ func (d *driver) getDHCPConfig() (*sabakan.DHCPConfig, error) {
 }
 
 func (d *driver) dhcpLease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
 	ipam, err := d.getIPAMConfig()
 	if err != nil {
 		return nil, err
 	}
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
 	lr := ipam.LeaseRange(ifaddr)
 	if lr == nil {
@@ -102,13 +102,13 @@ func (d *driver) dhcpLease(ctx context.Context, ifaddr net.IP, mac net.HardwareA
 }
 
 func (d *driver) dhcpRenew(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
 	ipam, err := d.getIPAMConfig()
 	if err != nil {
 		return err
 	}
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
 	lr := ipam.LeaseRange(ciaddr)
 	if lr == nil {
@@ -124,13 +124,13 @@ func (d *driver) dhcpRenew(ctx context.Context, ciaddr net.IP, mac net.HardwareA
 }
 
 func (d *driver) dhcpRelease(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
 	ipam, err := d.getIPAMConfig()
 	if err != nil {
 		return err
 	}
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
 	lr := ipam.LeaseRange(ciaddr)
 	if lr == nil {
