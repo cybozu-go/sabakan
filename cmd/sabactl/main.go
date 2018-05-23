@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	flagServer = flag.String("server", "http://localhost:8888", "<Listen IP>:<Port number>")
+	flagServer = flag.String("server", "http://localhost:10080", "<Listen IP>:<Port number>")
 )
 
 func main() {

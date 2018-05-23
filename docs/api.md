@@ -8,7 +8,11 @@ REST API
 * [POST /api/v1/machines](#postmachines)
 * [GET /api/v1/machines](#getmachines)
 * [DELETE /api/v1/machines](#deletemachines)
-* [GET /api/v1/ignitions](#getignitions)
+* [GET /api/v1/boot/ipxe.efi](#getipxe)
+* [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
+* [GET /api/v1/boot/coreos/kernel](#getcoreoskernel)
+* [GET /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
+* [GET /api/v1/boot/ignitions](#getignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
@@ -28,7 +32,7 @@ Create or update IPAM configurations.  If one or more nodes have been registered
   HTTP status code: 500 Internal Server Error
 
 ```console
-$ curl -XPUT localhost:8888/api/v1/config/ipam -d '
+$ curl -XPUT localhost:10080/api/v1/config/ipam -d '
 {
    "max-nodes-in-rack": 28,
    "node-ipv4-pool": "10.69.0.0/16",
@@ -61,7 +65,7 @@ The body must be JSON representation of [IPAMConfig](ipam.md#ipamconfig).
   HTTP status code: 404 Not Found
 
 ```console
-$ curl -XGET localhost:8888/api/v1/config/ipam
+$ curl -XGET localhost:10080/api/v1/config/ipam
 {
    "max-nodes-in-rack": 28,
    "node-ipv4-pool": "10.69.0.0/16",
@@ -90,7 +94,7 @@ The body must be JSON representation of [DHCPConfig](dhcp.md#dhcpconfig).
 - HTTP status codes other than 200.
 
 ```console
-$ curl -XPUT localhost:8888/api/v1/config/dhcp -d '
+$ curl -XPUT localhost:10080/api/v1/config/dhcp -d '
 {
     "gateway-offset": 1
 }'
@@ -113,7 +117,7 @@ Get DHCP configurations.
   HTTP status code: 404 Not Found
 
 ```console
-$ curl -XGET localhost:8888/api/v1/config/dhcp
+$ curl -XGET localhost:10080/api/v1/config/dhcp
 {
     "gateway-offset": 254
 }
@@ -158,7 +162,7 @@ $ curl -i -X POST \
   "rack": 1,
   "role": "boot"
 }]' \
- 'http://localhost:8888/api/v1/machines'
+ 'http://localhost:10080/api/v1/machines'
 ```
 
 ## <a name="getmachines" />`GET /api/v1/machines`
@@ -189,11 +193,11 @@ Query                      | Description
   HTTP status code: 404 Not Found
 
 ```console
-$ curl -XGET 'localhost:8888/api/v1/machines?serial=1234abcd'
+$ curl -XGET 'localhost:10080/api/v1/machines?serial=1234abcd'
 [{"serial":"1234abcd","product":"R630","datacenter":"us","rack":1,"index-in-rack":1,"role":"boot","network":{"node0":{"ipv4":["10.69.0.197"],"ipv6":null},"node1":{"ipv4":["10.69.1.5"],"ipv6":null},"node2":{"ipv4":["10.69.1.69"],"ipv6":null}},"bmc":{"ipv4":["10.72.17.37"]}}]
-$ curl -XGET 'localhost:8888/api/v1/machines?datacenter=ty3&rack=1&product=R630'
+$ curl -XGET 'localhost:10080/api/v1/machines?datacenter=ty3&rack=1&product=R630'
 [{"serial":"10000000","product":"R630","datacenter":"ty3","rack":1,"index-in-rack":1,"role":"boot","network":{"node0":{"ipv4":["10.69.0.197"],"ipv6":null},"node1":{"ipv4":["10.69.1.5"],"ipv6":null},"node2":{"ipv4":["10.69.1.69"],"ipv6":null}},"bmc":{"ipv4":["10.72.17.37"]}},{"serial":"10000001","product":"R630","datacenter":"ty3","rack":1,"index-in-rack":1,"role":"boot","network":{"node0":{"ipv4":["10.69.0.197"],"ipv6":null},"node1":{"ipv4":["10.69.1.5"],"ipv6":null},"node2":{"ipv4":["10.69.1.69"],"ipv6":null}},"bmc":{"ipv4":["10.72.17.37"]}}]
-$ curl -XGET 'localhost:8888/api/v1/machines?ipv4=10.20.30.40'
+$ curl -XGET 'localhost:10080/api/v1/machines?ipv4=10.20.30.40'
 [{"serial":"20000000","product":"R630","datacenter":"us","rack":1,"index-in-rack":1,"role":"boot","network":{"node0":{"ipv4":["10.69.0.197"],"ipv6":null},"node1":{"ipv4":["10.20.30.40"],"ipv6":null},"node2":{"ipv4":["10.69.1.69"],"ipv6":null}},"bmc":{"ipv4":["10.72.17.37"]}}]
 ```
 
@@ -214,20 +218,39 @@ Delete registered machine of the `<serial>`.
   HTTP status code: 404 Not Found
 
 ```console
-$ curl -i -X DELETE 'localhost:8888/api/v1/machines/1234abcd'
+$ curl -i -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 (No output in stdout)
 ```
 
-## <a name="getignitions" />`GET /api/v1/ignitions/<serial>`
+## <a name="getipxe" />`GET /api/v1/boot/ipxe.efi`
+
+Get `ipxe.efi` firmware.
+
+## <a name="getcoreosipxe" />`GET /api/v1/boot/coreos/ipxe`
+
+Get iPXE script to boot CoreOS Container Linux.
+
+Following query parameters can be added.
+
+Name   | Value  | Description
+----   | -----  | -----------
+serial | 0 or 1 | serial console is enabled if 1
+
+## <a name="getcoreoskernel" />`GET /api/v1/boot/coreos/kernel`
+
+Get Linux kernel image to boot CoreOS.
+
+## <a name="getcoreosinitrd" />`GET /api/v1/boot/coreos/initrd.gz`
+
+Get initial RAM disk image to boot CoreOS.
+
+## <a name="getignitions" />`GET /api/v1/boot/ignitions/<serial>`
 
 Get CoreOS ignition.
 
 ```console
-$ curl -XGET localhost:8888/api/v1/ignitions/1234abcd
+$ curl -XGET localhost:10080/api/v1/boot/ignitions/1234abcd
 ```
-!!! Caution
-    Not implemented.
-
 ## <a name="putcrypts" />`PUT /api/v1/crypts/<serial>/<path>`
 
 Register disk encryption key. The request body is raw binary format of the key.
@@ -250,7 +273,7 @@ Register disk encryption key. The request body is raw binary format of the key.
 
 ```console
 $ echo "binary key data" | curl -i -X PUT -d - \
-   'http://localhost:8888/api/v1/crypts/1/aaaaa'
+   'http://localhost:10080/api/v1/crypts/1/aaaaa'
 HTTP/1.1 201 Created
 Content-Type: application/json
 Date: Tue, 10 Apr 2018 09:12:12 GMT
@@ -277,7 +300,7 @@ Get an encryption key of the particular disk.
 
 ```console
 $ curl -i -X GET \
-   'http://localhost:8888/api/v1/crypts/1/aaaaa'
+   'http://localhost:10080/api/v1/crypts/1/aaaaa'
 HTTP/1.1 200 OK
 Content-Type: application/octet-stream
 Date: Tue, 10 Apr 2018 09:15:59 GMT
@@ -298,7 +321,7 @@ Delete all disk encryption keys of the specified machine. This request does not 
 
 ```console
 $ curl -i -X DELETE \
-   'http://localhost:8888/api/v1/crypts/1'
+   'http://localhost:10080/api/v1/crypts/1'
 HTTP/1.1 200 OK
 Content-Type: application/json
 Date: Tue, 10 Apr 2018 09:19:01 GMT

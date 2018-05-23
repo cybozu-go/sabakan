@@ -60,20 +60,6 @@ This repository contains two programs:
 
 To see their usage, run them with `-h` option.
 
-### Debugging with a DHCP client
-
-`make debug` launch a DHCP client note for the debugging:
-
-```console
-$ make debug
-```
-
-It launch etcd on rkt, create a bridge, and launch VM by QEMU.  Use `make connect` to connect the VM.
-
-```console
-$ make connect
-```
-
 Documentation
 -------------
 
@@ -83,8 +69,6 @@ License
 -------
 
 Sabakan is licensed under MIT license.
-
-The source code contains a [Netboot](https://github.com/google/netboot) which is licensed under Apache License 2.0.
 
 [godoc]: https://godoc.org/github.com/cybozu-go/sabakan
 [etcd]: https://coreos.com/etcd/

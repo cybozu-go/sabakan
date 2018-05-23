@@ -17,7 +17,7 @@ func testConfigIPAMGet(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	config := &sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
@@ -59,7 +59,7 @@ func testConfigIPAMPut(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	bad := "{}"
 	good := `

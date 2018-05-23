@@ -17,7 +17,7 @@ func testConfigDHCPGet(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	config := &sabakan.DHCPConfig{
 		GatewayOffset: 100,
@@ -51,7 +51,7 @@ func testConfigDHCPPut(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
-	handler := Server{m}
+	handler := Server{Model: m}
 
 	bad := "{}"
 	good := `

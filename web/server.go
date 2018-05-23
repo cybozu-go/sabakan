@@ -9,7 +9,8 @@ import (
 
 // Server is the sabakan server.
 type Server struct {
-	Model sabakan.Model
+	Model        sabakan.Model
+	IPXEFirmware string
 }
 
 // Handler implements http.Handler
@@ -35,9 +36,15 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(p, "crypts/"):
 		s.handleCrypts(w, r)
 		return
-	case strings.HasPrefix(p, "ignitions"):
-		//s.handleIgnitions(w, r)
-		//return
+	case p == "boot/ipxe.efi":
+		http.ServeFile(w, r, s.IPXEFirmware)
+		return
+	case strings.HasPrefix(p, "boot/coreos/"):
+		s.handleCoreOS(w, r)
+		return
+	case strings.HasPrefix(p, "boot/ignitions/"):
+		s.handleIgnitions(w, r)
+		return
 	case strings.HasPrefix(p, "machines"):
 		s.handleMachines(w, r)
 		return
