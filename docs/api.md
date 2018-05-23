@@ -230,6 +230,12 @@ Get `ipxe.efi` firmware.
 
 Get iPXE script to boot CoreOS Container Linux.
 
+Following query parameters can be added.
+
+Name   | Value  | Description
+----   | -----  | -----------
+serial | 0 or 1 | serial console is enabled if 1
+
 ## <a name="getcoreoskernel" />`GET /api/v1/boot/coreos/kernel`
 
 Get Linux kernel image to boot CoreOS.

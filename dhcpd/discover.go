@@ -1,6 +1,7 @@
 package dhcpd
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"net"
@@ -53,6 +54,11 @@ func isIPXEBoot(pkt *dhcp4.Packet) bool {
 	}
 
 	return ucls == "iPXE"
+}
+
+func isQemuMacAddress(mac net.HardwareAddr) bool {
+	// "52:54:00" comes from placemat.
+	return bytes.HasPrefix(mac, []byte{0x52, 0x54, 0x00})
 }
 
 func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error) {
@@ -108,6 +114,9 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 		})
 		// iPXE script to boot CoreOS Container Linux
 		resp.BootFilename = h.makeBootAPIURL(serverAddr, "coreos/ipxe")
+		if isQemuMacAddress(pkt.HardwareAddr) {
+			resp.BootFilename += "?serial=1"
+		}
 	}
 
 	return resp, nil

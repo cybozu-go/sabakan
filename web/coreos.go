@@ -9,10 +9,11 @@ import (
 const (
 	coreOSImageDir = "/var/www/assets/coreos/1576.5.0"
 
+	// iPXE script specs can be found at http://ipxe.org/cfg
 	coreOSiPXETemplate = `#!ipxe
 
 set base-url %s
-kernel ${base-url}/coreos/kernel initrd=initrd.gz coreos.first_boot=1 coreos.config.url=${base-url}/ignitions/${serial}
+kernel ${base-url}/coreos/kernel initrd=initrd.gz coreos.first_boot=1 coreos.config.url=${base-url}/ignitions/${serial} %s
 initrd ${base-url}/coreos/initrd.gz
 boot
 `
@@ -39,9 +40,13 @@ func (s Server) handleCoreOS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleCoreOSiPXE(w http.ResponseWriter, r *http.Request) {
-	// iPXE script specs can be found at http://ipxe.org/cfg
+	console := ""
+	if r.URL.Query().Get("serial") == "1" {
+		console = "console=ttyS0"
+	}
+
 	baseURL := fmt.Sprintf("http://%s/api/v1/boot", r.Host)
-	ipxe := fmt.Sprintf(coreOSiPXETemplate, baseURL)
+	ipxe := fmt.Sprintf(coreOSiPXETemplate, baseURL, console)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))
