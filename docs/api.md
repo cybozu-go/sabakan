@@ -9,6 +9,9 @@ REST API
 * [GET /api/v1/machines](#getmachines)
 * [DELETE /api/v1/machines](#deletemachines)
 * [GET /api/v1/boot/ipxe.efi](#getipxe)
+* [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
+* [GET /api/v1/boot/coreos/kernel](#getcoreoskernel)
+* [GET /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
 * [GET /api/v1/boot/ignitions](#getignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
@@ -223,6 +226,18 @@ $ curl -i -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 
 Get `ipxe.efi` firmware.
 
+## <a name="getcoreosipxe" />`GET /api/v1/boot/coreos/ipxe`
+
+Get iPXE script to boot CoreOS Container Linux.
+
+## <a name="getcoreoskernel" />`GET /api/v1/boot/coreos/kernel`
+
+Get Linux kernel image to boot CoreOS.
+
+## <a name="getcoreosinitrd" />`GET /api/v1/boot/coreos/initrd.gz`
+
+Get initial RAM disk image to boot CoreOS.
+
 ## <a name="getignitions" />`GET /api/v1/boot/ignitions/<serial>`
 
 Get CoreOS ignition.
@@ -230,9 +245,6 @@ Get CoreOS ignition.
 ```console
 $ curl -XGET localhost:10080/api/v1/boot/ignitions/1234abcd
 ```
-!!! Caution
-    Not implemented.
-
 ## <a name="putcrypts" />`PUT /api/v1/crypts/<serial>/<path>`
 
 Register disk encryption key. The request body is raw binary format of the key.
