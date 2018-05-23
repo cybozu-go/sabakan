@@ -55,8 +55,9 @@ func getIPv4AddrForInterface(intf *net.Interface) (net.IP, error) {
 		if !ok {
 			continue
 		}
-		if ipaddr.IP.To4() != nil {
-			return ipaddr.IP, nil
+		ipaddr4 := ipaddr.IP.To4()
+		if ipaddr4 != nil {
+			return ipaddr4, nil
 		}
 	}
 	return nil, errors.New("No IPv4 address for " + intf.Name)
