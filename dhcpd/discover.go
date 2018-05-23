@@ -61,7 +61,7 @@ func isQemuMacAddress(mac net.HardwareAddr) bool {
 	return bytes.HasPrefix(mac, []byte{0x52, 0x54, 0x00})
 }
 
-func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error) {
+func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
 		return nil, err

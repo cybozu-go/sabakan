@@ -2,7 +2,6 @@ package dhcpd
 
 import (
 	"context"
-	"net"
 
 	"go.universe.tf/netboot/dhcp4"
 )
@@ -14,7 +13,7 @@ import (
 //
 // To distinguish these three, "server identifier" option (54) and
 // "requested IP address" option (50) are used.
-func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error) {
+func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
 		return nil, err

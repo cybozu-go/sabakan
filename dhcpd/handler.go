@@ -15,7 +15,7 @@ import (
 
 // Handler defines an interface for Server.
 type Handler interface {
-	ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error)
+	ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error)
 }
 
 // DHCPHandler is an implementation of Handler using sabakan.Model.
@@ -25,7 +25,7 @@ type DHCPHandler struct {
 }
 
 // ServeDHCP implements Handler interface
-func (h DHCPHandler) ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf *net.Interface) (*dhcp4.Packet, error) {
+func (h DHCPHandler) ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
 	switch pkt.Type {
 	case dhcp4.MsgDiscover:
 		return h.handleDiscover(ctx, pkt, intf)
@@ -45,7 +45,7 @@ func (h DHCPHandler) ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf *net
 	return nil, errUnknownMsgType
 }
 
-func getIPv4AddrForInterface(intf *net.Interface) (net.IP, error) {
+func getIPv4AddrForInterface(intf Interface) (net.IP, error) {
 	addrs, err := intf.Addrs()
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func getIPv4AddrForInterface(intf *net.Interface) (net.IP, error) {
 			return ipaddr4, nil
 		}
 	}
-	return nil, errors.New("No IPv4 address for " + intf.Name)
+	return nil, errors.New("No IPv4 address for " + intf.Name())
 }
 
 // makeOptions returns dhcp4.Options that includes these common options:
