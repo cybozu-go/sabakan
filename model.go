@@ -66,8 +66,3 @@ type Model struct {
 	IPAM    IPAMModel
 	DHCP    DHCPModel
 }
-
-// Leaser is an interface to lease IP addresses
-type Leaser interface {
-	Lease() (net.IP, error)
-}
