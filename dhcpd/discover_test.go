@@ -1,6 +1,7 @@
 package dhcpd
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"net"
@@ -37,9 +38,48 @@ func testDiscoverInterface() Interface {
 	}
 }
 
+func testIPEqual(t *testing.T, name string, respIP net.IP, expectedIP net.IP) {
+	if expectedIP.Equal(net.IPv4zero) {
+		if respIP == nil {
+			return
+		}
+	}
+	if !respIP.Equal(expectedIP) {
+		t.Error(`wrong resp.`+name, respIP, expectedIP)
+	}
+}
+
 func testComparePacket(t *testing.T, resp, expected *dhcp4.Packet) {
 	if resp.Type != expected.Type {
 		t.Error(`wrong resp.Type:`, resp.Type, expected.Type)
+	}
+
+	if !bytes.Equal(resp.TransactionID, expected.TransactionID) {
+		t.Error(`wrong resp.TransactionID:`, resp.TransactionID, expected.TransactionID)
+	}
+
+	if resp.Broadcast != expected.Broadcast {
+		t.Error(`wrong resp.Broadcast:`, resp.Broadcast, expected.Broadcast)
+	}
+
+	if !bytes.Equal(resp.HardwareAddr, expected.HardwareAddr) {
+		t.Error(`wrong resp.HardwareAddr:`, resp.HardwareAddr, expected.HardwareAddr)
+	}
+
+	testIPEqual(t, "ClientAddr", resp.ClientAddr, expected.ClientAddr)
+	testIPEqual(t, "YourAddr", resp.YourAddr, expected.YourAddr)
+	testIPEqual(t, "ServerAddr", resp.ServerAddr, expected.ServerAddr)
+	testIPEqual(t, "RelayAddr", resp.RelayAddr, expected.RelayAddr)
+
+	for k, v := range expected.Options {
+		v2, ok := resp.Options[k]
+		if !ok {
+			t.Error(`missing Option`, k)
+			continue
+		}
+		if !bytes.Equal(v, v2) {
+			t.Error(`wrong Option:`, k, v2, v)
+		}
 	}
 }
 
@@ -52,17 +92,29 @@ func testDiscoverDirect(t *testing.T) {
 	intf := testDiscoverInterface()
 	expected := testDiscoverPacket()
 	expected.Type = dhcp4.MsgOffer
-	expected.YourAddr = net.IPv4(10, 69, 1, 32)
-	expected.ServerAddr = net.IPv4(10, 69, 1, 3)
+	expected.YourAddr = []byte{10, 69, 1, 32}
+	expected.ServerAddr = []byte{10, 69, 1, 3}
 	expected.BootServerName = "10.69.1.3"
-	expected.Options[dhcp4.OptSubnetMask] = net.IPv4(255, 255, 255, 192)
-	expected.Options[dhcp4.OptRouters] = net.IPv4(10, 69, 1, 1)
+	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 192}
+	expected.Options[dhcp4.OptRouters] = []byte{10, 69, 1, 1}
 	buf := make([]byte, 4)
 	binary.BigEndian.PutUint32(buf, 3600)
 	expected.Options[dhcp4.OptLeaseTime] = buf
-	expected.Options[dhcp4.OptServerIdentifier] = net.IPv4(10, 69, 1, 3)
+	expected.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
 
 	resp, err := h.handleDiscover(context.Background(), pkt, intf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	testComparePacket(t, resp, expected)
+
+	h = testNewHandler(24, 100, 10)
+	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 0}
+	expected.Options[dhcp4.OptRouters] = []byte{10, 69, 1, 100}
+	binary.BigEndian.PutUint32(buf, 600)
+	expected.Options[dhcp4.OptLeaseTime] = buf
+
+	resp, err = h.handleDiscover(context.Background(), pkt, intf)
 	if err != nil {
 		t.Fatal(err)
 	}
