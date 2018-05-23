@@ -107,7 +107,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 			"ip":  yourip.String(),
 		})
 		// iPXE script to boot CoreOS Container Linux
-		resp.BootFilename = h.makeBootAPIURL(serverAddr, "coreos.ipxe")
+		resp.BootFilename = h.makeBootAPIURL(serverAddr, "coreos/ipxe")
 	}
 
 	return resp, nil
