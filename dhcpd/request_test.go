@@ -9,10 +9,10 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 )
 
-func testDiscoverPacket() *dhcp4.Packet {
+func testRequestPacket() *dhcp4.Packet {
 	txnID := []byte{0xaa, 0xbb, 0xcc, 0xdd}
 	return &dhcp4.Packet{
-		Type:          dhcp4.MsgDiscover,
+		Type:          dhcp4.MsgRequest,
 		TransactionID: txnID,
 		Broadcast:     true,
 		HardwareAddr:  []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
@@ -24,15 +24,16 @@ func testDiscoverPacket() *dhcp4.Packet {
 	}
 }
 
-func testDiscoverDirect(t *testing.T) {
+func testRequestSelected(t *testing.T) {
 	t.Parallel()
 
 	h := testNewHandler(26, 1, 0)
 
-	pkt := testDiscoverPacket()
+	pkt := testRequestPacket()
+	pkt.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
 	intf := testInterface()
-	expected := testDiscoverPacket()
-	expected.Type = dhcp4.MsgOffer
+	expected := testRequestPacket()
+	expected.Type = dhcp4.MsgAck
 	expected.YourAddr = []byte{10, 69, 1, 32}
 	expected.ServerAddr = []byte{10, 69, 1, 3}
 	expected.BootServerName = "10.69.1.3"
@@ -43,35 +44,39 @@ func testDiscoverDirect(t *testing.T) {
 	expected.Options[dhcp4.OptLeaseTime] = buf
 	expected.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
 
-	resp, err := h.handleDiscover(context.Background(), pkt, intf)
-	if err != nil {
-		t.Fatal(err)
-	}
-	testComparePacket(t, resp, expected)
-
-	h = testNewHandler(24, 100, 10)
-	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 0}
-	expected.Options[dhcp4.OptRouters] = []byte{10, 69, 1, 100}
-	binary.BigEndian.PutUint32(buf, 600)
-	expected.Options[dhcp4.OptLeaseTime] = buf
-
-	resp, err = h.handleDiscover(context.Background(), pkt, intf)
+	resp, err := h.handleRequest(context.Background(), pkt, intf)
 	if err != nil {
 		t.Fatal(err)
 	}
 	testComparePacket(t, resp, expected)
 }
 
-func testDiscoverRelayed(t *testing.T) {
+func testRequestNotSelected(t *testing.T) {
 	t.Parallel()
 
 	h := testNewHandler(26, 1, 0)
 
-	pkt := testDiscoverPacket()
-	pkt.RelayAddr = []byte{10, 69, 0, 129}
+	pkt := testRequestPacket()
+	pkt.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 2}
 	intf := testInterface()
-	expected := testDiscoverPacket()
-	expected.Type = dhcp4.MsgOffer
+
+	_, err := h.handleRequest(context.Background(), pkt, intf)
+	if err != errNotChosen {
+		t.Error("invalid error:", err)
+	}
+}
+
+func testRequestRelayedSelected(t *testing.T) {
+	t.Parallel()
+
+	h := testNewHandler(26, 1, 0)
+
+	pkt := testRequestPacket()
+	pkt.RelayAddr = []byte{10, 69, 0, 129}
+	pkt.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
+	intf := testInterface()
+	expected := testRequestPacket()
+	expected.Type = dhcp4.MsgAck
 	expected.YourAddr = []byte{10, 69, 0, 160}
 	expected.ServerAddr = []byte{10, 69, 1, 3}
 	expected.RelayAddr = []byte{10, 69, 0, 129}
@@ -83,25 +88,39 @@ func testDiscoverRelayed(t *testing.T) {
 	expected.Options[dhcp4.OptLeaseTime] = buf
 	expected.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
 
-	resp, err := h.handleDiscover(context.Background(), pkt, intf)
+	resp, err := h.handleRequest(context.Background(), pkt, intf)
 	if err != nil {
 		t.Fatal(err)
 	}
 	testComparePacket(t, resp, expected)
 }
 
-func testDiscoverHTTPBoot(t *testing.T) {
+func testRequestConfirm(t *testing.T) {
 	t.Parallel()
 
 	h := testNewHandler(26, 1, 0)
 
-	pkt := testDiscoverPacket()
-	pkt.Options[93] = []byte{0x00, 0x10}
-	pkt.Options[dhcp4.OptVendorIdentifier] = []byte("HTTPClient:hogehoge")
+	// Request before Discover; ignored
+	pkt := testRequestPacket()
+	pkt.Options[dhcp4.OptRequestedIP] = []byte{10, 69, 1, 33}
 	intf := testInterface()
-	expected := testDiscoverPacket()
-	expected.Type = dhcp4.MsgOffer
-	expected.YourAddr = []byte{10, 69, 1, 32}
+
+	_, err := h.handleRequest(context.Background(), pkt, intf)
+	if err != errNoRecord {
+		t.Error("invalid error:", err)
+	}
+
+	pkt = testDiscoverPacket()
+	resp, err := h.handleDiscover(context.Background(), pkt, intf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pkt = testRequestPacket()
+	pkt.Options[dhcp4.OptRequestedIP] = resp.YourAddr
+	expected := testRequestPacket()
+	expected.Type = dhcp4.MsgAck
+	expected.YourAddr = resp.YourAddr
 	expected.ServerAddr = []byte{10, 69, 1, 3}
 	expected.BootServerName = "10.69.1.3"
 	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 192}
@@ -110,27 +129,41 @@ func testDiscoverHTTPBoot(t *testing.T) {
 	binary.BigEndian.PutUint32(buf, 3600)
 	expected.Options[dhcp4.OptLeaseTime] = buf
 	expected.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
-	expected.Options[dhcp4.OptVendorIdentifier] = []byte("HTTPClient")
-	expected.BootFilename = "http://10.69.1.3:80/api/v1/boot/ipxe.efi"
 
-	resp, err := h.handleDiscover(context.Background(), pkt, intf)
+	resp2, err := h.handleRequest(context.Background(), pkt, intf)
 	if err != nil {
 		t.Fatal(err)
 	}
-	testComparePacket(t, resp, expected)
+	testComparePacket(t, resp2, expected)
 }
 
-func testDiscoverIPXE(t *testing.T) {
+func testRequestRenew(t *testing.T) {
 	t.Parallel()
 
 	h := testNewHandler(26, 1, 0)
 
-	pkt := testDiscoverPacket()
-	pkt.Options[77] = []byte("iPXE")
+	// Request before Discover; ignored
+	pkt := testRequestPacket()
+	pkt.ClientAddr = []byte{10, 69, 1, 33}
 	intf := testInterface()
-	expected := testDiscoverPacket()
-	expected.Type = dhcp4.MsgOffer
-	expected.YourAddr = []byte{10, 69, 1, 32}
+
+	_, err := h.handleRequest(context.Background(), pkt, intf)
+	if err != errNoRecord {
+		t.Error("invalid error:", err)
+	}
+
+	pkt = testDiscoverPacket()
+	resp, err := h.handleDiscover(context.Background(), pkt, intf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pkt = testRequestPacket()
+	pkt.ClientAddr = resp.YourAddr
+	expected := testRequestPacket()
+	expected.Type = dhcp4.MsgAck
+	expected.ClientAddr = resp.YourAddr
+	expected.YourAddr = resp.YourAddr
 	expected.ServerAddr = []byte{10, 69, 1, 3}
 	expected.BootServerName = "10.69.1.3"
 	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 192}
@@ -139,19 +172,18 @@ func testDiscoverIPXE(t *testing.T) {
 	binary.BigEndian.PutUint32(buf, 3600)
 	expected.Options[dhcp4.OptLeaseTime] = buf
 	expected.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
-	expected.BootFilename = "http://10.69.1.3:80/api/v1/boot/coreos/ipxe"
 
-	resp, err := h.handleDiscover(context.Background(), pkt, intf)
+	resp2, err := h.handleRequest(context.Background(), pkt, intf)
 	if err != nil {
 		t.Fatal(err)
 	}
-	testComparePacket(t, resp, expected)
-
+	testComparePacket(t, resp2, expected)
 }
 
-func TestDiscover(t *testing.T) {
-	t.Run("Direct", testDiscoverDirect)
-	t.Run("Relayed", testDiscoverRelayed)
-	t.Run("HTTPBoot", testDiscoverHTTPBoot)
-	t.Run("iPXE", testDiscoverIPXE)
+func TestRequest(t *testing.T) {
+	t.Run("Selected", testRequestSelected)
+	t.Run("NotSelected", testRequestNotSelected)
+	t.Run("RelayedSelected", testRequestRelayedSelected)
+	t.Run("Confirm", testRequestConfirm)
+	t.Run("Renew", testRequestRenew)
 }
