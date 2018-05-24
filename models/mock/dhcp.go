@@ -51,6 +51,30 @@ func (l *leaseUsage) release(mac net.HardwareAddr) {
 	delete(l.usageMap, idx)
 }
 
+func (l *leaseUsage) decline(mac net.HardwareAddr) {
+	key := mac.String()
+
+	idx, ok := l.macMap[key]
+	if !ok {
+		return
+	}
+
+	declineKey := generateDummyMAC(idx).String()
+	l.macMap[declineKey] = idx
+	delete(l.macMap, key)
+}
+
+func generateDummyMAC(idx int) net.HardwareAddr {
+	return net.HardwareAddr{
+		0xff,
+		0,
+		byte((idx / 256 / 256 / 256) % 256),
+		byte((idx / 256 / 256) % 256),
+		byte((idx / 256) % 256),
+		byte(idx % 256),
+	}
+}
+
 func newLeaseUsage(lr *sabakan.LeaseRange) *leaseUsage {
 	return &leaseUsage{
 		leaseRange: lr,
@@ -145,6 +169,28 @@ func (d *driver) dhcpRelease(ctx context.Context, ciaddr net.IP, mac net.Hardwar
 	return nil
 }
 
+func (d *driver) dhcpDecline(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	ipam, err := d.getIPAMConfig()
+	if err != nil {
+		return err
+	}
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	lr := ipam.LeaseRange(ciaddr)
+	if lr == nil {
+		return errors.New("invalid ciaddr: " + ciaddr.String())
+	}
+
+	key := lr.Key()
+	lu := d.leases[key]
+	if lu != nil {
+		lu.decline(mac)
+	}
+	return nil
+}
+
 type dhcpDriver struct {
 	*driver
 }
@@ -167,4 +213,8 @@ func (d dhcpDriver) Renew(ctx context.Context, ciaddr net.IP, mac net.HardwareAd
 
 func (d dhcpDriver) Release(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
 	return d.dhcpRelease(ctx, ciaddr, mac)
+}
+
+func (d dhcpDriver) Decline(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	return d.dhcpDecline(ctx, ciaddr, mac)
 }
