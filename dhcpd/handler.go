@@ -35,8 +35,8 @@ func (h DHCPHandler) ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf Inte
 		return h.handleDecline(ctx, pkt, intf)
 	case dhcp4.MsgRelease:
 		return h.handleRelease(ctx, pkt, intf)
-		//	case dhcp4.MsgInform:
-		//		return h.handleInform(ctx, pkt, intf)
+	case dhcp4.MsgInform:
+		return h.handleInform(ctx, pkt, intf)
 	default:
 		log.Error("unexpected message type", map[string]interface{}{
 			"type": pkt.Type.String(),
