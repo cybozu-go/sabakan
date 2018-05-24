@@ -342,3 +342,7 @@ func (d dhcpDriver) Renew(ctx context.Context, ciaddr net.IP, mac net.HardwareAd
 func (d dhcpDriver) Release(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
 	return d.dhcpRelease(ctx, ciaddr, mac)
 }
+
+func (d dhcpDriver) Decline(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	return nil
+}

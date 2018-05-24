@@ -43,7 +43,7 @@ func (s Server) Serve(ctx context.Context) error {
 		env.Go(func(ctx context.Context) error {
 			resp, err := s.Handler.ServeDHCP(ctx, pkt, wrappedIntf)
 			switch err {
-			case errNotChosen, errNoRecord:
+			case errNotChosen, errNoRecord, errNoAction:
 				// do nothing
 				return nil
 			case errUnknownMsgType:
