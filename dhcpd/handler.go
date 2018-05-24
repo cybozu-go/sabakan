@@ -33,8 +33,8 @@ func (h DHCPHandler) ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf Inte
 		return h.handleRequest(ctx, pkt, intf)
 	case dhcp4.MsgDecline:
 		return h.handleDecline(ctx, pkt, intf)
-		//	case dhcp4.MsgRelease:
-		//		return h.handleRelease(ctx, pkt, intf)
+	case dhcp4.MsgRelease:
+		return h.handleRelease(ctx, pkt, intf)
 		//	case dhcp4.MsgInform:
 		//		return h.handleInform(ctx, pkt, intf)
 	default:
