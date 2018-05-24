@@ -199,10 +199,48 @@ func testDHCPRelease(t *testing.T) {
 	}
 }
 
+func testDHCPDecline(t *testing.T) {
+	d, ch := testNewDriver(t)
+
+	testSetupConfig(t, d, ch)
+
+	interfaceip := net.ParseIP("10.69.0.195")
+	mac := net.HardwareAddr([]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66})
+
+	dhcpip, err := d.dhcpLease(context.Background(), interfaceip, mac)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = d.dhcpDecline(context.Background(), dhcpip, mac)
+	if err != nil {
+		t.Error(err)
+	}
+
+	dhcpip2, err := d.dhcpLease(context.Background(), interfaceip, mac)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if dhcpip.Equal(dhcpip2) {
+		t.Error("declined IP address should not be used until expired")
+	}
+}
+
+func testDummyMAC(t *testing.T) {
+	mac := generateDummyMAC(257)
+	if mac.String() != "ff:00:00:00:01:01" {
+		t.Error("unexpected MAC address", mac)
+	}
+}
+
 func TestDHCP(t *testing.T) {
 	t.Run("Put", testDHCPPutConfig)
 	t.Run("Get", testDHCPGetConfig)
 	t.Run("Lease", testDHCPLease)
 	t.Run("Renew", testDHCPRenew)
 	t.Run("Release", testDHCPRelease)
+	t.Run("Decline", testDHCPDecline)
+
+	t.Run("Generate Dummy MAC", testDummyMAC)
 }

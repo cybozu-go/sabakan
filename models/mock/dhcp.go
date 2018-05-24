@@ -59,9 +59,20 @@ func (l *leaseUsage) decline(mac net.HardwareAddr) {
 		return
 	}
 
-	declineKey := net.HardwareAddr{0xff, 0, 0, 0, 0, byte(idx)}.String()
+	declineKey := generateDummyMAC(idx).String()
 	l.macMap[declineKey] = idx
 	delete(l.macMap, key)
+}
+
+func generateDummyMAC(idx int) net.HardwareAddr {
+	return net.HardwareAddr{
+		0xff,
+		0,
+		byte((idx / 256 / 256 / 256) % 256),
+		byte((idx / 256 / 256) % 256),
+		byte((idx / 256) % 256),
+		byte(idx % 256),
+	}
 }
 
 func newLeaseUsage(lr *sabakan.LeaseRange) *leaseUsage {

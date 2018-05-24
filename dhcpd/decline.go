@@ -30,6 +30,5 @@ func (h DHCPHandler) handleDecline(ctx context.Context, pkt *dhcp4.Packet, intf 
 	if err != nil {
 		return nil, err
 	}
-
 	return nil, errNoAction
 }
