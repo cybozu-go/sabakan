@@ -95,12 +95,11 @@ func (d *driver) startWatching(ctx context.Context, ch chan<- struct{}) error {
 			}
 			if err != nil {
 				panic(err)
-			} else {
-				select {
-				case ch <- struct{}{}:
-				default:
-				}
 			}
+		}
+		select {
+		case ch <- struct{}{}:
+		default:
 		}
 	}
 

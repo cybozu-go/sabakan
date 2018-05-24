@@ -32,6 +32,8 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch // wait for initialization of rack#0 node-indices
+	<-ch
 
 	resp, err := d.client.Get(context.Background(), t.Name()+KeyMachines+"/5678efgh")
 	if err != nil {
@@ -57,6 +59,8 @@ func testRegister(t *testing.T) {
 	if err != sabakan.ErrConflicted {
 		t.Errorf("unexpected error: %v", err)
 	}
+	// no need to wait; failed registration does not modify etcd,
+	// so it does not generate event
 
 	bootServer := []*sabakan.Machine{
 		&sabakan.Machine{
@@ -75,6 +79,7 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
 	resp, err = d.client.Get(context.Background(), t.Name()+KeyMachines+"/00000000")
 	if err != nil {
@@ -114,6 +119,8 @@ func testQuery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
+	<-ch
 
 	q := sabakan.QueryBySerial("12345678")
 	resp, err := d.Query(context.Background(), q)
@@ -160,11 +167,14 @@ func testDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
+	<-ch
 
 	err = d.Delete(context.Background(), "1234abcd")
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 
 	resp, err := d.client.Get(context.Background(), t.Name()+KeyMachines+"/1234abcd")
 	if err != nil {

@@ -52,10 +52,12 @@ func testIPAMPutConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	<-ch
 	err = d.putIPAMConfig(context.Background(), config)
 	if err == nil {
 		t.Error("should be failed, because some machine is already registered")
 	}
+	<-ch
 }
 
 func testIPAMGetConfig(t *testing.T) {
