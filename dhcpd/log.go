@@ -1,6 +1,7 @@
 package dhcpd
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
 	"sort"
@@ -12,9 +13,9 @@ func getPacketLog(intf string, pkt *dhcp4.Packet) map[string]interface{} {
 	pktLog := map[string]interface{}{
 		"intf":      intf,
 		"type":      pkt.Type.String(),
-		"xid":       pkt.TransactionID,
+		"xid":       binary.BigEndian.Uint32(pkt.TransactionID),
 		"broadcast": pkt.Broadcast,
-		"hwaddr":    pkt.HardwareAddr,
+		"chaddr":    pkt.HardwareAddr,
 	}
 	if len(pkt.ClientAddr) > 0 && !pkt.ClientAddr.Equal(net.IPv4zero) {
 		pktLog["ciaddr"] = pkt.ClientAddr
@@ -37,6 +38,9 @@ func getPacketLog(intf string, pkt *dhcp4.Packet) map[string]interface{} {
 
 func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
 	optLog := make(map[string]interface{})
+
+	optLog["xid"] = binary.BigEndian.Uint32(pkt.TransactionID)
+
 	var opts []int
 	for n := range pkt.Options {
 		opts = append(opts, int(n))
@@ -85,7 +89,6 @@ func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
 				continue
 			}
 		}
-		//fmt.Println(out)
 		optLog[fmt.Sprintf("option%d", n)] = out
 	}
 	return optLog

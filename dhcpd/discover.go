@@ -63,7 +63,7 @@ func isQemuMacAddress(mac net.HardwareAddr) bool {
 
 func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
 	log.Info("received", getPacketLog(intf.Name(), pkt))
-	log.Debug("received", getOptionsLog(pkt))
+	log.Debug("options", getOptionsLog(pkt))
 
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
@@ -101,6 +101,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 	// UEFI HTTP Boot
 	if isUEFIHTTPBoot(pkt) {
 		log.Info("requested UEFI HTTP boot", map[string]interface{}{
+			"xid": binary.BigEndian.Uint32(pkt.TransactionID),
 			"mac": pkt.HardwareAddr.String(),
 			"ip":  yourip.String(),
 		})
@@ -111,6 +112,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 	// iPXE Boot
 	if isIPXEBoot(pkt) {
 		log.Info("requested iPXE boot", map[string]interface{}{
+			"xid": binary.BigEndian.Uint32(pkt.TransactionID),
 			"mac": pkt.HardwareAddr.String(),
 			"ip":  yourip.String(),
 		})
@@ -122,7 +124,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 	}
 
 	log.Info("sent", getPacketLog(intf.Name(), resp))
-	log.Debug("sent", getOptionsLog(resp))
+	log.Debug("options", getOptionsLog(resp))
 
 	return resp, nil
 }

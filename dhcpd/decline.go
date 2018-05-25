@@ -9,7 +9,7 @@ import (
 
 func (h DHCPHandler) handleDecline(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
 	log.Info("received", getPacketLog(intf.Name(), pkt))
-	log.Debug("received", getOptionsLog(pkt))
+	log.Debug("options", getOptionsLog(pkt))
 
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {

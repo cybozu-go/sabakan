@@ -9,7 +9,7 @@ import (
 
 func (h DHCPHandler) handleInform(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
 	log.Info("received", getPacketLog(intf.Name(), pkt))
-	log.Debug("received", getOptionsLog(pkt))
+	log.Debug("options", getOptionsLog(pkt))
 
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
@@ -30,18 +30,8 @@ func (h DHCPHandler) handleInform(ctx context.Context, pkt *dhcp4.Packet, intf I
 		Options:        opts,
 	}
 
-	log.Info("sent", map[string]interface{}{
-		"intf":      intf.Name(),
-		"type":      "DHCPACK",
-		"xid":       resp.TransactionID,
-		"broadcast": resp.Broadcast,
-		"hwaddr":    resp.HardwareAddr,
-		"ciaddr":    resp.ClientAddr,
-		"siaddr":    resp.ServerAddr,
-		"giaddr":    resp.RelayAddr,
-		"sname":     resp.BootServerName,
-	})
-	log.Debug("sent", getOptionsLog(resp))
+	log.Info("sent", getPacketLog(intf.Name(), resp))
+	log.Debug("options", getOptionsLog(resp))
 
 	return resp, nil
 }
