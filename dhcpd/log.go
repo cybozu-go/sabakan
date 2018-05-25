@@ -2,13 +2,41 @@ package dhcpd
 
 import (
 	"fmt"
+	"net"
 	"sort"
 
 	"go.universe.tf/netboot/dhcp4"
 )
 
+func getPacketLog(intf string, pkt *dhcp4.Packet) map[string]interface{} {
+	pktLog := map[string]interface{}{
+		"intf":      intf,
+		"type":      pkt.Type.String(),
+		"xid":       pkt.TransactionID,
+		"broadcast": pkt.Broadcast,
+		"hwaddr":    pkt.HardwareAddr,
+	}
+	if len(pkt.ClientAddr) > 0 && !pkt.ClientAddr.Equal(net.IPv4zero) {
+		pktLog["ciaddr"] = pkt.ClientAddr
+	}
+	if len(pkt.YourAddr) > 0 && !pkt.YourAddr.Equal(net.IPv4zero) {
+		pktLog["yiaddr"] = pkt.YourAddr
+	}
+	if len(pkt.ServerAddr) > 0 && !pkt.ServerAddr.Equal(net.IPv4zero) {
+		pktLog["siaddr"] = pkt.ServerAddr
+	}
+	if len(pkt.RelayAddr) > 0 && !pkt.RelayAddr.Equal(net.IPv4zero) {
+		pktLog["giaddr"] = pkt.RelayAddr
+	}
+	if len(pkt.BootServerName) > 0 {
+		pktLog["sname"] = pkt.BootServerName
+	}
+
+	return pktLog
+}
+
 func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
-	debugLog := make(map[string]interface{})
+	optLog := make(map[string]interface{})
 	var opts []int
 	for n := range pkt.Options {
 		opts = append(opts, int(n))
@@ -58,7 +86,7 @@ func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
 			}
 		}
 		//fmt.Println(out)
-		debugLog[fmt.Sprintf("option%d", n)] = out
+		optLog[fmt.Sprintf("option%d", n)] = out
 	}
-	return debugLog
+	return optLog
 }

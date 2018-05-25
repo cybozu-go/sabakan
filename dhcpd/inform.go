@@ -8,14 +8,7 @@ import (
 )
 
 func (h DHCPHandler) handleInform(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
-	log.Info("received", map[string]interface{}{
-		"intf":      intf.Name(),
-		"type":      "DHCPDISCOVER",
-		"xid":       pkt.TransactionID,
-		"broadcast": pkt.Broadcast,
-		"chaddr":    pkt.HardwareAddr,
-		"ciaddr":    pkt.ClientAddr,
-	})
+	log.Info("received", getPacketLog(intf.Name(), pkt))
 	log.Debug("received", getOptionsLog(pkt))
 
 	serverAddr, err := getIPv4AddrForInterface(intf)
