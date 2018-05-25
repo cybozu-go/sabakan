@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"net"
+	"sort"
 	"strings"
 	"time"
 
@@ -69,11 +70,15 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 		"type":   "DHCPDISCOVER",
 		"chaddr": pkt.HardwareAddr,
 	})
-	log.Debug("received", map[string]interface{}{
+	debugLog := map[string]interface{}{
 		"xid":       pkt.TransactionID,
 		"broadcast": pkt.Broadcast,
-		"options":   pkt.Options,
-	})
+	}
+	debugLog, err := setOptionsToLog(pkt, debugLog)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug("received", debugLog)
 
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
@@ -136,21 +141,31 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 		"yiaddr": pkt.YourAddr,
 		"hwaddr": pkt.HardwareAddr,
 	})
-	debugLog := map[string]interface{}{
+	debugLog = map[string]interface{}{
 		"siaddr": pkt.ServerAddr,
 		"sname":  pkt.BootServerName,
 	}
-	setOptionsToLog(pkt, debugLog)
+	debugLog, err = setOptionsToLog(pkt, debugLog)
+	if err != nil {
+		return nil, err
+	}
 	log.Debug("sent", debugLog)
 
 	return resp, nil
 }
 
-func setOptionsToLog(pkt *dhcp4.Packet, debugLog map[string]interface{}) {
-	//TODO: Cast v to appropriate types
-	for i, v := range pkt.Options {
-		if len(v) > 0 {
-			debugLog[fmt.Sprintf("option%d", i)] = v
-		}
+func setOptionsToLog(pkt *dhcp4.Packet, debugLog map[string]interface{}) (map[string]interface{}, error) {
+	var opts []int
+	for n := range pkt.Options {
+		opts = append(opts, int(n))
 	}
+	sort.Ints(opts)
+	for _, n := range opts {
+		optstring, err := pkt.Options.String(dhcp4.Option(n))
+		if err != nil {
+			return nil, err
+		}
+		debugLog[fmt.Sprintf("option%d", n)] = optstring
+	}
+	return debugLog, nil
 }
