@@ -5,11 +5,8 @@ import (
 	"context"
 	"encoding/binary"
 	"net"
-	"sort"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"github.com/cybozu-go/log"
 	"go.universe.tf/netboot/dhcp4"
@@ -74,11 +71,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 		"xid":       pkt.TransactionID,
 		"broadcast": pkt.Broadcast,
 	}
-	debugLog, err := setOptionsToLog(pkt, debugLog)
-	if err != nil {
-		return nil, err
-	}
-	log.Debug("received", debugLog)
+	log.Debug("received", getOptionsLog(pkt, debugLog))
 
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
@@ -138,34 +131,14 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 	log.Info("sent", map[string]interface{}{
 		"intf":   intf.Name(),
 		"type":   "DHCPOFFER",
-		"yiaddr": pkt.YourAddr,
-		"hwaddr": pkt.HardwareAddr,
+		"yiaddr": resp.YourAddr,
+		"hwaddr": resp.HardwareAddr,
 	})
 	debugLog = map[string]interface{}{
-		"siaddr": pkt.ServerAddr,
-		"sname":  pkt.BootServerName,
+		"siaddr": resp.ServerAddr,
+		"sname":  resp.BootServerName,
 	}
-	debugLog, err = setOptionsToLog(pkt, debugLog)
-	if err != nil {
-		return nil, err
-	}
-	log.Debug("sent", debugLog)
+	log.Debug("sent", getOptionsLog(resp, debugLog))
 
 	return resp, nil
-}
-
-func setOptionsToLog(pkt *dhcp4.Packet, debugLog map[string]interface{}) (map[string]interface{}, error) {
-	var opts []int
-	for n := range pkt.Options {
-		opts = append(opts, int(n))
-	}
-	sort.Ints(opts)
-	for _, n := range opts {
-		optstring, err := pkt.Options.String(dhcp4.Option(n))
-		if err != nil {
-			return nil, err
-		}
-		debugLog[fmt.Sprintf("option%d", n)] = optstring
-	}
-	return debugLog, nil
 }
