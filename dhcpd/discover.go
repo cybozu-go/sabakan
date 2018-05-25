@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"fmt"
+
 	"github.com/cybozu-go/log"
 	"go.universe.tf/netboot/dhcp4"
 )
@@ -62,11 +64,21 @@ func isQemuMacAddress(mac net.HardwareAddr) bool {
 }
 
 func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
+	log.Info("received", map[string]interface{}{
+		"intf":   intf.Name(),
+		"type":   "DHCPDISCOVER",
+		"chaddr": pkt.HardwareAddr,
+	})
+	log.Debug("received", map[string]interface{}{
+		"xid":       pkt.TransactionID,
+		"broadcast": pkt.Broadcast,
+		"options":   pkt.Options,
+	})
+
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
 		return nil, err
 	}
-
 	ifaddr := pkt.RelayAddr
 	if ifaddr == nil || ifaddr.IsUnspecified() {
 		ifaddr = serverAddr
@@ -118,6 +130,27 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 			resp.BootFilename += "?serial=1"
 		}
 	}
+	log.Info("sent", map[string]interface{}{
+		"intf":   intf.Name(),
+		"type":   "DHCPOFFER",
+		"yiaddr": pkt.YourAddr,
+		"hwaddr": pkt.HardwareAddr,
+	})
+	debugLog := map[string]interface{}{
+		"siaddr": pkt.ServerAddr,
+		"sname":  pkt.BootServerName,
+	}
+	setOptionsToLog(pkt, debugLog)
+	log.Debug("sent", debugLog)
 
 	return resp, nil
+}
+
+func setOptionsToLog(pkt *dhcp4.Packet, debugLog map[string]interface{}) {
+	//TODO: Cast v to appropriate types
+	for i, v := range pkt.Options {
+		if len(v) > 0 {
+			debugLog[fmt.Sprintf("option%d", i)] = v
+		}
+	}
 }
