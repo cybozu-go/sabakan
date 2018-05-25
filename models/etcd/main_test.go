@@ -79,7 +79,7 @@ func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 		prefix: t.Name(),
 		mi:     newMachinesIndex(),
 	}
-	ch := make(chan struct{}, 1)
+	ch := make(chan struct{}, 8) // buffers post-modify-done signals, up to 8
 	go d.startWatching(context.Background(), ch)
 	<-ch
 	return d, ch
