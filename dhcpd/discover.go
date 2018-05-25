@@ -63,15 +63,13 @@ func isQemuMacAddress(mac net.HardwareAddr) bool {
 
 func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
 	log.Info("received", map[string]interface{}{
-		"intf":   intf.Name(),
-		"type":   "DHCPDISCOVER",
-		"chaddr": pkt.HardwareAddr,
-	})
-	debugLog := map[string]interface{}{
+		"intf":      intf.Name(),
+		"type":      "DHCPDISCOVER",
 		"xid":       pkt.TransactionID,
 		"broadcast": pkt.Broadcast,
-	}
-	log.Debug("received", getOptionsLog(pkt, debugLog))
+		"chaddr":    pkt.HardwareAddr,
+	})
+	log.Debug("received", getOptionsLog(pkt))
 
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
@@ -128,17 +126,19 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 			resp.BootFilename += "?serial=1"
 		}
 	}
+
 	log.Info("sent", map[string]interface{}{
-		"intf":   intf.Name(),
-		"type":   "DHCPOFFER",
-		"yiaddr": resp.YourAddr,
-		"hwaddr": resp.HardwareAddr,
+		"intf":      intf.Name(),
+		"type":      "DHCPOFFER",
+		"xid":       resp.TransactionID,
+		"broadcast": resp.Broadcast,
+		"hwaddr":    resp.HardwareAddr,
+		"yiaddr":    resp.YourAddr,
+		"siaddr":    resp.ServerAddr,
+		"giaddr":    resp.RelayAddr,
+		"sname":     resp.BootServerName,
 	})
-	debugLog = map[string]interface{}{
-		"siaddr": resp.ServerAddr,
-		"sname":  resp.BootServerName,
-	}
-	log.Debug("sent", getOptionsLog(resp, debugLog))
+	log.Debug("sent", getOptionsLog(resp))
 
 	return resp, nil
 }

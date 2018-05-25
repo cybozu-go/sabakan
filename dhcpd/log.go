@@ -7,7 +7,8 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 )
 
-func getOptionsLog(pkt *dhcp4.Packet, debugLog map[string]interface{}) map[string]interface{} {
+func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
+	debugLog := make(map[string]interface{})
 	var opts []int
 	for n := range pkt.Options {
 		opts = append(opts, int(n))
@@ -56,6 +57,7 @@ func getOptionsLog(pkt *dhcp4.Packet, debugLog map[string]interface{}) map[strin
 				continue
 			}
 		}
+		//fmt.Println(out)
 		debugLog[fmt.Sprintf("option%d", n)] = out
 	}
 	return debugLog

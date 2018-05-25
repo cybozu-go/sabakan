@@ -3,6 +3,7 @@ package dhcpd
 import (
 	"context"
 
+	"github.com/cybozu-go/log"
 	"go.universe.tf/netboot/dhcp4"
 )
 
@@ -14,6 +15,15 @@ import (
 // To distinguish these three, "server identifier" option (54) and
 // "requested IP address" option (50) are used.
 func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
+	log.Info("received", map[string]interface{}{
+		"intf":      intf.Name(),
+		"type":      "DHCPREQUEST",
+		"xid":       pkt.TransactionID,
+		"broadcast": pkt.Broadcast,
+		"chaddr":    pkt.HardwareAddr,
+	})
+	log.Debug("received", getOptionsLog(pkt))
+
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
 		return nil, err
@@ -37,6 +47,20 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 			return nil, err
 		}
 		resp.Type = dhcp4.MsgAck
+
+		log.Info("sent", map[string]interface{}{
+			"intf":      intf.Name(),
+			"type":      "DHCPACK",
+			"xid":       resp.TransactionID,
+			"broadcast": resp.Broadcast,
+			"hwaddr":    resp.HardwareAddr,
+			"yiaddr":    resp.YourAddr,
+			"siaddr":    resp.ServerAddr,
+			"giaddr":    resp.RelayAddr,
+			"sname":     resp.BootServerName,
+		})
+		log.Debug("sent", getOptionsLog(resp))
+
 		return resp, nil
 	}
 
@@ -64,6 +88,19 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 			Options:        opts,
 		}
 
+		log.Info("sent", map[string]interface{}{
+			"intf":      intf.Name(),
+			"type":      "DHCPACK",
+			"xid":       resp.TransactionID,
+			"broadcast": resp.Broadcast,
+			"hwaddr":    resp.HardwareAddr,
+			"yiaddr":    resp.YourAddr,
+			"siaddr":    resp.ServerAddr,
+			"giaddr":    resp.RelayAddr,
+			"sname":     resp.BootServerName,
+		})
+		log.Debug("sent", getOptionsLog(resp))
+
 		return resp, nil
 	}
 
@@ -90,5 +127,20 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 		BootServerName: serverAddr.String(),
 		Options:        opts,
 	}
+
+	log.Info("sent", map[string]interface{}{
+		"intf":      intf.Name(),
+		"type":      "DHCPACK",
+		"xid":       resp.TransactionID,
+		"broadcast": resp.Broadcast,
+		"hwaddr":    resp.HardwareAddr,
+		"ciaddr":    resp.ClientAddr,
+		"yiaddr":    resp.YourAddr,
+		"siaddr":    resp.ServerAddr,
+		"giaddr":    resp.RelayAddr,
+		"sname":     resp.BootServerName,
+	})
+	log.Debug("sent", getOptionsLog(resp))
+
 	return resp, nil
 }
