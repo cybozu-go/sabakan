@@ -9,9 +9,9 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 )
 
-func getPacketLog(intf string, pkt *dhcp4.Packet) map[string]interface{} {
+func getPacketLog(pkt *dhcp4.Packet, intf *net.Interface) map[string]interface{} {
 	pktLog := map[string]interface{}{
-		"intf":      intf,
+		"intf":      intf.Name,
 		"type":      pkt.Type.String(),
 		"xid":       binary.BigEndian.Uint32(pkt.TransactionID),
 		"broadcast": pkt.Broadcast,
