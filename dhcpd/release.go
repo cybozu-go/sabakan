@@ -3,6 +3,7 @@ package dhcpd
 import (
 	"context"
 
+	"github.com/cybozu-go/log"
 	"go.universe.tf/netboot/dhcp4"
 )
 
@@ -18,6 +19,9 @@ func (h DHCPHandler) handleRelease(ctx context.Context, pkt *dhcp4.Packet, intf 
 	}
 
 	if !serverAddr.Equal(serverIdentifier) {
+		log.Warn("dhcp: requested release with inconsistent server id", addPacketLog(pkt, map[string]interface{}{
+			"serverid": serverIdentifier,
+		}))
 		return nil, errNotChosen
 	}
 
@@ -25,5 +29,9 @@ func (h DHCPHandler) handleRelease(ctx context.Context, pkt *dhcp4.Packet, intf 
 	if err != nil {
 		return nil, err
 	}
+
+	log.Info("dhcp: released address", addPacketLog(pkt, map[string]interface{}{
+		"ciaddr": pkt.ClientAddr,
+	}))
 	return nil, errNoAction
 }

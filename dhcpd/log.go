@@ -93,3 +93,13 @@ func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
 	}
 	return optLog
 }
+
+func addPacketLog(pkt *dhcp4.Packet, fields map[string]interface{}) map[string]interface{} {
+	ret := fields
+	if ret == nil {
+		ret = make(map[string]interface{})
+	}
+	ret["xid"] = binary.BigEndian.Uint32(pkt.TransactionID)
+	ret["chaddr"] = pkt.HardwareAddr.String()
+	return ret
+}
