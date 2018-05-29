@@ -8,6 +8,10 @@ REST API
 * [POST /api/v1/machines](#postmachines)
 * [GET /api/v1/machines](#getmachines)
 * [DELETE /api/v1/machines](#deletemachines)
+* [GET /api/v1/images/coreos](#getimageindex)
+* [PUT /api/v1/images/coreos/VERSION](#putimages)
+* [GET /api/v1/images/coreos/VERSION](#getimages)
+* [DELETE /api/v1/images/coreos/VERSION](#deleteimages)
 * [GET /api/v1/boot/ipxe.efi](#getipxe)
 * [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
 * [GET /api/v1/boot/coreos/kernel](#getcoreoskernel)
@@ -208,8 +212,7 @@ Delete registered machine of the `<serial>`.
 **Successful response**
 
 - HTTP status code: 200 OK
-- HTTP response header: `application/json`
-- HTTP response body: JSON
+- HTTP response body: empty
 
 **Failure responses**
 
@@ -221,6 +224,65 @@ Delete registered machine of the `<serial>`.
 $ curl -i -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 (No output in stdout)
 ```
+
+## <a name="getimageindex" />`GET /api/v1/images/coreos`
+
+Get the [image index](image_management.md).
+
+## <a name="putimages" />`PUT /api/v1/images/coreos/<version>`
+
+Upload a tar archive of CoreOS Container Linux boot image.
+The tar file must consist of these two files:
+
+* `kernel`: Linux kernel image.
+* `initrd.gz`: Initial rootfs image.
+
+**Successful response**
+
+- HTTP status code: 201 Created
+- HTTP response header: `application/json`
+- HTTP response body: JSON
+
+**Failure responses**
+
+- The same version has already been registered in the index.
+
+  HTTP status code: 409 Conflict
+
+- Invalid tar image.
+
+  HTTP status code: 400 Bad Request
+
+## <a name="getimages" />`GET /api/v1/images/coreos/<version>`
+
+Download the specified version of the image archive.
+The archive format is the same as PUT; i.e. a tar consists of `kernel` and `initrd.gz`.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `application/tar`
+
+**Failure responses**
+
+- If the version is not found
+
+  HTTP status code: 404 Not found
+
+## <a name="deleteimages" />`DELETE /api/v1/images/coreos/<version>`
+
+Remove the specified version of the image from the index.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response body: empty
+
+**Failure responses**
+
+- If the version is not found
+
+  HTTP status code: 404 Not found
 
 ## <a name="getipxe" />`GET /api/v1/boot/ipxe.efi`
 
