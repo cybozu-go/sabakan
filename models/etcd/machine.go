@@ -157,8 +157,6 @@ func (d *driver) Delete(ctx context.Context, serial string) error {
 		"node_index": m.IndexInRack,
 		"role":       m.Role,
 	})
-	machineKey := path.Join(d.prefix, KeyMachines, serial)
-	indexKey := d.indexInRackKey(m.Rack)
 
 RETRY:
 	usage, err := d.getRackIndexUsage(ctx, m.Rack)
@@ -167,9 +165,31 @@ RETRY:
 	}
 	usage.release(m)
 
-	j, err := json.Marshal(usage)
+	resp, err := d.doDelete(ctx, m, usage)
 	if err != nil {
 		return err
+	}
+
+	if !resp.Succeeded {
+		// revision mismatch
+		goto RETRY
+	}
+
+	if !resp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+		// KeyExists(machineKey) failed
+		return sabakan.ErrNotFound
+	}
+
+	return nil
+}
+
+func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
+	machineKey := path.Join(d.prefix, KeyMachines, machine.Serial)
+	indexKey := d.indexInRackKey(machine.Rack)
+
+	j, err := json.Marshal(usage)
+	if err != nil {
+		return nil, err
 	}
 
 	resp, err := d.client.Txn(ctx).
@@ -186,18 +206,8 @@ RETRY:
 		Else().
 		Commit()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if !resp.Succeeded {
-		// revision mismatch
-		goto RETRY
-	}
-
-	if !resp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
-		// KeyExists(machineKey) failed
-		return sabakan.ErrNotFound
-	}
-
-	return nil
+	return resp, nil
 }

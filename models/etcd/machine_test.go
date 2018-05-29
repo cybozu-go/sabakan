@@ -197,9 +197,16 @@ func testDelete(t *testing.T) {
 func testRegisterRace(t *testing.T) {
 	d, ch := testNewDriver(t)
 	cfg := &testIPAMConfig
+	err := d.putIPAMConfig(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+
 	machines := []*sabakan.Machine{&sabakan.Machine{
 		Serial: "1234abcd", Role: "worker",
 	}}
+
 RETRY:
 	wmcs1, usageMap1, err := d.updateMachines(context.Background(), machines, cfg)
 	if err != nil {
@@ -227,9 +234,63 @@ RETRY:
 	}
 }
 
+func testDeleteRace(t *testing.T) {
+	d, ch := testNewDriver(t)
+	cfg := &testIPAMConfig
+	err := d.putIPAMConfig(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+
+	machines := []*sabakan.Machine{&sabakan.Machine{
+		Serial: "1234abcd", Role: "worker",
+	}}
+
+	err = d.Register(context.Background(), machines)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+	<-ch
+
+	m := machines[0]
+
+RETRY:
+	usage1, err := d.getRackIndexUsage(context.Background(), m.Rack)
+	if err != nil {
+		t.Fatal(err)
+	}
+	usage1.release(m)
+
+	usage2, err := d.getRackIndexUsage(context.Background(), m.Rack)
+	if err != nil {
+		t.Fatal(err)
+	}
+	usage2.release(m)
+
+	resp2, err := d.doDelete(context.Background(), m, usage2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !resp2.Succeeded {
+		goto RETRY
+	}
+	<-ch
+
+	resp1, err := d.doDelete(context.Background(), m, usage1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp1.Succeeded {
+		t.Error("update operations should be failed, if revision number has been changed")
+	}
+}
+
 func TestMachine(t *testing.T) {
 	t.Run("Register", testRegister)
 	t.Run("Query", testQuery)
 	t.Run("Delete", testDelete)
 	t.Run("RegisterRace", testRegisterRace)
+	t.Run("DeleteRace", testDeleteRace)
 }
