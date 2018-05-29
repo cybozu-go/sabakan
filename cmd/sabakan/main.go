@@ -16,7 +16,7 @@ import (
 	"github.com/cybozu-go/sabakan/models/etcd"
 	"github.com/cybozu-go/sabakan/web"
 	"go.universe.tf/netboot/dhcp4"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type etcdConfig struct {
@@ -39,6 +39,7 @@ var (
 
 func main() {
 	flag.Parse()
+	cmd.LogConfig{}.Apply()
 
 	cfg := newConfig()
 	if *flagConfigFile == "" {
