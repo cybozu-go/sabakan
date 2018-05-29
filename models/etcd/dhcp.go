@@ -10,6 +10,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -95,8 +96,10 @@ func (l *leaseUsage) gc() {
 }
 
 func (l *leaseUsage) lease(mac net.HardwareAddr, lr *sabakan.LeaseRange, du time.Duration) (net.IP, error) {
-	if v, ok := l.hwMap[mac.String()]; ok {
-		v.LeaseUntil = time.Now().Add(du)
+	hwAddr := mac.String()
+	leaseUntil := time.Now().Add(du)
+	if v, ok := l.hwMap[hwAddr]; ok {
+		v.LeaseUntil = leaseUntil
 		return lr.IP(v.Index), nil
 	}
 
@@ -107,7 +110,13 @@ func (l *leaseUsage) lease(mac net.HardwareAddr, lr *sabakan.LeaseRange, du time
 			continue
 		}
 		l.usageMap[i] = true
-		l.hwMap[mac.String()] = leaseInfo{i, time.Now().Add(du)}
+		l.hwMap[hwAddr] = leaseInfo{i, leaseUntil}
+		log.Debug("etcd/dhcp: lease", map[string]interface{}{
+			"node_index":  i,
+			"mac":         hwAddr,
+			"ip":          lr.IP(i),
+			"lease_until": leaseUntil,
+		})
 		return lr.IP(i), nil
 	}
 
@@ -115,38 +124,54 @@ func (l *leaseUsage) lease(mac net.HardwareAddr, lr *sabakan.LeaseRange, du time
 }
 
 func (l *leaseUsage) renew(mac net.HardwareAddr, du time.Duration) error {
-	v, ok := l.hwMap[mac.String()]
+	hwAddr := mac.String()
+	v, ok := l.hwMap[hwAddr]
 	if !ok {
-		return errors.New("not leased for " + mac.String())
+		return errors.New("not leased for " + hwAddr)
 	}
 
-	v.LeaseUntil = time.Now().Add(du)
+	leaseUntil := time.Now().Add(du)
+	v.LeaseUntil = leaseUntil
+	log.Debug("etcd/dhcp: renew", map[string]interface{}{
+		"node_index":  v.Index,
+		"mac":         hwAddr,
+		"lease_until": leaseUntil,
+	})
 	return nil
 }
 
 func (l *leaseUsage) release(mac net.HardwareAddr) {
-	key := mac.String()
+	hwAddr := mac.String()
 
-	v, ok := l.hwMap[key]
+	v, ok := l.hwMap[hwAddr]
 	if !ok {
 		return
 	}
 
+	log.Debug("etcd/dhcp: release", map[string]interface{}{
+		"node_index": v.Index,
+		"mac":        hwAddr,
+	})
 	delete(l.usageMap, v.Index)
-	delete(l.hwMap, key)
+	delete(l.hwMap, hwAddr)
 }
 
 func (l *leaseUsage) decline(mac net.HardwareAddr) {
-	key := mac.String()
+	hwAddr := mac.String()
 
-	v, ok := l.hwMap[key]
+	v, ok := l.hwMap[hwAddr]
 	if !ok {
 		return
 	}
 
+	log.Debug("etcd/dhcp: decline", map[string]interface{}{
+		"node_index": v.Index,
+		"mac":        hwAddr,
+	})
+
 	declineKey := generateDummyMAC(v.Index).String()
 	l.hwMap[declineKey] = v
-	delete(l.hwMap, key)
+	delete(l.hwMap, hwAddr)
 }
 
 func generateDummyMAC(idx int) net.HardwareAddr {
