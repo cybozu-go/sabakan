@@ -95,3 +95,30 @@ $ sabactl machines remove <serial>
     We should not unregister machines by their serials, but by their statuses.
     We can unregister machines only if their statuses are "to be repaired" or "to be discarded" or anythin like those.
     So the parameters of this command should be `--state <state>`.
+
+`sabactl images [-os OS] index`
+-------------------------------
+
+Get the current index of the OS images as JSON.
+`-os` specifies OS of the image.  If not given, the OS will be "coreos".
+
+
+`sabactl images [-os OS] upload`
+----------------------------------------
+
+```console
+$ sabactl images upload 1745.4.0 coreos_production_pxe.vmlinuz coreos_production_pxe_image.cpio.gz
+```
+
+Upload the boot image as VERSION.
+`-os` specifies OS of the image.  If not given, the OS will be "coreos".
+
+`sabactl images [-os OS] delete`
+----------------------------------------
+
+```console
+$ sabactl images delete 1745.4.0
+```
+
+Delete a version of the image.
+`-os` specifies OS of the image.  If not given, the OS will be "coreos".

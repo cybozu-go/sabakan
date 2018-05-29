@@ -71,6 +71,12 @@ $ etcdctl get /sabakan/crypts/1234abcd/pci-0000:00:1f.2-ata-3 --print-value-only
 (This returns a binary key.)
 ```
 
+`<prefix>/images/coreos`
+------------------------
+
+This type of key holds the index of CoreOS container Linux images.
+The value is described in [boot image management](image_management.md).
+
 `<prefix>/ipam`
 ---------------
 
