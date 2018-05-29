@@ -15,9 +15,6 @@ import (
 // To distinguish these three, "server identifier" option (54) and
 // "requested IP address" option (50) are used.
 func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
-	log.Info("received", getPacketLog(intf.Name(), pkt))
-	log.Debug("options", getOptionsLog(pkt))
-
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
 		return nil, err
@@ -33,8 +30,13 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 		// case 1.
 		if !serverAddr.Equal(serverIdentifier) {
 			// not chosen
+			log.Info("dhcp: ignored request to another server", addPacketLog(pkt, map[string]interface{}{
+				optionLogKey(dhcp4.OptServerIdentifier): serverIdentifier,
+			}))
 			return nil, errNotChosen
 		}
+
+		log.Info("dhcp: received response to OFFER", addPacketLog(pkt, nil))
 
 		resp, err := h.handleDiscover(ctx, pkt, intf)
 		if err != nil {
@@ -42,16 +44,20 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 		}
 		resp.Type = dhcp4.MsgAck
 
-		log.Info("sent", getPacketLog(intf.Name(), resp))
-		log.Debug("options", getOptionsLog(resp))
-
 		return resp, nil
 	}
 
 	if hasRequestedIP {
 		// case 2.
+		log.Info("dhcp: requested confirmation on reboot", addPacketLog(pkt, map[string]interface{}{
+			optionLogKey(dhcp4.OptRequestedIP): requestedIP,
+		}))
+
 		err = h.DHCP.Renew(ctx, requestedIP, pkt.HardwareAddr)
 		if err != nil {
+			log.Warn("dhcp: requested confirmation but found no record", addPacketLog(pkt, map[string]interface{}{
+				optionLogKey(dhcp4.OptRequestedIP): requestedIP,
+			}))
 			return nil, errNoRecord
 		}
 
@@ -72,15 +78,19 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 			Options:        opts,
 		}
 
-		log.Info("sent", getPacketLog(intf.Name(), resp))
-		log.Debug("options", getOptionsLog(resp))
-
 		return resp, nil
 	}
 
 	// case 3.
+	log.Info("dhcp: requested renewal", addPacketLog(pkt, map[string]interface{}{
+		pktCiaddr: pkt.ClientAddr,
+	}))
+
 	err = h.DHCP.Renew(ctx, pkt.ClientAddr, pkt.HardwareAddr)
 	if err != nil {
+		log.Warn("dhcp: requested renewal but found no record", addPacketLog(pkt, map[string]interface{}{
+			pktCiaddr: pkt.ClientAddr,
+		}))
 		return nil, errNoRecord
 	}
 
@@ -101,9 +111,6 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 		BootServerName: serverAddr.String(),
 		Options:        opts,
 	}
-
-	log.Info("sent", getPacketLog(intf.Name(), resp))
-	log.Debug("options", getOptionsLog(resp))
 
 	return resp, nil
 }

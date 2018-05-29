@@ -62,9 +62,6 @@ func isQemuMacAddress(mac net.HardwareAddr) bool {
 }
 
 func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
-	log.Info("received", getPacketLog(intf.Name(), pkt))
-	log.Debug("options", getOptionsLog(pkt))
-
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
 		return nil, err
@@ -100,31 +97,24 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 
 	// UEFI HTTP Boot
 	if isUEFIHTTPBoot(pkt) {
-		log.Info("requested UEFI HTTP boot", map[string]interface{}{
-			"xid": binary.BigEndian.Uint32(pkt.TransactionID),
-			"mac": pkt.HardwareAddr.String(),
-			"ip":  yourip.String(),
-		})
+		log.Info("dhcp: requested UEFI HTTP boot", addPacketLog(pkt, map[string]interface{}{
+			pktYiaddr: yourip.String(),
+		}))
 		opts[dhcp4.OptVendorIdentifier] = []byte("HTTPClient")
 		resp.BootFilename = h.makeBootAPIURL(serverAddr, "ipxe.efi")
 	}
 
 	// iPXE Boot
 	if isIPXEBoot(pkt) {
-		log.Info("requested iPXE boot", map[string]interface{}{
-			"xid": binary.BigEndian.Uint32(pkt.TransactionID),
-			"mac": pkt.HardwareAddr.String(),
-			"ip":  yourip.String(),
-		})
+		log.Info("dhcp: requested iPXE boot", addPacketLog(pkt, map[string]interface{}{
+			pktYiaddr: yourip.String(),
+		}))
 		// iPXE script to boot CoreOS Container Linux
 		resp.BootFilename = h.makeBootAPIURL(serverAddr, "coreos/ipxe")
 		if isQemuMacAddress(pkt.HardwareAddr) {
 			resp.BootFilename += "?serial=1"
 		}
 	}
-
-	log.Info("sent", getPacketLog(intf.Name(), resp))
-	log.Debug("options", getOptionsLog(resp))
 
 	return resp, nil
 }

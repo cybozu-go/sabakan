@@ -9,9 +9,43 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 )
 
-func getPacketLog(intf string, pkt *dhcp4.Packet) map[string]interface{} {
+const (
+	pktCiaddr = "ciaddr"
+	pktYiaddr = "yiaddr"
+)
+
+var optionNames = map[dhcp4.Option]string{
+	dhcp4.OptSubnetMask:         "subnet_mask",
+	dhcp4.OptTimeOffset:         "time_offset",
+	dhcp4.OptRouters:            "router",
+	dhcp4.OptDNSServers:         "domain_name_server",
+	dhcp4.OptHostname:           "host_name",
+	dhcp4.OptBootFileSize:       "boot_file_size",
+	dhcp4.OptDomainName:         "domain_name",
+	dhcp4.OptBroadcastAddr:      "broadcast_address",
+	dhcp4.OptNTPServers:         "ntp_server",
+	dhcp4.OptVendorSpecific:     "vender_specific",
+	dhcp4.OptRequestedIP:        "requested_ip_address",
+	dhcp4.OptLeaseTime:          "lease_time",
+	dhcp4.OptOverload:           "overload",
+	dhcp4.OptServerIdentifier:   "server_identifier",
+	dhcp4.OptRequestedOptions:   "requested_options",
+	dhcp4.OptMessage:            "message",
+	dhcp4.OptMaximumMessageSize: "maximum_message_size",
+	dhcp4.OptRenewalTime:        "renewal_time",
+	dhcp4.OptRebindingTime:      "rebinding_time",
+	dhcp4.OptVendorIdentifier:   "vendor_class_identifier",
+	dhcp4.OptClientIdentifier:   "client_identifier",
+	dhcp4.OptFQDN:               "fqdn",
+}
+
+func optionLogKey(n dhcp4.Option) string {
+	return fmt.Sprintf("option_%d_%s", n, optionNames[n])
+}
+
+func getPacketLog(pkt *dhcp4.Packet, intf *net.Interface) map[string]interface{} {
 	pktLog := map[string]interface{}{
-		"intf":      intf,
+		"intf":      intf.Name,
 		"type":      pkt.Type.String(),
 		"xid":       binary.BigEndian.Uint32(pkt.TransactionID),
 		"broadcast": pkt.Broadcast,
@@ -84,12 +118,23 @@ func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
 				continue
 			}
 		default:
+			// TODO: escape non-ASCII string
 			out, err = pkt.Options.String(targetOpt)
 			if err != nil {
 				continue
 			}
 		}
-		optLog[fmt.Sprintf("option%d", n)] = out
+		optLog[optionLogKey(targetOpt)] = out
 	}
 	return optLog
+}
+
+func addPacketLog(pkt *dhcp4.Packet, fields map[string]interface{}) map[string]interface{} {
+	ret := fields
+	if ret == nil {
+		ret = make(map[string]interface{})
+	}
+	ret["xid"] = binary.BigEndian.Uint32(pkt.TransactionID)
+	ret["chaddr"] = pkt.HardwareAddr.String()
+	return ret
 }

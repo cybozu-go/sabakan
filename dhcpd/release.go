@@ -8,9 +8,6 @@ import (
 )
 
 func (h DHCPHandler) handleRelease(ctx context.Context, pkt *dhcp4.Packet, intf Interface) (*dhcp4.Packet, error) {
-	log.Info("received", getPacketLog(intf.Name(), pkt))
-	log.Debug("options", getOptionsLog(pkt))
-
 	serverAddr, err := getIPv4AddrForInterface(intf)
 	if err != nil {
 		return nil, err
@@ -22,6 +19,9 @@ func (h DHCPHandler) handleRelease(ctx context.Context, pkt *dhcp4.Packet, intf 
 	}
 
 	if !serverAddr.Equal(serverIdentifier) {
+		log.Warn("dhcp: requested release with inconsistent server id", addPacketLog(pkt, map[string]interface{}{
+			optionLogKey(dhcp4.OptServerIdentifier): serverIdentifier,
+		}))
 		return nil, errNotChosen
 	}
 
@@ -29,5 +29,9 @@ func (h DHCPHandler) handleRelease(ctx context.Context, pkt *dhcp4.Packet, intf 
 	if err != nil {
 		return nil, err
 	}
+
+	log.Info("dhcp: released address", addPacketLog(pkt, map[string]interface{}{
+		pktCiaddr: pkt.ClientAddr,
+	}))
 	return nil, errNoAction
 }
