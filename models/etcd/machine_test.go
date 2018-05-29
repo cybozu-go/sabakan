@@ -163,6 +163,7 @@ func testDelete(t *testing.T) {
 		},
 	}
 
+	// register one
 	err = d.Register(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
@@ -170,12 +171,14 @@ func testDelete(t *testing.T) {
 	<-ch
 	<-ch
 
+	// delete one
 	err = d.Delete(context.Background(), "1234abcd")
 	if err != nil {
 		t.Fatal(err)
 	}
 	<-ch
 
+	// confirm deletion
 	resp, err := d.client.Get(context.Background(), t.Name()+KeyMachines+"/1234abcd")
 	if err != nil {
 		t.Fatal(err)
@@ -184,6 +187,7 @@ func testDelete(t *testing.T) {
 		t.Error("machine was not deleted")
 	}
 
+	// double delete
 	err = d.Delete(context.Background(), "1234abcd")
 	if err != sabakan.ErrNotFound {
 		if err == nil {
@@ -191,6 +195,21 @@ func testDelete(t *testing.T) {
 		} else {
 			t.Fatal(err)
 		}
+	}
+
+	// register after delete
+	err = d.Register(context.Background(), machines)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+
+	resp, err = d.client.Get(context.Background(), t.Name()+KeyMachines+"/1234abcd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Kvs) != 1 {
+		t.Error("failed to register machine after delete")
 	}
 }
 
