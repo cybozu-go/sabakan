@@ -96,6 +96,9 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 
 	res := make([]*sabakan.Machine, 0, len(serials))
 	for _, serial := range serials {
+		log.Debug("etcd/machine: query serial", map[string]interface{}{
+			"serial": serial,
+		})
 		key := path.Join(d.prefix, KeyMachines, serial)
 		resp, err := d.client.Get(ctx, key)
 		if err != nil {
