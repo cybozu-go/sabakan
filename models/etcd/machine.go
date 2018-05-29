@@ -8,6 +8,7 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/coreos/etcd/etcdserver/etcdserverpb"
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -29,6 +30,12 @@ RETRY:
 	for i, rmc := range machines {
 		cfg.GenerateIP(rmc)
 		wmcs[i] = rmc
+		log.Debug("etcd/machine: register", map[string]interface{}{
+			"serial":     rmc.Serial,
+			"rack":       rmc.Rack,
+			"node_index": rmc.IndexInRack,
+			"role":       rmc.Role,
+		})
 	}
 
 	// Put machines into etcd
@@ -89,6 +96,9 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 
 	res := make([]*sabakan.Machine, 0, len(serials))
 	for _, serial := range serials {
+		log.Debug("etcd/machine: query serial", map[string]interface{}{
+			"serial": serial,
+		})
 		key := path.Join(d.prefix, KeyMachines, serial)
 		resp, err := d.client.Get(ctx, key)
 		if err != nil {
@@ -128,7 +138,12 @@ func (d *driver) Delete(ctx context.Context, serial string) error {
 	}
 
 	m := machines[0]
-
+	log.Debug("etcd/machine: delete", map[string]interface{}{
+		"serial":     m.Serial,
+		"rack":       m.Rack,
+		"node_index": m.IndexInRack,
+		"role":       m.Role,
+	})
 	machineKey := path.Join(d.prefix, KeyMachines, serial)
 	indexKey := d.indexInRackKey(m.Rack)
 
