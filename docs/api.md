@@ -9,9 +9,9 @@ REST API
 * [GET /api/v1/machines](#getmachines)
 * [DELETE /api/v1/machines](#deletemachines)
 * [GET /api/v1/images/coreos](#getimageindex)
-* [PUT /api/v1/images/coreos/VERSION](#putimages)
-* [GET /api/v1/images/coreos/VERSION](#getimages)
-* [DELETE /api/v1/images/coreos/VERSION](#deleteimages)
+* [PUT /api/v1/images/coreos/ID](#putimages)
+* [GET|HEAD /api/v1/images/coreos/ID](#getimages)
+* [DELETE /api/v1/images/coreos/ID](#deleteimages)
 * [GET /api/v1/boot/ipxe.efi](#getipxe)
 * [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
 * [GET /api/v1/boot/coreos/kernel](#getcoreoskernel)
@@ -229,7 +229,7 @@ $ curl -i -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 
 Get the [image index](image_management.md).
 
-## <a name="putimages" />`PUT /api/v1/images/coreos/<version>`
+## <a name="putimages" />`PUT /api/v1/images/coreos/<id>`
 
 Upload a tar archive of CoreOS Container Linux boot image.
 The tar file must consist of these two files:
@@ -245,18 +245,20 @@ The tar file must consist of these two files:
 
 **Failure responses**
 
-- The same version has already been registered in the index.
+- An image having the same ID has already been registered in the index.
 
   HTTP status code: 409 Conflict
 
-- Invalid tar image.
+- Invalid tar image or invalid ID.
 
   HTTP status code: 400 Bad Request
 
-## <a name="getimages" />`GET /api/v1/images/coreos/<version>`
+## <a name="getimages" />`GET|HEAD /api/v1/images/coreos/<id>`
 
-Download the specified version of the image archive.
+Download the image archive specified by `<id>`.
 The archive format is the same as PUT; i.e. a tar consists of `kernel` and `initrd.gz`.
+
+For `HEAD` requests, the response body will be empty.
 
 **Successful response**
 
@@ -265,13 +267,13 @@ The archive format is the same as PUT; i.e. a tar consists of `kernel` and `init
 
 **Failure responses**
 
-- If the version is not found
+- No image has the ID.
 
   HTTP status code: 404 Not found
 
-## <a name="deleteimages" />`DELETE /api/v1/images/coreos/<version>`
+## <a name="deleteimages" />`DELETE /api/v1/images/coreos/<id>`
 
-Remove the specified version of the image from the index.
+Remove the image specified by `<id>` from the index.
 
 **Successful response**
 
@@ -280,7 +282,7 @@ Remove the specified version of the image from the index.
 
 **Failure responses**
 
-- If the version is not found
+- No image has the ID.
 
   HTTP status code: 404 Not found
 

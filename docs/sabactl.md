@@ -100,25 +100,27 @@ $ sabactl machines remove <serial>
 -------------------------------
 
 Get the current index of the OS images as JSON.
-`-os` specifies OS of the image.  If not given, the OS will be "coreos".
 
+* `-os`: specifies OS of the image.  Default is "coreos"
 
 `sabactl images [-os OS] upload`
 ----------------------------------------
 
 ```console
-$ sabactl images upload 1745.4.0 coreos_production_pxe.vmlinuz coreos_production_pxe_image.cpio.gz
+$ sabactl images upload ID coreos_production_pxe.vmlinuz coreos_production_pxe_image.cpio.gz
 ```
 
-Upload the boot image as VERSION.
-`-os` specifies OS of the image.  If not given, the OS will be "coreos".
+Upload a set of boot image files identified by `ID`.
+
+* `-os`: specifies OS of the image.  Default is "coreos"
 
 `sabactl images [-os OS] delete`
 ----------------------------------------
 
 ```console
-$ sabactl images delete 1745.4.0
+$ sabactl images delete ID
 ```
 
-Delete a version of the image.
-`-os` specifies OS of the image.  If not given, the OS will be "coreos".
+Delete an image.
+
+* `-os`: specifies OS of the image.  Default is "coreos"
