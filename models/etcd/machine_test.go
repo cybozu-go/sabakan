@@ -194,8 +194,42 @@ func testDelete(t *testing.T) {
 	}
 }
 
+func testRegisterRace(t *testing.T) {
+	d, ch := testNewDriver(t)
+	cfg := &testIPAMConfig
+	machines := []*sabakan.Machine{&sabakan.Machine{
+		Serial: "1234abcd", Role: "worker",
+	}}
+RETRY:
+	wmcs1, usageMap1, err := d.updateMachines(context.Background(), machines, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wmcs2, usageMap2, err := d.updateMachines(context.Background(), machines, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tresp2, err := d.doRegister(context.Background(), wmcs2, usageMap2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !tresp2.Succeeded {
+		goto RETRY
+	}
+	<-ch
+
+	tresp1, err := d.doRegister(context.Background(), wmcs1, usageMap1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tresp1.Succeeded {
+		t.Error("update operations should be failed, if revision number has been changed")
+	}
+}
+
 func TestMachine(t *testing.T) {
 	t.Run("Register", testRegister)
 	t.Run("Query", testQuery)
 	t.Run("Delete", testDelete)
+	t.Run("RegisterRace", testRegisterRace)
 }

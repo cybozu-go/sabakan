@@ -14,62 +14,16 @@ import (
 
 // Register implements sabakan.MachineModel
 func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
-	wmcs := make([]*sabakan.Machine, len(machines))
-
 	cfg, err := d.getIPAMConfig()
 	if err != nil {
 		return err
 	}
-
 RETRY:
-	// Assign node indices temporarily
-	usageMap, err := d.assignNodeIndex(ctx, machines, cfg)
+	wmcs, usageMap, err := d.updateMachines(ctx, machines, cfg)
 	if err != nil {
 		return err
 	}
-	for i, rmc := range machines {
-		cfg.GenerateIP(rmc)
-		wmcs[i] = rmc
-		log.Debug("etcd/machine: register", map[string]interface{}{
-			"serial":     rmc.Serial,
-			"rack":       rmc.Rack,
-			"node_index": rmc.IndexInRack,
-			"role":       rmc.Role,
-		})
-	}
-
-	// Put machines into etcd
-	conflictMachinesIfOps := []clientv3.Cmp{}
-	usageCASIfOps := []clientv3.Cmp{}
-	txnThenOps := []clientv3.Op{}
-	for _, wmc := range wmcs {
-		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
-		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
-		j, err := json.Marshal(wmc)
-		if err != nil {
-			return err
-		}
-		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
-	}
-	for rack, usage := range usageMap {
-		key := d.indexInRackKey(rack)
-		j, err := json.Marshal(usage)
-		if err != nil {
-			return err
-		}
-		usageCASIfOps = append(usageCASIfOps, clientv3.Compare(clientv3.ModRevision(key), "=", usage.revision))
-		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
-	}
-
-	tresp, err := d.client.Txn(ctx).
-		If(
-			usageCASIfOps...,
-		).
-		Then(
-			clientv3.OpTxn(conflictMachinesIfOps, txnThenOps, nil),
-		).
-		Else().
-		Commit()
+	tresp, err := d.doRegister(ctx, wmcs, usageMap)
 	if err != nil {
 		return err
 	}
@@ -83,6 +37,63 @@ RETRY:
 	}
 
 	return nil
+}
+
+func (d *driver) updateMachines(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) ([]*sabakan.Machine, map[uint]*rackIndexUsage, error) {
+	wmcs := make([]*sabakan.Machine, len(machines))
+	// Assign node indices temporarily
+	usageMap, err := d.assignNodeIndex(ctx, machines, config)
+	if err != nil {
+		return nil, nil, err
+	}
+	for i, rmc := range machines {
+		config.GenerateIP(rmc)
+		wmcs[i] = rmc
+		log.Debug("etcd/machine: register", map[string]interface{}{
+			"serial":     rmc.Serial,
+			"rack":       rmc.Rack,
+			"node_index": rmc.IndexInRack,
+			"role":       rmc.Role,
+		})
+	}
+	return wmcs, usageMap, nil
+}
+
+func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageMap map[uint]*rackIndexUsage) (*clientv3.TxnResponse, error) {
+	// Put machines into etcd
+	conflictMachinesIfOps := []clientv3.Cmp{}
+	usageCASIfOps := []clientv3.Cmp{}
+	txnThenOps := []clientv3.Op{}
+	for _, wmc := range wmcs {
+		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
+		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
+		j, err := json.Marshal(wmc)
+		if err != nil {
+			return nil, err
+		}
+		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
+	}
+	for rack, usage := range usageMap {
+		key := d.indexInRackKey(rack)
+		j, err := json.Marshal(usage)
+		if err != nil {
+			return nil, err
+		}
+
+		usageCASIfOps = append(usageCASIfOps, clientv3.Compare(clientv3.ModRevision(key), "=", usage.revision))
+		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
+	}
+
+	tresp, err := d.client.Txn(ctx).
+		If(
+			usageCASIfOps...,
+		).
+		Then(
+			clientv3.OpTxn(conflictMachinesIfOps, txnThenOps, nil),
+		).
+		Else().
+		Commit()
+	return tresp, err
 }
 
 // Query implements sabakan.MachineModel
