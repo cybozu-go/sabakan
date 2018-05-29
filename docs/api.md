@@ -212,8 +212,7 @@ Delete registered machine of the `<serial>`.
 **Successful response**
 
 - HTTP status code: 200 OK
-- HTTP response header: `application/json`
-- HTTP response body: JSON
+- HTTP response body: empty
 
 **Failure responses**
 
@@ -277,7 +276,7 @@ Remove the specified version of the image from the index.
 **Successful response**
 
 - HTTP status code: 200 OK
-- HTTP response header: `application/json`
+- HTTP response body: empty
 
 **Failure responses**
 
