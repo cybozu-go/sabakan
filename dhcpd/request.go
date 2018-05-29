@@ -31,7 +31,7 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 		if !serverAddr.Equal(serverIdentifier) {
 			// not chosen
 			log.Info("dhcp: ignored request to another server", addPacketLog(pkt, map[string]interface{}{
-				"serverid": serverIdentifier,
+				optionLogKey(dhcp4.OptServerIdentifier): serverIdentifier,
 			}))
 			return nil, errNotChosen
 		}
@@ -50,13 +50,13 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 	if hasRequestedIP {
 		// case 2.
 		log.Info("dhcp: requested confirmation on reboot", addPacketLog(pkt, map[string]interface{}{
-			"requested": requestedIP,
+			optionLogKey(dhcp4.OptRequestedIP): requestedIP,
 		}))
 
 		err = h.DHCP.Renew(ctx, requestedIP, pkt.HardwareAddr)
 		if err != nil {
 			log.Warn("dhcp: requested confirmation but found no record", addPacketLog(pkt, map[string]interface{}{
-				"requested": requestedIP,
+				optionLogKey(dhcp4.OptRequestedIP): requestedIP,
 			}))
 			return nil, errNoRecord
 		}
@@ -83,13 +83,13 @@ func (h DHCPHandler) handleRequest(ctx context.Context, pkt *dhcp4.Packet, intf 
 
 	// case 3.
 	log.Info("dhcp: requested renewal", addPacketLog(pkt, map[string]interface{}{
-		"ciaddr": pkt.ClientAddr,
+		pktCiaddr: pkt.ClientAddr,
 	}))
 
 	err = h.DHCP.Renew(ctx, pkt.ClientAddr, pkt.HardwareAddr)
 	if err != nil {
 		log.Warn("dhcp: requested renewal but found no record", addPacketLog(pkt, map[string]interface{}{
-			"ciaddr": pkt.ClientAddr,
+			pktCiaddr: pkt.ClientAddr,
 		}))
 		return nil, errNoRecord
 	}

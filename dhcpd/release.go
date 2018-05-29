@@ -20,7 +20,7 @@ func (h DHCPHandler) handleRelease(ctx context.Context, pkt *dhcp4.Packet, intf 
 
 	if !serverAddr.Equal(serverIdentifier) {
 		log.Warn("dhcp: requested release with inconsistent server id", addPacketLog(pkt, map[string]interface{}{
-			"serverid": serverIdentifier,
+			optionLogKey(dhcp4.OptServerIdentifier): serverIdentifier,
 		}))
 		return nil, errNotChosen
 	}
@@ -31,7 +31,7 @@ func (h DHCPHandler) handleRelease(ctx context.Context, pkt *dhcp4.Packet, intf 
 	}
 
 	log.Info("dhcp: released address", addPacketLog(pkt, map[string]interface{}{
-		"ciaddr": pkt.ClientAddr,
+		pktCiaddr: pkt.ClientAddr,
 	}))
 	return nil, errNoAction
 }

@@ -98,7 +98,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 	// UEFI HTTP Boot
 	if isUEFIHTTPBoot(pkt) {
 		log.Info("dhcp: requested UEFI HTTP boot", addPacketLog(pkt, map[string]interface{}{
-			"yiaddr": yourip.String(),
+			pktYiaddr: yourip.String(),
 		}))
 		opts[dhcp4.OptVendorIdentifier] = []byte("HTTPClient")
 		resp.BootFilename = h.makeBootAPIURL(serverAddr, "ipxe.efi")
@@ -107,7 +107,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 	// iPXE Boot
 	if isIPXEBoot(pkt) {
 		log.Info("dhcp: requested iPXE boot", addPacketLog(pkt, map[string]interface{}{
-			"yiaddr": yourip.String(),
+			pktYiaddr: yourip.String(),
 		}))
 		// iPXE script to boot CoreOS Container Linux
 		resp.BootFilename = h.makeBootAPIURL(serverAddr, "coreos/ipxe")

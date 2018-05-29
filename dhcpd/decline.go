@@ -20,7 +20,7 @@ func (h DHCPHandler) handleDecline(ctx context.Context, pkt *dhcp4.Packet, intf 
 
 	if !serverAddr.Equal(serverIdentifier) {
 		log.Info("dhcp: ignored decline to another server", addPacketLog(pkt, map[string]interface{}{
-			"serverid": serverIdentifier,
+			optionLogKey(dhcp4.OptServerIdentifier): serverIdentifier,
 		}))
 		return nil, errNotChosen
 	}
@@ -36,7 +36,7 @@ func (h DHCPHandler) handleDecline(ctx context.Context, pkt *dhcp4.Packet, intf 
 	}
 
 	log.Info("dhcp: marked address as declined", addPacketLog(pkt, map[string]interface{}{
-		"requested": requestedIP,
+		optionLogKey(dhcp4.OptRequestedIP): requestedIP,
 	}))
 	return nil, errNoAction
 }
