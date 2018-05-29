@@ -6,6 +6,7 @@ import (
 	"net"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/sabakan"
@@ -227,6 +228,52 @@ func testDHCPDecline(t *testing.T) {
 	}
 }
 
+func testDHCPLeaseExpiration(t *testing.T) {
+	d, ch := testNewDriver(t)
+
+	testSetupConfig(t, d, ch)
+
+	ipam, err := d.getIPAMConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	interfaceip := net.ParseIP("10.69.0.195")
+	mac := net.HardwareAddr([]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66})
+	dhcpip, err := d.dhcpLease(context.Background(), interfaceip, mac)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// update lease expiration to 2000-01-01
+	lr := ipam.LeaseRange(interfaceip)
+	lrkey := lr.Key()
+RETRY:
+	lu, err := d.getLeaseUsage(context.Background(), lrkey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	li := lu.hwMap[mac.String()]
+	li.LeaseUntil = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+	lu.hwMap[mac.String()] = li
+	succeeded, err := d.updateLeaseUsage(context.Background(), lrkey, lu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !succeeded {
+		goto RETRY
+	}
+
+	mac2 := net.HardwareAddr([]byte{0x22, 0x33, 0x44, 0x55, 0x66, 0x77})
+	dhcpip2, err := d.dhcpLease(context.Background(), interfaceip, mac2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !dhcpip2.Equal(dhcpip) {
+		t.Error("expired address was not reused")
+	}
+}
+
 func testDummyMAC(t *testing.T) {
 	mac := generateDummyMAC(257)
 	if mac.String() != "ff:00:00:00:01:01" {
@@ -241,6 +288,7 @@ func TestDHCP(t *testing.T) {
 	t.Run("Renew", testDHCPRenew)
 	t.Run("Release", testDHCPRelease)
 	t.Run("Decline", testDHCPDecline)
+	t.Run("Expire", testDHCPLeaseExpiration)
 
 	t.Run("Generate Dummy MAC", testDummyMAC)
 }
