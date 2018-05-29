@@ -9,6 +9,31 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 )
 
+var optionNames = map[dhcp4.Option]string{
+	dhcp4.OptSubnetMask:         "subnet mask",
+	dhcp4.OptTimeOffset:         "time offset",
+	dhcp4.OptRouters:            "router",
+	dhcp4.OptDNSServers:         "domain name server",
+	dhcp4.OptHostname:           "hostname",
+	dhcp4.OptBootFileSize:       "boot file size",
+	dhcp4.OptDomainName:         "domain name",
+	dhcp4.OptBroadcastAddr:      "broadcast address",
+	dhcp4.OptNTPServers:         "NTP server",
+	dhcp4.OptVendorSpecific:     "vender specific",
+	dhcp4.OptRequestedIP:        "requested IP address",
+	dhcp4.OptLeaseTime:          "lease time",
+	dhcp4.OptOverload:           "overload",
+	dhcp4.OptServerIdentifier:   "server identifier",
+	dhcp4.OptRequestedOptions:   "requested options",
+	dhcp4.OptMessage:            "message",
+	dhcp4.OptMaximumMessageSize: "maximum message size",
+	dhcp4.OptRenewalTime:        "renewal time",
+	dhcp4.OptRebindingTime:      "rebinding time",
+	dhcp4.OptVendorIdentifier:   "vendor class identifier",
+	dhcp4.OptClientIdentifier:   "client identifier",
+	dhcp4.OptFQDN:               "FQDN",
+}
+
 func getPacketLog(pkt *dhcp4.Packet, intf *net.Interface) map[string]interface{} {
 	pktLog := map[string]interface{}{
 		"intf":      intf.Name,
@@ -89,7 +114,7 @@ func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
 				continue
 			}
 		}
-		optLog[fmt.Sprintf("option%d", n)] = out
+		optLog[fmt.Sprintf("option%d(%s)", n, optionNames[dhcp4.Option(n)])] = out
 	}
 	return optLog
 }

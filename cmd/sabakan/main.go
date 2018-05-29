@@ -35,6 +35,7 @@ var (
 
 func main() {
 	flag.Parse()
+	cmd.LogConfig{}.Apply()
 
 	var e etcdConfig
 	e.Servers = strings.Split(*flagEtcdServers, ",")
