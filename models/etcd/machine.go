@@ -19,20 +19,22 @@ func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 		return err
 	}
 RETRY:
+	// Assign node indices and addresses temporarily
 	wmcs, usageMap, err := d.updateMachines(ctx, machines, cfg)
 	if err != nil {
 		return err
 	}
+
 	tresp, err := d.doRegister(ctx, wmcs, usageMap)
 	if err != nil {
 		return err
 	}
 	if !tresp.Succeeded {
-		// usageCASIfOps evaluated to false; index usage was updated by another txn.
+		// outer IF() evaluated to false; index usage was updated by another txn.
 		goto RETRY
 	}
 	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
-		// conflictMachinesIfOps evaluated to false
+		// inner IF() evaluated to false
 		return sabakan.ErrConflicted
 	}
 
@@ -40,12 +42,12 @@ RETRY:
 }
 
 func (d *driver) updateMachines(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) ([]*sabakan.Machine, map[uint]*rackIndexUsage, error) {
-	wmcs := make([]*sabakan.Machine, len(machines))
-	// Assign node indices temporarily
 	usageMap, err := d.assignNodeIndex(ctx, machines, config)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	wmcs := make([]*sabakan.Machine, len(machines))
 	for i, rmc := range machines {
 		config.GenerateIP(rmc)
 		wmcs[i] = rmc
