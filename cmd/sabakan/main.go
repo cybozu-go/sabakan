@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/cybozu-go/sabakan/models/etcd"
 	"github.com/cybozu-go/sabakan/web"
 	"go.universe.tf/netboot/dhcp4"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type etcdConfig struct {
@@ -31,26 +33,49 @@ var (
 
 	flagDHCPBind = flag.String("dhcp-bind", "0.0.0.0:10067", "bound ip addresses and port for dhcp server")
 	flagIPXEPath = flag.String("ipxe-efi-path", "/usr/lib/ipxe/ipxe.efi", "path to ipxe.efi")
+
+	flagConfigFile = flag.String("config-file", "", "path to configuration file")
 )
 
 func main() {
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
 
-	var e etcdConfig
-	e.Servers = strings.Split(*flagEtcdServers, ",")
-	e.Prefix = path.Clean("/" + *flagEtcdPrefix)
+	cfg := newConfig()
+	if *flagConfigFile == "" {
+		cfg.ListenHTTP = *flagHTTP
+		cfg.URLPort = *flagURLPort
+		cfg.EtcdServers = strings.Split(*flagEtcdServers, ",")
+		cfg.EtcdPrefix = *flagEtcdPrefix
+		cfg.EtcdTimeout = *flagEtcdTimeout
+		cfg.DHCPBind = *flagDHCPBind
+		cfg.IPXEPath = *flagIPXEPath
+	} else {
+		f, err := os.Open(*flagConfigFile)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+		err = yaml.NewDecoder(f).Decode(cfg)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+		f.Close()
+	}
 
-	timeout, err := time.ParseDuration(*flagEtcdTimeout)
+	var e etcdConfig
+	e.Servers = cfg.EtcdServers
+	e.Prefix = path.Clean("/" + cfg.EtcdPrefix)
+
+	timeout, err := time.ParseDuration(cfg.EtcdTimeout)
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
-	cfg := clientv3.Config{
+	etcdCfg := clientv3.Config{
 		Endpoints:   e.Servers,
 		DialTimeout: timeout,
 	}
-	c, err := clientv3.New(cfg)
+	c, err := clientv3.New(etcdCfg)
 	if err != nil {
 		log.ErrorExit(err)
 	}
@@ -64,23 +89,23 @@ func main() {
 	// waiting the driver gets ready
 	<-ch
 
-	conn, err := dhcp4.NewConn(*flagDHCPBind)
+	conn, err := dhcp4.NewConn(cfg.DHCPBind)
 	if err != nil {
 		log.ErrorExit(err)
 	}
 	dhcpServer := dhcpd.Server{
-		Handler: dhcpd.DHCPHandler{Model: model, URLPort: *flagURLPort},
+		Handler: dhcpd.DHCPHandler{Model: model, URLPort: cfg.URLPort},
 		Conn:    conn,
 	}
 	cmd.Go(dhcpServer.Serve)
 
 	webServer := web.Server{
 		Model:        model,
-		IPXEFirmware: *flagIPXEPath,
+		IPXEFirmware: cfg.IPXEPath,
 	}
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
-			Addr:    *flagHTTP,
+			Addr:    cfg.ListenHTTP,
 			Handler: webServer,
 		},
 		ShutdownTimeout: 3 * time.Minute,
