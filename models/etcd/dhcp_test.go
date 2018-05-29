@@ -274,6 +274,43 @@ RETRY:
 	}
 }
 
+func testDHCPLeaseRace(t *testing.T) {
+	d, ch := testNewDriver(t)
+	testSetupConfig(t, d, ch)
+	ipam, err := d.getIPAMConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	interfaceip := net.ParseIP("10.69.0.195")
+	lr := ipam.LeaseRange(interfaceip)
+	lrkey := lr.Key()
+RETRY:
+	lu1, err := d.getLeaseUsage(context.Background(), lrkey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lu2, err := d.getLeaseUsage(context.Background(), lrkey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	succeeded2, err := d.updateLeaseUsage(context.Background(), lrkey, lu2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !succeeded2 {
+		goto RETRY
+	}
+
+	succeeded1, err := d.updateLeaseUsage(context.Background(), lrkey, lu1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if succeeded1 {
+		t.Error("update operations should be failed, if revision number has been changed")
+	}
+
+}
+
 func testDummyMAC(t *testing.T) {
 	mac := generateDummyMAC(257)
 	if mac.String() != "ff:00:00:00:01:01" {
@@ -289,6 +326,7 @@ func TestDHCP(t *testing.T) {
 	t.Run("Release", testDHCPRelease)
 	t.Run("Decline", testDHCPDecline)
 	t.Run("Expire", testDHCPLeaseExpiration)
+	t.Run("Race", testDHCPLeaseRace)
 
 	t.Run("Generate Dummy MAC", testDummyMAC)
 }
