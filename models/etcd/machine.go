@@ -31,6 +31,7 @@ RETRY:
 	}
 	if !tresp.Succeeded {
 		// outer If, i.e. usageCASIfOPs, evaluated to false; index usage was updated by another txn.
+		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
 	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
@@ -171,6 +172,7 @@ RETRY:
 
 	if !resp.Succeeded {
 		// revision mismatch
+		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
 

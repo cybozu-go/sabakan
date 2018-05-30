@@ -9,6 +9,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -62,7 +63,10 @@ OUT:
 
 func (r *rackIndexUsage) release(m *sabakan.Machine) {
 	if _, ok := r.indexMap[m.IndexInRack]; !ok {
-		panic("inconsistent index map")
+		log.Info("etcd: node_index not found in indexMap; deleted by another sabakan", map[string]interface{}{
+			"node_index": m.IndexInRack,
+		})
+		return
 	}
 	delete(r.indexMap, m.IndexInRack)
 
