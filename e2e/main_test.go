@@ -92,6 +92,7 @@ func runSabakan() (func(), error) {
 	command := exec.Command("../sabakan",
 		"-dhcp-bind", "0.0.0.0:10067",
 		"-etcd-servers", servers,
+		"-advertise-url", "http://localhost:10080",
 	)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
@@ -102,7 +103,8 @@ func runSabakan() (func(), error) {
 
 	// wait for startup
 	for i := 0; i < 10; i++ {
-		resp, err := http.Get("http://localhost:10080/api/v1/config/ipam")
+		var resp *http.Response
+		resp, err = http.Get("http://localhost:10080/api/v1/config/ipam")
 		if err == nil {
 			resp.Body.Close()
 			return func() {

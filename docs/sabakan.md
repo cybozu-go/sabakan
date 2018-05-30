@@ -7,6 +7,8 @@ Usage
 ```console
 $ sabakan -h
 Usage of /home/ymmt/go/bin/sabakan:
+  -advertise-url string
+        public URL of this server
   -config-file string
         path to configuration file
   -dhcp-bind string
@@ -31,10 +33,11 @@ Usage of /home/ymmt/go/bin/sabakan:
         port number used to construct boot API URL (default "10080")
 ```
 
-Option            | Default value            | Description
-------            | -------------            | -----------
-`-config-file` | ""                       | If given, configurations are read from the file.
-`-dhcp-bind`    | `0.0.0.0:10067`          | bound ip addresses and port dhcp server
+Option           | Default value            | Description
+---------------- | ------------------------ | -----------
+`-advertise-url` | ""                       | Public URL to access this server.  Required.
+`-config-file`   | ""                       | If given, configurations are read from the file.
+`-dhcp-bind`     | `0.0.0.0:10067`          | bound ip addresses and port dhcp server
 `-etcd-prefix`   | `/sabakan`               | etcd prefix
 `-etcd-servers`  | `http://localhost:2379`  | comma-separated URLs of the backend etcd
 `-etcd-timeout`  | `2s`                     | dial timeout to etcd
@@ -46,8 +49,8 @@ Config file
 -----------
 
 Sabakan can read configurations from a YAML file if `-config-file` option is specified.
-
-Logging options can be specified only by command-line options.
+When `-config-file` is specified, command line options are ignored except for logging
+options.
 
 Properties in YAML are the same as the command-line option names without leading slashes.
 `etcd-servers` value is a list of URL strings.
