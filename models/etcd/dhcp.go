@@ -290,6 +290,7 @@ RETRY:
 		return nil, err
 	}
 	if !succeeded {
+		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
 
@@ -330,6 +331,7 @@ RETRY:
 		return err
 	}
 	if !succeeded {
+		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
 
@@ -362,6 +364,7 @@ RETRY:
 		return err
 	}
 	if !succeeded {
+		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
 
@@ -394,6 +397,7 @@ RETRY:
 		return err
 	}
 	if !succeeded {
+		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
 
