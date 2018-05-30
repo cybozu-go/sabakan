@@ -24,7 +24,7 @@ Directory structure:
         - ...
 
 While extracting the image archive, a temporary directory is created
-under `var/lib/sabakan/OS/`.  The temporary directory will be renamed
+under `/var/lib/sabakan/OS/`.  The temporary directory will be renamed
 to `IDxx` once extraction successfully completed.
 */
 
@@ -54,6 +54,11 @@ func writeToFile(p string, r io.Reader) error {
 	return f.Sync()
 }
 
+// Extract reads tar archive from "r" to extract files shown in "members".
+//
+// Extracted files are finally stored under "id" directory.
+// If the tar archive contains a file not in "members", or if the tar
+// archive lacks a file in "members", this function returns sabakan.ErrBadRequest.
 func (d ImageDir) Extract(r io.Reader, id string, members []string) error {
 	defer func() {
 		io.Copy(ioutil.Discard, r)
@@ -113,6 +118,7 @@ func (d ImageDir) Extract(r io.Reader, id string, members []string) error {
 	return nil
 }
 
+// GC removes images listed in "ids".
 func (d ImageDir) GC(ids []string) error {
 	for _, id := range ids {
 		p := filepath.Join(d.Dir, id)
@@ -124,6 +130,8 @@ func (d ImageDir) GC(ids []string) error {
 	return nil
 }
 
+// Exists returns true if image files referenced by "id"
+// is stored in the directory.
 func (d ImageDir) Exists(id string) bool {
 	p := filepath.Join(d.Dir, id)
 	_, err := os.Stat(p)

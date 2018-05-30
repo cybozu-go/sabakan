@@ -97,7 +97,7 @@ func (d *imageDriver) Upload(ctx context.Context, os, id string, r io.Reader) er
 	}
 
 	d.images[id] = imageData{kernel, initrd}
-	d.index = d.index.Append(&sabakan.Image{
+	d.index, _ = d.index.Append(&sabakan.Image{
 		ID:   id,
 		Date: time.Now().UTC(),
 	})
