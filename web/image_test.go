@@ -14,9 +14,7 @@ import (
 	"github.com/cybozu-go/sabakan/models/mock"
 )
 
-func newTestImage() io.Reader {
-	kernel := []byte("abcd")
-	initrd := []byte("efgh")
+func newTestImage(kernel, initrd string) io.Reader {
 
 	buf := new(bytes.Buffer)
 	tw := tar.NewWriter(buf)
@@ -29,7 +27,7 @@ func newTestImage() io.Reader {
 	if err != nil {
 		panic(err)
 	}
-	tw.Write(kernel)
+	tw.Write([]byte(kernel))
 
 	hdr = &tar.Header{
 		Name: sabakan.ImageInitrdFilename,
@@ -40,7 +38,7 @@ func newTestImage() io.Reader {
 	if err != nil {
 		panic(err)
 	}
-	tw.Write(initrd)
+	tw.Write([]byte(initrd))
 	tw.Close()
 	return buf
 }
@@ -87,7 +85,7 @@ func testHandleImageIndexGet(t *testing.T) {
 		t.Error("len(data) != 0:", len(data))
 	}
 
-	archive := newTestImage()
+	archive := newTestImage("abcd", "efgh")
 	err = m.Image.Upload(context.Background(), "coreos", "1234", archive)
 	if err != nil {
 		t.Fatal(err)
@@ -119,7 +117,7 @@ func testHandleImagesGet(t *testing.T) {
 	m := mock.NewModel()
 	handler := Server{Model: m}
 
-	archive := newTestImage()
+	archive := newTestImage("abcd", "efgh")
 	err := m.Image.Upload(context.Background(), "coreos", "1234", archive)
 	if err != nil {
 		t.Fatal(err)
@@ -159,7 +157,7 @@ func testHandleImagesPut(t *testing.T) {
 	m := mock.NewModel()
 	handler := Server{Model: m}
 
-	archive := newTestImage()
+	archive := newTestImage("abcd", "efgh")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PUT", "/api/v1/images/coreos/1234", archive)
@@ -170,7 +168,7 @@ func testHandleImagesPut(t *testing.T) {
 		t.Fatal("resp.StatusCore != http.StatusCreated:", resp.StatusCode)
 	}
 
-	archive = newTestImage()
+	archive = newTestImage("abcd", "efgh")
 	w = httptest.NewRecorder()
 	r = httptest.NewRequest("PUT", "/api/v1/images/coreos/1234", archive)
 	handler.ServeHTTP(w, r)
@@ -206,7 +204,7 @@ func testHandleImagesDelete(t *testing.T) {
 		t.Fatal("resp.StatusCore != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	archive := newTestImage()
+	archive := newTestImage("abcd", "efgh")
 	err := m.Image.Upload(context.Background(), "coreos", "1234", archive)
 	if err != nil {
 		t.Fatal(err)
