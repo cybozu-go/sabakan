@@ -14,21 +14,42 @@ import (
 
 // Register implements sabakan.MachineModel
 func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
-	wmcs := make([]*sabakan.Machine, len(machines))
-
 	cfg, err := d.getIPAMConfig()
 	if err != nil {
 		return err
 	}
-
 RETRY:
-	// Assign node indices temporarily
-	usageMap, err := d.assignNodeIndex(ctx, machines, cfg)
+	// Assign node indices and addresses temporarily
+	wmcs, usageMap, err := d.updateMachines(ctx, machines, cfg)
 	if err != nil {
 		return err
 	}
+
+	tresp, err := d.doRegister(ctx, wmcs, usageMap)
+	if err != nil {
+		return err
+	}
+	if !tresp.Succeeded {
+		// outer If, i.e. usageCASIfOPs, evaluated to false; index usage was updated by another txn.
+		goto RETRY
+	}
+	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+		// inner If, i.e. conflictMachinesIfOps, evaluated to false
+		return sabakan.ErrConflicted
+	}
+
+	return nil
+}
+
+func (d *driver) updateMachines(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) ([]*sabakan.Machine, map[uint]*rackIndexUsage, error) {
+	usageMap, err := d.assignNodeIndex(ctx, machines, config)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	wmcs := make([]*sabakan.Machine, len(machines))
 	for i, rmc := range machines {
-		cfg.GenerateIP(rmc)
+		config.GenerateIP(rmc)
 		wmcs[i] = rmc
 		log.Debug("etcd/machine: register", map[string]interface{}{
 			"serial":     rmc.Serial,
@@ -37,7 +58,10 @@ RETRY:
 			"role":       rmc.Role,
 		})
 	}
+	return wmcs, usageMap, nil
+}
 
+func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageMap map[uint]*rackIndexUsage) (*clientv3.TxnResponse, error) {
 	// Put machines into etcd
 	conflictMachinesIfOps := []clientv3.Cmp{}
 	usageCASIfOps := []clientv3.Cmp{}
@@ -47,7 +71,7 @@ RETRY:
 		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
@@ -55,13 +79,14 @@ RETRY:
 		key := d.indexInRackKey(rack)
 		j, err := json.Marshal(usage)
 		if err != nil {
-			return err
+			return nil, err
 		}
+
 		usageCASIfOps = append(usageCASIfOps, clientv3.Compare(clientv3.ModRevision(key), "=", usage.revision))
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
 
-	tresp, err := d.client.Txn(ctx).
+	return d.client.Txn(ctx).
 		If(
 			usageCASIfOps...,
 		).
@@ -70,19 +95,6 @@ RETRY:
 		).
 		Else().
 		Commit()
-	if err != nil {
-		return err
-	}
-	if !tresp.Succeeded {
-		// usageCASIfOps evaluated to false; index usage was updated by another txn.
-		goto RETRY
-	}
-	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
-		// conflictMachinesIfOps evaluated to false
-		return sabakan.ErrConflicted
-	}
-
-	return nil
 }
 
 // Query implements sabakan.MachineModel
@@ -144,8 +156,6 @@ func (d *driver) Delete(ctx context.Context, serial string) error {
 		"node_index": m.IndexInRack,
 		"role":       m.Role,
 	})
-	machineKey := path.Join(d.prefix, KeyMachines, serial)
-	indexKey := d.indexInRackKey(m.Rack)
 
 RETRY:
 	usage, err := d.getRackIndexUsage(ctx, m.Rack)
@@ -154,24 +164,7 @@ RETRY:
 	}
 	usage.release(m)
 
-	j, err := json.Marshal(usage)
-	if err != nil {
-		return err
-	}
-
-	resp, err := d.client.Txn(ctx).
-		If(clientv3.Compare(clientv3.ModRevision(indexKey), "=", usage.revision)).
-		Then(
-			clientv3.OpTxn(
-				[]clientv3.Cmp{clientv3util.KeyExists(machineKey)},
-				[]clientv3.Op{
-					clientv3.OpDelete(machineKey),
-					clientv3.OpPut(indexKey, string(j)),
-				},
-				nil),
-		).
-		Else().
-		Commit()
+	resp, err := d.doDelete(ctx, m, usage)
 	if err != nil {
 		return err
 	}
@@ -187,4 +180,28 @@ RETRY:
 	}
 
 	return nil
+}
+
+func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
+	machineKey := path.Join(d.prefix, KeyMachines, machine.Serial)
+	indexKey := d.indexInRackKey(machine.Rack)
+
+	j, err := json.Marshal(usage)
+	if err != nil {
+		return nil, err
+	}
+
+	return d.client.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(indexKey), "=", usage.revision)).
+		Then(
+			clientv3.OpTxn(
+				[]clientv3.Cmp{clientv3util.KeyExists(machineKey)},
+				[]clientv3.Op{
+					clientv3.OpDelete(machineKey),
+					clientv3.OpPut(indexKey, string(j)),
+				},
+				nil),
+		).
+		Else().
+		Commit()
 }
