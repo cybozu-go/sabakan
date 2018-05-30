@@ -104,7 +104,7 @@ Get the current index of the OS images as JSON.
 * `-os`: specifies OS of the image.  Default is "coreos"
 
 `sabactl images [-os OS] upload`
-----------------------------------------
+--------------------------------
 
 ```console
 $ sabactl images upload ID coreos_production_pxe.vmlinuz coreos_production_pxe_image.cpio.gz
@@ -115,7 +115,7 @@ Upload a set of boot image files identified by `ID`.
 * `-os`: specifies OS of the image.  Default is "coreos"
 
 `sabactl images [-os OS] delete`
-----------------------------------------
+--------------------------------
 
 ```console
 $ sabactl images delete ID

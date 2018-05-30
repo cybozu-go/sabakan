@@ -10,12 +10,12 @@ REST API
 * [DELETE /api/v1/machines](#deletemachines)
 * [GET /api/v1/images/coreos](#getimageindex)
 * [PUT /api/v1/images/coreos/ID](#putimages)
-* [GET|HEAD /api/v1/images/coreos/ID](#getimages)
+* [GET /api/v1/images/coreos/ID](#getimages)
 * [DELETE /api/v1/images/coreos/ID](#deleteimages)
 * [GET /api/v1/boot/ipxe.efi](#getipxe)
 * [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
-* [GET /api/v1/boot/coreos/kernel](#getcoreoskernel)
-* [GET /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
+* [GET|HEAD /api/v1/boot/coreos/kernel](#getcoreoskernel)
+* [GET|HEAD /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
 * [GET /api/v1/boot/ignitions](#getignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
@@ -253,7 +253,7 @@ The tar file must consist of these two files:
 
   HTTP status code: 400 Bad Request
 
-## <a name="getimages" />`GET|HEAD /api/v1/images/coreos/<id>`
+## <a name="getimages" />`GET /api/v1/images/coreos/<id>`
 
 Download the image archive specified by `<id>`.
 The archive format is the same as PUT; i.e. a tar consists of `kernel` and `initrd.gz`.
@@ -300,11 +300,11 @@ Name   | Value  | Description
 ----   | -----  | -----------
 serial | 0 or 1 | serial console is enabled if 1
 
-## <a name="getcoreoskernel" />`GET /api/v1/boot/coreos/kernel`
+## <a name="getcoreoskernel" />`GET|HEAD /api/v1/boot/coreos/kernel`
 
 Get Linux kernel image to boot CoreOS.
 
-## <a name="getcoreosinitrd" />`GET /api/v1/boot/coreos/initrd.gz`
+## <a name="getcoreosinitrd" />`GET|HEAD /api/v1/boot/coreos/initrd.gz`
 
 Get initial RAM disk image to boot CoreOS.
 
