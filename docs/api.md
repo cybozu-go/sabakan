@@ -258,8 +258,6 @@ The tar file must consist of these two files:
 Download the image archive specified by `<id>`.
 The archive format is the same as PUT; i.e. a tar consists of `kernel` and `initrd.gz`.
 
-For `HEAD` requests, the response body will be empty.
-
 **Successful response**
 
 - HTTP status code: 200 OK

@@ -2,13 +2,14 @@ package web
 
 import (
 	"fmt"
+	"io"
 	"net/http"
-	"path/filepath"
+	"time"
+
+	"github.com/cybozu-go/sabakan"
 )
 
 const (
-	coreOSImageDir = "/var/www/assets/coreos/1576.5.0"
-
 	// iPXE script specs can be found at http://ipxe.org/cfg
 	coreOSiPXETemplate = `#!ipxe
 
@@ -22,7 +23,7 @@ boot
 func (s Server) handleCoreOS(w http.ResponseWriter, r *http.Request) {
 	item := r.URL.Path[len("/api/v1/boot/coreos/"):]
 
-	if r.Method != "GET" {
+	if r.Method != "GET" && r.Method != "HEAD" {
 		renderError(r.Context(), w, APIErrBadMethod)
 		return
 	}
@@ -53,11 +54,31 @@ func (s Server) handleCoreOSiPXE(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleCoreOSKernel(w http.ResponseWriter, r *http.Request) {
-	p := filepath.Join(coreOSImageDir, "coreos_production_pxe.vmlinuz")
-	http.ServeFile(w, r, p)
+	f := func(modtime time.Time, content io.ReadSeeker) {
+		http.ServeContent(w, r, sabakan.ImageKernelFilename, modtime, content)
+	}
+	w.Header().Set("content-type", "application/octet-stream")
+	err := s.Model.Image.ServeFile(r.Context(), "coreos", sabakan.ImageKernelFilename, f)
+	if err == sabakan.ErrNotFound {
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	}
+	if err != nil {
+		renderError(r.Context(), w, InternalServerError(err))
+	}
 }
 
 func (s Server) handleCoreOSInitRD(w http.ResponseWriter, r *http.Request) {
-	p := filepath.Join(coreOSImageDir, "coreos_production_pxe_image.cpio.gz")
-	http.ServeFile(w, r, p)
+	f := func(modtime time.Time, content io.ReadSeeker) {
+		http.ServeContent(w, r, sabakan.ImageInitrdFilename, modtime, content)
+	}
+	w.Header().Set("content-type", "application/octet-stream")
+	err := s.Model.Image.ServeFile(r.Context(), "coreos", sabakan.ImageInitrdFilename, f)
+	if err == sabakan.ErrNotFound {
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	}
+	if err != nil {
+		renderError(r.Context(), w, InternalServerError(err))
+	}
 }
