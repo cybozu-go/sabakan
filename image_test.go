@@ -2,9 +2,51 @@ package sabakan
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 	"time"
 )
+
+func testImageValidID(t *testing.T) {
+	t.Parallel()
+
+	if !IsValidImageID("ubuntu-bionic") {
+		t.Error(`!IsValidImageID("ubuntu-bionic")`)
+	}
+	if !IsValidImageID("Bionic20180503") {
+		t.Error(`!IsValidImageID("Bionic20180503")`)
+	}
+	if !IsValidImageID("123.45.6") {
+		t.Error(`!IsValidImageID("123.45.6")`)
+	}
+
+	if IsValidImageID("Ubuntu 18.04") {
+		t.Error(`IsValidImageID("Ubuntu 18.04")`)
+	}
+}
+
+func testImageValidOS(t *testing.T) {
+	t.Parallel()
+
+	if !IsValidImageOS("coreos") {
+		t.Error(`!IsValidImageOS("coreos")`)
+	}
+	if !IsValidImageOS("ubuntu18.04") {
+		t.Error(`!IsValidImageOS("ubuntu18.04")`)
+	}
+
+	if IsValidImageOS("ubuntu 18.04") {
+		t.Error(`IsValidImageOS("ubuntu 18.04")`)
+	}
+	if IsValidImageOS("Ubuntu") {
+		t.Error(`IsValidImageOS("Ubuntu")`)
+	}
+}
+
+func testImageValid(t *testing.T) {
+	t.Run("ID", testImageValidID)
+	t.Run("OS", testImageValidOS)
+}
 
 func testImageIndexAppend(t *testing.T) {
 	t.Parallel()
@@ -83,6 +125,35 @@ func testImageIndexFind(t *testing.T) {
 	}
 }
 
+func testImageIndexRemove(t *testing.T) {
+	t.Parallel()
+
+	idx := ImageIndex{
+		&Image{ID: "0"},
+		&Image{ID: "1"},
+		&Image{ID: "2"},
+		&Image{ID: "3"},
+		&Image{ID: "4"},
+	}
+
+	idx2 := idx.Remove("6")
+	if len(idx2) != len(idx) {
+		t.Error(`len(idx2) != len(idx)`, len(idx2))
+	}
+	if !reflect.DeepEqual(idx2, idx) {
+		t.Error(`!reflect.DeepEqual(idx2, idx)`)
+	}
+
+	idx2 = idx.Remove("2")
+	if len(idx2) != (len(idx) - 1) {
+		t.Error(`len(idx2) != (len(idx) - 1)`)
+	}
+	img := idx2.Find("2")
+	if img != nil {
+		t.Error("Image ID 2 should not be found")
+	}
+}
+
 func testImageIndexJSON(t *testing.T) {
 	t.Parallel()
 
@@ -117,7 +188,9 @@ func testImageIndexJSON(t *testing.T) {
 }
 
 func TestImageIndex(t *testing.T) {
+	t.Run("Valid", testImageValid)
 	t.Run("Append", testImageIndexAppend)
 	t.Run("Find", testImageIndexFind)
+	t.Run("Remove", testImageIndexRemove)
 	t.Run("JSON", testImageIndexJSON)
 }
