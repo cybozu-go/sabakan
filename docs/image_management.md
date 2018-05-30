@@ -34,20 +34,25 @@ The structure of the index is a JSON like this:
         "urls": [
             "http://10.1.2.3:10080/api/v1/images/coreos/1688.5.3", 
             "http://10.98.76.54:10080/api/v1/images/coreos/1688.5.3"
-        ]
+        ],
+        "exists": true
     },
     {
         "id": "1745.4.0",
         "date": "2018-05-29T01:23:45Z",
         "urls": [
             "http://10.1.2.3:10080/api/v1/images/coreos/1745.4.0"
-        ]
+        ],
+        "exists": false
     }
 ]
 ```
 
 `urls` is a list of URLs where the image archive can be downloaded.
 Details are described in the next section.
+
+`exists` is only meaningful when this JSON is returned from a REST API.
+It becomes `true` if the server has a local copy of the image.
 
 ### Watching index
 

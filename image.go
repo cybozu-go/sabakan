@@ -1,6 +1,9 @@
 package sabakan
 
-import "time"
+import (
+	"regexp"
+	"time"
+)
 
 const (
 	// MaxImages is the maximum number of images that an index can hold.
@@ -13,11 +16,27 @@ const (
 	ImageInitrdFilename = "initrd.gz"
 )
 
+var (
+	reValidImageID = regexp.MustCompile(`^[0-9a-zA-Z.-]+$`)
+	reValidImageOS = regexp.MustCompile(`^[a-z0-9.]+$`)
+)
+
+// IsValidImageID returns true if id is valid as an image ID.
+func IsValidImageID(id string) bool {
+	return reValidImageID.MatchString(id)
+}
+
+// IsValidImageOS returns true if id is valid as OS.
+func IsValidImageOS(os string) bool {
+	return reValidImageOS.MatchString(os)
+}
+
 // Image represents a set of image files for iPXE boot.
 type Image struct {
-	ID   string    `json:"id"`
-	Date time.Time `json:"date"`
-	URLs []string  `json:"urls"`
+	ID     string    `json:"id"`
+	Date   time.Time `json:"date"`
+	URLs   []string  `json:"urls"`
+	Exists bool      `json:"exists"`
 }
 
 // ImageIndex is a list of *Image.
@@ -34,6 +53,19 @@ func (i ImageIndex) Append(img *Image) ImageIndex {
 	copy(i, i[len(i)-MaxImages+1:len(i)])
 	i[MaxImages-1] = img
 	return i[0:MaxImages]
+}
+
+// Remove removes an image entry from the index.
+func (i ImageIndex) Remove(id string) ImageIndex {
+	newIndex := make(ImageIndex, 0, len(i))
+	for _, img := range i {
+		if img.ID == id {
+			continue
+		}
+		newIndex = append(newIndex, img)
+	}
+
+	return newIndex
 }
 
 // Find an image whose ID is id.
