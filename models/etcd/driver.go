@@ -12,17 +12,19 @@ import (
 type driver struct {
 	client     *clientv3.Client
 	prefix     string
+	imageDir   string
 	mi         *machinesIndex
 	ipamConfig atomic.Value
 	dhcpConfig atomic.Value
 }
 
 // NewModel returns sabakan.Model
-func NewModel(client *clientv3.Client, prefix string) sabakan.Model {
+func NewModel(client *clientv3.Client, prefix, imageDir string) sabakan.Model {
 	d := &driver{
-		client: client,
-		prefix: prefix,
-		mi:     newMachinesIndex(),
+		client:   client,
+		prefix:   prefix,
+		imageDir: imageDir,
+		mi:       newMachinesIndex(),
 	}
 	return sabakan.Model{
 		Runner:  d,
@@ -30,6 +32,7 @@ func NewModel(client *clientv3.Client, prefix string) sabakan.Model {
 		Machine: d,
 		IPAM:    ipamDriver{d},
 		DHCP:    dhcpDriver{d},
+		Image:   imageDriver{d},
 	}
 }
 

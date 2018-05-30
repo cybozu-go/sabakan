@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -25,14 +27,15 @@ type etcdConfig struct {
 }
 
 var (
-	flagHTTP        = flag.String("http", "0.0.0.0:10080", "<Listen IP>:<Port number>")
+	flagHTTP        = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
 	flagURLPort     = flag.String("url-port", "10080", "port number used to construct boot API URL")
-	flagEtcdServers = flag.String("etcd-servers", "http://localhost:2379", "comma-separated URLs of the backend etcd")
-	flagEtcdPrefix  = flag.String("etcd-prefix", "/sabakan", "etcd prefix")
+	flagEtcdServers = flag.String("etcd-servers", strings.Join(defaultEtcdServers, ","), "comma-separated URLs of the backend etcd")
+	flagEtcdPrefix  = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
 	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
 
-	flagDHCPBind = flag.String("dhcp-bind", "0.0.0.0:10067", "bound ip addresses and port for dhcp server")
-	flagIPXEPath = flag.String("ipxe-efi-path", "/usr/lib/ipxe/ipxe.efi", "path to ipxe.efi")
+	flagDHCPBind = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
+	flagIPXEPath = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
+	flagImageDir = flag.String("image-dir", defaultImageDir, "directory to store boot images")
 
 	flagConfigFile = flag.String("config-file", "", "path to configuration file")
 )
@@ -50,6 +53,7 @@ func main() {
 		cfg.EtcdTimeout = *flagEtcdTimeout
 		cfg.DHCPBind = *flagDHCPBind
 		cfg.IPXEPath = *flagIPXEPath
+		cfg.ImageDir = *flagImageDir
 	} else {
 		f, err := os.Open(*flagConfigFile)
 		if err != nil {
@@ -60,6 +64,11 @@ func main() {
 			log.ErrorExit(err)
 		}
 		f.Close()
+	}
+
+	if !filepath.IsAbs(cfg.ImageDir) {
+		fmt.Fprintln(os.Stderr, "image-dir must be an absolute path")
+		os.Exit(1)
 	}
 
 	var e etcdConfig
@@ -81,7 +90,7 @@ func main() {
 	}
 	defer c.Close()
 
-	model := etcd.NewModel(c, e.Prefix)
+	model := etcd.NewModel(c, e.Prefix, cfg.ImageDir)
 	ch := make(chan struct{})
 	cmd.Go(func(ctx context.Context) error {
 		return model.Run(ctx, ch)
