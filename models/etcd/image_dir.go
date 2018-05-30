@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -116,6 +117,53 @@ func (d ImageDir) Extract(r io.Reader, id string, members []string) error {
 	}
 	tmpdir = ""
 	return nil
+}
+
+func copyFile(w io.Writer, p string) error {
+	f, err := os.Open(p)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = io.Copy(w, f)
+	return err
+}
+
+// Download writes files in a directory specified by "id" as a tar archive.
+func (d ImageDir) Download(w io.Writer, id string) error {
+	files, err := ioutil.ReadDir(filepath.Join(d.Dir, id))
+	if err != nil {
+		return err
+	}
+
+	tw := tar.NewWriter(w)
+
+	for _, fi := range files {
+		if !fi.Mode().IsRegular() {
+			log.Warn("non-regular file in image dir", map[string]interface{}{
+				"dir":  filepath.Join(d.Dir, id),
+				"name": fi.Name(),
+			})
+			continue
+		}
+
+		hdr := &tar.Header{
+			Name: fi.Name(),
+			Size: fi.Size(),
+			Mode: 0644,
+		}
+		err = tw.WriteHeader(hdr)
+		if err != nil {
+			return err
+		}
+		err = copyFile(tw, filepath.Join(d.Dir, id, fi.Name()))
+		if err != nil {
+			return err
+		}
+	}
+
+	return tw.Close()
 }
 
 // GC removes images listed in "ids".

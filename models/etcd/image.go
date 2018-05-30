@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -128,7 +129,30 @@ RETRY:
 }
 
 func (d *driver) imageDownload(ctx context.Context, os, id string, out io.Writer) error {
-	return nil
+	index, err := d.imageGetIndex(ctx, os)
+	if err != nil {
+		return err
+	}
+
+	img := index.Find(id)
+	if img == nil {
+		return sabakan.ErrNotFound
+	}
+
+	dir := d.getImageDir(os)
+	if !dir.Exists(id) {
+		return sabakan.ErrNotFound
+	}
+
+	err = dir.Download(out, id)
+	if err != nil {
+		log.Error("imageDownload failed", map[string]interface{}{
+			"os":        os,
+			"id":        id,
+			log.FnError: err.Error(),
+		})
+	}
+	return err
 }
 
 func (d *driver) imageDelete(ctx context.Context, os, id string) error {

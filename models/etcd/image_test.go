@@ -45,6 +45,19 @@ func newTestImage(kernel, initrd string) io.Reader {
 	return buf
 }
 
+func testImagePutIndex(t *testing.T, d *driver, index sabakan.ImageIndex) {
+	data, err := json.Marshal(index)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := path.Join(d.prefix, KeyImages, "coreos")
+	_, err = d.client.Put(context.Background(), key, string(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func testImageGetIndex(t *testing.T) {
 	t.Parallel()
 
@@ -76,16 +89,7 @@ func testImageGetIndex(t *testing.T) {
 			ID: "2234.6",
 		},
 	}
-	testData, err := json.Marshal(testIndex)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	key := path.Join(d.prefix, KeyImages, "coreos")
-	_, err = d.client.Put(context.Background(), key, string(testData))
-	if err != nil {
-		t.Fatal(err)
-	}
+	testImagePutIndex(t, d, testIndex)
 
 	index, err = d.imageGetIndex(context.Background(), "coreos")
 	if err != nil {
@@ -200,10 +204,113 @@ func testImageUpload(t *testing.T) {
 	if dels[0] != "0" {
 		t.Error("wrong deleted image ID")
 	}
+}
 
+func testImageDownload(t *testing.T) {
+	t.Parallel()
+
+	d, _ := testNewDriver(t)
+
+	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.imageDir = tempdir
+	defer os.RemoveAll(tempdir)
+
+	index := sabakan.ImageIndex{
+		&sabakan.Image{
+			ID: "2234.6",
+		},
+	}
+	testImagePutIndex(t, d, index)
+
+	// case 1. ID is not in the index, no local copy.
+	err = d.imageDownload(context.Background(), "coreos", "1234.5", ioutil.Discard)
+	if err != sabakan.ErrNotFound {
+		t.Error(`err != sabakan.ErrNotFound`)
+	}
+
+	// case 2. ID is in the index, but no local copy.
+	index = sabakan.ImageIndex{
+		&sabakan.Image{
+			ID: "1234.5",
+		},
+		&sabakan.Image{
+			ID: "2234.6",
+		},
+	}
+	testImagePutIndex(t, d, index)
+	err = d.imageDownload(context.Background(), "coreos", "1234.5", ioutil.Discard)
+	if err != sabakan.ErrNotFound {
+		t.Error(`err != sabakan.ErrNotFound`)
+	}
+
+	// case 3. ID is in the index and a local copy exists.
+	dir := d.getImageDir("coreos")
+	err = dir.Extract(newTestImage("abc", "def"), "1234.5", []string{
+		sabakan.ImageKernelFilename,
+		sabakan.ImageInitrdFilename,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	buf := new(bytes.Buffer)
+	err = d.imageDownload(context.Background(), "coreos", "1234.5", buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tr := tar.NewReader(buf)
+	count := 0
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Error(err)
+			break
+		}
+		expects := ""
+		switch hdr.Name {
+		case sabakan.ImageKernelFilename:
+			count++
+			expects = "abc"
+		case sabakan.ImageInitrdFilename:
+			count++
+			expects = "def"
+		default:
+			t.Error("unexpected file in tar:", hdr.Name)
+			break
+		}
+
+		data, err := ioutil.ReadAll(tr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(data) != expects {
+			t.Error(`string(data) != expects`, string(data), expects)
+		}
+	}
+	if count != 2 {
+		t.Error(`count != 2`)
+	}
+
+	// case 4. ID is not in the index, a local copy remains.
+	index = sabakan.ImageIndex{
+		&sabakan.Image{
+			ID: "2234.6",
+		},
+	}
+	testImagePutIndex(t, d, index)
+	err = d.imageDownload(context.Background(), "coreos", "1234.5", ioutil.Discard)
+	if err != sabakan.ErrNotFound {
+		t.Error(`err != sabakan.ErrNotFound`)
+	}
 }
 
 func TestImage(t *testing.T) {
 	t.Run("GetIndex", testImageGetIndex)
 	t.Run("Upload", testImageUpload)
+	t.Run("Download", testImageDownload)
 }
