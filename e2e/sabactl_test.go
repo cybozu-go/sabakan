@@ -177,12 +177,18 @@ func testSabactlMachines(t *testing.T) {
 			Product:    "R730xd",
 			Datacenter: "ty3",
 			Role:       "worker",
+			BMC: sabakan.MachineBMC{
+				Type: sabakan.BmcIdrac9,
+			},
 		},
 		{
 			Serial:     "abcdefg",
 			Product:    "R730xd",
 			Datacenter: "ty3",
 			Role:       "boot",
+			BMC: sabakan.MachineBMC{
+				Type: sabakan.BmcIpmi2,
+			},
 		},
 	}
 	stdout, stderr, err = runSabactlWithFile(t, &machines, "machines", "create")

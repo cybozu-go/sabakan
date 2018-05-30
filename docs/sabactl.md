@@ -73,7 +73,7 @@ Detailed specification of the input JSON file is same as that of the [`POST /api
 Show machines filtered by query parameters.
 
 ```console
-$ sabactl machines get [--serial <serial>] [--state <state>] [--datacenter <datacenter>] [--rack <rack>] [--product <product>] [--ipv4 <ip address>] [--ipv6 <ip address>]
+$ sabactl machines get [--serial <serial>] [--state <state>] [--datacenter <datacenter>] [--rack <rack>] [--product <product>] [--ipv4 <ip address>] [--ipv6 <ip address>] [--bmc-type <BMC type>]
 ```
 
 Detailed specification of the query parameters and the output JSON content is same as those of the [`GET /api/v1/machines` API](api.md#getmachines).
