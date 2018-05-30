@@ -61,13 +61,15 @@ OUT:
 	return nil
 }
 
-func (r *rackIndexUsage) release(m *sabakan.Machine) {
+func (r *rackIndexUsage) release(m *sabakan.Machine) (needUpdate bool) {
 	if _, ok := r.indexMap[m.IndexInRack]; !ok {
 		log.Info("etcd: node_index not found in indexMap; deleted by another sabakan", map[string]interface{}{
 			"node_index": m.IndexInRack,
 		})
+		needUpdate = false
 		return
 	}
+	needUpdate = true
 	delete(r.indexMap, m.IndexInRack)
 
 	used := make([]uint, 0, len(r.usedIndices)-1)
@@ -78,6 +80,8 @@ func (r *rackIndexUsage) release(m *sabakan.Machine) {
 		used = append(used, idx)
 	}
 	r.usedIndices = used
+
+	return
 }
 
 func (d *driver) indexInRackKey(rack uint) string {
