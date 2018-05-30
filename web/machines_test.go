@@ -121,7 +121,7 @@ func testMachinesGet(t *testing.T) {
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "boot",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BMC_iDRAC_9},
+			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
 		},
 		{
 			Serial:     "5678abcd",
@@ -129,7 +129,7 @@ func testMachinesGet(t *testing.T) {
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "worker",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BMC_iDRAC_9},
+			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
 		},
 		{
 			Serial:     "1234efgh",
@@ -137,7 +137,7 @@ func testMachinesGet(t *testing.T) {
 			Datacenter: "ty3",
 			Rack:       2,
 			Role:       "boot",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BMC_IPMI_2},
+			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
 		},
 	})
 
