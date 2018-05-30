@@ -62,8 +62,8 @@ Detailed specification of the input JSON file is same as that of the [`POST /api
 
 ```json
 [
-  { "serial": "<serial1>", "datacenter": "<datacenter1>", "rack": "<rack1>", "product": "<product1>", "role": "<role1>" },
-  { "serial": "<serial2>", "datacenter": "<datacenter2>", "rack": "<rack2>", "product": "<product2>", "role": "<role2>" }
+  { "serial": "<serial1>", "datacenter": "<datacenter1>", "rack": "<rack1>", "product": "<product1>", "role": "<role1>", "bmc": { "type": "iDRAC-9" }},
+  { "serial": "<serial2>", "datacenter": "<datacenter2>", "rack": "<rack2>", "product": "<product2>", "role": "<role2>", "bmc": { "type": "iDRAC-9" }}
 ]
 ```
 
@@ -73,7 +73,7 @@ Detailed specification of the input JSON file is same as that of the [`POST /api
 Show machines filtered by query parameters.
 
 ```console
-$ sabactl machines get [--serial <serial>] [--state <state>] [--datacenter <datacenter>] [--rack <rack>] [--product <product>] [--ipv4 <ip address>] [--ipv6 <ip address>]
+$ sabactl machines get [--serial <serial>] [--state <state>] [--datacenter <datacenter>] [--rack <rack>] [--product <product>] [--ipv4 <ip address>] [--ipv6 <ip address>] [--bmc-type <BMC type>]
 ```
 
 Detailed specification of the query parameters and the output JSON content is same as those of the [`GET /api/v1/machines` API](api.md#getmachines).
