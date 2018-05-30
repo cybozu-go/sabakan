@@ -36,6 +36,9 @@ func (d *imageDriver) GetIndex(ctx context.Context, os string) (sabakan.ImageInd
 
 	copied := make(sabakan.ImageIndex, len(d.index))
 	copy(copied, d.index)
+	for _, i := range copied {
+		i.Exists = true
+	}
 	return copied, nil
 }
 
