@@ -16,6 +16,10 @@ var ErrConflicted = errors.New("key conflicted")
 // A model should return this when it cannot find a resource by a specified key.
 var ErrNotFound = errors.New("not found")
 
+// ErrBadRequest is a special err for models.
+// A model should return this when the request is bad
+var ErrBadRequest = errors.New("bad request")
+
 // StorageModel is an interface for disk encryption keys.
 type StorageModel interface {
 	GetEncryptionKey(ctx context.Context, serial string, diskByPath string) ([]byte, error)

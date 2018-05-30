@@ -16,7 +16,7 @@ func (s Server) handleImages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	os := params[0]
-	if sabakan.IsValidImageOS(os) {
+	if !sabakan.IsValidImageOS(os) {
 		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	}
@@ -31,7 +31,7 @@ func (s Server) handleImages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := params[1]
-	if sabakan.IsValidImageID(id) {
+	if !sabakan.IsValidImageID(id) {
 		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	}
@@ -44,7 +44,7 @@ func (s Server) handleImages(w http.ResponseWriter, r *http.Request) {
 		s.handleImagesPut(w, r, os, id)
 		return
 	case "DELETE":
-		s.handleImageIndexDelete(w, r, os, id)
+		s.handleImagesDelete(w, r, os, id)
 		return
 	}
 
@@ -74,18 +74,20 @@ func (s Server) handleImagesGet(w http.ResponseWriter, r *http.Request, os, id s
 }
 
 func (s Server) handleImagesPut(w http.ResponseWriter, r *http.Request, os, id string) {
-	w.WriteHeader(http.StatusCreated)
 	err := s.Model.Image.Upload(r.Context(), os, id, r.Body)
-	if err == sabakan.ErrConflicted {
+	switch err {
+	case sabakan.ErrConflicted:
 		renderError(r.Context(), w, APIErrConflict)
-		return
-	}
-	if err != nil {
+	case sabakan.ErrBadRequest:
+		renderError(r.Context(), w, APIErrBadRequest)
+	case nil:
+		w.WriteHeader(http.StatusCreated)
+	default:
 		renderError(r.Context(), w, InternalServerError(err))
 	}
 }
 
-func (s Server) handleImageIndexDelete(w http.ResponseWriter, r *http.Request, os, id string) {
+func (s Server) handleImagesDelete(w http.ResponseWriter, r *http.Request, os, id string) {
 	err := s.Model.Image.Delete(r.Context(), os, id)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)

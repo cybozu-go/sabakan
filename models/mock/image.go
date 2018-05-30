@@ -88,12 +88,12 @@ func (d *imageDriver) Upload(ctx context.Context, os, id string, r io.Reader) er
 			initrd = b.Bytes()
 
 		default:
-			return errors.New("unexpected filename: " + hdr.Name)
+			return sabakan.ErrBadRequest
 		}
 	}
 
 	if kernel == nil || initrd == nil {
-		return errors.New("missing files in tar")
+		return sabakan.ErrBadRequest
 	}
 
 	d.images[id] = imageData{kernel, initrd}
