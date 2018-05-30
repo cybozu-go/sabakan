@@ -45,14 +45,20 @@ type ImageIndex []*Image
 // Append appends a new *Image to the index.
 //
 // If the index has MaxImages images, the oldest image will be discarded.
-func (i ImageIndex) Append(img *Image) ImageIndex {
+// ID of discarded images are returned in the second return value.
+func (i ImageIndex) Append(img *Image) (ImageIndex, []string) {
 	if len(i) < MaxImages {
-		return append(i, img)
+		return append(i, img), nil
 	}
 
-	copy(i, i[len(i)-MaxImages+1:len(i)])
+	ndels := len(i) - MaxImages + 1
+	dels := make([]string, ndels)
+	for j := 0; j < ndels; j++ {
+		dels[j] = i[j].ID
+	}
+	copy(i, i[ndels:len(i)])
 	i[MaxImages-1] = img
-	return i[0:MaxImages]
+	return i[0:MaxImages], dels
 }
 
 // Remove removes an image entry from the index.

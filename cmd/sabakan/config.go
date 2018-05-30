@@ -28,12 +28,13 @@ func newConfig() *config {
 }
 
 type config struct {
-	ListenHTTP  string   `yaml:"http"`
-	URLPort     string   `yaml:"url-port"`
-	EtcdServers []string `yaml:"etcd-servers"`
-	EtcdPrefix  string   `yaml:"etcd-prefix"`
-	EtcdTimeout string   `yaml:"etcd-timeout"`
-	DHCPBind    string   `yaml:"dhcp-bind"`
-	IPXEPath    string   `yaml:"ipxe-efi-path"`
-	ImageDir    string   `yaml:"image-dir"`
+	ListenHTTP   string   `yaml:"http"`
+	URLPort      string   `yaml:"url-port"`
+	EtcdServers  []string `yaml:"etcd-servers"`
+	EtcdPrefix   string   `yaml:"etcd-prefix"`
+	EtcdTimeout  string   `yaml:"etcd-timeout"`
+	DHCPBind     string   `yaml:"dhcp-bind"`
+	IPXEPath     string   `yaml:"ipxe-efi-path"`
+	ImageDir     string   `yaml:"image-dir"`
+	AdvertiseURL string   `yaml:"advertise-url"`
 }

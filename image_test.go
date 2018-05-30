@@ -51,7 +51,7 @@ func testImageValid(t *testing.T) {
 func testImageIndexAppend(t *testing.T) {
 	t.Parallel()
 
-	idx := ImageIndex{}.Append(nil)
+	idx, _ := ImageIndex{}.Append(nil)
 	if len(idx) != 1 {
 		t.Fatal(`len(idx) != 1`, len(idx))
 	}
@@ -66,7 +66,7 @@ func testImageIndexAppend(t *testing.T) {
 		&Image{ID: "3"},
 		&Image{ID: "4"},
 	}
-	idx = idx.Append(&Image{ID: "5"})
+	idx, _ = idx.Append(&Image{ID: "5"})
 	if len(idx) != MaxImages {
 		t.Fatal(`len(idx) != MaxImages`, len(idx))
 	}
@@ -87,7 +87,7 @@ func testImageIndexAppend(t *testing.T) {
 		&Image{ID: "5"},
 		&Image{ID: "6"},
 	}
-	idx = idx.Append(&Image{ID: "7"})
+	idx, dels := idx.Append(&Image{ID: "7"})
 	if len(idx) != MaxImages {
 		t.Fatal(`len(idx) != MaxImages`, len(idx))
 	}
@@ -97,6 +97,9 @@ func testImageIndexAppend(t *testing.T) {
 	}
 	if idx[4].ID != "7" {
 		t.Error(`idx[4].ID != "7"`, idx[4].ID)
+	}
+	if !reflect.DeepEqual(dels, []string{"0", "1", "2"}) {
+		t.Error(`dels != {"0", "1", "2"}`)
 	}
 }
 

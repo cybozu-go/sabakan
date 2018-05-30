@@ -59,6 +59,11 @@ func (d ImageDir) Extract(r io.Reader, id string, members []string) error {
 		io.Copy(ioutil.Discard, r)
 	}()
 
+	err := os.MkdirAll(d.Dir, 0755)
+	if err != nil {
+		return err
+	}
+
 	tmpdir, err := ioutil.TempDir(d.Dir, "_tmp")
 	if err != nil {
 		return err
@@ -117,4 +122,10 @@ func (d ImageDir) GC(ids []string) error {
 		}
 	}
 	return nil
+}
+
+func (d ImageDir) Exists(id string) bool {
+	p := filepath.Join(d.Dir, id)
+	_, err := os.Stat(p)
+	return err == nil
 }

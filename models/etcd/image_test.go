@@ -1,0 +1,209 @@
+package etcd
+
+import (
+	"archive/tar"
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
+	"testing"
+
+	"github.com/cybozu-go/sabakan"
+)
+
+func newTestImage(kernel, initrd string) io.Reader {
+
+	buf := new(bytes.Buffer)
+	tw := tar.NewWriter(buf)
+	hdr := &tar.Header{
+		Name: sabakan.ImageKernelFilename,
+		Mode: 0644,
+		Size: int64(len(kernel)),
+	}
+	err := tw.WriteHeader(hdr)
+	if err != nil {
+		panic(err)
+	}
+	tw.Write([]byte(kernel))
+
+	hdr = &tar.Header{
+		Name: sabakan.ImageInitrdFilename,
+		Mode: 0644,
+		Size: int64(len(initrd)),
+	}
+	err = tw.WriteHeader(hdr)
+	if err != nil {
+		panic(err)
+	}
+	tw.Write([]byte(initrd))
+	tw.Close()
+	return buf
+}
+
+func testImageGetIndex(t *testing.T) {
+	t.Parallel()
+
+	d, _ := testNewDriver(t)
+
+	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.imageDir = tempdir
+	defer os.RemoveAll(tempdir)
+
+	index, err := d.imageGetIndex(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if index == nil {
+		t.Error("image index should not be nil")
+	}
+	if len(index) != 0 {
+		t.Error("image index should be empty")
+	}
+
+	testIndex := sabakan.ImageIndex{
+		&sabakan.Image{
+			ID: "1234.5",
+		},
+		&sabakan.Image{
+			ID: "2234.6",
+		},
+	}
+	testData, err := json.Marshal(testIndex)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := path.Join(d.prefix, KeyImages, "coreos")
+	_, err = d.client.Put(context.Background(), key, string(testData))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	index, err = d.imageGetIndex(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(index) != 2 {
+		t.Fatal("wrong image index: ", len(index))
+	}
+	for i := 0; i < len(testIndex); i++ {
+		if index[i].ID != testIndex[i].ID {
+			t.Error("mismatch id", i, index[i].ID)
+		}
+		if index[i].Exists != false {
+			t.Error("mismatch exists", i)
+		}
+	}
+
+	err = os.MkdirAll(filepath.Join(tempdir, "coreos", "1234.5"), 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	index, err = d.imageGetIndex(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(index) != 2 {
+		t.Fatal("wrong image index: ", len(index))
+	}
+	if index[0].Exists != true {
+		t.Error("exists should be true")
+	}
+	if index[1].Exists != false {
+		t.Error("exists should be false")
+	}
+}
+
+func testImageUpload(t *testing.T) {
+	t.Parallel()
+
+	archive := newTestImage("abcd", "efg")
+
+	d, _ := testNewDriver(t)
+
+	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.imageDir = tempdir
+	defer os.RemoveAll(tempdir)
+
+	err = d.imageUpload(context.Background(), "coreos", "1234.5", archive)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	index, err := d.imageGetIndex(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(index) != 1 {
+		t.Error("index not registered")
+	}
+
+	if index[0].ID != "1234.5" {
+		t.Error("ID mismatch", index[0].ID)
+	}
+
+	if !d.getImageDir("coreos").Exists("1234.5") {
+		t.Error("image is not stored")
+	}
+
+	for i := 0; i < sabakan.MaxImages; i++ {
+		archive = newTestImage("abcd", "efg")
+		err = d.imageUpload(context.Background(), "coreos", fmt.Sprint(i), archive)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	index, err = d.imageGetIndex(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(index) != sabakan.MaxImages {
+		t.Error("index size should not exceed sabakan.MaxImages")
+	}
+
+	dels, _, err := d.imageGetDeletedWithRev(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(dels) != 1 {
+		t.Fatal("deleted is not stored")
+	}
+	if dels[0] != "1234.5" {
+		t.Error("wrong deleted image ID")
+	}
+
+	for i := 0; i < MaxDeleted; i++ {
+		archive = newTestImage("abcd", "efg")
+		err = d.imageUpload(context.Background(), "coreos", fmt.Sprint(i+10), archive)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	dels, _, err = d.imageGetDeletedWithRev(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(dels) != MaxDeleted {
+		t.Fatal("deleted should not exceed MaxDeleted")
+	}
+	if dels[0] != "0" {
+		t.Error("wrong deleted image ID")
+	}
+
+}
+
+func TestImage(t *testing.T) {
+	t.Run("GetIndex", testImageGetIndex)
+	t.Run("Upload", testImageUpload)
+}

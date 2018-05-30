@@ -2,17 +2,128 @@ package etcd
 
 import (
 	"context"
+	"encoding/json"
 	"io"
+	"path"
+	"path/filepath"
 	"time"
 
+	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/sabakan"
 )
 
+func (d *driver) getImageDir(os string) ImageDir {
+	return ImageDir{
+		Dir: filepath.Join(d.imageDir, os),
+	}
+}
+
+func (d *driver) imageGetIndexWithRev(ctx context.Context, os string) (sabakan.ImageIndex, int64, error) {
+	key := path.Join(d.prefix, KeyImages, os)
+	resp, err := d.client.Get(ctx, key)
+	if err != nil {
+		return nil, 0, err
+	}
+	if resp.Count == 0 {
+		return sabakan.ImageIndex{}, 0, nil
+	}
+
+	var ret sabakan.ImageIndex
+	err = json.Unmarshal(resp.Kvs[0].Value, &ret)
+	if err != nil {
+		return nil, 0, err
+	}
+	dir := d.getImageDir(os)
+	for _, img := range ret {
+		img.Exists = dir.Exists(img.ID)
+	}
+	return ret, resp.Kvs[0].ModRevision, nil
+}
+
+func (d *driver) imageGetDeletedWithRev(ctx context.Context, os string) ([]string, int64, error) {
+	key := path.Join(d.prefix, KeyImages, os, "deleted")
+	resp, err := d.client.Get(ctx, key)
+	if err != nil {
+		return nil, 0, err
+	}
+	if resp.Count == 0 {
+		return nil, 0, nil
+	}
+
+	var ret []string
+	err = json.Unmarshal(resp.Kvs[0].Value, &ret)
+	if err != nil {
+		return nil, 0, err
+	}
+	return ret, resp.Kvs[0].ModRevision, nil
+}
+
 func (d *driver) imageGetIndex(ctx context.Context, os string) (sabakan.ImageIndex, error) {
-	return nil, nil
+	index, _, err := d.imageGetIndexWithRev(ctx, os)
+	return index, err
 }
 
 func (d *driver) imageUpload(ctx context.Context, os, id string, r io.Reader) error {
+RETRY:
+	index, indexRev, err := d.imageGetIndexWithRev(ctx, os)
+	if err != nil {
+		return err
+	}
+	deleted, delRev, err := d.imageGetDeletedWithRev(ctx, os)
+	if err != nil {
+		return err
+	}
+
+	img := index.Find(id)
+	if img != nil {
+		return sabakan.ErrConflicted
+	}
+
+	dir := d.getImageDir(os)
+	err = dir.Extract(r, id, []string{sabakan.ImageKernelFilename, sabakan.ImageInitrdFilename})
+	if err != nil {
+		return err
+	}
+
+	index, dels := index.Append(&sabakan.Image{
+		ID:   id,
+		Date: time.Now().UTC(),
+		URLs: []string{d.myURL("/api/v1/images", os, id)},
+	})
+	deleted = append(deleted, dels...)
+	if len(deleted) > MaxDeleted {
+		deleted = deleted[len(deleted)-MaxDeleted:]
+	}
+
+	indexKey := path.Join(d.prefix, KeyImages, os)
+	deletedKey := path.Join(d.prefix, KeyImages, os, "deleted")
+
+	indexJSON, err := json.Marshal(index)
+	if err != nil {
+		return err
+	}
+	deletedJSON, err := json.Marshal(deleted)
+	if err != nil {
+		return err
+	}
+
+	resp, err := d.client.Txn(ctx).
+		If(
+			clientv3.Compare(clientv3.ModRevision(indexKey), "=", indexRev),
+			clientv3.Compare(clientv3.ModRevision(deletedKey), "=", delRev),
+		).
+		Then(
+			clientv3.OpPut(indexKey, string(indexJSON)),
+			clientv3.OpPut(deletedKey, string(deletedJSON)),
+		).
+		Commit()
+	if err != nil {
+		return err
+	}
+	if !resp.Succeeded {
+		goto RETRY
+	}
+
 	return nil
 }
 
