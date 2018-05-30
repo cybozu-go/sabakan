@@ -30,11 +30,11 @@ RETRY:
 		return err
 	}
 	if !tresp.Succeeded {
-		// outer IF() evaluated to false; index usage was updated by another txn.
+		// outer If, i.e. usageCASIfOPs, evaluated to false; index usage was updated by another txn.
 		goto RETRY
 	}
 	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
-		// inner IF() evaluated to false
+		// inner If, i.e. conflictMachinesIfOps, evaluated to false
 		return sabakan.ErrConflicted
 	}
 
@@ -86,7 +86,7 @@ func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageM
 		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
 	}
 
-	tresp, err := d.client.Txn(ctx).
+	return d.client.Txn(ctx).
 		If(
 			usageCASIfOps...,
 		).
@@ -95,7 +95,6 @@ func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageM
 		).
 		Else().
 		Commit()
-	return tresp, err
 }
 
 // Query implements sabakan.MachineModel
@@ -192,7 +191,7 @@ func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *
 		return nil, err
 	}
 
-	resp, err := d.client.Txn(ctx).
+	return d.client.Txn(ctx).
 		If(clientv3.Compare(clientv3.ModRevision(indexKey), "=", usage.revision)).
 		Then(
 			clientv3.OpTxn(
@@ -205,9 +204,4 @@ func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *
 		).
 		Else().
 		Commit()
-	if err != nil {
-		return nil, err
-	}
-
-	return resp, nil
 }

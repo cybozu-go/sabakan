@@ -227,14 +227,18 @@ func testRegisterRace(t *testing.T) {
 	}}
 
 RETRY:
+	// retrieve usage data #1 and #2 with revision, and update data on memory
 	wmcs1, usageMap1, err := d.updateMachines(context.Background(), machines, cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	wmcs2, usageMap2, err := d.updateMachines(context.Background(), machines, cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// update data#2 on etcd; this increments revision
 	tresp2, err := d.doRegister(context.Background(), wmcs2, usageMap2)
 	if err != nil {
 		t.Fatal(err)
@@ -244,12 +248,13 @@ RETRY:
 	}
 	<-ch
 
+	// try to update data#1 on etcd; this must fail
 	tresp1, err := d.doRegister(context.Background(), wmcs1, usageMap1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if tresp1.Succeeded {
-		t.Error("update operations should be failed, if revision number has been changed")
+		t.Error("update operations should fail, if revision number has been changed")
 	}
 }
 
@@ -266,6 +271,7 @@ func testDeleteRace(t *testing.T) {
 		Serial: "1234abcd", Role: "worker",
 	}}
 
+	// prepare data to be deleted
 	err = d.Register(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
@@ -276,6 +282,7 @@ func testDeleteRace(t *testing.T) {
 	m := machines[0]
 
 RETRY:
+	// retrieve usage data #1 and #2 with revision, and update data on memory
 	usage1, err := d.getRackIndexUsage(context.Background(), m.Rack)
 	if err != nil {
 		t.Fatal(err)
@@ -288,6 +295,7 @@ RETRY:
 	}
 	usage2.release(m)
 
+	// update data#2 on etcd; this increments revision
 	resp2, err := d.doDelete(context.Background(), m, usage2)
 	if err != nil {
 		t.Fatal(err)
@@ -297,12 +305,13 @@ RETRY:
 	}
 	<-ch
 
+	// try to update data#1 on etcd; this must fail
 	resp1, err := d.doDelete(context.Background(), m, usage1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if resp1.Succeeded {
-		t.Error("update operations should be failed, if revision number has been changed")
+		t.Error("update operations should fail, if revision number has been changed")
 	}
 }
 
