@@ -52,6 +52,14 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("role is empty"))
 			return
 		}
+		if m.BMC.Type == "" {
+			renderError(r.Context(), w, BadRequest("BMC type is empty"))
+			return
+		}
+		if (m.BMC.Type != sabakan.BMC_IPMI_2) && (m.BMC.Type != sabakan.BMC_iDRAC_9) {
+			renderError(r.Context(), w, BadRequest("unknown BMC type"))
+			return
+		}
 	}
 
 	err = s.Model.Machine.Register(r.Context(), machines)
@@ -76,6 +84,7 @@ func getMachinesQuery(r *http.Request) *sabakan.Query {
 	q.Role = vals.Get("role")
 	q.IPv4 = vals.Get("ipv4")
 	q.IPv6 = vals.Get("ipv6")
+	q.BMCType = vals.Get("bmc-type")
 	return &q
 }
 

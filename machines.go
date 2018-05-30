@@ -1,5 +1,10 @@
 package sabakan
 
+const (
+	BMC_iDRAC_9 = "iDRAC-9"
+	BMC_IPMI_2  = "IPMI-2.0"
+)
+
 // Machine represents a server hardware.
 type Machine struct {
 	Serial      string                    `json:"serial"`
@@ -40,4 +45,5 @@ func (n MachineNetwork) hasIPv6(ipv6 string) bool {
 type MachineBMC struct {
 	IPv4 string `json:"ipv4"`
 	IPv6 string `json:"ipv6"`
+	Type string `json:"type"`
 }

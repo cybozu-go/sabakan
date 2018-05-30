@@ -29,30 +29,49 @@ func testMachinesPost(t *testing.T) {
   "product": "R630",
   "datacenter": "ty3",
   "rack": 1,
-  "role": "boot"
+  "role": "boot",
+  "bmc": {"type": "iDRAC-9"}
 }]`, http.StatusCreated},
 		{`[{
   "serial": "1234abcd",
   "product": "R630",
   "datacenter": "ty3",
   "rack": 1,
-  "role": "boot"
+  "role": "boot",
+  "bmc": {"type": "iDRAC-9"}
 }]`, http.StatusConflict},
 		{`[{
   "product": "R630",
   "datacenter": "ty3",
   "rack": 1,
-  "role": "boot"
+  "role": "boot",
+  "bmc": {"type": "iDRAC-9"}
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "5678abcd",
   "datacenter": "ty3",
   "rack": 1,
-  "role": "boot"
+  "role": "boot",
+  "bmc": {"type": "iDRAC-9"}
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "0000abcd",
   "product": "R630",
+  "rack": 1,
+  "role": "boot",
+  "bmc": {"type": "iDRAC-9"}
+}]`, http.StatusBadRequest},
+		{`[{
+  "serial": "2222abcd",
+  "product": "R630",
+  "datacenter": "ty3",
+  "rack": 1,
+  "bmc": {"type": "iDRAC-9"}
+}]`, http.StatusBadRequest},
+		{`[{
+  "serial": "2222abcd",
+  "product": "R630",
+  "datacenter": "ty3",
   "rack": 1,
   "role": "boot"
 }]`, http.StatusBadRequest},
@@ -60,7 +79,9 @@ func testMachinesPost(t *testing.T) {
   "serial": "2222abcd",
   "product": "R630",
   "datacenter": "ty3",
-  "rack": 1
+  "rack": 1,
+  "role": "boot",
+  "bmc": {"type": "unknown-BMC"}
 }]`, http.StatusBadRequest},
 	}
 
@@ -100,6 +121,7 @@ func testMachinesGet(t *testing.T) {
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "boot",
+			BMC:        sabakan.MachineBMC{Type: sabakan.BMC_iDRAC_9},
 		},
 		{
 			Serial:     "5678abcd",
@@ -107,6 +129,7 @@ func testMachinesGet(t *testing.T) {
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "worker",
+			BMC:        sabakan.MachineBMC{Type: sabakan.BMC_iDRAC_9},
 		},
 		{
 			Serial:     "1234efgh",
@@ -114,6 +137,7 @@ func testMachinesGet(t *testing.T) {
 			Datacenter: "ty3",
 			Rack:       2,
 			Role:       "boot",
+			BMC:        sabakan.MachineBMC{Type: sabakan.BMC_IPMI_2},
 		},
 	})
 
@@ -147,11 +171,15 @@ func testMachinesGet(t *testing.T) {
 			status:   http.StatusOK,
 			expected: map[string]bool{"1234abcd": true, "1234efgh": true},
 		},
-
 		{
 			query:    map[string][]string{"serial": {"5689abcd"}},
 			status:   http.StatusNotFound,
 			expected: nil,
+		},
+		{
+			query:    map[string][]string{"bmc-type": {"iDRAC-9"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
 		},
 	}
 	for _, c := range cases {

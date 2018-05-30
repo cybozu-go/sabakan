@@ -11,6 +11,7 @@ type Query struct {
 	Role       string
 	IPv4       string
 	IPv6       string
+	BMCType    string
 }
 
 // Match returns true if all non-empty fields matches Machine
@@ -52,6 +53,9 @@ func (q *Query) Match(m *Machine) bool {
 		return false
 	}
 	if len(q.Role) > 0 && q.Role != m.Role {
+		return false
+	}
+	if len(q.BMCType) > 0 && q.BMCType != m.BMC.Type {
 		return false
 	}
 

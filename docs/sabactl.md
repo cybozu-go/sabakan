@@ -62,8 +62,8 @@ Detailed specification of the input JSON file is same as that of the [`POST /api
 
 ```json
 [
-  { "serial": "<serial1>", "datacenter": "<datacenter1>", "rack": "<rack1>", "product": "<product1>", "role": "<role1>" },
-  { "serial": "<serial2>", "datacenter": "<datacenter2>", "rack": "<rack2>", "product": "<product2>", "role": "<role2>" }
+  { "serial": "<serial1>", "datacenter": "<datacenter1>", "rack": "<rack1>", "product": "<product1>", "role": "<role1>", "bmc": { "type": "iDRAC-9" }},
+  { "serial": "<serial2>", "datacenter": "<datacenter2>", "rack": "<rack2>", "product": "<product2>", "role": "<role2>", "bmc": { "type": "iDRAC-9" }}
 ]
 ```
 
