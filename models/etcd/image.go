@@ -64,6 +64,34 @@ func (d *driver) imageGetIndex(ctx context.Context, os string) (sabakan.ImageInd
 	return index, err
 }
 
+func (d *driver) imageCASIndex(ctx context.Context, os string,
+	index sabakan.ImageIndex, indexRev int64,
+	deleted []string, delRev int64) (*clientv3.TxnResponse, error) {
+
+	indexKey := path.Join(d.prefix, KeyImages, os)
+	deletedKey := path.Join(d.prefix, KeyImages, os, "deleted")
+
+	indexJSON, err := json.Marshal(index)
+	if err != nil {
+		return nil, err
+	}
+	deletedJSON, err := json.Marshal(deleted)
+	if err != nil {
+		return nil, err
+	}
+
+	return d.client.Txn(ctx).
+		If(
+			clientv3.Compare(clientv3.ModRevision(indexKey), "=", indexRev),
+			clientv3.Compare(clientv3.ModRevision(deletedKey), "=", delRev),
+		).
+		Then(
+			clientv3.OpPut(indexKey, string(indexJSON)),
+			clientv3.OpPut(deletedKey, string(deletedJSON)),
+		).
+		Commit()
+}
+
 func (d *driver) imageUpload(ctx context.Context, os, id string, r io.Reader) error {
 RETRY:
 	index, indexRev, err := d.imageGetIndexWithRev(ctx, os)
@@ -96,28 +124,7 @@ RETRY:
 		deleted = deleted[len(deleted)-MaxDeleted:]
 	}
 
-	indexKey := path.Join(d.prefix, KeyImages, os)
-	deletedKey := path.Join(d.prefix, KeyImages, os, "deleted")
-
-	indexJSON, err := json.Marshal(index)
-	if err != nil {
-		return err
-	}
-	deletedJSON, err := json.Marshal(deleted)
-	if err != nil {
-		return err
-	}
-
-	resp, err := d.client.Txn(ctx).
-		If(
-			clientv3.Compare(clientv3.ModRevision(indexKey), "=", indexRev),
-			clientv3.Compare(clientv3.ModRevision(deletedKey), "=", delRev),
-		).
-		Then(
-			clientv3.OpPut(indexKey, string(indexJSON)),
-			clientv3.OpPut(deletedKey, string(deletedJSON)),
-		).
-		Commit()
+	resp, err := d.imageCASIndex(ctx, os, index, indexRev, deleted, delRev)
 	if err != nil {
 		return err
 	}
@@ -156,6 +163,44 @@ func (d *driver) imageDownload(ctx context.Context, os, id string, out io.Writer
 }
 
 func (d *driver) imageDelete(ctx context.Context, os, id string) error {
+RETRY:
+	index, indexRev, err := d.imageGetIndexWithRev(ctx, os)
+	if err != nil {
+		return err
+	}
+	deleted, delRev, err := d.imageGetDeletedWithRev(ctx, os)
+	if err != nil {
+		return err
+	}
+
+	if len(index) == 0 {
+		return sabakan.ErrNotFound
+	}
+
+	newIndex := make(sabakan.ImageIndex, 0, len(index))
+	for _, img := range index {
+		if img.ID == id {
+			continue
+		}
+		newIndex = append(newIndex, img)
+	}
+	if len(newIndex) == len(index) {
+		return sabakan.ErrNotFound
+	}
+
+	deleted = append(deleted, id)
+	if len(deleted) > MaxDeleted {
+		deleted = deleted[len(deleted)-MaxDeleted:]
+	}
+
+	resp, err := d.imageCASIndex(ctx, os, newIndex, indexRev, deleted, delRev)
+	if err != nil {
+		return err
+	}
+	if !resp.Succeeded {
+		goto RETRY
+	}
+
 	return nil
 }
 

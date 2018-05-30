@@ -309,8 +309,90 @@ func testImageDownload(t *testing.T) {
 	}
 }
 
+func testImageDelete(t *testing.T) {
+	t.Parallel()
+
+	d, _ := testNewDriver(t)
+
+	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.imageDir = tempdir
+	defer os.RemoveAll(tempdir)
+
+	index := sabakan.ImageIndex{
+		&sabakan.Image{
+			ID: "1234.5",
+		},
+		&sabakan.Image{
+			ID: "2234.6",
+		},
+	}
+	testImagePutIndex(t, d, index)
+
+	err = d.imageDelete(context.Background(), "coreos", "hoge")
+	if err != sabakan.ErrNotFound {
+		t.Error(`err != sabakan.ErrNotFound`)
+	}
+
+	err = d.imageDelete(context.Background(), "coreos", "1234.5")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	index2, err := d.imageGetIndex(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(index2) != 1 {
+		t.Fatal(`len(index2) != 1`)
+	}
+	if index2[0].ID != "2234.6" {
+		t.Error(`index2[0].ID != "2234.6"`, index2[0].ID)
+	}
+
+	deleted, _, err := d.imageGetDeletedWithRev(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(deleted) != 1 {
+		t.Fatal(`len(deleted) != 1`)
+	}
+	if deleted[0] != "1234.5" {
+		t.Error(`deleted[0] != "1234.5"`)
+	}
+
+	index = sabakan.ImageIndex{}
+	for i := 0; i < MaxDeleted; i++ {
+		index = append(index, &sabakan.Image{
+			ID: fmt.Sprint(i),
+		})
+	}
+	testImagePutIndex(t, d, index)
+
+	for i := 0; i < MaxDeleted; i++ {
+		err = d.imageDelete(context.Background(), "coreos", fmt.Sprint(i))
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	deleted, _, err = d.imageGetDeletedWithRev(context.Background(), "coreos")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(deleted) != MaxDeleted {
+		t.Fatal(`len(deleted) != MaxDeleted`)
+	}
+	if deleted[0] != "0" {
+		t.Error(`deleted[0] != "0"`)
+	}
+}
+
 func TestImage(t *testing.T) {
 	t.Run("GetIndex", testImageGetIndex)
 	t.Run("Upload", testImageUpload)
 	t.Run("Download", testImageDownload)
+	t.Run("Delete", testImageDelete)
 }
