@@ -35,6 +35,14 @@ type ImageDir struct {
 	Dir string
 }
 
+// Exists returns true if image files referenced by "id"
+// is stored in the directory.
+func (d ImageDir) Exists(id string) bool {
+	p := filepath.Join(d.Dir, id)
+	_, err := os.Stat(p)
+	return err == nil
+}
+
 func writeToFile(p string, r io.Reader) error {
 	f, err := os.Create(p)
 	if err != nil {
@@ -166,6 +174,19 @@ func (d ImageDir) Download(w io.Writer, id string) error {
 	return tw.Close()
 }
 
+// ServeFile opens filename in "id" directory then calls "f" with the opened file.
+func (d ImageDir) ServeFile(id, filename string, f func(content io.ReadSeeker)) error {
+	p := filepath.Join(d.Dir, id, filename)
+	g, err := os.Open(p)
+	if err != nil {
+		return err
+	}
+	defer g.Close()
+
+	f(g)
+	return nil
+}
+
 // GC removes images listed in "ids".
 func (d ImageDir) GC(ids []string) error {
 	for _, id := range ids {
@@ -176,12 +197,4 @@ func (d ImageDir) GC(ids []string) error {
 		}
 	}
 	return nil
-}
-
-// Exists returns true if image files referenced by "id"
-// is stored in the directory.
-func (d ImageDir) Exists(id string) bool {
-	p := filepath.Join(d.Dir, id)
-	_, err := os.Stat(p)
-	return err == nil
 }

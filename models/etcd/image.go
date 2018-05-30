@@ -206,7 +206,29 @@ RETRY:
 
 func (d *driver) imageServeFile(ctx context.Context, os, filename string,
 	f func(modtime time.Time, content io.ReadSeeker)) error {
-	return nil
+
+	index, err := d.imageGetIndex(ctx, os)
+	if err != nil {
+		return err
+	}
+
+	dir := d.getImageDir(os)
+	for i := len(index) - 1; i >= 0; i-- {
+		id := index[i].ID
+		date := index[i].Date
+		if !dir.Exists(id) {
+			log.Warn("imageServeFile: no local copy", map[string]interface{}{
+				"id": id,
+			})
+			continue
+		}
+
+		return dir.ServeFile(id, filename, func(content io.ReadSeeker) {
+			f(date, content)
+		})
+	}
+
+	return sabakan.ErrNotFound
 }
 
 type imageDriver struct {

@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/cybozu-go/sabakan"
 )
@@ -390,9 +391,100 @@ func testImageDelete(t *testing.T) {
 	}
 }
 
+func testImageServeFile(t *testing.T) {
+	t.Parallel()
+
+	d, _ := testNewDriver(t)
+
+	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.imageDir = tempdir
+	defer os.RemoveAll(tempdir)
+
+	index := sabakan.ImageIndex{
+		&sabakan.Image{
+			ID: "1234.5",
+		},
+		&sabakan.Image{
+			ID: "2234.6",
+		},
+	}
+	testImagePutIndex(t, d, index)
+
+	buf := new(bytes.Buffer)
+	var modtime time.Time
+	f := func(mt time.Time, content io.ReadSeeker) {
+		modtime = mt
+		buf.Reset()
+		io.Copy(buf, content)
+	}
+
+	err = d.imageServeFile(context.Background(), "coreos", "kernel", f)
+	if err != sabakan.ErrNotFound {
+		t.Error(`err != sabakan.ErrNotFound`, err)
+	}
+
+	dir := d.getImageDir("coreos")
+	err = dir.Extract(newTestImage("abc", "def"), "1234.5", []string{
+		sabakan.ImageKernelFilename,
+		sabakan.ImageInitrdFilename,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = d.imageServeFile(context.Background(), "coreos", sabakan.ImageKernelFilename, f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if buf.String() != "abc" {
+		t.Error(`buf.String() != "abc"`, buf.String())
+	}
+
+	err = d.imageServeFile(context.Background(), "coreos", sabakan.ImageInitrdFilename, f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if buf.String() != "def" {
+		t.Error(`buf.String() != "def"`, buf.String())
+	}
+
+	err = d.imageServeFile(context.Background(), "coreos", "no-such-file", f)
+	if err == nil {
+		t.Error("imageServeFile should return an error that causes an internal server error")
+	}
+
+	err = dir.Extract(newTestImage("zzzz", "3838"), "2234.6", []string{
+		sabakan.ImageKernelFilename,
+		sabakan.ImageInitrdFilename,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = d.imageServeFile(context.Background(), "coreos", sabakan.ImageKernelFilename, f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if buf.String() != "zzzz" {
+		t.Error(`buf.String() != "zzzz"`, buf.String())
+	}
+
+	err = d.imageServeFile(context.Background(), "coreos", sabakan.ImageInitrdFilename, f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if buf.String() != "3838" {
+		t.Error(`buf.String() != "3838"`, buf.String())
+	}
+}
+
 func TestImage(t *testing.T) {
 	t.Run("GetIndex", testImageGetIndex)
 	t.Run("Upload", testImageUpload)
 	t.Run("Download", testImageDownload)
 	t.Run("Delete", testImageDelete)
+	t.Run("ServeFile", testImageServeFile)
 }
