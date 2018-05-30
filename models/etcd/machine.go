@@ -163,7 +163,10 @@ RETRY:
 	if err != nil {
 		return err
 	}
-	usage.release(m)
+	needUpdate := usage.release(m)
+	if !needUpdate {
+		return nil
+	}
 
 	resp, err := d.doDelete(ctx, m, usage)
 	if err != nil {
