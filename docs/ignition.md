@@ -5,21 +5,21 @@ In order to distribute CoreOS ignitions, sabakan provides an ignition management
 
 * Operators need to upload template ignitions to one sabakan server.
 
-    Rest of sabakan servers will automatically saved by etcd cluster.
+    Rest of sabakan servers will automatically save by etcd cluster.
 
-* Ignition templates are stored for each `<role>`.
+* Sabakan saves ignition templates for each `<role>`.
 
     `<role>` is referred from a parameter `<role>` in a machine.
 
 * Sabakan keeps versions of ignitions by `<role>`.
 
     In case of a new ignition fatal detects, the change can be rolled back by DELETE API. 
-    When operators put a new ignition template to the sabakan, `<id>` is automatically generated. `<id>` format will be time stamp such as `1527731687`.
+    When operators put a new ignition template to the sabakan, `<id>` is automatically generated. `<id>` format is timestamp such as `1527731687`.
     Running CoreOS can refer a kernel parameter `coreos.config.url` to know which `<id>` of the ignition template applied.
 
 * Sabakan saves configured number of ignitions.
 
-    Older ignitions will be deleted when operators upload a new ignition template.
+    Sabakan deletes oldeh ignitions when operators upload a new ignition template.
 
 How it works
 ------------
