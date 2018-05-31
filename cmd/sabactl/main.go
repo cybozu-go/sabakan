@@ -26,6 +26,7 @@ func main() {
 	subcommands.Register(dhcpCommand(c), "")
 	subcommands.Register(ipamCommand(c), "")
 	subcommands.Register(machinesCommand(c), "")
+	subcommands.Register(imagesCommand(c), "")
 
 	flag.Parse()
 	cmd.LogConfig{}.Apply()

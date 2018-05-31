@@ -56,8 +56,8 @@ func testSabactlDHCP(t *testing.T) {
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "dhcp", "set")
 	code := exitCode(err)
 	if code != client.ExitSuccess {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 
@@ -66,8 +66,8 @@ func testSabactlDHCP(t *testing.T) {
 	stdout, stderr, err = runSabactl("dhcp", "get")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 
@@ -84,8 +84,8 @@ func testSabactlDHCP(t *testing.T) {
 	stdout, stderr, err = runSabactlWithFile(t, &badConf, "dhcp", "set")
 	code = exitCode(err)
 	if code != client.ExitResponse4xx {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 }
@@ -105,8 +105,8 @@ func testSabactlIPAM(t *testing.T) {
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "ipam", "set")
 	code := exitCode(err)
 	if code != client.ExitSuccess {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 
@@ -115,8 +115,8 @@ func testSabactlIPAM(t *testing.T) {
 	stdout, stderr, err = runSabactl("ipam", "get")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 
@@ -143,8 +143,8 @@ func testSabactlIPAM(t *testing.T) {
 	stdout, stderr, err = runSabactlWithFile(t, &badConf, "ipam", "set")
 	code = exitCode(err)
 	if code != client.ExitResponse4xx {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 }
@@ -164,8 +164,8 @@ func testSabactlMachines(t *testing.T) {
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "ipam", "set")
 	code := exitCode(err)
 	if code != client.ExitSuccess {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 
@@ -188,16 +188,16 @@ func testSabactlMachines(t *testing.T) {
 	stdout, stderr, err = runSabactlWithFile(t, &machines, "machines", "create")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 
 	stdout, stderr, err = runSabactl("machines", "get", "--serial", "12345678")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 	var gotMachines []sabakan.Machine
@@ -209,17 +209,27 @@ func testSabactlMachines(t *testing.T) {
 	stdout, stderr, err = runSabactl("machines", "remove", "12345678")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 
 	stdout, stderr, err = runSabactl("machines", "get", "--serial", "12345678")
 	code = exitCode(err)
 	if code != client.ExitNotFound {
-		t.Error("stdout:", stdout.String())
-		t.Error("stderr:", stderr.String())
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
 		t.Fatal("machine not removed", code)
+	}
+}
+
+func testSabactlImages(t *testing.T) {
+	stdout, stderr, err := runSabactl("images", "index")
+	code := exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to get index of images", code)
 	}
 }
 
@@ -231,4 +241,5 @@ func TestSabactl(t *testing.T) {
 	t.Run("DHCP", testSabactlDHCP)
 	t.Run("IPAM", testSabactlIPAM)
 	t.Run("Machines", testSabactlMachines)
+	t.Run("Images", testSabactlImages)
 }
