@@ -27,9 +27,11 @@ func (s Server) Serve(ctx context.Context) error {
 	for {
 		pkt, intf, err := s.Conn.RecvDHCP()
 		if err != nil {
-			log.Error("RecvDHCP returns an error, exiting", map[string]interface{}{
-				log.FnError: err.Error(),
-			})
+			if ctx.Err() != context.Canceled {
+				log.Error("RecvDHCP returns an error, exiting", map[string]interface{}{
+					log.FnError: err.Error(),
+				})
+			}
 			break
 		}
 		if intf == nil {

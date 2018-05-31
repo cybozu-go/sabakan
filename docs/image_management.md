@@ -34,14 +34,16 @@ The structure of the index is a JSON like this:
         "urls": [
             "http://10.1.2.3:10080/api/v1/images/coreos/1688.5.3", 
             "http://10.98.76.54:10080/api/v1/images/coreos/1688.5.3"
-        ]
+        ],
+        "exists": true
     },
     {
         "id": "1745.4.0",
         "date": "2018-05-29T01:23:45Z",
         "urls": [
             "http://10.1.2.3:10080/api/v1/images/coreos/1745.4.0"
-        ]
+        ],
+        "exists": false
     }
 ]
 ```
@@ -49,24 +51,29 @@ The structure of the index is a JSON like this:
 `urls` is a list of URLs where the image archive can be downloaded.
 Details are described in the next section.
 
-### Watching index
+`exists` is only meaningful when this JSON is returned from a REST API.
+It becomes `true` if the server has a local copy of the image.
 
-Each sabakan server watches the index in etcd to:
-* remove an image if the id of it disappears from the index, and
-* pull an image if a new one appears in the index.
+### Finding and pulling new images
 
 Firstly, only one sabakan server in the cluster has a new image.
 Other sabakan servers need to pull the image from the first server.
 
-To distribute new images, the first server that receives a new image
-adds an index entry having a download URL from the server in `urls`.
-
+Each sabakan server watches the index in etcd, and finds new images.
 When a server finds a new image in the index, it downloads the image through
 a URL in `urls`.  After the server pulled the image, it may optionally add
 a URL to download the image from itself for load-balancing.
 
-When a server finds an entry disappears in the index, it removes the local
-copy of the image.
+To distribute new images, the first server that receives a new image
+adds an index entry having a download URL from the server in `urls`.
+
+### Removing images that are no longer in the index
+
+When an image is removed from the index, the ID of the index is added
+to a list saved in `<prefix>/images/coreos/deleted` key in etcd.
+
+Each sabakan server watches the key to remove local copy of the deleted
+images.
 
 ### Serving requests from iPXE
 

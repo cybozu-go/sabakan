@@ -89,25 +89,35 @@ func runSabakan() (func(), error) {
 	if circleci {
 		servers = "http://localhost:2379"
 	}
+
+	imageDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		return nil, err
+	}
+
 	command := exec.Command("../sabakan",
 		"-dhcp-bind", "0.0.0.0:10067",
 		"-etcd-servers", servers,
+		"-advertise-url", "http://localhost:10080",
+		"-image-dir", imageDir,
 	)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
-	err := command.Start()
+	err = command.Start()
 	if err != nil {
 		return nil, err
 	}
 
 	// wait for startup
 	for i := 0; i < 10; i++ {
-		resp, err := http.Get("http://localhost:10080/api/v1/config/ipam")
+		var resp *http.Response
+		resp, err = http.Get("http://localhost:10080/api/v1/config/ipam")
 		if err == nil {
 			resp.Body.Close()
 			return func() {
 				command.Process.Kill()
 				command.Wait()
+				os.RemoveAll(imageDir)
 			}, nil
 		}
 		time.Sleep(1 * time.Second)

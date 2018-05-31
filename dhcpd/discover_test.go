@@ -111,7 +111,7 @@ func testDiscoverHTTPBoot(t *testing.T) {
 	expected.Options[dhcp4.OptLeaseTime] = buf
 	expected.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
 	expected.Options[dhcp4.OptVendorIdentifier] = []byte("HTTPClient")
-	expected.BootFilename = "http://10.69.1.3:80/api/v1/boot/ipxe.efi"
+	expected.BootFilename = "http://10.69.0.195:10080/api/v1/boot/ipxe.efi"
 
 	resp, err := h.handleDiscover(context.Background(), pkt, intf)
 	if err != nil {
@@ -139,7 +139,7 @@ func testDiscoverIPXE(t *testing.T) {
 	binary.BigEndian.PutUint32(buf, 3600)
 	expected.Options[dhcp4.OptLeaseTime] = buf
 	expected.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
-	expected.BootFilename = "http://10.69.1.3:80/api/v1/boot/coreos/ipxe"
+	expected.BootFilename = "http://10.69.0.195:10080/api/v1/boot/coreos/ipxe"
 
 	resp, err := h.handleDiscover(context.Background(), pkt, intf)
 	if err != nil {

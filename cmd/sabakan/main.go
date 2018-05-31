@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -25,14 +28,15 @@ type etcdConfig struct {
 }
 
 var (
-	flagHTTP        = flag.String("http", "0.0.0.0:10080", "<Listen IP>:<Port number>")
-	flagURLPort     = flag.String("url-port", "10080", "port number used to construct boot API URL")
-	flagEtcdServers = flag.String("etcd-servers", "http://localhost:2379", "comma-separated URLs of the backend etcd")
-	flagEtcdPrefix  = flag.String("etcd-prefix", "/sabakan", "etcd prefix")
+	flagHTTP        = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
+	flagEtcdServers = flag.String("etcd-servers", strings.Join(defaultEtcdServers, ","), "comma-separated URLs of the backend etcd")
+	flagEtcdPrefix  = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
 	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
 
-	flagDHCPBind = flag.String("dhcp-bind", "0.0.0.0:10067", "bound ip addresses and port for dhcp server")
-	flagIPXEPath = flag.String("ipxe-efi-path", "/usr/lib/ipxe/ipxe.efi", "path to ipxe.efi")
+	flagDHCPBind     = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
+	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
+	flagImageDir     = flag.String("image-dir", defaultImageDir, "directory to store boot images")
+	flagAdvertiseURL = flag.String("advertise-url", "", "public URL of this server")
 
 	flagConfigFile = flag.String("config-file", "", "path to configuration file")
 )
@@ -44,12 +48,13 @@ func main() {
 	cfg := newConfig()
 	if *flagConfigFile == "" {
 		cfg.ListenHTTP = *flagHTTP
-		cfg.URLPort = *flagURLPort
 		cfg.EtcdServers = strings.Split(*flagEtcdServers, ",")
 		cfg.EtcdPrefix = *flagEtcdPrefix
 		cfg.EtcdTimeout = *flagEtcdTimeout
 		cfg.DHCPBind = *flagDHCPBind
 		cfg.IPXEPath = *flagIPXEPath
+		cfg.ImageDir = *flagImageDir
+		cfg.AdvertiseURL = *flagAdvertiseURL
 	} else {
 		f, err := os.Open(*flagConfigFile)
 		if err != nil {
@@ -60,6 +65,19 @@ func main() {
 			log.ErrorExit(err)
 		}
 		f.Close()
+	}
+
+	if !filepath.IsAbs(cfg.ImageDir) {
+		fmt.Fprintln(os.Stderr, "image-dir must be an absolute path")
+		os.Exit(1)
+	}
+	if cfg.AdvertiseURL == "" {
+		fmt.Fprintln(os.Stderr, "advertise-url must be specified")
+		os.Exit(1)
+	}
+	advertiseURL, err := url.Parse(cfg.AdvertiseURL)
+	if err != nil {
+		log.ErrorExit(err)
 	}
 
 	var e etcdConfig
@@ -81,7 +99,7 @@ func main() {
 	}
 	defer c.Close()
 
-	model := etcd.NewModel(c, e.Prefix)
+	model := etcd.NewModel(c, e.Prefix, cfg.ImageDir, advertiseURL)
 	ch := make(chan struct{})
 	cmd.Go(func(ctx context.Context) error {
 		return model.Run(ctx, ch)
@@ -94,7 +112,7 @@ func main() {
 		log.ErrorExit(err)
 	}
 	dhcpServer := dhcpd.Server{
-		Handler: dhcpd.DHCPHandler{Model: model, URLPort: cfg.URLPort},
+		Handler: dhcpd.DHCPHandler{Model: model, MyURL: advertiseURL},
 		Conn:    conn,
 	}
 	cmd.Go(dhcpServer.Serve)
@@ -102,6 +120,7 @@ func main() {
 	webServer := web.Server{
 		Model:        model,
 		IPXEFirmware: cfg.IPXEPath,
+		MyURL:        advertiseURL,
 	}
 	s := &cmd.HTTPServer{
 		Server: &http.Server{

@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"testing"
@@ -74,13 +75,18 @@ func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	u, err := url.Parse("http://localhost:10080")
+	if err != nil {
+		t.Fatal(err)
+	}
 	d := &driver{
-		client: client,
-		prefix: t.Name(),
-		mi:     newMachinesIndex(),
+		client:       client,
+		prefix:       t.Name(),
+		mi:           newMachinesIndex(),
+		advertiseURL: u,
 	}
 	ch := make(chan struct{}, 8) // buffers post-modify-done signals, up to 8
-	go d.startWatching(context.Background(), ch)
+	go d.startWatching(context.Background(), ch, nil)
 	<-ch
 	return d, ch
 }

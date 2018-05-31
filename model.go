@@ -3,7 +3,9 @@ package sabakan
 import (
 	"context"
 	"errors"
+	"io"
 	"net"
+	"time"
 )
 
 // ErrConflicted is a special error for models.
@@ -13,6 +15,10 @@ var ErrConflicted = errors.New("key conflicted")
 // ErrNotFound is a special err for models.
 // A model should return this when it cannot find a resource by a specified key.
 var ErrNotFound = errors.New("not found")
+
+// ErrBadRequest is a special err for models.
+// A model should return this when the request is bad
+var ErrBadRequest = errors.New("bad request")
 
 // StorageModel is an interface for disk encryption keys.
 type StorageModel interface {
@@ -44,6 +50,20 @@ type DHCPModel interface {
 	Decline(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error
 }
 
+// ImageModel is an interface to manage boot images.
+type ImageModel interface {
+	// These are for /api/v1/images
+	GetIndex(ctx context.Context, os string) (ImageIndex, error)
+	Upload(ctx context.Context, os, id string, r io.Reader) error
+	Download(ctx context.Context, os, id string, out io.Writer) error
+	Delete(ctx context.Context, os, id string) error
+
+	// This is for /api/v1/boot/OS/{kernel,initrd.gz}
+	// Calling f will serve the content to the HTTP client.
+	ServeFile(ctx context.Context, os, filename string,
+		f func(modtime time.Time, content io.ReadSeeker)) error
+}
+
 // Runner is an interface to run the underlying threads.
 //
 // The caller must pass a channel as follows.
@@ -66,4 +86,5 @@ type Model struct {
 	Machine MachineModel
 	IPAM    IPAMModel
 	DHCP    DHCPModel
+	Image   ImageModel
 }

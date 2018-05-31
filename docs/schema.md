@@ -84,6 +84,15 @@ $ etcdctl get /sabakan/crypts/1234abcd/pci-0000:00:1f.2-ata-3 --print-value-only
 This type of key holds the index of CoreOS container Linux images.
 The value is described in [boot image management](image_management.md).
 
+`<prefix>/images/coreos/deleted`
+--------------------------------
+
+This type of key holds a list of deleted image IDs as follows:
+
+```javascript
+["123.45.6", "789.0.1", "2018.04.01"]
+```
+
 `<prefix>/ipam`
 ---------------
 

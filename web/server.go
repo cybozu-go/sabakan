@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/cybozu-go/sabakan"
@@ -10,6 +11,7 @@ import (
 // Server is the sabakan server.
 type Server struct {
 	Model        sabakan.Model
+	MyURL        *url.URL
 	IPXEFirmware string
 }
 
@@ -47,6 +49,9 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 		return
 	case strings.HasPrefix(p, "machines"):
 		s.handleMachines(w, r)
+		return
+	case p == "images/coreos" || strings.HasPrefix(p, "images/coreos/"):
+		s.handleImages(w, r)
 		return
 	}
 

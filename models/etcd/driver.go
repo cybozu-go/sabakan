@@ -3,26 +3,33 @@ package etcd
 
 import (
 	"context"
+	"net/url"
+	"path"
 	"sync/atomic"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/sabakan"
 )
 
 type driver struct {
-	client     *clientv3.Client
-	prefix     string
-	mi         *machinesIndex
-	ipamConfig atomic.Value
-	dhcpConfig atomic.Value
+	client       *clientv3.Client
+	prefix       string
+	imageDir     string
+	advertiseURL *url.URL
+	mi           *machinesIndex
+	ipamConfig   atomic.Value
+	dhcpConfig   atomic.Value
 }
 
 // NewModel returns sabakan.Model
-func NewModel(client *clientv3.Client, prefix string) sabakan.Model {
+func NewModel(client *clientv3.Client, prefix, imageDir string, advertiseURL *url.URL) sabakan.Model {
 	d := &driver{
-		client: client,
-		prefix: prefix,
-		mi:     newMachinesIndex(),
+		client:       client,
+		prefix:       prefix,
+		imageDir:     imageDir,
+		advertiseURL: advertiseURL,
+		mi:           newMachinesIndex(),
 	}
 	return sabakan.Model{
 		Runner:  d,
@@ -30,7 +37,14 @@ func NewModel(client *clientv3.Client, prefix string) sabakan.Model {
 		Machine: d,
 		IPAM:    ipamDriver{d},
 		DHCP:    dhcpDriver{d},
+		Image:   imageDriver{d},
 	}
+}
+
+func (d *driver) myURL(p ...string) string {
+	u := *d.advertiseURL
+	u.Path = path.Join(p...)
+	return u.String()
 }
 
 // Run starts etcd watcher.  This should be called as a goroutine.
@@ -42,5 +56,16 @@ func NewModel(client *clientv3.Client, prefix string) sabakan.Model {
 // if and only if sending to ch is not going to be blocked.
 // This can be used by tests to synchronize with the watcher.
 func (d *driver) Run(ctx context.Context, ch chan<- struct{}) error {
-	return d.startWatching(ctx, ch)
+	imageIndexCh := make(chan struct{}, 1)
+
+	env := cmd.NewEnvironment(ctx)
+	env.Go(func(ctx context.Context) error {
+		return d.startWatching(ctx, ch, imageIndexCh)
+	})
+	env.Go(func(ctx context.Context) error {
+		return d.startImageUpdater(ctx, imageIndexCh)
+	})
+	env.Stop()
+
+	return env.Wait()
 }
