@@ -21,6 +21,8 @@ func (d *driver) PutTemplate(ctx context.Context, role string, template string) 
 }
 
 func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	templateMap, ok := d.ignitions[role]
 	if !ok {
 		return nil, sabakan.ErrNotFound
@@ -33,6 +35,8 @@ func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, err
 }
 
 func (d *driver) GetTemplate(ctx context.Context, role string, id string) (string, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	res, ok := d.ignitions[role][id]
 	if !ok {
 		return "", sabakan.ErrNotFound
@@ -41,6 +45,8 @@ func (d *driver) GetTemplate(ctx context.Context, role string, id string) (strin
 }
 
 func (d *driver) DeleteTemplate(ctx context.Context, role string, id string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	ids, ok := d.ignitions[role]
 	if !ok {
 		return sabakan.ErrNotFound

@@ -379,7 +379,7 @@ Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ig
 
 **Failure responses**
 
-- Invalid ignition format, or missing role.
+- Invalid ignition format.
 
   HTTP status code: 400 Bad Request
 

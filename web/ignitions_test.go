@@ -4,15 +4,105 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/cybozu-go/sabakan/models/mock"
 )
 
 func TestIgnitions(t *testing.T) {
-	// TODO test igitions
+	t.Parallel()
+
+	ign := `{
+    "ignition": { "version": "2.2.0" },
+    "storage": {
+        "files": [{
+            "filesystem": "root",
+            "path": "/etc/hostname",
+            "mode": 420,
+            "contents": { "source": "{{.Serial}}" }
+        }]
+    }
+}`
+
+	expected := `{
+    "ignition": { "version": "2.2.0" },
+    "storage": {
+        "files": [{
+            "filesystem": "root",
+            "path": "/etc/hostname",
+            "mode": 420,
+            "contents": { "source": "2222abcd" }
+        }]
+    }
+}`
+
+	m := mock.NewModel()
+	handler := Server{Model: m}
+
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", ign)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	machine := `[{
+  "serial": "2222abcd",
+  "product": "R630",
+  "datacenter": "ty3",
+  "rack": 1,
+  "role": "cs",
+  "bmc": {"type": "iDRAC-9"}
+}]`
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST", "/api/v1/machines", strings.NewReader(machine))
+	handler.ServeHTTP(w, r)
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/cs/0/2222abcd", nil)
+	handler.ServeHTTP(w, r)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Error("resp.StatusCode != http.StatusOK:", resp.StatusCode)
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	if string(body) != expected {
+		t.Error("unexpected ignition:", string(body))
+	}
+
+	// serial is not found
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/cs/0/1234abcd", nil)
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
+	}
+
+	// id is not found
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/cs/1/2222abcd", nil)
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
+	}
+
+	// role is not found
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/boot/0/2222abcd", nil)
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
+	}
 }
 
 func testIgnitionTemplatesGet(t *testing.T) {
@@ -130,7 +220,7 @@ func testIgnitionTemplatesDelete(t *testing.T) {
 	}
 }
 
-func TestIgnitionTemplatess(t *testing.T) {
+func TestIgnitionTemplates(t *testing.T) {
 	t.Run("TemplateGet", testIgnitionTemplatesGet)
 	t.Run("TemplatePut", testIgnitionTemplatesPut)
 	t.Run("TemplateDelete", testIgnitionTemplatesDelete)

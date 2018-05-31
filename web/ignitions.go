@@ -14,7 +14,7 @@ import (
 
 func (s Server) handleIgnitions(w http.ResponseWriter, r *http.Request) {
 	params := strings.Split(r.URL.Path[len("/api/v1/boot/ignitions/"):], "/")
-	if len(params) == 3 {
+	if len(params) != 3 {
 		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	}
@@ -23,7 +23,7 @@ func (s Server) handleIgnitions(w http.ResponseWriter, r *http.Request) {
 	id := params[1]
 	serial := params[2]
 
-	if len(serial) == 0 || len(id) == 0 || len(serial) == 0 {
+	if len(role) == 0 || len(id) == 0 || len(serial) == 0 {
 		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	}
@@ -119,8 +119,9 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, role, id, 
 		return
 	}
 
-	if ms == nil {
+	if len(ms) == 0 {
 		renderError(r.Context(), w, APIErrNotFound)
+		return
 	}
 
 	ign, err := renderIgnition(tmpl, ms[0])
@@ -139,12 +140,12 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, role, id, 
 }
 
 func renderIgnition(tmpl string, m *sabakan.Machine) (string, error) {
-	template, err := template.New("ignition").Parse(tmpl)
+	t, err := template.New("ignition").Parse(tmpl)
 	if err != nil {
 		return "", err
 	}
 	buf := new(bytes.Buffer)
-	err = template.Execute(buf, m)
+	err = t.Execute(buf, m)
 	if err != nil {
 		return "", err
 	}
