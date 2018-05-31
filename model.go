@@ -64,6 +64,7 @@ type ImageModel interface {
 		f func(modtime time.Time, content io.ReadSeeker)) error
 }
 
+// IgnitionModel is an interface for ignition template.
 type IgnitionModel interface {
 	PutTemplate(ctx context.Context, role string, template string) (string, error)
 	GetTemplateIDs(ctx context.Context, role string) ([]string, error)

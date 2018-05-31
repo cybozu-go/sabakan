@@ -16,10 +16,10 @@ REST API
 * [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
 * [GET|HEAD /api/v1/boot/coreos/kernel](#getcoreoskernel)
 * [GET|HEAD /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
-* [GET /api/v1/boot/ignitions/ROLE](#getignitions)
-* [GET /api/v1/boot/ignitions/ID/SERIAL](#getigitionsid)
-* [PUT /api/v1/boot/ignitions/ROLE](#putignitions)
-* [DELETE /api/v1/boot/ignitions/ROLE/ID](#deleteignitions)
+* [GET /api/v1/boot/ignitions/ROLE/ID/SERIAL](#getigitionsid)
+* [GET /api/v1/ignitions/ROLE](#getignitions)
+* [PUT /api/v1/ignitions/ROLE](#putignitions)
+* [DELETE /api/v1/ignitions/ROLE/ID](#deleteignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
@@ -316,7 +316,34 @@ Get Linux kernel image to boot CoreOS.
 
 Get initial RAM disk image to boot CoreOS.
 
-## <a name="getignitions" />`GET /api/v1/boot/ignitions/<role>`
+## <a name="getigitionsid" />`GET /api/v1/boot/ignitions/<role>/<id>/<serial>`
+
+Get CoreOS ignition for a certain serial.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- No ignition for `<role>` or `<id>` is found.
+
+  HTTP status code: 404 Not found
+
+- No `<serial>` is found.
+
+  HTTP status code: 404 Not found
+
+```console
+$ curl -XGET localhost:10080/api/v1/boot/ignitions/cs/1527731687/1234abcd
+{
+  "systemd": [
+    ......
+  ]
+}
+```
+
+## <a name="getignitions" />`GET /api/v1/ignitions/<role>`
 
 Get CoreOS ignition ids for a ceartain role.
 
@@ -336,34 +363,7 @@ $ curl -XGET localhost:10080/api/v1/boot/ignitions/cs
 [ "1427731487", "1507731659", "1527731687"]
 ```
 
-## <a name="getignitionsid" />`GET /api/v1/boot/ignitions/<id>/<serial>`
-
-Get CoreOS ignition for a certain serial.
-
-**Successful response**
-
-- HTTP status code: 200 OK
-
-**Failure responses**
-
-- No ignition for `<id>` is found.
-
-  HTTP status code: 404 Not found
-
-- No `<serial>` is found.
-
-  HTTP status code: 404 Not found
-
-```console
-$ curl -XGET localhost:10080/api/v1/boot/ignitions/1527731687/1234abcd
-{
-  "systemd": [
-    ......
-  ]
-}
-```
-
-## <a name="putignitions" />`PUT /api/v1/boot/ignitions/<role>`
+## <a name="putignitions" />`PUT /api/v1/ignitions/<role>`
 
 Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ignition.
 
@@ -374,16 +374,12 @@ Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ig
 - HTTP response body: JSON
 
 ```json
-{"status": 201, "role": "<role>", id": "<id>"}
+{"status": 201, "role": "<role>", "id": "<id>"}
 ```
 
 **Failure responses**
 
-- `<id>` already exists in `<role>`
-
-  HTTP status code: 409 Conflict
-
-- Invalid ignition format.
+- Invalid ignition format, or missing role.
 
   HTTP status code: 400 Bad Request
 
@@ -393,7 +389,7 @@ $ curl -XPUT localhost:10080/api/v1/boot/ignitions/cs
 1507731659
 ```
 
-## <a name="deleteignitions" />`DELETE /api/v1/boot/ignitions/<role>/<id>`
+## <a name="deleteignitions" />`DELETE /api/v1/ignitions/<role>/<id>`
 
 Delete CoreOS ignition by role and id.
 
@@ -403,6 +399,10 @@ Delete CoreOS ignition by role and id.
 - HTTP response body: empty
 
 **Failure responses**
+
+- Missing role or id
+
+  HTTP status code: 400 Bad Request
 
 - No `<id>` exists in `<role>`.
 

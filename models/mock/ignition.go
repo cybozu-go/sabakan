@@ -13,6 +13,7 @@ func (d *driver) PutTemplate(ctx context.Context, role string, template string) 
 	templateMap := d.ignitions[role]
 	if templateMap == nil {
 		templateMap = make(map[string]string)
+		d.ignitions[role] = templateMap
 	}
 	id := strconv.Itoa(len(templateMap))
 	templateMap[id] = template
@@ -20,9 +21,12 @@ func (d *driver) PutTemplate(ctx context.Context, role string, template string) 
 }
 
 func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, error) {
-	templateMap := d.ignitions[role]
+	templateMap, ok := d.ignitions[role]
+	if !ok {
+		return nil, sabakan.ErrNotFound
+	}
 	res := make([]string, 0)
-	for k, _ := range templateMap {
+	for k := range templateMap {
 		res = append(res, k)
 	}
 	return res, nil
@@ -37,6 +41,13 @@ func (d *driver) GetTemplate(ctx context.Context, role string, id string) (strin
 }
 
 func (d *driver) DeleteTemplate(ctx context.Context, role string, id string) error {
-	delete(d.ignitions[role], id)
+	ids, ok := d.ignitions[role]
+	if !ok {
+		return sabakan.ErrNotFound
+	}
+	if _, ok := ids[id]; !ok {
+		return sabakan.ErrNotFound
+	}
+	delete(ids, id)
 	return nil
 }

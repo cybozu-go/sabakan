@@ -28,12 +28,13 @@ func NewModel() sabakan.Model {
 		ignitions: make(map[string]map[string]string),
 	}
 	return sabakan.Model{
-		Runner:  d,
-		Storage: d,
-		Machine: d,
-		IPAM:    ipamDriver{d},
-		DHCP:    dhcpDriver{d},
-		Image:   newImageDriver(),
+		Runner:   d,
+		Storage:  d,
+		Machine:  d,
+		IPAM:     ipamDriver{d},
+		DHCP:     dhcpDriver{d},
+		Image:    newImageDriver(),
+		Ignition: d,
 	}
 }
 
