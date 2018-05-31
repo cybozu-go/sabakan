@@ -21,7 +21,7 @@ type updateData struct {
 }
 
 const (
-	maxJitterSeconds = 180
+	maxJitterSeconds = 60
 	maxImageURLs     = 10
 )
 
