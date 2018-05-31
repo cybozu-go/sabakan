@@ -106,7 +106,7 @@ OUTER:
 				return err
 			}
 
-			log.Info("pulled image", map[string]interface{}{
+			log.Info("image updater: pulled image", map[string]interface{}{
 				"os":  os,
 				"id":  img.ID,
 				"url": u,
@@ -198,6 +198,9 @@ func (d *driver) startImageUpdater(ctx context.Context, ch <-chan struct{}) erro
 		select {
 		case <-ch:
 			jitter := rand.Intn(maxJitterSeconds)
+			log.Info("image updater: waiting...", map[string]interface{}{
+				"seconds": jitter,
+			})
 			time.Sleep(time.Duration(jitter) * time.Second)
 		case <-ctx.Done():
 			return nil
