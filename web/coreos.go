@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/cybozu-go/sabakan"
@@ -46,8 +47,9 @@ func (s Server) handleCoreOSiPXE(w http.ResponseWriter, r *http.Request) {
 		console = "console=ttyS0"
 	}
 
-	baseURL := fmt.Sprintf("http://%s/api/v1/boot", r.Host)
-	ipxe := fmt.Sprintf(coreOSiPXETemplate, baseURL, console)
+	u := *s.MyURL
+	u.Path = path.Join("/api/v1/boot")
+	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), console)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))

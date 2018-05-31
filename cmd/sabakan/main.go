@@ -120,6 +120,7 @@ func main() {
 	webServer := web.Server{
 		Model:        model,
 		IPXEFirmware: cfg.IPXEPath,
+		MyURL:        advertiseURL,
 	}
 	s := &cmd.HTTPServer{
 		Server: &http.Server{

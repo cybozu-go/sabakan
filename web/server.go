@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/cybozu-go/sabakan"
@@ -10,6 +11,7 @@ import (
 // Server is the sabakan server.
 type Server struct {
 	Model        sabakan.Model
+	MyURL        *url.URL
 	IPXEFirmware string
 }
 
