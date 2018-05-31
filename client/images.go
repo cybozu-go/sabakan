@@ -91,3 +91,8 @@ func createImageArchive(kernelPath, initrdPath string) (io.Reader, error) {
 
 	return buf, nil
 }
+
+// ImagesDelete deletes image file.
+func (c *Client) ImagesDelete(ctx context.Context, os, id string) *Status {
+	return c.sendRequest(ctx, "DELETE", path.Join("/images", os, id))
+}

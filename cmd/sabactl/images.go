@@ -24,7 +24,7 @@ func (c *imagesCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.Ex
 	cmdr := newCommander(f, "images")
 	cmdr.Register(imagesIndexCommand(c.c, c.os), "")
 	cmdr.Register(imagesUploadCommand(c.c, c.os), "")
-	//cmdr.Register(imagesDeleteCommand(c.c, c.os), "")
+	cmdr.Register(imagesDeleteCommand(c.c, c.os), "")
 	return cmdr.Execute(ctx)
 }
 
@@ -93,5 +93,35 @@ func imagesUploadCommand(c *client.Client, os string) subcommands.Command {
 		"upload",
 		"upload image",
 		"upload ID KERNEL INITRD",
+	}
+}
+
+type imagesDeleteCmd struct {
+	c  *client.Client
+	os string
+}
+
+func (c imagesDeleteCmd) SetFlags(f *flag.FlagSet) {}
+
+func (c imagesDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	if len(f.Args()) != 1 {
+		return client.ExitUsageError
+	}
+
+	err := c.c.ImagesDelete(ctx, c.os, f.Arg(0))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return err.Code()
+	}
+
+	return client.ExitSuccess
+}
+
+func imagesDeleteCommand(c *client.Client, os string) subcommands.Command {
+	return subcmd{
+		&imagesDeleteCmd{c: c, os: os},
+		"delete",
+		"delete image",
+		"delete ID",
 	}
 }
