@@ -86,7 +86,7 @@ func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 		advertiseURL: u,
 	}
 	ch := make(chan struct{}, 8) // buffers post-modify-done signals, up to 8
-	go d.startWatching(context.Background(), ch)
+	go d.startWatching(context.Background(), ch, nil)
 	<-ch
 	return d, ch
 }

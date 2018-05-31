@@ -50,7 +50,7 @@ func (d *driver) initDHCPConfig(ctx context.Context) error {
 	return nil
 }
 
-func (d *driver) startWatching(ctx context.Context, ch chan<- struct{}) error {
+func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{}) error {
 	// obtain the current revision to avoid missing events.
 	resp, err := d.client.Get(ctx, "/")
 	if err != nil {
@@ -92,6 +92,11 @@ func (d *driver) startWatching(ctx context.Context, ch chan<- struct{}) error {
 				err = d.handleDHCPConfig(ev)
 			case key == KeyIPAM:
 				err = d.handleIPAMConfig(ev)
+			case strings.HasPrefix(key, KeyImages):
+				select {
+				case indexCh <- struct{}{}:
+				default:
+				}
 			}
 			if err != nil {
 				panic(err)

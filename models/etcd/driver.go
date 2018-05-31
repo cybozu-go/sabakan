@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -55,5 +56,16 @@ func (d *driver) myURL(p ...string) string {
 // if and only if sending to ch is not going to be blocked.
 // This can be used by tests to synchronize with the watcher.
 func (d *driver) Run(ctx context.Context, ch chan<- struct{}) error {
-	return d.startWatching(ctx, ch)
+	imageIndexCh := make(chan struct{}, 1)
+
+	env := cmd.NewEnvironment(ctx)
+	env.Go(func(ctx context.Context) error {
+		return d.startWatching(ctx, ch, imageIndexCh)
+	})
+	env.Go(func(ctx context.Context) error {
+		return d.startImageUpdater(ctx, imageIndexCh)
+	})
+	env.Stop()
+
+	return env.Wait()
 }
