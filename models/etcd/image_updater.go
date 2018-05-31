@@ -204,6 +204,7 @@ func (d *driver) startImageUpdater(ctx context.Context, ch <-chan struct{}) erro
 			select {
 			case <-time.After(time.Duration(jitter) * time.Second):
 			case <-ctx.Done():
+				return nil
 			}
 		case <-ctx.Done():
 			return nil
