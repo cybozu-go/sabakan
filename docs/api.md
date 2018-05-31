@@ -159,6 +159,10 @@ Field                        | Description
 
   HTTP status code: 409 Conflict
 
+- Invalid value of `<role>` format.
+
+  HTTP status code: 400 Bad Request
+
 ```console
 $ curl -i -X POST \
    -H "Content-Type:application/json" \
@@ -316,6 +320,17 @@ Get initial RAM disk image to boot CoreOS.
 
 Get CoreOS ignition ids for a ceartain role.
 
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- No ignitions are registered in the role.
+
+  HTTP status code: 404 Not found
+
+
 ```console
 $ curl -XGET localhost:10080/api/v1/boot/ignitions/cs
 [ "1427731487", "1507731659", "1527731687"]
@@ -324,6 +339,20 @@ $ curl -XGET localhost:10080/api/v1/boot/ignitions/cs
 ## <a name="getignitionsid" />`GET /api/v1/boot/ignitions/<id>/<serial>`
 
 Get CoreOS ignition for a certain serial.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- No ignition for `<id>` is found.
+
+  HTTP status code: 404 Not found
+
+- No `<serial>` is found.
+
+  HTTP status code: 404 Not found
 
 ```console
 $ curl -XGET localhost:10080/api/v1/boot/ignitions/1527731687/1234abcd
@@ -338,6 +367,27 @@ $ curl -XGET localhost:10080/api/v1/boot/ignitions/1527731687/1234abcd
 
 Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ignition.
 
+**Successful response**
+
+- HTTP status code: 201 Created
+- HTTP response header: `application/json`
+- HTTP response body: JSON
+
+```json
+{"status": 201, "role": "<role>", id": "<id>"}
+```
+
+**Failure responses**
+
+- `<id>` already exists in `<role>`
+
+  HTTP status code: 409 Conflict
+
+- Invalid ignition format.
+
+  HTTP status code: 400 Bad Request
+
+-
 ```console
 $ curl -XPUT localhost:10080/api/v1/boot/ignitions/cs
 1507731659
@@ -346,6 +396,17 @@ $ curl -XPUT localhost:10080/api/v1/boot/ignitions/cs
 ## <a name="deleteignitions" />`DELETE /api/v1/boot/ignitions/<role>/<id>`
 
 Delete CoreOS ignition by role and id.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response body: empty
+
+**Failure responses**
+
+- No `<id>` exists in `<role>`.
+
+  HTTP status code: 404 Not found
 
 ```console
 $ curl -XDELETE localhost:10080/api/v1/boot/ignitions/cs/1527731687

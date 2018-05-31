@@ -93,6 +93,11 @@ This type of key holds a list of deleted image IDs as follows:
 ["123.45.6", "789.0.1", "2018.04.01"]
 ```
 
+`<prefix>/ignitions/<role>/<id>`
+-------------------------
+
+This type of key holds an ignition template. Ignitions are distinguished by `<role>`.
+
 `<prefix>/ipam`
 ---------------
 
