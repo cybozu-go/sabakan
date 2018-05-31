@@ -13,6 +13,15 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
+var (
+	imageMembers = map[string][]string{
+		"coreos": []string{
+			sabakan.ImageKernelFilename,
+			sabakan.ImageInitrdFilename,
+		},
+	}
+)
+
 func (d *driver) getImageDir(os string) ImageDir {
 	return ImageDir{
 		Dir: filepath.Join(d.imageDir, os),
@@ -109,7 +118,7 @@ RETRY:
 	}
 
 	dir := d.getImageDir(os)
-	err = dir.Extract(r, id, []string{sabakan.ImageKernelFilename, sabakan.ImageInitrdFilename})
+	err = dir.Extract(r, id, imageMembers[os])
 	if err != nil {
 		return err
 	}
