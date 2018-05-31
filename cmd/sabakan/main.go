@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -44,6 +45,9 @@ var (
 func main() {
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
+
+	// seed math/random
+	rand.Seed(time.Now().UnixNano())
 
 	cfg := newConfig()
 	if *flagConfigFile == "" {
