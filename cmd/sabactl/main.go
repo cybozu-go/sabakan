@@ -16,6 +16,9 @@ var (
 )
 
 func main() {
+	flag.Parse()
+	cmd.LogConfig{}.Apply()
+
 	c := client.NewClient(*flagServer, &cmd.HTTPClient{
 		Client: &http.Client{},
 	})
@@ -27,9 +30,6 @@ func main() {
 	subcommands.Register(ipamCommand(c), "")
 	subcommands.Register(machinesCommand(c), "")
 	subcommands.Register(imagesCommand(c), "")
-
-	flag.Parse()
-	cmd.LogConfig{}.Apply()
 
 	ctx := context.Background()
 	os.Exit(int(subcommands.Execute(ctx)))
