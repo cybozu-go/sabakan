@@ -23,7 +23,7 @@ func (c *imagesCmd) SetFlags(f *flag.FlagSet) {
 func (c *imagesCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	cmdr := newCommander(f, "images")
 	cmdr.Register(imagesIndexCommand(c.c, c.os), "")
-	//cmdr.Register(imagesUploadCommand(c.c, c.os), "")
+	cmdr.Register(imagesUploadCommand(c.c, c.os), "")
 	//cmdr.Register(imagesDeleteCommand(c.c, c.os), "")
 	return cmdr.Execute(ctx)
 }
@@ -63,5 +63,35 @@ func imagesIndexCommand(c *client.Client, os string) subcommands.Command {
 		"index",
 		"get index of images",
 		"index",
+	}
+}
+
+type imagesUploadCmd struct {
+	c  *client.Client
+	os string
+}
+
+func (c imagesUploadCmd) SetFlags(f *flag.FlagSet) {}
+
+func (c imagesUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	if len(f.Args()) != 3 {
+		return client.ExitUsageError
+	}
+
+	err := c.c.ImagesUpload(ctx, c.os, f.Arg(0), f.Arg(1), f.Arg(2))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return err.Code()
+	}
+
+	return client.ExitSuccess
+}
+
+func imagesUploadCommand(c *client.Client, os string) subcommands.Command {
+	return subcmd{
+		&imagesUploadCmd{c: c, os: os},
+		"upload",
+		"upload image",
+		"upload ID KERNEL INITRD",
 	}
 }
