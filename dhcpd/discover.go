@@ -101,7 +101,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 			pktYiaddr: yourip.String(),
 		}))
 		opts[dhcp4.OptVendorIdentifier] = []byte("HTTPClient")
-		resp.BootFilename = h.makeBootAPIURL(serverAddr, "ipxe.efi")
+		resp.BootFilename = h.makeBootAPIURL("ipxe.efi")
 	}
 
 	// iPXE Boot
@@ -110,7 +110,7 @@ func (h DHCPHandler) handleDiscover(ctx context.Context, pkt *dhcp4.Packet, intf
 			pktYiaddr: yourip.String(),
 		}))
 		// iPXE script to boot CoreOS Container Linux
-		resp.BootFilename = h.makeBootAPIURL(serverAddr, "coreos/ipxe")
+		resp.BootFilename = h.makeBootAPIURL("coreos/ipxe")
 		if isQemuMacAddress(pkt.HardwareAddr) {
 			resp.BootFilename += "?serial=1"
 		}

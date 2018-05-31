@@ -29,7 +29,6 @@ type etcdConfig struct {
 
 var (
 	flagHTTP        = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
-	flagURLPort     = flag.String("url-port", "10080", "port number used to construct boot API URL")
 	flagEtcdServers = flag.String("etcd-servers", strings.Join(defaultEtcdServers, ","), "comma-separated URLs of the backend etcd")
 	flagEtcdPrefix  = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
 	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
@@ -49,7 +48,6 @@ func main() {
 	cfg := newConfig()
 	if *flagConfigFile == "" {
 		cfg.ListenHTTP = *flagHTTP
-		cfg.URLPort = *flagURLPort
 		cfg.EtcdServers = strings.Split(*flagEtcdServers, ",")
 		cfg.EtcdPrefix = *flagEtcdPrefix
 		cfg.EtcdTimeout = *flagEtcdTimeout
@@ -114,7 +112,7 @@ func main() {
 		log.ErrorExit(err)
 	}
 	dhcpServer := dhcpd.Server{
-		Handler: dhcpd.DHCPHandler{Model: model, URLPort: cfg.URLPort},
+		Handler: dhcpd.DHCPHandler{Model: model, MyURL: advertiseURL},
 		Conn:    conn,
 	}
 	cmd.Go(dhcpServer.Serve)

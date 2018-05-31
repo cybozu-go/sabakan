@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"net"
+	"net/url"
 	"testing"
 
 	"github.com/cybozu-go/sabakan"
@@ -42,7 +43,9 @@ func testNewHandler(maskbits, gwoffset, leasemin uint) DHCPHandler {
 		LeaseMinutes:  leasemin,
 	})
 
-	return DHCPHandler{Model: m, URLPort: "80"}
+	u, _ := url.Parse("http://10.69.0.195:10080")
+
+	return DHCPHandler{Model: m, MyURL: u}
 }
 
 func testInterface() Interface {

@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"net"
+	"net/url"
+	"path"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/netutil"
@@ -21,7 +22,7 @@ type Handler interface {
 // DHCPHandler is an implementation of Handler using sabakan.Model.
 type DHCPHandler struct {
 	sabakan.Model
-	URLPort string
+	MyURL *url.URL
 }
 
 // ServeDHCP implements Handler interface
@@ -98,6 +99,8 @@ func (h DHCPHandler) makeOptions(ciaddr net.IP) (dhcp4.Options, error) {
 	return opts, nil
 }
 
-func (h DHCPHandler) makeBootAPIURL(siaddr net.IP, p string) string {
-	return fmt.Sprintf("http://%s:%s/api/v1/boot/%s", siaddr.String(), h.URLPort, p)
+func (h DHCPHandler) makeBootAPIURL(p string) string {
+	u := *h.MyURL
+	u.Path = path.Join("/api/v1/boot", p)
+	return u.String()
 }
