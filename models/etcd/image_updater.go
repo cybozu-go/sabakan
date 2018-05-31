@@ -201,7 +201,10 @@ func (d *driver) startImageUpdater(ctx context.Context, ch <-chan struct{}) erro
 			log.Info("image updater: waiting...", map[string]interface{}{
 				"seconds": jitter,
 			})
-			time.Sleep(time.Duration(jitter) * time.Second)
+			select {
+			case <-time.After(time.Duration(jitter) * time.Second):
+			case <-ctx.Done():
+			}
 		case <-ctx.Done():
 			return nil
 		}
