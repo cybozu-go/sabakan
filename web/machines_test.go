@@ -83,6 +83,14 @@ func testMachinesPost(t *testing.T) {
   "role": "boot",
   "bmc": {"type": "unknown-BMC"}
 }]`, http.StatusBadRequest},
+		{`[{
+  "serial": "2222abcd",
+  "product": "R630",
+  "datacenter": "ty3",
+  "rack": 1,
+  "role": "invalid/Role",
+  "bmc": {"type": "iDRAC-9"}
+}]`, http.StatusBadRequest},
 	}
 
 	for _, c := range cases {

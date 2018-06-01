@@ -178,6 +178,14 @@ func testIgnitionTemplatesPut(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusBadRequest:", resp.StatusCode)
 	}
 
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/ignitions/@invalidRole", bytes.NewBufferString(ign))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Error("resp.StatusCode != http.StatusBadRequest:", resp.StatusCode)
+	}
 	// TODO check if the ignition is valid
 }
 

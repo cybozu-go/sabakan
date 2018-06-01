@@ -1,8 +1,6 @@
 package web
 
 import (
-	"bytes"
-	"html/template"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -40,14 +38,14 @@ func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) 
 
 	if r.Method == "GET" && len(params) == 1 {
 		role := params[0]
-		if len(role) == 0 {
+		if !sabakan.IsValidRole(role) {
 			renderError(r.Context(), w, APIErrBadRequest)
 			return
 		}
 		s.handleIgnitionTemplatesGet(w, r, role)
 	} else if r.Method == "PUT" && len(params) == 1 {
 		role := params[0]
-		if len(role) == 0 {
+		if !sabakan.IsValidRole(role) {
 			renderError(r.Context(), w, APIErrBadRequest)
 			return
 		}
@@ -55,7 +53,7 @@ func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) 
 	} else if r.Method == "DELETE" && len(params) == 2 {
 		role := params[0]
 		id := params[1]
-		if len(role) == 0 || len(id) == 0 {
+		if !sabakan.IsValidRole(role) || len(id) == 0 {
 			renderError(r.Context(), w, APIErrBadRequest)
 			return
 		}
@@ -124,7 +122,7 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, role, id, 
 		return
 	}
 
-	ign, err := renderIgnition(tmpl, ms[0])
+	ign, err := sabakan.RenderIgnition(tmpl, ms[0])
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return
@@ -139,15 +137,4 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, role, id, 
 	}
 }
 
-func renderIgnition(tmpl string, m *sabakan.Machine) (string, error) {
-	t, err := template.New("ignition").Parse(tmpl)
-	if err != nil {
-		return "", err
-	}
-	buf := new(bytes.Buffer)
-	err = t.Execute(buf, m)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
+
