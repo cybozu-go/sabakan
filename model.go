@@ -64,6 +64,14 @@ type ImageModel interface {
 		f func(modtime time.Time, content io.ReadSeeker)) error
 }
 
+// IgnitionModel is an interface for ignition template.
+type IgnitionModel interface {
+	PutTemplate(ctx context.Context, role string, template string) (string, error)
+	GetTemplateIDs(ctx context.Context, role string) ([]string, error)
+	GetTemplate(ctx context.Context, role string, id string) (string, error)
+	DeleteTemplate(ctx context.Context, role string, id string) error
+}
+
 // Runner is an interface to run the underlying threads.
 //
 // The caller must pass a channel as follows.
@@ -82,9 +90,10 @@ type Runner interface {
 // Model is a struct that consists of sub-models.
 type Model struct {
 	Runner
-	Storage StorageModel
-	Machine MachineModel
-	IPAM    IPAMModel
-	DHCP    DHCPModel
-	Image   ImageModel
+	Storage  StorageModel
+	Machine  MachineModel
+	IPAM     IPAMModel
+	DHCP     DHCPModel
+	Image    ImageModel
+	Ignition IgnitionModel
 }

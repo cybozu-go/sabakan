@@ -14,9 +14,13 @@ REST API
 * [DELETE /api/v1/images/coreos/ID](#deleteimages)
 * [GET /api/v1/boot/ipxe.efi](#getipxe)
 * [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
+* [GET /api/v1/boot/coreos/ipxe/SERIAL](#getcoreosipxeserial)
 * [GET|HEAD /api/v1/boot/coreos/kernel](#getcoreoskernel)
 * [GET|HEAD /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
-* [GET /api/v1/boot/ignitions](#getignitions)
+* [GET /api/v1/boot/ignitions/ID/SERIAL](#getigitionsid)
+* [GET /api/v1/ignitions/ROLE](#getignitions)
+* [PUT /api/v1/ignitions/ROLE](#putignitions)
+* [DELETE /api/v1/ignitions/ROLE/ID](#deleteignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
@@ -156,6 +160,10 @@ Field                        | Description
 
   HTTP status code: 409 Conflict
 
+- Invalid value of `<role>` format.
+
+  HTTP status code: 400 Bad Request
+
 ```console
 $ curl -i -X POST \
    -H "Content-Type:application/json" \
@@ -293,6 +301,10 @@ Get `ipxe.efi` firmware.
 
 ## <a name="getcoreosipxe" />`GET /api/v1/boot/coreos/ipxe`
 
+Get iPXE script to chain URL to redirect  `/api/v1/boot/coreos/ipxe/<serial>`
+
+## <a name="getcoreosipxeserial" />`GET /api/v1/boot/coreos/ipxe/<serial>`
+
 Get iPXE script to boot CoreOS Container Linux.
 
 Following query parameters can be added.
@@ -309,13 +321,102 @@ Get Linux kernel image to boot CoreOS.
 
 Get initial RAM disk image to boot CoreOS.
 
-## <a name="getignitions" />`GET /api/v1/boot/ignitions/<serial>`
+## <a name="getigitionsid" />`GET /api/v1/boot/ignitions/<serial>/<id>`
 
-Get CoreOS ignition.
+Get CoreOS ignition for a certain serial.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- No `<serial>` is found.
+
+  HTTP status code: 404 Not found
+
+- No ignition for `<id>` is found.
+
+  HTTP status code: 404 Not found
 
 ```console
-$ curl -XGET localhost:10080/api/v1/boot/ignitions/1234abcd
+$ curl -XGET localhost:10080/api/v1/boot/ignitions/1527731687/1234abcd
+{
+  "systemd": [
+    ......
+  ]
+}
 ```
+
+## <a name="getignitions" />`GET /api/v1/ignitions/<role>`
+
+Get CoreOS ignition ids for a ceartain role.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- No ignitions are registered in the role.
+
+  HTTP status code: 404 Not found
+
+
+```console
+$ curl -XGET localhost:10080/api/v1/boot/ignitions/cs
+[ "1427731487", "1507731659", "1527731687"]
+```
+
+## <a name="putignitions" />`PUT /api/v1/ignitions/<role>`
+
+Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ignition.
+
+**Successful response**
+
+- HTTP status code: 201 Created
+- HTTP response header: `application/json`
+- HTTP response body: JSON
+
+```json
+{"status": 201, "role": "<role>", "id": "<id>"}
+```
+
+**Failure responses**
+
+- Invalid ignition format.
+
+  HTTP status code: 400 Bad Request
+
+-
+```console
+$ curl -XPUT localhost:10080/api/v1/boot/ignitions/cs
+1507731659
+```
+
+## <a name="deleteignitions" />`DELETE /api/v1/ignitions/<role>/<id>`
+
+Delete CoreOS ignition by role and id.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response body: empty
+
+**Failure responses**
+
+- Missing role or id
+
+  HTTP status code: 400 Bad Request
+
+- No `<id>` exists in `<role>`.
+
+  HTTP status code: 404 Not found
+
+```console
+$ curl -XDELETE localhost:10080/api/v1/boot/ignitions/cs/1527731687
+```
+
 ## <a name="putcrypts" />`PUT /api/v1/crypts/<serial>/<path>`
 
 Register disk encryption key. The request body is raw binary format of the key.

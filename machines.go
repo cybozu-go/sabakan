@@ -1,5 +1,7 @@
 package sabakan
 
+import "regexp"
+
 const (
 	// BmcIdrac9 is BMC type for iDRAC-9
 	BmcIdrac9 = "iDRAC-9"
@@ -17,6 +19,15 @@ type Machine struct {
 	Role        string                    `json:"role"`
 	Network     map[string]MachineNetwork `json:"network"`
 	BMC         MachineBMC                `json:"bmc"`
+}
+
+var (
+	reValidRole = regexp.MustCompile(`^[0-9a-zA-Z._-]+$`)
+)
+
+// IsValidRole returns true if role is valid as machine role
+func IsValidRole(role string) bool {
+	return reValidRole.MatchString(role)
 }
 
 // MachineNetwork is a network interface struct for Machine

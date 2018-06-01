@@ -48,8 +48,8 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("datacenter is empty"))
 			return
 		}
-		if m.Role == "" {
-			renderError(r.Context(), w, BadRequest("role is empty"))
+		if !sabakan.IsValidRole(m.Role) {
+			renderError(r.Context(), w, BadRequest("invalid role"))
 			return
 		}
 		if m.BMC.Type == "" {
