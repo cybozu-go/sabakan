@@ -148,6 +148,7 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	t.Parallel()
 
 	ign := `{ "ignition": { "version": "2.2.0" } }`
+	invalid := `{ "ignition": { "version": "0.2.0" } }`
 
 	m := mock.NewModel()
 	handler := Server{Model: m}
@@ -179,6 +180,15 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/ignitions/cs", bytes.NewBufferString(invalid))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Error("resp.StatusCode != http.StatusBadRequest:", resp.StatusCode)
+	}
+
+	w = httptest.NewRecorder()
 	r = httptest.NewRequest("PUT", "/api/v1/ignitions/@invalidRole", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
@@ -186,7 +196,6 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Error("resp.StatusCode != http.StatusBadRequest:", resp.StatusCode)
 	}
-	// TODO check if the ignition is valid
 }
 
 func testIgnitionTemplatesDelete(t *testing.T) {

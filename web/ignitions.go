@@ -82,6 +82,11 @@ func (s Server) handleIgnitionTemplatesPut(w http.ResponseWriter, r *http.Reques
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
+	err = sabakan.ValidateIgnitionTemplate(string(body))
+	if err != nil {
+		renderError(r.Context(), w, APIErrBadRequest)
+		return
+	}
 	id, err := s.Model.Ignition.PutTemplate(r.Context(), role, string(body))
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
@@ -136,5 +141,3 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, role, id, 
 		log.Error("failed to write response for GET /boot/ignitions", fields)
 	}
 }
-
-
