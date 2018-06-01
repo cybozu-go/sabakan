@@ -21,7 +21,7 @@ type updateData struct {
 }
 
 const (
-	maxJitterSeconds = 180
+	maxJitterSeconds = 60
 	maxImageURLs     = 10
 )
 
@@ -204,6 +204,7 @@ func (d *driver) startImageUpdater(ctx context.Context, ch <-chan struct{}) erro
 			select {
 			case <-time.After(time.Duration(jitter) * time.Second):
 			case <-ctx.Done():
+				return nil
 			}
 		case <-ctx.Done():
 			return nil
