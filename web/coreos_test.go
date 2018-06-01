@@ -5,10 +5,101 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 
+	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/models/mock"
 )
+
+func testHandleiPXE(t *testing.T) {
+	t.Parallel()
+
+	m := mock.NewModel()
+	url, err := url.Parse("http://localhost")
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler := Server{Model: m, MyURL: url}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/api/v1/boot/coreos/ipxe", nil)
+	handler.ServeHTTP(w, r)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Error("resp.StatusCode != http.StatusOK:", resp.StatusCode)
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	if !strings.Contains(string(body), "chain") {
+		t.Error("unexpected ipxe script:", string(body))
+	}
+}
+
+func testHandleiPXEWithSerial(t *testing.T) {
+	t.Parallel()
+
+	machines := []*sabakan.Machine{
+		&sabakan.Machine{
+			Serial:     "2222abcd",
+			Product:    "R630",
+			Datacenter: "ty3",
+			Rack:       1,
+			Role:       "cs",
+			BMC:        sabakan.MachineBMC{Type: "iDRAC-9"},
+		},
+	}
+
+	ign := `{ "ignition": { "version": "2.2.0" } }`
+
+	m := mock.NewModel()
+	url, err := url.Parse("http://localhost")
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler := Server{Model: m, MyURL: url}
+	err = m.Machine.Register(context.Background(), machines)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/api/v1/boot/coreos/ipxe/2222abcd", nil)
+	handler.ServeHTTP(w, r)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
+	}
+
+	_, err = m.Ignition.PutTemplate(context.Background(), "cs", ign)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("GET", "/api/v1/boot/coreos/ipxe/2222abcd", nil)
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Error("resp.StatusCode != http.StatusOK:", resp.StatusCode)
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	if !strings.Contains(string(body), "kernel") {
+		t.Error("unexpected ipxe script:", string(body))
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("GET", "/api/v1/boot/coreos/ipxe/1234abcd", nil)
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
+	}
+}
 
 func testHandleCoreOSKernel(t *testing.T) {
 	t.Parallel()
@@ -40,7 +131,6 @@ func testHandleCoreOSKernel(t *testing.T) {
 		t.Fatal("resp.StatusCore != http.StatusOK:", resp.StatusCode)
 	}
 
-	//
 	archive = newTestImage("opqr", "stu")
 	err = m.Image.Upload(context.Background(), "coreos", "5678", archive)
 	if err != nil {
@@ -94,7 +184,6 @@ func testHandleCoreOSInitRD(t *testing.T) {
 		t.Fatal("resp.StatusCore != http.StatusOK:", resp.StatusCode)
 	}
 
-	//
 	archive = newTestImage("opqr", "stu")
 	err = m.Image.Upload(context.Background(), "coreos", "5678", archive)
 	if err != nil {
@@ -119,6 +208,8 @@ func testHandleCoreOSInitRD(t *testing.T) {
 }
 
 func TestHandleCoreOS(t *testing.T) {
+	t.Run("iPXE", testHandleiPXE)
+	t.Run("iPXEWithSerial", testHandleiPXEWithSerial)
 	t.Run("kernel", testHandleCoreOSKernel)
 	t.Run("initrd", testHandleCoreOSInitRD)
 }

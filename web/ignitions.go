@@ -12,16 +12,15 @@ import (
 
 func (s Server) handleIgnitions(w http.ResponseWriter, r *http.Request) {
 	params := strings.Split(r.URL.Path[len("/api/v1/boot/ignitions/"):], "/")
-	if len(params) != 3 {
+	if len(params) != 2 {
 		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	}
 
-	role := params[0]
+	serial := params[0]
 	id := params[1]
-	serial := params[2]
 
-	if len(role) == 0 || len(id) == 0 || len(serial) == 0 {
+	if len(serial) == 0 || len(id) == 0 {
 		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	}
@@ -30,7 +29,7 @@ func (s Server) handleIgnitions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.serveIgnition(w, r, role, id, serial)
+	s.serveIgnition(w, r, id, serial)
 }
 
 func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) {
@@ -109,12 +108,7 @@ func (s Server) handleIgnitionTemplatesDelete(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, role, id, serial string) {
-	tmpl, err := s.Model.Ignition.GetTemplate(r.Context(), role, id)
-	if err == sabakan.ErrNotFound {
-		renderError(r.Context(), w, APIErrNotFound)
-		return
-	}
+func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, id, serial string) {
 	q := sabakan.QueryBySerial(serial)
 	ms, err := s.Model.Machine.Query(r.Context(), q)
 	if err == sabakan.ErrNotFound {
@@ -127,6 +121,11 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, role, id, 
 		return
 	}
 
+	tmpl, err := s.Model.Ignition.GetTemplate(r.Context(), ms[0].Role, id)
+	if err == sabakan.ErrNotFound {
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	}
 	ign, err := sabakan.RenderIgnition(tmpl, ms[0])
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))

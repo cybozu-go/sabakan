@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/cybozu-go/sabakan"
@@ -12,26 +13,35 @@ import (
 
 const (
 	// iPXE script specs can be found at http://ipxe.org/cfg
+	redirectiPXETemplate = `#!ipxe
+chain %s/${serial}
+`
+
 	coreOSiPXETemplate = `#!ipxe
 
 set base-url %s
-kernel ${base-url}/coreos/kernel initrd=initrd.gz coreos.first_boot=1 coreos.config.url=${base-url}/ignitions/${serial} %s
+set ignition-id %s
+kernel ${base-url}/coreos/kernel initrd=initrd.gz coreos.first_boot=1 coreos.config.url=${base-url}/ignitions/${serial}/${ignition-id} %s
 initrd ${base-url}/coreos/initrd.gz
 boot
 `
 )
 
 func (s Server) handleCoreOS(w http.ResponseWriter, r *http.Request) {
-	item := r.URL.Path[len("/api/v1/boot/coreos/"):]
+	params := strings.Split(r.URL.Path[len("/api/v1/boot/coreos/"):], "/")
 
 	if r.Method != "GET" && r.Method != "HEAD" {
 		renderError(r.Context(), w, APIErrBadMethod)
 		return
 	}
 
-	switch item {
+	switch params[0] {
 	case "ipxe":
-		s.handleCoreOSiPXE(w, r)
+		if len(params) == 2 {
+			s.handleCoreOSiPXEWithSerial(w, r, params[1])
+		} else {
+			s.handleCoreOSiPXE(w, r)
+		}
 	case "kernel":
 		s.handleCoreOSKernel(w, r)
 	case "initrd.gz":
@@ -42,14 +52,46 @@ func (s Server) handleCoreOS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleCoreOSiPXE(w http.ResponseWriter, r *http.Request) {
+	u := *s.MyURL
+	u.Path = path.Join("/api/v1/boot/coreos/ipxe")
+	ipxe := fmt.Sprintf(redirectiPXETemplate, u.String())
+
+	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
+	w.Write([]byte(ipxe))
+}
+
+func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Request, serial string) {
 	console := ""
 	if r.URL.Query().Get("serial") == "1" {
 		console = "console=ttyS0"
 	}
 
+	q := sabakan.QueryBySerial(serial)
+	ms, err := s.Model.Machine.Query(r.Context(), q)
+	if err == sabakan.ErrNotFound {
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	}
+
+	if len(ms) == 0 {
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	}
+
+	role := ms[0].Role
+	ids, err := s.Model.Ignition.GetTemplateIDs(r.Context(), role)
+	if err == sabakan.ErrNotFound {
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	}
+	if err != nil {
+		renderError(r.Context(), w, InternalServerError(err))
+		return
+	}
+
 	u := *s.MyURL
 	u.Path = path.Join("/api/v1/boot")
-	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), console)
+	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), ids[len(ids)-1], console)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))

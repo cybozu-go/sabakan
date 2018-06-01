@@ -62,7 +62,7 @@ func TestIgnitions(t *testing.T) {
 	handler.ServeHTTP(w, r)
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/cs/0/2222abcd", nil)
+	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/2222abcd/0", nil)
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -76,7 +76,7 @@ func TestIgnitions(t *testing.T) {
 
 	// serial is not found
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/cs/0/1234abcd", nil)
+	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/1234abcd/0", nil)
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -86,17 +86,7 @@ func TestIgnitions(t *testing.T) {
 
 	// id is not found
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/cs/1/2222abcd", nil)
-	handler.ServeHTTP(w, r)
-
-	resp = w.Result()
-	if resp.StatusCode != http.StatusNotFound {
-		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
-	}
-
-	// role is not found
-	w = httptest.NewRecorder()
-	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/boot/0/2222abcd", nil)
+	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/2222abcd/1", nil)
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
