@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"sort"
 	"strconv"
 
 	"github.com/cybozu-go/sabakan"
@@ -31,6 +32,7 @@ func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, err
 	for k := range templateMap {
 		res = append(res, k)
 	}
+	sort.Strings(res)
 	return res, nil
 }
 
