@@ -32,12 +32,13 @@ func NewModel(client *clientv3.Client, prefix, imageDir string, advertiseURL *ur
 		mi:           newMachinesIndex(),
 	}
 	return sabakan.Model{
-		Runner:  d,
-		Storage: d,
-		Machine: d,
-		IPAM:    ipamDriver{d},
-		DHCP:    dhcpDriver{d},
-		Image:   imageDriver{d},
+		Runner:   d,
+		Storage:  d,
+		Machine:  d,
+		IPAM:     ipamDriver{d},
+		DHCP:     dhcpDriver{d},
+		Image:    imageDriver{d},
+		Ignition: d,
 	}
 }
 

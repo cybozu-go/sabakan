@@ -9,6 +9,7 @@ const (
 	KeyMachines    = "/machines"
 	KeyNodeIndices = "/node-indices"
 	KeyImages      = "/images"
+	KeyIgnitions   = "/ignitions"
 )
 
 // MaxDeleted is the maximum number of deleted image IDs stored in etcd.
