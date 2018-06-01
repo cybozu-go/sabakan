@@ -4,6 +4,7 @@ Getting started
 * [Setup sabakan](#setupsabakan)
   * [Prepare etcd](#prepareetcd)
   * [Install sabakan and sabactl](#installsabakan)
+  * [Prepare data directory](#datadir)
   * [Run sabakan](#runsabakan)
   * [Configure sabakan](#configuresabakan)
 * [Netboot](#netboot)
@@ -26,6 +27,12 @@ $ go get -u github.com/cybozu-go/sabakan/cmd/sabactl
 ```
 
 `sabakan` Docker image is so available at [quay.io/cybozu/sabakan](https://quay.io/cybozu/sabakan)
+
+### <a name="datadir" />Prepare data directory
+
+```console
+$ sudo mkdir -p /var/lib/sabakan
+```
 
 ### <a name="runsabakan" /> Run sabakan
 
@@ -64,7 +71,7 @@ Read [ipam](ipam.md) if you want to know meaning of each parameter.
 
 Read [dhcp](dhcp.md) if you want to know meaning of each parameter.
 
-Use `sabactl` to configure `sabakan`. 
+Use `sabactl` to configure `sabakan`.
 
 ```console
 $ sabactl ipam set -f ipam.json
