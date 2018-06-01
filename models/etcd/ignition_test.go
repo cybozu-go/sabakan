@@ -63,6 +63,21 @@ func testTemplateIDs(t *testing.T) {
 	if len(ids) != 1 {
 		t.Error("wrong number of templates", len(ids))
 	}
+
+	for i := 0; i < sabakan.MaxIgnitions+10; i++ {
+		_, err = d.PutTemplate(context.Background(), "cs", "data")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	ids, err = d.GetTemplateIDs(context.Background(), "cs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ids) != sabakan.MaxIgnitions {
+		t.Error("wrong number of templates", len(ids))
+	}
+
 }
 
 func TestIgnitionTemplate(t *testing.T) {

@@ -33,6 +33,27 @@ RETRY:
 		goto RETRY
 	}
 
+	target = path.Join(d.prefix, KeyIgnitions, role) + "/"
+	resp, err := d.client.Get(ctx, target,
+		clientv3.WithPrefix(),
+		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
+	if err != nil {
+		return "", err
+	}
+	if resp.Count <= sabakan.MaxIgnitions {
+		return id, nil
+	}
+
+	ops := make([]clientv3.Op, resp.Count-sabakan.MaxIgnitions)
+	for i := 0; i < len(ops); i++ {
+		idx := i + int(resp.Count-sabakan.MaxIgnitions)
+		ops[i] = clientv3.OpDelete(string(resp.Kvs[idx].Key))
+	}
+	_, err = d.client.Txn(ctx).Then(ops...).Commit()
+	if err != nil {
+		return "", err
+	}
+
 	return id, nil
 }
 

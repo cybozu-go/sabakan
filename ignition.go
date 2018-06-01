@@ -8,6 +8,9 @@ import (
 	ignition "github.com/coreos/ignition/config/v2_2"
 )
 
+// MaxIgnitions is a number of the ignitions to keep on etcd
+const MaxIgnitions = 10
+
 // ValidateIgnitionTemplate validates if the tmpl is a template for a valid ignition.
 // The method returns nil if valid template is given, otherwise returns an error.
 // The method retuders template by tmpl nil value of Machine.
