@@ -22,7 +22,7 @@ func (r ignitionsCmd) SetFlags(f *flag.FlagSet) {
 func (r ignitionsCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	cmdr := newCommander(f, "ignitions")
 	cmdr.Register(ignitionsGetCommand(r.c), "")
-	//cmdr.Register(ignitionsCatCommand(r.c), "")
+	cmdr.Register(ignitionsCatCommand(r.c), "")
 	cmdr.Register(ignitionsSetCommand(r.c), "")
 	//cmdr.Register(ignitionsDeleteCommand(r.c), "")
 	return cmdr.Execute(ctx)
@@ -67,6 +67,35 @@ func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		fmt.Fprintln(os.Stderr, err)
 		return client.ExitFailure
 	}
+	return client.ExitSuccess
+}
+
+func ignitionsCatCommand(c *client.Client) subcommands.Command {
+	return subcmd{
+		&ignitionsCatCmd{c},
+		"cat",
+		"show an ignition template for the ID and ROLE",
+		"cat ROLE ID",
+	}
+}
+
+type ignitionsCatCmd struct {
+	c *client.Client
+}
+
+func (c ignitionsCatCmd) SetFlags(f *flag.FlagSet) {}
+
+func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	if len(f.Args()) != 2 {
+		return client.ExitUsageError
+	}
+	tmpl, status := c.c.IgnitionsCat(ctx, f.Arg(0), f.Arg(1))
+	if status != nil {
+		fmt.Fprintln(os.Stderr, status)
+		return status.Code()
+	}
+
+	fmt.Printf(tmpl)
 	return client.ExitSuccess
 }
 

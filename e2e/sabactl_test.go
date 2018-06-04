@@ -312,13 +312,14 @@ func testSabactlImages(t *testing.T) {
 }
 
 func testSabactlIgnitions(t *testing.T) {
+	ign := `{ "ignition": { "version": "2.2.0" } }`
 	file, err := ioutil.TempFile("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(file.Name())
 
-	_, err = fmt.Fprintln(file, `{ "ignition": { "version": "2.2.0" } }`)
+	_, err = fmt.Fprintf(file, ign)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -346,6 +347,17 @@ func testSabactlIgnitions(t *testing.T) {
 	}
 	if len(ids) != 1 {
 		t.Error("expected:1, actual:", len(ids))
+	}
+
+	stdout, stderr, err = runSabactl("ignitions", "cat", "cs", ids[0])
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to cat ignition template", code)
+	}
+	if stdout.String() != ign {
+		t.Error("stdout.String() != ign", stdout.String())
 	}
 }
 

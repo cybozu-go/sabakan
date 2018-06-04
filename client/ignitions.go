@@ -3,12 +3,13 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 )
 
-// IgnitionsGet get ignition template ID list of the specified role
+// IgnitionsGet gets ignition template ID list of the specified role
 func (c *Client) IgnitionsGet(ctx context.Context, role string) ([]string, *Status) {
 	var ids []string
 	err := c.getJSON(ctx, path.Join("/ignitions", role), nil, &ids)
@@ -16,6 +17,26 @@ func (c *Client) IgnitionsGet(ctx context.Context, role string) ([]string, *Stat
 		return nil, err
 	}
 	return ids, nil
+}
+
+// IgnitionsCat gets an ignition template for the role an id
+func (c *Client) IgnitionsCat(ctx context.Context, role, id string) (string, *Status) {
+	req, err := http.NewRequest("GET", c.endpoint+path.Join("/api/v1/ignitions", role, id), nil)
+	if err != nil {
+		return "", ErrorStatus(err)
+	}
+	req = req.WithContext(ctx)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return "", ErrorStatus(err)
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", ErrorStatus(err)
+	}
+	return string(body), nil
 }
 
 // IgnitionsSet post a ignition template file
