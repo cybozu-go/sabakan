@@ -95,7 +95,7 @@ func TestIgnitions(t *testing.T) {
 	}
 }
 
-func testIgnitionTemplatesGet(t *testing.T) {
+func testIgnitionTemplateIDsGet(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
@@ -134,7 +134,43 @@ func testIgnitionTemplatesGet(t *testing.T) {
 	}
 }
 
-func testIgnitionTemplatesPut(t *testing.T) {
+func testIgnitionTemplatesGet(t *testing.T) {
+	t.Parallel()
+
+	m := mock.NewModel()
+	handler := Server{Model: m}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/api/v1/ignitions/cs/0", nil)
+	handler.ServeHTTP(w, r)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
+	}
+
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hoge")
+	if err != nil {
+		t.Fatal(err)
+	}
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("GET", "/api/v1/ignitions/cs/0", nil)
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatal("resp.StatusCode != http.StatusOK:", resp.StatusCode)
+	}
+	ign, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(ign) != "hoge" {
+		t.Error("ign != hoge:", ign)
+	}
+}
+
+func testIgnitionTemplatesPost(t *testing.T) {
 	t.Parallel()
 
 	ign := `{ "ignition": { "version": "2.2.0" } }`
@@ -144,7 +180,7 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	handler := Server{Model: m}
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("PUT", "/api/v1/ignitions/cs", bytes.NewBufferString(ign))
+	r := httptest.NewRequest("POST", "/api/v1/ignitions/cs", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -161,7 +197,7 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/ignitions/", bytes.NewBufferString(ign))
+	r = httptest.NewRequest("POST", "/api/v1/ignitions/", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -170,7 +206,7 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/ignitions/cs", bytes.NewBufferString(invalid))
+	r = httptest.NewRequest("POST", "/api/v1/ignitions/cs", bytes.NewBufferString(invalid))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -179,7 +215,7 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/ignitions/@invalidRole", bytes.NewBufferString(ign))
+	r = httptest.NewRequest("POST", "/api/v1/ignitions/@invalidRole", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -228,7 +264,8 @@ func testIgnitionTemplatesDelete(t *testing.T) {
 }
 
 func TestIgnitionTemplates(t *testing.T) {
-	t.Run("TemplateGet", testIgnitionTemplatesGet)
-	t.Run("TemplatePut", testIgnitionTemplatesPut)
+	t.Run("TemplateIDsGet", testIgnitionTemplateIDsGet)
+	t.Run("TemplatesGet", testIgnitionTemplatesGet)
+	t.Run("TemplatePost", testIgnitionTemplatesPost)
 	t.Run("TemplateDelete", testIgnitionTemplatesDelete)
 }

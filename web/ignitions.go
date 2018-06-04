@@ -41,14 +41,22 @@ func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) 
 			renderError(r.Context(), w, APIErrBadRequest)
 			return
 		}
-		s.handleIgnitionTemplatesGet(w, r, role)
-	} else if r.Method == "PUT" && len(params) == 1 {
+		s.handleIgnitionTemplateIndexGet(w, r, role)
+	} else if r.Method == "GET" && len(params) == 2 {
+		role := params[0]
+		id := params[1]
+		if !sabakan.IsValidRole(role) {
+			renderError(r.Context(), w, APIErrBadRequest)
+			return
+		}
+		s.handleIgnitionTemplatesGet(w, r, role, id)
+	} else if r.Method == "POST" && len(params) == 1 {
 		role := params[0]
 		if !sabakan.IsValidRole(role) {
 			renderError(r.Context(), w, APIErrBadRequest)
 			return
 		}
-		s.handleIgnitionTemplatesPut(w, r, role)
+		s.handleIgnitionTemplatesPost(w, r, role)
 	} else if r.Method == "DELETE" && len(params) == 2 {
 		role := params[0]
 		id := params[1]
@@ -62,7 +70,7 @@ func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Request, role string) {
+func (s Server) handleIgnitionTemplateIndexGet(w http.ResponseWriter, r *http.Request, role string) {
 	ids, err := s.Model.Ignition.GetTemplateIDs(r.Context(), role)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
@@ -75,8 +83,28 @@ func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Reques
 	renderJSON(w, ids, http.StatusOK)
 }
 
-func (s Server) handleIgnitionTemplatesPut(w http.ResponseWriter, r *http.Request, role string) {
-	body, err := ioutil.ReadAll(r.Body)
+func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Request, role string, id string) {
+	ign, err := s.Model.Ignition.GetTemplate(r.Context(), role, id)
+	if err == sabakan.ErrNotFound {
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	}
+	if err != nil {
+		renderError(r.Context(), w, InternalServerError(err))
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain")
+	_, err = w.Write([]byte(ign))
+	if err != nil {
+		fields := cmd.FieldsFromContext(r.Context())
+		fields[log.FnError] = err.Error()
+		log.Error("failed to write response for GET /ignitions", fields)
+	}
+}
+
+func (s Server) handleIgnitionTemplatesPost(w http.ResponseWriter, r *http.Request, role string) {
+	// 1MB is maximum ignition template size
+	body, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 1073741824))
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return

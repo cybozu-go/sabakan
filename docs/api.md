@@ -19,7 +19,8 @@ REST API
 * [GET|HEAD /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
 * [GET /api/v1/boot/ignitions/ID/SERIAL](#getigitionsid)
 * [GET /api/v1/ignitions/ROLE](#getignitions)
-* [PUT /api/v1/ignitions/ROLE](#putignitions)
+* [GET /api/v1/ignitions/ROLE/ID](#getignitionsid)
+* [POST /api/v1/ignitions/ROLE](#postignitions)
 * [DELETE /api/v1/ignitions/ROLE/ID](#deleteignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
@@ -350,7 +351,7 @@ $ curl -XGET localhost:10080/api/v1/boot/ignitions/1527731687/1234abcd
 
 ## <a name="getignitions" />`GET /api/v1/ignitions/<role>`
 
-Get CoreOS ignition ids for a ceartain role.
+Get CoreOS ignition ids for a certain role.
 
 **Successful response**
 
@@ -362,15 +363,45 @@ Get CoreOS ignition ids for a ceartain role.
 
   HTTP status code: 404 Not found
 
+- Invalid `<role>`.
+
+  HTTP status code: 400 Bad Request
 
 ```console
 $ curl -XGET localhost:10080/api/v1/boot/ignitions/cs
 [ "1427731487", "1507731659", "1527731687"]
 ```
 
-## <a name="putignitions" />`PUT /api/v1/ignitions/<role>`
+## <a name="getignitionsid" />`GET /api/v1/ignitions/<role>/<id>`
 
-Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ignition.
+Get CoreOS ignition template for a certain role.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- No `<id>` exists in `<role>`.
+
+  HTTP status code: 404 Not found
+
+- Invalid `<role>`.
+
+  HTTP status code: 400 Bad Request
+
+```console
+$ curl -XGET localhost:10080/api/v1/ignitions/cs/1527731687
+{
+  "systemd": [
+    ......
+  ]
+}
+```
+
+## <a name="postignitions" />`POST /api/v1/ignitions/<role>`
+
+Create CoreOS ignition for a certain role.  It returns a new assigned ID for the ignition.
 
 **Successful response**
 
@@ -388,10 +419,14 @@ Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ig
 
   HTTP status code: 400 Bad Request
 
+- Invalid `<role>`.
+
+  HTTP status code: 400 Bad Request
+
 -
 ```console
-$ curl -XPUT localhost:10080/api/v1/boot/ignitions/cs
-1507731659
+$ curl -XPOST localhost:10080/api/v1/boot/ignitions/cs
+{"status": 201, "role": "cs", "id": "1507731659"}
 ```
 
 ## <a name="deleteignitions" />`DELETE /api/v1/ignitions/<role>/<id>`
@@ -412,6 +447,10 @@ Delete CoreOS ignition by role and id.
 - No `<id>` exists in `<role>`.
 
   HTTP status code: 404 Not found
+
+- Invalid `<role>`.
+
+  HTTP status code: 400 Bad Request
 
 ```console
 $ curl -XDELETE localhost:10080/api/v1/boot/ignitions/cs/1527731687
