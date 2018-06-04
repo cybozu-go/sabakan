@@ -15,7 +15,22 @@ const MaxIgnitions = 10
 // The method returns nil if valid template is given, otherwise returns an error.
 // The method retuders template by tmpl nil value of Machine.
 func ValidateIgnitionTemplate(tmpl string) error {
-	ign, err := RenderIgnition(tmpl, &Machine{})
+	mc := &Machine{
+		Serial: "1234abcd",
+		Rack:   1,
+		Network: map[string]MachineNetwork{
+			"node0": MachineNetwork{
+				IPv4: []string{"127.0.0.1"},
+			},
+			"node1": MachineNetwork{
+				IPv4: []string{"127.0.0.1"},
+			},
+			"node2": MachineNetwork{
+				IPv4: []string{"127.0.0.1"},
+			},
+		},
+	}
+	ign, err := RenderIgnition(tmpl, mc)
 	if err != nil {
 		return err
 	}
