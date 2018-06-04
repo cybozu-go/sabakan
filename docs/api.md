@@ -363,6 +363,9 @@ Get CoreOS ignition ids for a certain role.
 
   HTTP status code: 404 Not found
 
+- Invalid `<role>`.
+
+  HTTP status code: 400 Bad Request
 
 ```console
 $ curl -XGET localhost:10080/api/v1/boot/ignitions/cs
@@ -382,6 +385,10 @@ Get CoreOS ignition template for a certain role.
 - No `<id>` exists in `<role>`.
 
   HTTP status code: 404 Not found
+
+- Invalid `<role>`.
+
+  HTTP status code: 400 Bad Request
 
 ```console
 $ curl -XGET localhost:10080/api/v1/ignitions/cs/1527731687
@@ -412,6 +419,10 @@ Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ig
 
   HTTP status code: 400 Bad Request
 
+- Invalid `<role>`.
+
+  HTTP status code: 400 Bad Request
+
 -
 ```console
 $ curl -XPUT localhost:10080/api/v1/boot/ignitions/cs
@@ -436,6 +447,10 @@ Delete CoreOS ignition by role and id.
 - No `<id>` exists in `<role>`.
 
   HTTP status code: 404 Not found
+
+- Invalid `<role>`.
+
+  HTTP status code: 400 Bad Request
 
 ```console
 $ curl -XDELETE localhost:10080/api/v1/boot/ignitions/cs/1527731687
