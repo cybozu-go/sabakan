@@ -39,7 +39,7 @@ func (c *Client) IgnitionsCat(ctx context.Context, role, id string) (string, *St
 	return string(body), nil
 }
 
-// IgnitionsSet post a ignition template file
+// IgnitionsSet posts an ignition template file
 func (c *Client) IgnitionsSet(ctx context.Context, role string, fname string) (map[string]interface{}, *Status) {
 	f, err := os.Open(fname)
 	if err != nil {
@@ -65,4 +65,19 @@ func (c *Client) IgnitionsSet(ctx context.Context, role string, fname string) (m
 	}
 
 	return data, nil
+}
+
+// IgnitionsDelete deletes an ignition template specified by role and id
+func (c *Client) IgnitionsDelete(ctx context.Context, role, id string) *Status {
+	req, err := http.NewRequest("DELETE", c.endpoint+path.Join("/api/v1/ignitions", role, id), nil)
+	if err != nil {
+		return ErrorStatus(err)
+	}
+	req = req.WithContext(ctx)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return ErrorStatus(err)
+	}
+	res.Body.Close()
+	return nil
 }

@@ -24,7 +24,7 @@ func (r ignitionsCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.
 	cmdr.Register(ignitionsGetCommand(r.c), "")
 	cmdr.Register(ignitionsCatCommand(r.c), "")
 	cmdr.Register(ignitionsSetCommand(r.c), "")
-	//cmdr.Register(ignitionsDeleteCommand(r.c), "")
+	cmdr.Register(ignitionsDeleteCommand(r.c), "")
 	return cmdr.Execute(ctx)
 }
 
@@ -132,6 +132,33 @@ func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomma
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return client.ExitFailure
+	}
+	return client.ExitSuccess
+}
+
+func ignitionsDeleteCommand(c *client.Client) subcommands.Command {
+	return subcmd{
+		&ignitionsDeleteCmd{c},
+		"delete",
+		"delete an ignition template for the ID and ROLE",
+		"delete ROLE ID",
+	}
+}
+
+type ignitionsDeleteCmd struct {
+	c *client.Client
+}
+
+func (c ignitionsDeleteCmd) SetFlags(f *flag.FlagSet) {}
+
+func (c ignitionsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	if len(f.Args()) != 2 {
+		return client.ExitUsageError
+	}
+	status := c.c.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))
+	if status != nil {
+		fmt.Fprintln(os.Stderr, status)
+		return status.Code()
 	}
 	return client.ExitSuccess
 }
