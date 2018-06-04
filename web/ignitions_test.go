@@ -4,14 +4,83 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/models/mock"
 )
+
+func TestIgnitionsFromFile(t *testing.T) {
+	t.Parallel()
+
+	ign, err := ioutil.ReadFile("../testdata/cs.ign")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m := mock.NewModel()
+	handler := Server{Model: m}
+
+	_, err = m.Ignition.PutTemplate(context.Background(), "cs", string(ign))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	machines := []*sabakan.Machine{
+		&sabakan.Machine{
+			Serial:     "2222abcd",
+			Product:    "R630",
+			Datacenter: "ty3",
+			Rack:       1,
+			Role:       "cs",
+			Network: map[string]sabakan.MachineNetwork{
+				"node0": sabakan.MachineNetwork{
+					IPv4: []string{"10.69.0.4"},
+				},
+				"node1": sabakan.MachineNetwork{
+					IPv4: []string{"10.69.0.68"},
+				},
+				"node2": sabakan.MachineNetwork{
+					IPv4: []string{"10.69.0.132"},
+				},
+			},
+			BMC: sabakan.MachineBMC{Type: "iDRAC-9"},
+		},
+	}
+
+	err = m.Machine.Register(context.Background(), machines)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/api/v1/boot/ignitions/2222abcd/0", nil)
+	handler.ServeHTTP(w, r)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Error("resp.StatusCode != http.StatusOK:", resp.StatusCode)
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
+	if !strings.Contains(string(body), "2222abcd") {
+		t.Error("unexpected ignition:", string(body))
+	}
+	if !strings.Contains(string(body), "10.69.0.4") {
+		t.Error("unexpected ignition:", string(body))
+	}
+	if !strings.Contains(string(body), "10.69.0.68") {
+		t.Error("unexpected ignition:", string(body))
+	}
+	if !strings.Contains(string(body), "10.69.0.132") {
+		t.Error("unexpected ignition:", string(body))
+	}
+}
 
 func TestIgnitions(t *testing.T) {
 	t.Parallel()
