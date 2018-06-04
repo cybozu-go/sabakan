@@ -3,6 +3,7 @@ package e2e
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -310,6 +311,87 @@ func testSabactlImages(t *testing.T) {
 	}
 }
 
+func testSabactlIgnitions(t *testing.T) {
+	ign := `{ "ignition": { "version": "2.2.0" } }`
+	file, err := ioutil.TempFile("", "sabakan-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
+	_, err = fmt.Fprintf(file, ign)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file.Close()
+
+	stdout, stderr, err := runSabactl("ignitions", "set", "-f", file.Name(), "cs")
+	code := exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to set ignition template", code)
+	}
+	stdout, stderr, err = runSabactl("ignitions", "set", "-f", file.Name(), "cs")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to set ignition template", code)
+	}
+
+	stdout, stderr, err = runSabactl("ignitions", "get", "cs")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to get ignition template IDs of cs", code)
+	}
+	ids := []string{}
+	err = json.NewDecoder(stdout).Decode(&ids)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ids) != 2 {
+		t.Error("expected:1, actual:", len(ids))
+	}
+
+	stdout, stderr, err = runSabactl("ignitions", "cat", "cs", ids[0])
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to cat ignition template", code)
+	}
+	if stdout.String() != ign {
+		t.Error("stdout.String() != ign", stdout.String())
+	}
+
+	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", ids[0])
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to delete an ignition template", code)
+	}
+
+	stdout, stderr, err = runSabactl("ignitions", "get", "cs")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to get ignition template IDs of cs", code)
+	}
+	ids = []string{}
+	err = json.NewDecoder(stdout).Decode(&ids)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ids) != 1 {
+		t.Error("expected:1, actual:", len(ids))
+	}
+}
+
 func TestSabactl(t *testing.T) {
 	_, err := os.Stat("../sabactl")
 	if err != nil {
@@ -319,4 +401,5 @@ func TestSabactl(t *testing.T) {
 	t.Run("IPAM", testSabactlIPAM)
 	t.Run("Machines", testSabactlMachines)
 	t.Run("Images", testSabactlImages)
+	t.Run("Ignitions", testSabactlIgnitions)
 }

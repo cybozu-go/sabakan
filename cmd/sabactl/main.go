@@ -30,6 +30,7 @@ func main() {
 	subcommands.Register(ipamCommand(c), "")
 	subcommands.Register(machinesCommand(c), "")
 	subcommands.Register(imagesCommand(c), "")
+	subcommands.Register(ignitionsCommand(c), "")
 
 	ctx := context.Background()
 	os.Exit(int(subcommands.Execute(ctx)))

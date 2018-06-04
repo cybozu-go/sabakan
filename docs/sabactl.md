@@ -149,7 +149,7 @@ $ sabactl ignitions cat <role> <id>
 Register a new ignition template for a certain role.
 
 ```console
-$ sabactl ignitions set <role> -f <template.ign>
+$ sabactl ignitions set -f <template.ign> <role>
 ```
 
 `sabactl ignitions delete ROLE ID`
