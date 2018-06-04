@@ -15,9 +15,7 @@ type ignitionsCmd struct {
 	c *client.Client
 }
 
-func (r ignitionsCmd) SetFlags(f *flag.FlagSet) {
-
-}
+func (r ignitionsCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r ignitionsCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	cmdr := newCommander(f, "ignitions")
@@ -53,7 +51,7 @@ type ignitionsGetCmd struct {
 func (c ignitionsGetCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	if len(f.Args()) != 1 {
+	if f.NArg() != 1 {
 		return client.ExitUsageError
 	}
 	ids, status := c.c.IgnitionsGet(ctx, f.Arg(0))
@@ -86,7 +84,7 @@ type ignitionsCatCmd struct {
 func (c ignitionsCatCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	if len(f.Args()) != 2 {
+	if f.NArg() != 2 {
 		return client.ExitUsageError
 	}
 	tmpl, status := c.c.IgnitionsCat(ctx, f.Arg(0), f.Arg(1))
@@ -104,7 +102,7 @@ func ignitionsSetCommand(c *client.Client) subcommands.Command {
 		&ignitionsSetCmd{c: c},
 		"set",
 		"create ignition template",
-		"set ROLE -f FILE",
+		"set -f FILE ROLE ",
 	}
 }
 
@@ -152,7 +150,7 @@ type ignitionsDeleteCmd struct {
 func (c ignitionsDeleteCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c ignitionsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	if len(f.Args()) != 2 {
+	if f.NArg() != 2 {
 		return client.ExitUsageError
 	}
 	status := c.c.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))
