@@ -19,6 +19,7 @@ REST API
 * [GET|HEAD /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
 * [GET /api/v1/boot/ignitions/ID/SERIAL](#getigitionsid)
 * [GET /api/v1/ignitions/ROLE](#getignitions)
+* [GET /api/v1/ignitions/ROLE/ID](#getignitionsid)
 * [PUT /api/v1/ignitions/ROLE](#putignitions)
 * [DELETE /api/v1/ignitions/ROLE/ID](#deleteignitions)
 * [PUT /api/v1/crypts](#putcrypts)
@@ -350,7 +351,7 @@ $ curl -XGET localhost:10080/api/v1/boot/ignitions/1527731687/1234abcd
 
 ## <a name="getignitions" />`GET /api/v1/ignitions/<role>`
 
-Get CoreOS ignition ids for a ceartain role.
+Get CoreOS ignition ids for a certain role.
 
 **Successful response**
 
@@ -366,6 +367,29 @@ Get CoreOS ignition ids for a ceartain role.
 ```console
 $ curl -XGET localhost:10080/api/v1/boot/ignitions/cs
 [ "1427731487", "1507731659", "1527731687"]
+```
+
+## <a name="getignitionsid" />`GET /api/v1/ignitions/<role>/<id>`
+
+Get CoreOS ignition template for a certain role.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- No `<id>` exists in `<role>`.
+
+  HTTP status code: 404 Not found
+
+```console
+$ curl -XGET localhost:10080/api/v1/ignitions/cs/1527731687
+{
+  "systemd": [
+    ......
+  ]
+}
 ```
 
 ## <a name="putignitions" />`PUT /api/v1/ignitions/<role>`

@@ -124,3 +124,39 @@ $ sabactl images delete ID
 Delete an image.
 
 * `-os`: specifies OS of the image.  Default is "coreos"
+
+`sabactl ignitions get ROLE`
+----------------------------
+
+Get a registered ignition template ID list of the role.
+
+```console
+$ sabactl ignitions get <role>
+```
+
+`sabactl ignitions cat ROLE ID`
+-------------------------------
+
+Get a registered ignition template of ID in the role. 
+
+```console
+$ sabactl ignitions cat <role> <id>
+```
+
+`sabactl ignitions set ROLE`
+----------------------------
+
+Register a new ignition template for a certain role.
+
+```console
+$ sabactl ignitions set <role> -f <template.ign>
+```
+
+`sabactl ignitions delete ROLE ID`
+----------------------------------
+
+Delete a ignition template for a certain role.
+
+```console
+$ sabactl ignitions delete <role> <id>
+```
