@@ -20,7 +20,7 @@ REST API
 * [GET /api/v1/boot/ignitions/ID/SERIAL](#getigitionsid)
 * [GET /api/v1/ignitions/ROLE](#getignitions)
 * [GET /api/v1/ignitions/ROLE/ID](#getignitionsid)
-* [PUT /api/v1/ignitions/ROLE](#putignitions)
+* [POST /api/v1/ignitions/ROLE](#postignitions)
 * [DELETE /api/v1/ignitions/ROLE/ID](#deleteignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
@@ -399,9 +399,9 @@ $ curl -XGET localhost:10080/api/v1/ignitions/cs/1527731687
 }
 ```
 
-## <a name="putignitions" />`PUT /api/v1/ignitions/<role>`
+## <a name="postignitions" />`POST /api/v1/ignitions/<role>`
 
-Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ignition.
+Create CoreOS ignition for a certain role.  It returns a new assigned ID for the ignition.
 
 **Successful response**
 
@@ -425,8 +425,8 @@ Put CoreOS ignition for a certain role.  It returns a new assigned ID for the ig
 
 -
 ```console
-$ curl -XPUT localhost:10080/api/v1/boot/ignitions/cs
-1507731659
+$ curl -XPOST localhost:10080/api/v1/boot/ignitions/cs
+{"status": 201, "role": "cs", "id": "1507731659"}
 ```
 
 ## <a name="deleteignitions" />`DELETE /api/v1/ignitions/<role>/<id>`

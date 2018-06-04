@@ -170,7 +170,7 @@ func testIgnitionTemplatesGet(t *testing.T) {
 	}
 }
 
-func testIgnitionTemplatesPut(t *testing.T) {
+func testIgnitionTemplatesPost(t *testing.T) {
 	t.Parallel()
 
 	ign := `{ "ignition": { "version": "2.2.0" } }`
@@ -180,7 +180,7 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	handler := Server{Model: m}
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("PUT", "/api/v1/ignitions/cs", bytes.NewBufferString(ign))
+	r := httptest.NewRequest("POST", "/api/v1/ignitions/cs", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -197,7 +197,7 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/ignitions/", bytes.NewBufferString(ign))
+	r = httptest.NewRequest("POST", "/api/v1/ignitions/", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -206,7 +206,7 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/ignitions/cs", bytes.NewBufferString(invalid))
+	r = httptest.NewRequest("POST", "/api/v1/ignitions/cs", bytes.NewBufferString(invalid))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -215,7 +215,7 @@ func testIgnitionTemplatesPut(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/ignitions/@invalidRole", bytes.NewBufferString(ign))
+	r = httptest.NewRequest("POST", "/api/v1/ignitions/@invalidRole", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -266,6 +266,6 @@ func testIgnitionTemplatesDelete(t *testing.T) {
 func TestIgnitionTemplates(t *testing.T) {
 	t.Run("TemplateIDsGet", testIgnitionTemplateIDsGet)
 	t.Run("TemplatesGet", testIgnitionTemplatesGet)
-	t.Run("TemplatePut", testIgnitionTemplatesPut)
+	t.Run("TemplatePost", testIgnitionTemplatesPost)
 	t.Run("TemplateDelete", testIgnitionTemplatesDelete)
 }
