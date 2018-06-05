@@ -4,29 +4,76 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/models/mock"
 )
 
-func TestIgnitionsFromFile(t *testing.T) {
+func TestIgnitions(t *testing.T) {
 	t.Parallel()
 
-	ign, err := ioutil.ReadFile("../testdata/cs.ign")
-	if err != nil {
-		t.Fatal(err)
-	}
+	ign := `{
+    "ignition": { "version": "2.2.0" },
+    "storage": {
+        "files": [{
+            "filesystem": "root",
+            "path": "/etc/hostname",
+            "mode": 420,
+            "contents": { "source": "{{.Serial}}" }
+        },
+        {
+            "contents": {
+                "source": "data:,{{ .Rack }}"
+            },
+			"filesystem": "root",
+            "mode": 420,
+            "path": "/etc/neco/rack"
+        }]
+    },
+    "networkd": {
+        "units": [
+        {
+            "contents": "[Match]\nName=node0\n\n[Network]\nAddress={{ index .Network.node0.IPv4 0 }}/32\n",
+            "name": "10-node0.network"
+        }]
+    }
+}`
+
+	expected := `{
+    "ignition": { "version": "2.2.0" },
+    "storage": {
+        "files": [{
+            "filesystem": "root",
+            "path": "/etc/hostname",
+            "mode": 420,
+            "contents": { "source": "2222abcd" }
+        },
+        {
+            "contents": {
+                "source": "data:,1"
+            },
+			"filesystem": "root",
+            "mode": 420,
+            "path": "/etc/neco/rack"
+        }]
+    },
+    "networkd": {
+        "units": [
+        {
+            "contents": "[Match]\nName=node0\n\n[Network]\nAddress=10.69.0.4/32\n",
+            "name": "10-node0.network"
+        }]
+    }
+}`
 
 	m := mock.NewModel()
 	handler := Server{Model: m}
 
-	_, err = m.Ignition.PutTemplate(context.Background(), "cs", string(ign))
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", ign)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,12 +89,6 @@ func TestIgnitionsFromFile(t *testing.T) {
 				"node0": sabakan.MachineNetwork{
 					IPv4: []string{"10.69.0.4"},
 				},
-				"node1": sabakan.MachineNetwork{
-					IPv4: []string{"10.69.0.68"},
-				},
-				"node2": sabakan.MachineNetwork{
-					IPv4: []string{"10.69.0.132"},
-				},
 			},
 			BMC: sabakan.MachineBMC{Type: "iDRAC-9"},
 		},
@@ -60,78 +101,6 @@ func TestIgnitionsFromFile(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/api/v1/boot/ignitions/2222abcd/0", nil)
-	handler.ServeHTTP(w, r)
-
-	resp := w.Result()
-	if resp.StatusCode != http.StatusOK {
-		t.Error("resp.StatusCode != http.StatusOK:", resp.StatusCode)
-	}
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body))
-	if !strings.Contains(string(body), "2222abcd") {
-		t.Error("unexpected ignition:", string(body))
-	}
-	if !strings.Contains(string(body), "10.69.0.4") {
-		t.Error("unexpected ignition:", string(body))
-	}
-	if !strings.Contains(string(body), "10.69.0.68") {
-		t.Error("unexpected ignition:", string(body))
-	}
-	if !strings.Contains(string(body), "10.69.0.132") {
-		t.Error("unexpected ignition:", string(body))
-	}
-}
-
-func TestIgnitions(t *testing.T) {
-	t.Parallel()
-
-	ign := `{
-    "ignition": { "version": "2.2.0" },
-    "storage": {
-        "files": [{
-            "filesystem": "root",
-            "path": "/etc/hostname",
-            "mode": 420,
-            "contents": { "source": "{{.Serial}}" }
-        }]
-    }
-}`
-
-	expected := `{
-    "ignition": { "version": "2.2.0" },
-    "storage": {
-        "files": [{
-            "filesystem": "root",
-            "path": "/etc/hostname",
-            "mode": 420,
-            "contents": { "source": "2222abcd" }
-        }]
-    }
-}`
-
-	m := mock.NewModel()
-	handler := Server{Model: m}
-
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", ign)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	machine := `[{
-  "serial": "2222abcd",
-  "product": "R630",
-  "datacenter": "ty3",
-  "rack": 1,
-  "role": "cs",
-  "bmc": {"type": "iDRAC-9"}
-}]`
-
-	w := httptest.NewRecorder()
-	r := httptest.NewRequest("POST", "/api/v1/machines", strings.NewReader(machine))
-	handler.ServeHTTP(w, r)
-
-	w = httptest.NewRecorder()
-	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/2222abcd/0", nil)
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
