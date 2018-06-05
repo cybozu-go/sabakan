@@ -52,6 +52,7 @@ func (c ignitionsGetCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
+		f.Usage()
 		return client.ExitUsageError
 	}
 	ids, status := c.c.IgnitionsGet(ctx, f.Arg(0))
@@ -85,6 +86,7 @@ func (c ignitionsCatCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
+		f.Usage()
 		return client.ExitUsageError
 	}
 	tmpl, status := c.c.IgnitionsCat(ctx, f.Arg(0), f.Arg(1))
@@ -116,7 +118,8 @@ func (c *ignitionsSetCmd) SetFlags(f *flag.FlagSet) {
 }
 
 func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	if f.NArg() != 1 {
+	if f.NArg() != 1 || c.file == "" {
+		f.Usage()
 		return client.ExitUsageError
 	}
 
@@ -151,6 +154,7 @@ func (c ignitionsDeleteCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c ignitionsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
+		f.Usage()
 		return client.ExitUsageError
 	}
 	status := c.c.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))

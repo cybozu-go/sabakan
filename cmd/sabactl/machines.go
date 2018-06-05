@@ -96,6 +96,10 @@ func (r *machinesCreateCmd) SetFlags(f *flag.FlagSet) {
 }
 
 func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	if r.file == "" {
+		f.Usage()
+		return client.ExitUsageError
+	}
 	file, err := os.Open(r.file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -135,6 +139,7 @@ func (r machinesRemoveCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
+		f.Usage()
 		return client.ExitUsageError
 	}
 

@@ -75,6 +75,7 @@ func (c imagesUploadCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c imagesUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if len(f.Args()) != 3 {
+		f.Usage()
 		return client.ExitUsageError
 	}
 
@@ -105,6 +106,7 @@ func (c imagesDeleteCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c imagesDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
+		f.Usage()
 		return client.ExitUsageError
 	}
 

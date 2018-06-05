@@ -71,6 +71,10 @@ func (r *ipamSetCmd) SetFlags(f *flag.FlagSet) {
 }
 
 func (r *ipamSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	if r.file == "" {
+		f.Usage()
+		return client.ExitUsageError
+	}
 	file, err := os.Open(r.file)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
