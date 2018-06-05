@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
+	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/models/mock"
 )
 
@@ -24,6 +24,21 @@ func TestIgnitions(t *testing.T) {
             "path": "/etc/hostname",
             "mode": 420,
             "contents": { "source": "{{.Serial}}" }
+        },
+        {
+            "contents": {
+                "source": "data:,{{ .Rack }}"
+            },
+			"filesystem": "root",
+            "mode": 420,
+            "path": "/etc/neco/rack"
+        }]
+    },
+    "networkd": {
+        "units": [
+        {
+            "contents": "[Match]\nName=node0\n\n[Network]\nAddress={{ index .Network.node0.IPv4 0 }}/32\n",
+            "name": "10-node0.network"
         }]
     }
 }`
@@ -36,6 +51,21 @@ func TestIgnitions(t *testing.T) {
             "path": "/etc/hostname",
             "mode": 420,
             "contents": { "source": "2222abcd" }
+        },
+        {
+            "contents": {
+                "source": "data:,1"
+            },
+			"filesystem": "root",
+            "mode": 420,
+            "path": "/etc/neco/rack"
+        }]
+    },
+    "networkd": {
+        "units": [
+        {
+            "contents": "[Match]\nName=node0\n\n[Network]\nAddress=10.69.0.4/32\n",
+            "name": "10-node0.network"
         }]
     }
 }`
@@ -48,21 +78,29 @@ func TestIgnitions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	machine := `[{
-  "serial": "2222abcd",
-  "product": "R630",
-  "datacenter": "ty3",
-  "rack": 1,
-  "role": "cs",
-  "bmc": {"type": "iDRAC-9"}
-}]`
+	machines := []*sabakan.Machine{
+		&sabakan.Machine{
+			Serial:     "2222abcd",
+			Product:    "R630",
+			Datacenter: "ty3",
+			Rack:       1,
+			Role:       "cs",
+			Network: map[string]sabakan.MachineNetwork{
+				"node0": sabakan.MachineNetwork{
+					IPv4: []string{"10.69.0.4"},
+				},
+			},
+			BMC: sabakan.MachineBMC{Type: "iDRAC-9"},
+		},
+	}
+
+	err = m.Machine.Register(context.Background(), machines)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("POST", "/api/v1/machines", strings.NewReader(machine))
-	handler.ServeHTTP(w, r)
-
-	w = httptest.NewRecorder()
-	r = httptest.NewRequest("GET", "/api/v1/boot/ignitions/2222abcd/0", nil)
+	r := httptest.NewRequest("GET", "/api/v1/boot/ignitions/2222abcd/0", nil)
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
