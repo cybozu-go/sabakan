@@ -109,7 +109,12 @@ func (s Server) handleIgnitionTemplatesPost(w http.ResponseWriter, r *http.Reque
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
-	err = sabakan.ValidateIgnitionTemplate(string(body))
+	ipam, err := s.Model.IPAM.GetConfig()
+	if err != nil {
+		renderError(r.Context(), w, InternalServerError(err))
+		return
+	}
+	err = sabakan.ValidateIgnitionTemplate(string(body), ipam)
 	if err != nil {
 		renderError(r.Context(), w, APIErrBadRequest)
 		return
