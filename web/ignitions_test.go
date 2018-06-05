@@ -217,6 +217,23 @@ func testIgnitionTemplatesPost(t *testing.T) {
 	m := mock.NewModel()
 	handler := Server{Model: m}
 
+	config := &sabakan.IPAMConfig{
+		MaxNodesInRack:  28,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
+		NodeIndexOffset: 3,
+		NodeIPPerNode:   3,
+		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
+	}
+
+	err := m.IPAM.PutConfig(context.Background(), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("POST", "/api/v1/ignitions/cs", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)

@@ -3,13 +3,25 @@ package sabakan
 import "testing"
 
 func TestValidateIgnitionTemplate(t *testing.T) {
+	testIPAMConfig = &IPAMConfig{
+		MaxNodesInRack:  28,
+		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeRangeSize:   6,
+		NodeRangeMask:   26,
+		NodeIndexOffset: 3,
+		NodeIPPerNode:   3,
+		BMCIPv4Pool:     "10.72.17.0/20",
+		BMCRangeSize:    5,
+		BMCRangeMask:    20,
+	}
+
 	tmpls := []string{
 		`{ "ignition": { "version": "2.2.0" } }`,
 		`{ "ignition": { "version": "2.2.0" },
 		  "storage": { "files": [{ "filesystem": "root", "path": "/etc/hostname", "mode": 420, "contents": { "source": "data:,{{.Serial}}" } }] } }`,
 	}
 	for _, tmpl := range tmpls {
-		err := ValidateIgnitionTemplate(tmpl)
+		err := ValidateIgnitionTemplate(tmpl, testIPAMConfig)
 		if err != nil {
 			t.Error("err != nil:", err)
 		}
@@ -22,8 +34,9 @@ func TestValidateIgnitionTemplate(t *testing.T) {
 		`{ "ignition": { "version": "2.2.0" },
 		  "storage": { "files": [{ "filesystem": "root", "path": "/etc/hostname", "mode": 420, "contents": { "source": "data:,{{.User}}" } }] } }`,
 	}
+
 	for _, tmpl := range tmpls {
-		err := ValidateIgnitionTemplate(tmpl)
+		err := ValidateIgnitionTemplate(tmpl, testIPAMConfig)
 		if err == nil {
 			t.Error("err == nil:", err)
 		}

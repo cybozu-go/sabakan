@@ -14,7 +14,7 @@ import (
 const (
 	// iPXE script specs can be found at http://ipxe.org/cfg
 	redirectiPXETemplate = `#!ipxe
-chain %s/${serial}
+chain %s/${serial}%s
 `
 
 	coreOSiPXETemplate = `#!ipxe
@@ -52,9 +52,14 @@ func (s Server) handleCoreOS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleCoreOSiPXE(w http.ResponseWriter, r *http.Request) {
+	serial := ""
+	if r.URL.Query().Get("serial") == "1" {
+		serial = "?serial=1"
+	}
+
 	u := *s.MyURL
 	u.Path = path.Join("/api/v1/boot/coreos/ipxe")
-	ipxe := fmt.Sprintf(redirectiPXETemplate, u.String())
+	ipxe := fmt.Sprintf(redirectiPXETemplate, u.String(), serial)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))

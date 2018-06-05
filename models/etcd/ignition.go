@@ -55,7 +55,7 @@ RETRY:
 
 // GetTemplateIDs implements sabakan.IgnitionModel
 func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, error) {
-	target := path.Join(d.prefix, KeyIgnitions, role)
+	target := path.Join(d.prefix, KeyIgnitions, role) + "/"
 	resp, err := d.client.Get(ctx, target,
 		clientv3.WithPrefix(),
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend),

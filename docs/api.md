@@ -341,7 +341,7 @@ Get CoreOS ignition for a certain serial.
   HTTP status code: 404 Not found
 
 ```console
-$ curl -XGET localhost:10080/api/v1/boot/ignitions/1527731687/1234abcd
+$ curl -XGET localhost:10080/api/v1/boot/ignitions/1234abcd/1527731687
 {
   "systemd": [
     ......

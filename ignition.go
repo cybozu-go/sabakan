@@ -14,8 +14,15 @@ const MaxIgnitions = 10
 // ValidateIgnitionTemplate validates if the tmpl is a template for a valid ignition.
 // The method returns nil if valid template is given, otherwise returns an error.
 // The method retuders template by tmpl nil value of Machine.
-func ValidateIgnitionTemplate(tmpl string) error {
-	ign, err := RenderIgnition(tmpl, &Machine{})
+func ValidateIgnitionTemplate(tmpl string, ipam *IPAMConfig) error {
+	mc := &Machine{
+		Serial: "1234abcd",
+		Rack:   1,
+	}
+
+	ipam.GenerateIP(mc)
+	ign, err := RenderIgnition(tmpl, mc)
+
 	if err != nil {
 		return err
 	}
