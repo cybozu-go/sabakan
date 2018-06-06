@@ -12,7 +12,11 @@ func (h DHCPHandler) handleInform(ctx context.Context, pkt *dhcp4.Packet, intf I
 		return nil, err
 	}
 
-	opts := make(dhcp4.Options)
+	opts, err := h.makeOptions(pkt.ClientAddr)
+	if err != nil {
+		return nil, err
+	}
+	delete(opts, dhcp4.OptLeaseTime)
 	opts[dhcp4.OptServerIdentifier] = serverAddr
 	resp := &dhcp4.Packet{
 		Type:           dhcp4.MsgAck,
