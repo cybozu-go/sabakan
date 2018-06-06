@@ -30,6 +30,8 @@ type config struct {
 	EtcdServers  []string `yaml:"etcd-servers"`
 	EtcdPrefix   string   `yaml:"etcd-prefix"`
 	EtcdTimeout  string   `yaml:"etcd-timeout"`
+	EtcdUsername string   `yaml:"etcd-username"`
+	EtcdPassword string   `yaml:"etcd-password"`
 	DHCPBind     string   `yaml:"dhcp-bind"`
 	IPXEPath     string   `yaml:"ipxe-efi-path"`
 	ImageDir     string   `yaml:"image-dir"`

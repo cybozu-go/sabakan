@@ -52,7 +52,7 @@ func (d *driver) initDHCPConfig(ctx context.Context) error {
 
 func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{}) error {
 	// obtain the current revision to avoid missing events.
-	resp, err := d.client.Get(ctx, "/")
+	resp, err := d.client.Get(ctx, d.prefix+"/")
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{})
 	// notify the caller of the readiness
 	ch <- struct{}{}
 
-	rch := d.client.Watch(ctx, d.prefix,
+	rch := d.client.Watch(ctx, d.prefix+"/",
 		clientv3.WithPrefix(),
 		clientv3.WithPrevKV(),
 		clientv3.WithRev(rev),
