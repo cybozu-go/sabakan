@@ -16,8 +16,6 @@ var (
 	flagServer = flag.String("server", "http://localhost:10080", "<Listen IP>:<Port number>")
 )
 
-var discardLogger *log.Logger
-
 func main() {
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
