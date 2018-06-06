@@ -102,6 +102,6 @@ func dhcpSetCommand(c *client.Client) subcommands.Command {
 		&dhcpSetCmd{c, ""},
 		"set",
 		"set DHCP configurations",
-		"set",
+		"set -F FILE",
 	}
 }

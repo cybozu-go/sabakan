@@ -127,7 +127,7 @@ func machinesCreateCommand(c *client.Client) subcommands.Command {
 		&machinesCreateCmd{c: c},
 		"create",
 		"create machines information",
-		"create",
+		"create -f FILE",
 	}
 }
 

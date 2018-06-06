@@ -102,6 +102,6 @@ func ipamSetCommand(c *client.Client) subcommands.Command {
 		&ipamSetCmd{c, ""},
 		"set",
 		"set IPAM configurations",
-		"set",
+		"set -f FILE",
 	}
 }
