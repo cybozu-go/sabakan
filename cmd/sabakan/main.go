@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -38,6 +39,7 @@ var (
 	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
 	flagImageDir     = flag.String("image-dir", defaultImageDir, "directory to store boot images")
 	flagAdvertiseURL = flag.String("advertise-url", "", "public URL of this server")
+	flagAllowIPs     = flag.String("allow-ips", "127.0.0.1", "comma-separated IPs allowd to change resources")
 
 	flagConfigFile = flag.String("config-file", "", "path to configuration file")
 )
@@ -121,10 +123,15 @@ func main() {
 	}
 	cmd.Go(dhcpServer.Serve)
 
+	allowedIPs, err := parseAllowIPs(*flagAllowIPs)
+	if err != nil {
+		log.ErrorExit(err)
+	}
 	webServer := web.Server{
-		Model:        model,
-		IPXEFirmware: cfg.IPXEPath,
-		MyURL:        advertiseURL,
+		Model:         model,
+		IPXEFirmware:  cfg.IPXEPath,
+		MyURL:         advertiseURL,
+		AllowdRemotes: allowedIPs,
 	}
 	s := &cmd.HTTPServer{
 		Server: &http.Server{
@@ -140,4 +147,20 @@ func main() {
 	if !cmd.IsSignaled(err) && err != nil {
 		log.ErrorExit(err)
 	}
+}
+
+func parseAllowIPs(s string) ([]*net.IPNet, error) {
+	cidrs := strings.Split(s, ",")
+	nets := make([]*net.IPNet, len(cidrs))
+	for i, cidr := range cidrs {
+		if !strings.Contains(cidr, "/") {
+			cidr += "/32"
+		}
+		_, ipnet, err := net.ParseCIDR(cidr)
+		if err != nil {
+			return nil, err
+		}
+		nets[i] = ipnet
+	}
+	return nets, nil
 }
