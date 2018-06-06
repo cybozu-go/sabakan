@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -19,18 +18,13 @@ var (
 
 var discardLogger *log.Logger
 
-func init() {
-	discardLogger = log.NewLogger()
-	discardLogger.SetOutput(ioutil.Discard)
-}
-
 func main() {
 	flag.Parse()
+	cmd.LogConfig{}.Apply()
 
 	c := client.NewClient(*flagServer, &cmd.HTTPClient{
 		Severity: log.LvDebug,
 		Client:   &http.Client{},
-		Logger:   discardLogger,
 	})
 
 	subcommands.Register(subcommands.HelpCommand(), "")
