@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
@@ -20,7 +21,8 @@ func main() {
 	cmd.LogConfig{}.Apply()
 
 	c := client.NewClient(*flagServer, &cmd.HTTPClient{
-		Client: &http.Client{},
+		Severity: log.LvDebug,
+		Client:   &http.Client{},
 	})
 
 	subcommands.Register(subcommands.HelpCommand(), "")
