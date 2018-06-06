@@ -41,6 +41,7 @@ func testNewHandler(maskbits, gwoffset, leasemin uint) DHCPHandler {
 	m.DHCP.PutConfig(context.Background(), &sabakan.DHCPConfig{
 		GatewayOffset: gwoffset,
 		LeaseMinutes:  leasemin,
+		DNSServers:    []string{"10.0.0.1", "10.0.0.2"},
 	})
 
 	u, _ := url.Parse("http://10.69.0.195:10080")

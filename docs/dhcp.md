@@ -14,10 +14,11 @@ DHCPConfig
 `DHCPConfig` is a set of configurations for DHCP options.
 It is given as JSON object with the following fields:
 
-Field            | Required | Type   | Description
----------------- | -------- | ------ | -----------
-`gateway-offset` | Yes      | int    | The default gateway address offset.  See below.
-`lease-minutes`  | No       | int    | Lease period in minutes.  Default is 60.
+Field            | Required | Type            | Description
+---------------- | -------- | --------------- | -----------
+`gateway-offset` | Yes      | int             | The default gateway address offset.  See below.
+`lease-minutes`  | No       | int             | Lease period in minutes.  Default is 60.
+`dns-servers`    | No       | array of string | The IP addresses of DNS servers.
 
 ### `gateway-offset`
 

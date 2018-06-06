@@ -39,6 +39,7 @@ func testRequestSelected(t *testing.T) {
 	expected.BootServerName = "10.69.1.3"
 	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 192}
 	expected.Options[dhcp4.OptRouters] = []byte{10, 69, 1, 1}
+	expected.Options[dhcp4.OptDNSServers] = []byte{10, 0, 0, 1, 10, 0, 0, 2}
 	buf := make([]byte, 4)
 	binary.BigEndian.PutUint32(buf, 3600)
 	expected.Options[dhcp4.OptLeaseTime] = buf
@@ -83,6 +84,7 @@ func testRequestRelayedSelected(t *testing.T) {
 	expected.BootServerName = "10.69.1.3"
 	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 192}
 	expected.Options[dhcp4.OptRouters] = []byte{10, 69, 0, 129}
+	expected.Options[dhcp4.OptDNSServers] = []byte{10, 0, 0, 1, 10, 0, 0, 2}
 	buf := make([]byte, 4)
 	binary.BigEndian.PutUint32(buf, 3600)
 	expected.Options[dhcp4.OptLeaseTime] = buf
@@ -125,6 +127,7 @@ func testRequestConfirm(t *testing.T) {
 	expected.BootServerName = "10.69.1.3"
 	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 192}
 	expected.Options[dhcp4.OptRouters] = []byte{10, 69, 1, 1}
+	expected.Options[dhcp4.OptDNSServers] = []byte{10, 0, 0, 1, 10, 0, 0, 2}
 	buf := make([]byte, 4)
 	binary.BigEndian.PutUint32(buf, 3600)
 	expected.Options[dhcp4.OptLeaseTime] = buf
@@ -168,6 +171,7 @@ func testRequestRenew(t *testing.T) {
 	expected.BootServerName = "10.69.1.3"
 	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 192}
 	expected.Options[dhcp4.OptRouters] = []byte{10, 69, 1, 1}
+	expected.Options[dhcp4.OptDNSServers] = []byte{10, 0, 0, 1, 10, 0, 0, 2}
 	buf := make([]byte, 4)
 	binary.BigEndian.PutUint32(buf, 3600)
 	expected.Options[dhcp4.OptLeaseTime] = buf
