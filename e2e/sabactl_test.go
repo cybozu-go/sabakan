@@ -319,7 +319,7 @@ func testSabactlIgnitions(t *testing.T) {
 	}
 	defer os.Remove(file.Name())
 
-	_, err = fmt.Fprintf(file, ign)
+	_, err = fmt.Fprint(file, ign)
 	if err != nil {
 		t.Fatal(err)
 	}

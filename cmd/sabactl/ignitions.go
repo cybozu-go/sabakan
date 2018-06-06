@@ -95,7 +95,7 @@ func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		return status.Code()
 	}
 
-	fmt.Printf(tmpl)
+	fmt.Print(tmpl)
 	return client.ExitSuccess
 }
 
