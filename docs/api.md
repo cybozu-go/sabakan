@@ -26,6 +26,22 @@ REST API
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
 
+## Access control
+
+The following requets URLs are allowed for all remote hosts.  The other URLs are
+rejected from remote hosts excluding localhost (`127.0.0.1`).
+
+- `GET|HEAD /api/v1/boot/*`
+- `PUT /api/v1/crypts`
+- `GET /api/v1/crypts`
+- `GET|HEAD /*`
+
+This means that localhost can manage all resources, and the remote hosts such
+as worker nodes can only read resources.  `PUT /api/v1/crypts` and `GET
+/api/v1/crypts` are permitted from remote hosts since the encryption keys are
+generated on the worker nodes.  The encryption keys *should* be distributed
+between sabakan nodes and the worker node.
+
 ## <a name="putipam" />`PUT /api/v1/config/ipam`
 
 Create or update IPAM configurations.  If one or more nodes have been registered in sabakan, IPAM configurations cannot be updated.
