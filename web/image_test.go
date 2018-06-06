@@ -155,7 +155,7 @@ func testHandleImagesPut(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
-	handler := Server{Model: m}
+	handler := newTestServer(m)
 
 	archive := newTestImage("abcd", "efgh")
 
@@ -193,7 +193,7 @@ func testHandleImagesDelete(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
-	handler := Server{Model: m}
+	handler := newTestServer(m)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", "/api/v1/images/coreos/1234", nil)

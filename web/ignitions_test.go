@@ -215,7 +215,7 @@ func testIgnitionTemplatesPost(t *testing.T) {
 	invalid := `{ "ignition": { "version": "0.2.0" } }`
 
 	m := mock.NewModel()
-	handler := Server{Model: m}
+	handler := newTestServer(m)
 
 	config := &sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
@@ -283,7 +283,7 @@ func testIgnitionTemplatesDelete(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
-	handler := Server{Model: m}
+	handler := newTestServer(m)
 
 	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hello")
 	if err != nil {

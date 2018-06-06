@@ -59,7 +59,7 @@ func testConfigIPAMPut(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
-	handler := Server{Model: m}
+	handler := newTestServer(m)
 
 	bad := "{}"
 	good := `

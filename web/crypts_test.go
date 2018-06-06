@@ -60,7 +60,7 @@ func testCryptsGet(t *testing.T) {
 
 func testCryptsPut(t *testing.T) {
 	m := mock.NewModel()
-	handler := Server{Model: m}
+	handler := newTestServer(m)
 
 	serial := "1"
 
@@ -122,7 +122,7 @@ func testCryptsPut(t *testing.T) {
 
 func testCryptsDelete(t *testing.T) {
 	m := mock.NewModel()
-	handler := Server{Model: m}
+	handler := newTestServer(m)
 
 	ctx := context.Background()
 	expected := make(map[string]struct{})

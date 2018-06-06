@@ -1,6 +1,7 @@
 package web
 
 import (
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -10,9 +11,10 @@ import (
 
 // Server is the sabakan server.
 type Server struct {
-	Model        sabakan.Model
-	MyURL        *url.URL
-	IPXEFirmware string
+	Model         sabakan.Model
+	MyURL         *url.URL
+	IPXEFirmware  string
+	AllowdRemotes []*net.IPNet
 }
 
 // Handler implements http.Handler
@@ -27,6 +29,10 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	p := r.URL.Path[len("/api/v1/"):]
+
+	if !s.hasPermission(r) {
+		renderError(r.Context(), w, APIErrForbidden)
+	}
 
 	switch {
 	case p == "config/dhcp":
@@ -59,4 +65,25 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderError(r.Context(), w, APIErrNotFound)
+}
+
+// hasPermission returns true if the request has a permission to the resource
+func (s Server) hasPermission(r *http.Request) bool {
+	p := r.URL.Path[len("/api/v1/"):]
+	if r.Method == http.MethodGet || r.Method == http.MethodHead {
+		return true
+	}
+	if strings.HasPrefix(p, "boot/") || p == "crypts" {
+		return true
+	}
+	rhost := net.ParseIP(strings.Split(r.RemoteAddr, ":")[0])
+	if rhost == nil {
+		return false
+	}
+	for _, allowed := range s.AllowdRemotes {
+		if allowed.Contains(rhost) {
+			return true
+		}
+	}
+	return false
 }
