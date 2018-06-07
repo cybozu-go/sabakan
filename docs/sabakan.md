@@ -13,12 +13,16 @@ Usage of /home/ymmt/go/bin/sabakan:
         path to configuration file
   -dhcp-bind string
         bound ip addresses and port for dhcp server (default "0.0.0.0:10067")
+  -etcd-password string
+        password for etcd authentication
   -etcd-prefix string
         etcd prefix (default "/sabakan")
   -etcd-servers string
         comma-separated URLs of the backend etcd (default "http://localhost:2379")
   -etcd-timeout string
         dial timeout to etcd (default "2s")
+  -etcd-username string
+        username for etcd authentication
   -http string
         <Listen IP>:<Port number> (default "0.0.0.0:10080")
   -image-dir string
@@ -41,6 +45,8 @@ Option          | Default value            | Description
 `etcd-prefix`   | `/sabakan`               | etcd prefix
 `etcd-servers`  | `http://localhost:2379`  | comma-separated URLs of the backend etcd
 `etcd-timeout`  | `2s`                     | dial timeout to etcd
+`etcd-username` | ""                       | username for etcd authentication
+`etcd-password` | ""                       | password for etcd authentication
 `http`          | `0.0.0.0:10080`          | Listen IP:Port number
 `image-dir`     | `/var/lib/sabakan`       | Directory to store boot images.
 `ipxe-efi-path` | `/usr/lib/ipxe/ipxe.efi` | path to ipxe.efi

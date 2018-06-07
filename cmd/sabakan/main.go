@@ -29,10 +29,12 @@ type etcdConfig struct {
 }
 
 var (
-	flagHTTP        = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
-	flagEtcdServers = flag.String("etcd-servers", strings.Join(defaultEtcdServers, ","), "comma-separated URLs of the backend etcd")
-	flagEtcdPrefix  = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
-	flagEtcdTimeout = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
+	flagHTTP         = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
+	flagEtcdServers  = flag.String("etcd-servers", strings.Join(defaultEtcdServers, ","), "comma-separated URLs of the backend etcd")
+	flagEtcdPrefix   = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
+	flagEtcdTimeout  = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
+	flagEtcdUsername = flag.String("etcd-username", "", "username for etcd authentication")
+	flagEtcdPassword = flag.String("etcd-password", "", "password for etcd authentication")
 
 	flagDHCPBind     = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
 	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
@@ -55,6 +57,8 @@ func main() {
 		cfg.EtcdServers = strings.Split(*flagEtcdServers, ",")
 		cfg.EtcdPrefix = *flagEtcdPrefix
 		cfg.EtcdTimeout = *flagEtcdTimeout
+		cfg.EtcdUsername = *flagEtcdUsername
+		cfg.EtcdPassword = *flagEtcdPassword
 		cfg.DHCPBind = *flagDHCPBind
 		cfg.IPXEPath = *flagIPXEPath
 		cfg.ImageDir = *flagImageDir
@@ -96,6 +100,8 @@ func main() {
 	etcdCfg := clientv3.Config{
 		Endpoints:   e.Servers,
 		DialTimeout: timeout,
+		Username:    cfg.EtcdUsername,
+		Password:    cfg.EtcdPassword,
 	}
 	c, err := clientv3.New(etcdCfg)
 	if err != nil {
