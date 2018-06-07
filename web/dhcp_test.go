@@ -54,6 +54,13 @@ func testConfigDHCPPut(t *testing.T) {
 	handler := Server{Model: m}
 
 	bad := "{}"
+	bad2 := `
+{
+   "gateway-offset": 100,
+   "lease-minutes": 30,
+   "dns-servers": ["10.0.0.1", "::1"]
+}
+`
 	good := `
 {
    "gateway-offset": 100
@@ -62,7 +69,8 @@ func testConfigDHCPPut(t *testing.T) {
 	good2 := `
 {
    "gateway-offset": 100,
-   "lease-minutes": 30
+   "lease-minutes": 30,
+   "dns-servers": ["10.0.0.1", "10.0.0.2"]
 }
 `
 
@@ -71,6 +79,15 @@ func testConfigDHCPPut(t *testing.T) {
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Error("resp.StatusCode != http.StatusBadRequest")
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/config/dhcp", strings.NewReader(bad2))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Error("resp.StatusCode != http.StatusBadRequest")
 	}
@@ -120,6 +137,7 @@ func testConfigDHCPPut(t *testing.T) {
 	expected = &sabakan.DHCPConfig{
 		GatewayOffset: 100,
 		LeaseMinutes:  30,
+		DNSServers:    []string{"10.0.0.1", "10.0.0.2"},
 	}
 	if !reflect.DeepEqual(conf, expected) {
 		t.Errorf("mismatch: %#v", conf)

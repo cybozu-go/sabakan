@@ -34,6 +34,9 @@ func testInformDirect(t *testing.T) {
 	expected.Type = dhcp4.MsgAck
 	expected.ServerAddr = []byte{10, 69, 1, 3}
 	expected.BootServerName = "10.69.1.3"
+	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 192}
+	expected.Options[dhcp4.OptRouters] = []byte{10, 69, 0, 193}
+	expected.Options[dhcp4.OptDNSServers] = []byte{10, 0, 0, 1, 10, 0, 0, 2}
 	expected.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
 
 	resp, err := h.handleInform(context.Background(), pkt, intf)
@@ -56,6 +59,9 @@ func testInformRelayed(t *testing.T) {
 	expected.ServerAddr = []byte{10, 69, 1, 3}
 	expected.RelayAddr = []byte{10, 69, 0, 129}
 	expected.BootServerName = "10.69.1.3"
+	expected.Options[dhcp4.OptSubnetMask] = []byte{255, 255, 255, 192}
+	expected.Options[dhcp4.OptRouters] = []byte{10, 69, 0, 193}
+	expected.Options[dhcp4.OptDNSServers] = []byte{10, 0, 0, 1, 10, 0, 0, 2}
 	expected.Options[dhcp4.OptServerIdentifier] = []byte{10, 69, 1, 3}
 
 	resp, err := h.handleInform(context.Background(), pkt, intf)

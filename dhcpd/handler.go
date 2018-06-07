@@ -64,10 +64,35 @@ func getIPv4AddrForInterface(intf Interface) (net.IP, error) {
 	return nil, errors.New("No IPv4 address for " + intf.Name())
 }
 
+func flattenIPv4s(ips []net.IP) ([]byte, error) {
+	buf := make([]byte, len(ips)*4)
+	for i, ip := range ips {
+		ipv4 := ip.To4()
+		if ipv4 == nil {
+			return nil, errors.New("not IPv4 address: " + ip.String())
+		}
+		copy(buf[i*4:(i+1)*4], ipv4)
+	}
+	return buf, nil
+}
+
+func flattenIPv4Strings(addrs []string) ([]byte, error) {
+	ips := make([]net.IP, len(addrs))
+	for i, addr := range addrs {
+		ip := net.ParseIP(addr)
+		if ip == nil {
+			return nil, errors.New("not IP address: " + addr)
+		}
+		ips[i] = ip
+	}
+	return flattenIPv4s(ips)
+}
+
 // makeOptions returns dhcp4.Options that includes these common options:
 //
 // * Subnet Mask (1)
 // * Router (3)
+// * Domain Name Server (6) (if specified in DHCP config)
 // * Lease seconds (51)
 func (h DHCPHandler) makeOptions(ciaddr net.IP) (dhcp4.Options, error) {
 	ipam, err := h.IPAM.GetConfig()
@@ -89,6 +114,15 @@ func (h DHCPHandler) makeOptions(ciaddr net.IP) (dhcp4.Options, error) {
 	nnet := netutil.IP4ToInt(ciaddr.Mask(mask))
 	gw := netutil.IntToIP4(nnet + uint32(config.GatewayOffset)).To4()
 	opts[dhcp4.OptRouters] = gw
+
+	// domain name server
+	if len(config.DNSServers) > 0 {
+		v, err := flattenIPv4Strings(config.DNSServers)
+		if err != nil {
+			return nil, err
+		}
+		opts[dhcp4.OptDNSServers] = v
+	}
 
 	// lease seconds
 	secs := uint32(config.LeaseDuration().Seconds())

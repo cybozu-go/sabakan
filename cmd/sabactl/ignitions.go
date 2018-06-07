@@ -95,7 +95,12 @@ func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		return status.Code()
 	}
 
-	fmt.Printf(tmpl)
+	_, err := os.Stdout.WriteString(tmpl)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return client.ExitFailure
+	}
+
 	return client.ExitSuccess
 }
 
