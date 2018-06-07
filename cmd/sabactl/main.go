@@ -17,23 +17,28 @@ var (
 )
 
 func main() {
+	subcommands.Register(subcommands.HelpCommand(), "")
+	subcommands.Register(subcommands.FlagsCommand(), "")
+	subcommands.Register(subcommands.CommandsCommand(), "")
+	subcommands.Register(dhcpCommand(), "")
+	subcommands.Register(ipamCommand(), "")
+	subcommands.Register(machinesCommand(), "")
+	subcommands.Register(imagesCommand(), "")
+	subcommands.Register(ignitionsCommand(), "")
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
 
-	c := client.NewClient(*flagServer, &cmd.HTTPClient{
+	client.Setup(*flagServer, &cmd.HTTPClient{
 		Severity: log.LvDebug,
 		Client:   &http.Client{},
 	})
 
-	subcommands.Register(subcommands.HelpCommand(), "")
-	subcommands.Register(subcommands.FlagsCommand(), "")
-	subcommands.Register(subcommands.CommandsCommand(), "")
-	subcommands.Register(dhcpCommand(c), "")
-	subcommands.Register(ipamCommand(c), "")
-	subcommands.Register(machinesCommand(c), "")
-	subcommands.Register(imagesCommand(c), "")
-	subcommands.Register(ignitionsCommand(c), "")
-
-	ctx := context.Background()
-	os.Exit(int(subcommands.Execute(ctx)))
+	exitStatus := subcommands.ExitSuccess
+	cmd.Go(func(ctx context.Context) error {
+		exitStatus = subcommands.Execute(ctx)
+		return nil
+	})
+	cmd.Stop()
+	cmd.Wait()
+	os.Exit(int(exitStatus))
 }

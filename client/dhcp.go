@@ -7,9 +7,9 @@ import (
 )
 
 // DHCPConfigGet retrieves DHCP configurations
-func (c *Client) DHCPConfigGet(ctx context.Context) (*sabakan.DHCPConfig, *Status) {
+func DHCPConfigGet(ctx context.Context) (*sabakan.DHCPConfig, *Status) {
 	var conf sabakan.DHCPConfig
-	err := c.getJSON(ctx, "/config/dhcp", nil, &conf)
+	err := client.getJSON(ctx, "/config/dhcp", nil, &conf)
 	if err != nil {
 		return nil, err
 	}
@@ -17,6 +17,6 @@ func (c *Client) DHCPConfigGet(ctx context.Context) (*sabakan.DHCPConfig, *Statu
 }
 
 // DHCPConfigSet sets DHCP configurations
-func (c *Client) DHCPConfigSet(ctx context.Context, conf *sabakan.DHCPConfig) *Status {
-	return c.sendRequestWithJSON(ctx, "PUT", "/config/dhcp", conf)
+func DHCPConfigSet(ctx context.Context, conf *sabakan.DHCPConfig) *Status {
+	return client.sendRequestWithJSON(ctx, "PUT", "/config/dhcp", conf)
 }

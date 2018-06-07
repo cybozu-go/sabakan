@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -46,6 +47,9 @@ func handleError(err error) subcommands.ExitStatus {
 		return subcommands.ExitSuccess
 	}
 	fmt.Fprintf(os.Stderr, "\nError: %v\n", err)
+	if status, ok := err.(*client.Status); ok {
+		return status.Code()
+	}
 	return subcommands.ExitFailure
 }
 

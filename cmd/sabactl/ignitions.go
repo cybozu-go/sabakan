@@ -4,49 +4,35 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
-type ignitionsCmd struct {
-	c *client.Client
-}
+type ignitionsCmd struct{}
 
 func (r ignitionsCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r ignitionsCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	cmdr := newCommander(f, "ignitions")
-	cmdr.Register(ignitionsGetCommand(r.c), "")
-	cmdr.Register(ignitionsCatCommand(r.c), "")
-	cmdr.Register(ignitionsSetCommand(r.c), "")
-	cmdr.Register(ignitionsDeleteCommand(r.c), "")
+	cmdr.Register(ignitionsGetCommand(), "")
+	cmdr.Register(ignitionsCatCommand(), "")
+	cmdr.Register(ignitionsSetCommand(), "")
+	cmdr.Register(ignitionsDeleteCommand(), "")
 	return cmdr.Execute(ctx)
 }
 
-func ignitionsCommand(c *client.Client) subcommands.Command {
+func ignitionsCommand() subcommands.Command {
 	return subcmd{
-		sub:      ignitionsCmd{c},
+		sub:      ignitionsCmd{},
 		name:     "ignitions",
 		synopsis: "manage ignitions",
 		usage:    "ignitions ACTION ...",
 	}
 }
 
-func ignitionsGetCommand(c *client.Client) subcommands.Command {
-	return subcmd{
-		&ignitionsGetCmd{c},
-		"get",
-		"get IDs of ROLE",
-		"get ROLE",
-	}
-}
-
-type ignitionsGetCmd struct {
-	c *client.Client
-}
+type ignitionsGetCmd struct{}
 
 func (c ignitionsGetCmd) SetFlags(f *flag.FlagSet) {}
 
@@ -55,32 +41,28 @@ func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		f.Usage()
 		return client.ExitUsageError
 	}
-	ids, status := c.c.IgnitionsGet(ctx, f.Arg(0))
+	ids, status := client.IgnitionsGet(ctx, f.Arg(0))
 	if status != nil {
-		fmt.Fprintln(os.Stderr, status)
-		return status.Code()
+		return handleError(status)
 	}
 
 	err := json.NewEncoder(os.Stdout).Encode(ids)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return client.ExitFailure
+		return handleError(err)
 	}
 	return client.ExitSuccess
 }
 
-func ignitionsCatCommand(c *client.Client) subcommands.Command {
+func ignitionsGetCommand() subcommands.Command {
 	return subcmd{
-		&ignitionsCatCmd{c},
-		"cat",
-		"show an ignition template for the ID and ROLE",
-		"cat ROLE ID",
+		ignitionsGetCmd{},
+		"get",
+		"get IDs of ROLE",
+		"get ROLE",
 	}
 }
 
-type ignitionsCatCmd struct {
-	c *client.Client
-}
+type ignitionsCatCmd struct{}
 
 func (c ignitionsCatCmd) SetFlags(f *flag.FlagSet) {}
 
@@ -89,32 +71,29 @@ func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		f.Usage()
 		return client.ExitUsageError
 	}
-	tmpl, status := c.c.IgnitionsCat(ctx, f.Arg(0), f.Arg(1))
+	tmpl, status := client.IgnitionsCat(ctx, f.Arg(0), f.Arg(1))
 	if status != nil {
-		fmt.Fprintln(os.Stderr, status)
-		return status.Code()
+		return handleError(status)
 	}
 
 	_, err := os.Stdout.WriteString(tmpl)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return client.ExitFailure
+		return handleError(err)
 	}
 
 	return client.ExitSuccess
 }
 
-func ignitionsSetCommand(c *client.Client) subcommands.Command {
+func ignitionsCatCommand() subcommands.Command {
 	return subcmd{
-		&ignitionsSetCmd{c: c},
-		"set",
-		"create ignition template",
-		"set -f FILE ROLE ",
+		ignitionsCatCmd{},
+		"cat",
+		"show an ignition template for the ID and ROLE",
+		"cat ROLE ID",
 	}
 }
 
 type ignitionsSetCmd struct {
-	c    *client.Client
 	file string
 }
 
@@ -128,32 +107,28 @@ func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomma
 		return client.ExitUsageError
 	}
 
-	data, status := c.c.IgnitionsSet(ctx, f.Arg(0), c.file)
+	data, status := client.IgnitionsSet(ctx, f.Arg(0), c.file)
 	if status != nil {
-		fmt.Fprintln(os.Stderr, status)
-		return status.Code()
+		return handleError(status)
 	}
 
 	err := json.NewEncoder(os.Stdout).Encode(data)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return client.ExitFailure
+		return handleError(err)
 	}
 	return client.ExitSuccess
 }
 
-func ignitionsDeleteCommand(c *client.Client) subcommands.Command {
+func ignitionsSetCommand() subcommands.Command {
 	return subcmd{
-		&ignitionsDeleteCmd{c},
-		"delete",
-		"delete an ignition template for the ID and ROLE",
-		"delete ROLE ID",
+		&ignitionsSetCmd{},
+		"set",
+		"create ignition template",
+		"set -f FILE ROLE ",
 	}
 }
 
-type ignitionsDeleteCmd struct {
-	c *client.Client
-}
+type ignitionsDeleteCmd struct{}
 
 func (c ignitionsDeleteCmd) SetFlags(f *flag.FlagSet) {}
 
@@ -162,10 +137,18 @@ func (c ignitionsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 		f.Usage()
 		return client.ExitUsageError
 	}
-	status := c.c.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))
+	status := client.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))
 	if status != nil {
-		fmt.Fprintln(os.Stderr, status)
-		return status.Code()
+		return handleError(status)
 	}
 	return client.ExitSuccess
+}
+
+func ignitionsDeleteCommand() subcommands.Command {
+	return subcmd{
+		ignitionsDeleteCmd{},
+		"delete",
+		"delete an ignition template for the ID and ROLE",
+		"delete ROLE ID",
+	}
 }
