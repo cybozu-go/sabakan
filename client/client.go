@@ -15,9 +15,13 @@ type Client struct {
 	http     *cmd.HTTPClient
 }
 
-// NewClient creates a new sabakan client
-func NewClient(endpoint string, http *cmd.HTTPClient) *Client {
-	return &Client{
+var (
+	client *Client
+)
+
+// Setup initializes client package.
+func Setup(endpoint string, http *cmd.HTTPClient) {
+	client = &Client{
 		endpoint: endpoint,
 		http:     http,
 	}

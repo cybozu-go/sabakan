@@ -7,9 +7,9 @@ import (
 )
 
 // IPAMConfigGet retrieves IPAM configurations
-func (c *Client) IPAMConfigGet(ctx context.Context) (*sabakan.IPAMConfig, *Status) {
+func IPAMConfigGet(ctx context.Context) (*sabakan.IPAMConfig, *Status) {
 	var conf sabakan.IPAMConfig
-	err := c.getJSON(ctx, "/config/ipam", nil, &conf)
+	err := client.getJSON(ctx, "/config/ipam", nil, &conf)
 	if err != nil {
 		return nil, err
 	}
@@ -17,6 +17,6 @@ func (c *Client) IPAMConfigGet(ctx context.Context) (*sabakan.IPAMConfig, *Statu
 }
 
 // IPAMConfigSet sets IPAM configurations
-func (c *Client) IPAMConfigSet(ctx context.Context, conf *sabakan.IPAMConfig) *Status {
-	return c.sendRequestWithJSON(ctx, "PUT", "/config/ipam", conf)
+func IPAMConfigSet(ctx context.Context, conf *sabakan.IPAMConfig) *Status {
+	return client.sendRequestWithJSON(ctx, "PUT", "/config/ipam", conf)
 }

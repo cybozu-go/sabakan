@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/cybozu-go/sabakan/client"
@@ -12,7 +11,6 @@ import (
 )
 
 type imagesCmd struct {
-	c  *client.Client
 	os string
 }
 
@@ -22,15 +20,15 @@ func (c *imagesCmd) SetFlags(f *flag.FlagSet) {
 
 func (c *imagesCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	cmdr := newCommander(f, "images")
-	cmdr.Register(imagesIndexCommand(c.c, c.os), "")
-	cmdr.Register(imagesUploadCommand(c.c, c.os), "")
-	cmdr.Register(imagesDeleteCommand(c.c, c.os), "")
+	cmdr.Register(imagesIndexCommand(c.os), "")
+	cmdr.Register(imagesUploadCommand(c.os), "")
+	cmdr.Register(imagesDeleteCommand(c.os), "")
 	return cmdr.Execute(ctx)
 }
 
-func imagesCommand(c *client.Client) subcommands.Command {
+func imagesCommand() subcommands.Command {
 	return subcmd{
-		&imagesCmd{c, "coreos"},
+		&imagesCmd{"coreos"},
 		"images",
 		"manage boot images",
 		"images ACTION ...",
@@ -38,17 +36,15 @@ func imagesCommand(c *client.Client) subcommands.Command {
 }
 
 type imagesIndexCmd struct {
-	c  *client.Client
 	os string
 }
 
 func (c imagesIndexCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c imagesIndexCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	index, err := c.c.ImagesIndex(ctx, c.os)
+	index, err := client.ImagesIndex(ctx, c.os)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return err.Code()
+		return handleError(err)
 	}
 
 	e := json.NewEncoder(os.Stdout)
@@ -57,9 +53,9 @@ func (c imagesIndexCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommand
 	return client.ExitSuccess
 }
 
-func imagesIndexCommand(c *client.Client, os string) subcommands.Command {
+func imagesIndexCommand(os string) subcommands.Command {
 	return subcmd{
-		&imagesIndexCmd{c: c, os: os},
+		imagesIndexCmd{os: os},
 		"index",
 		"get index of images",
 		"index",
@@ -67,7 +63,6 @@ func imagesIndexCommand(c *client.Client, os string) subcommands.Command {
 }
 
 type imagesUploadCmd struct {
-	c  *client.Client
 	os string
 }
 
@@ -79,18 +74,17 @@ func (c imagesUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		return client.ExitUsageError
 	}
 
-	err := c.c.ImagesUpload(ctx, c.os, f.Arg(0), f.Arg(1), f.Arg(2))
+	err := client.ImagesUpload(ctx, c.os, f.Arg(0), f.Arg(1), f.Arg(2))
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return err.Code()
+		return handleError(err)
 	}
 
 	return client.ExitSuccess
 }
 
-func imagesUploadCommand(c *client.Client, os string) subcommands.Command {
+func imagesUploadCommand(os string) subcommands.Command {
 	return subcmd{
-		&imagesUploadCmd{c: c, os: os},
+		imagesUploadCmd{os: os},
 		"upload",
 		"upload image",
 		"upload ID KERNEL INITRD",
@@ -98,7 +92,6 @@ func imagesUploadCommand(c *client.Client, os string) subcommands.Command {
 }
 
 type imagesDeleteCmd struct {
-	c  *client.Client
 	os string
 }
 
@@ -110,18 +103,17 @@ func (c imagesDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		return client.ExitUsageError
 	}
 
-	err := c.c.ImagesDelete(ctx, c.os, f.Arg(0))
+	err := client.ImagesDelete(ctx, c.os, f.Arg(0))
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return err.Code()
+		return handleError(err)
 	}
 
 	return client.ExitSuccess
 }
 
-func imagesDeleteCommand(c *client.Client, os string) subcommands.Command {
+func imagesDeleteCommand(os string) subcommands.Command {
 	return subcmd{
-		&imagesDeleteCmd{c: c, os: os},
+		imagesDeleteCmd{os: os},
 		"delete",
 		"delete image",
 		"delete ID",

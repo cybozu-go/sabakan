@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/cybozu-go/sabakan"
@@ -12,23 +11,21 @@ import (
 	"github.com/google/subcommands"
 )
 
-type machinesCmd struct {
-	c *client.Client
-}
+type machinesCmd struct{}
 
 func (r machinesCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r machinesCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	cmdr := newCommander(f, "machines")
-	cmdr.Register(machinesGetCommand(r.c), "")
-	cmdr.Register(machinesCreateCommand(r.c), "")
-	cmdr.Register(machinesRemoveCommand(r.c), "")
+	cmdr.Register(machinesGetCommand(), "")
+	cmdr.Register(machinesCreateCommand(), "")
+	cmdr.Register(machinesRemoveCommand(), "")
 	return cmdr.Execute(ctx)
 }
 
-func machinesCommand(c *client.Client) subcommands.Command {
+func machinesCommand() subcommands.Command {
 	return subcmd{
-		machinesCmd{c},
+		machinesCmd{},
 		"machines",
 		"manage machines",
 		"machines ACTION ...",
@@ -36,7 +33,6 @@ func machinesCommand(c *client.Client) subcommands.Command {
 }
 
 type machinesGetCmd struct {
-	c     *client.Client
 	query map[string]*string
 }
 
@@ -66,10 +62,9 @@ func (r *machinesGetCmd) getParams() map[string]string {
 }
 
 func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	machines, err := r.c.MachinesGet(ctx, r.getParams())
+	machines, err := client.MachinesGet(ctx, r.getParams())
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return err.Code()
+		return handleError(err)
 	}
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
@@ -77,9 +72,9 @@ func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 	return client.ExitSuccess
 }
 
-func machinesGetCommand(c *client.Client) subcommands.Command {
+func machinesGetCommand() subcommands.Command {
 	return subcmd{
-		&machinesGetCmd{c: c},
+		&machinesGetCmd{},
 		"get",
 		"get machines information",
 		"get",
@@ -87,7 +82,6 @@ func machinesGetCommand(c *client.Client) subcommands.Command {
 }
 
 type machinesCreateCmd struct {
-	c    *client.Client
 	file string
 }
 
@@ -102,38 +96,33 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 	}
 	file, err := os.Open(r.file)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return client.ExitFailure
+		return handleError(err)
 	}
 	defer file.Close()
 
 	var machines []sabakan.Machine
 	err = json.NewDecoder(file).Decode(&machines)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return client.ExitInvalidParams
+		return handleError(err)
 	}
 
-	errorStatus := r.c.MachinesCreate(ctx, machines)
+	errorStatus := client.MachinesCreate(ctx, machines)
 	if errorStatus != nil {
-		fmt.Fprintln(os.Stderr, errorStatus)
-		return errorStatus.Code()
+		return handleError(errorStatus)
 	}
 	return client.ExitSuccess
 }
 
-func machinesCreateCommand(c *client.Client) subcommands.Command {
+func machinesCreateCommand() subcommands.Command {
 	return subcmd{
-		&machinesCreateCmd{c: c},
+		&machinesCreateCmd{},
 		"create",
 		"create machines information",
 		"create -f FILE",
 	}
 }
 
-type machinesRemoveCmd struct {
-	c *client.Client
-}
+type machinesRemoveCmd struct{}
 
 func (r machinesRemoveCmd) SetFlags(f *flag.FlagSet) {}
 
@@ -143,17 +132,16 @@ func (r machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomm
 		return client.ExitUsageError
 	}
 
-	errorStatus := r.c.MachinesRemove(ctx, f.Args()[0])
+	errorStatus := client.MachinesRemove(ctx, f.Args()[0])
 	if errorStatus != nil {
-		fmt.Fprintln(os.Stderr, errorStatus)
-		return errorStatus.Code()
+		return handleError(errorStatus)
 	}
 	return client.ExitSuccess
 }
 
-func machinesRemoveCommand(c *client.Client) subcommands.Command {
+func machinesRemoveCommand() subcommands.Command {
 	return subcmd{
-		machinesRemoveCmd{c},
+		machinesRemoveCmd{},
 		"remove",
 		"remove a machine information",
 		"remove SERIAL",

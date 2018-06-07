@@ -10,9 +10,9 @@ import (
 )
 
 // IgnitionsGet gets ignition template ID list of the specified role
-func (c *Client) IgnitionsGet(ctx context.Context, role string) ([]string, *Status) {
+func IgnitionsGet(ctx context.Context, role string) ([]string, *Status) {
 	var ids []string
-	err := c.getJSON(ctx, path.Join("/ignitions", role), nil, &ids)
+	err := client.getJSON(ctx, path.Join("/ignitions", role), nil, &ids)
 	if err != nil {
 		return nil, err
 	}
@@ -20,13 +20,13 @@ func (c *Client) IgnitionsGet(ctx context.Context, role string) ([]string, *Stat
 }
 
 // IgnitionsCat gets an ignition template for the role an id
-func (c *Client) IgnitionsCat(ctx context.Context, role, id string) (string, *Status) {
-	req, err := http.NewRequest("GET", c.endpoint+path.Join("/api/v1/ignitions", role, id), nil)
+func IgnitionsCat(ctx context.Context, role, id string) (string, *Status) {
+	req, err := http.NewRequest("GET", client.endpoint+path.Join("/api/v1/ignitions", role, id), nil)
 	if err != nil {
 		return "", ErrorStatus(err)
 	}
 	req = req.WithContext(ctx)
-	res, err := c.http.Do(req)
+	res, err := client.http.Do(req)
 	if err != nil {
 		return "", ErrorStatus(err)
 	}
@@ -40,19 +40,19 @@ func (c *Client) IgnitionsCat(ctx context.Context, role, id string) (string, *St
 }
 
 // IgnitionsSet posts an ignition template file
-func (c *Client) IgnitionsSet(ctx context.Context, role string, fname string) (map[string]interface{}, *Status) {
+func IgnitionsSet(ctx context.Context, role string, fname string) (map[string]interface{}, *Status) {
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
 	defer f.Close()
 
-	req, err := http.NewRequest("POST", c.endpoint+path.Join("/api/v1/ignitions", role), f)
+	req, err := http.NewRequest("POST", client.endpoint+path.Join("/api/v1/ignitions", role), f)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
 	req = req.WithContext(ctx)
-	res, err := c.http.Do(req)
+	res, err := client.http.Do(req)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
@@ -68,13 +68,13 @@ func (c *Client) IgnitionsSet(ctx context.Context, role string, fname string) (m
 }
 
 // IgnitionsDelete deletes an ignition template specified by role and id
-func (c *Client) IgnitionsDelete(ctx context.Context, role, id string) *Status {
-	req, err := http.NewRequest("DELETE", c.endpoint+path.Join("/api/v1/ignitions", role, id), nil)
+func IgnitionsDelete(ctx context.Context, role, id string) *Status {
+	req, err := http.NewRequest("DELETE", client.endpoint+path.Join("/api/v1/ignitions", role, id), nil)
 	if err != nil {
 		return ErrorStatus(err)
 	}
 	req = req.WithContext(ctx)
-	res, err := c.http.Do(req)
+	res, err := client.http.Do(req)
 	if err != nil {
 		return ErrorStatus(err)
 	}
