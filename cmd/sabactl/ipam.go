@@ -81,10 +81,7 @@ func (r *ipamSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.E
 	}
 
 	errorStatus := client.IPAMConfigSet(ctx, &conf)
-	if errorStatus != nil {
-		return handleError(errorStatus)
-	}
-	return client.ExitSuccess
+	return handleError(errorStatus)
 }
 
 func ipamSetCommand() subcommands.Command {

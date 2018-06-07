@@ -81,10 +81,7 @@ func (r *dhcpSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.E
 	}
 
 	errorStatus := client.DHCPConfigSet(ctx, &conf)
-	if errorStatus != nil {
-		return handleError(errorStatus)
-	}
-	return client.ExitSuccess
+	return handleError(errorStatus)
 }
 
 func dhcpSetCommand() subcommands.Command {

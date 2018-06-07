@@ -107,10 +107,7 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 	}
 
 	errorStatus := client.MachinesCreate(ctx, machines)
-	if errorStatus != nil {
-		return handleError(errorStatus)
-	}
-	return client.ExitSuccess
+	return handleError(errorStatus)
 }
 
 func machinesCreateCommand() subcommands.Command {
@@ -133,10 +130,7 @@ func (r machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomm
 	}
 
 	errorStatus := client.MachinesRemove(ctx, f.Args()[0])
-	if errorStatus != nil {
-		return handleError(errorStatus)
-	}
-	return client.ExitSuccess
+	return handleError(errorStatus)
 }
 
 func machinesRemoveCommand() subcommands.Command {

@@ -47,10 +47,7 @@ func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 	}
 
 	err := json.NewEncoder(os.Stdout).Encode(ids)
-	if err != nil {
-		return handleError(err)
-	}
-	return client.ExitSuccess
+	return handleError(err)
 }
 
 func ignitionsGetCommand() subcommands.Command {
@@ -77,11 +74,7 @@ func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 	}
 
 	_, err := os.Stdout.WriteString(tmpl)
-	if err != nil {
-		return handleError(err)
-	}
-
-	return client.ExitSuccess
+	return handleError(err)
 }
 
 func ignitionsCatCommand() subcommands.Command {
@@ -113,10 +106,7 @@ func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomma
 	}
 
 	err := json.NewEncoder(os.Stdout).Encode(data)
-	if err != nil {
-		return handleError(err)
-	}
-	return client.ExitSuccess
+	return handleError(err)
 }
 
 func ignitionsSetCommand() subcommands.Command {
@@ -138,10 +128,7 @@ func (c ignitionsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 		return client.ExitUsageError
 	}
 	status := client.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))
-	if status != nil {
-		return handleError(status)
-	}
-	return client.ExitSuccess
+	return handleError(status)
 }
 
 func ignitionsDeleteCommand() subcommands.Command {

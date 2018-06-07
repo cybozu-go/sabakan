@@ -75,11 +75,7 @@ func (c imagesUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 	}
 
 	err := client.ImagesUpload(ctx, c.os, f.Arg(0), f.Arg(1), f.Arg(2))
-	if err != nil {
-		return handleError(err)
-	}
-
-	return client.ExitSuccess
+	return handleError(err)
 }
 
 func imagesUploadCommand(os string) subcommands.Command {
@@ -104,11 +100,7 @@ func (c imagesDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 	}
 
 	err := client.ImagesDelete(ctx, c.os, f.Arg(0))
-	if err != nil {
-		return handleError(err)
-	}
-
-	return client.ExitSuccess
+	return handleError(err)
 }
 
 func imagesDeleteCommand(os string) subcommands.Command {

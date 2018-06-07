@@ -46,11 +46,17 @@ func handleError(err error) subcommands.ExitStatus {
 	if err == nil {
 		return subcommands.ExitSuccess
 	}
-	fmt.Fprintf(os.Stderr, "\nError: %v\n", err)
+
+	ret := subcommands.ExitFailure
+
 	if status, ok := err.(*client.Status); ok {
-		return status.Code()
+		if status == nil {
+			return subcommands.ExitSuccess
+		}
+		ret = status.Code()
 	}
-	return subcommands.ExitFailure
+	fmt.Fprintf(os.Stderr, "\nError: %v\n", err)
+	return ret
 }
 
 // newCommander creates a subcommands.Commander for nested sub commands.
