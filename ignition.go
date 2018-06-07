@@ -2,9 +2,11 @@ package sabakan
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"text/template"
 
+	"github.com/coreos/container-linux-config-transpiler/config"
 	ignition "github.com/coreos/ignition/config/v2_2"
 )
 
@@ -47,5 +49,21 @@ func RenderIgnition(tmpl string, m *Machine) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return buf.String(), nil
+
+	cfg, ast, report := config.Parse(buf.Bytes())
+	if len(report.Entries) > 0 || report.IsFatal() {
+		return "", errors.New("failed to parse container linux config file")
+	}
+
+	ignCfg, report := config.Convert(cfg, "", ast)
+	if len(report.Entries) > 0 || report.IsFatal() {
+		return "", errors.New("failed to convert to ignition file")
+	}
+
+	dataOut, err := json.Marshal(&ignCfg)
+	if err != nil {
+		return "", err
+	}
+
+	return string(dataOut), nil
 }
