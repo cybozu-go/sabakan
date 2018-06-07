@@ -15,7 +15,7 @@ const DefaultLeaseDuration = 60 * time.Minute
 type DHCPConfig struct {
 	GatewayOffset uint     `json:"gateway-offset"`
 	LeaseMinutes  uint     `json:"lease-minutes"`
-	DNSServers    []string `json:"dns-servers"`
+	DNSServers    []string `json:"dns-servers,omitempty"`
 }
 
 // GatewayAddress returns a gateway address for the given node address
