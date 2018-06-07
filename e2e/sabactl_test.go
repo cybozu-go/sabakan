@@ -3,7 +3,6 @@ package e2e
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -319,7 +318,7 @@ func testSabactlIgnitions(t *testing.T) {
 	}
 	defer os.Remove(file.Name())
 
-	_, err = fmt.Fprint(file, ign)
+	_, err = file.WriteString(ign)
 	if err != nil {
 		t.Fatal(err)
 	}

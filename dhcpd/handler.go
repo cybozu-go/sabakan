@@ -64,12 +64,28 @@ func getIPv4AddrForInterface(intf Interface) (net.IP, error) {
 	return nil, errors.New("No IPv4 address for " + intf.Name())
 }
 
-func flattenIPv4Addresses(addrs []string) []byte {
-	buf := make([]byte, len(addrs)*4)
-	for i, addr := range addrs {
-		copy(buf[i*4:(i+1)*4], net.ParseIP(addr).To4())
+func flattenIPv4s(ips []net.IP) ([]byte, error) {
+	buf := make([]byte, len(ips)*4)
+	for i, ip := range ips {
+		ipv4 := ip.To4()
+		if ipv4 == nil {
+			return nil, errors.New("not IPv4 address: " + ip.String())
+		}
+		copy(buf[i*4:(i+1)*4], ipv4)
 	}
-	return buf
+	return buf, nil
+}
+
+func flattenIPv4Strings(addrs []string) ([]byte, error) {
+	ips := make([]net.IP, len(addrs))
+	for i, addr := range addrs {
+		ip := net.ParseIP(addr)
+		if ip == nil {
+			return nil, errors.New("not IP address: " + addr)
+		}
+		ips[i] = ip
+	}
+	return flattenIPv4s(ips)
 }
 
 // makeOptions returns dhcp4.Options that includes these common options:
@@ -101,7 +117,11 @@ func (h DHCPHandler) makeOptions(ciaddr net.IP) (dhcp4.Options, error) {
 
 	// domain name server
 	if len(config.DNSServers) > 0 {
-		opts[dhcp4.OptDNSServers] = flattenIPv4Addresses(config.DNSServers)
+		v, err := flattenIPv4Strings(config.DNSServers)
+		if err != nil {
+			return nil, err
+		}
+		opts[dhcp4.OptDNSServers] = v
 	}
 
 	// lease seconds
