@@ -1,6 +1,10 @@
 package sabakan
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/go-test/deep"
+)
 
 func TestValidateIgnitionTemplate(t *testing.T) {
 	testIPAMConfig = &IPAMConfig{
@@ -16,9 +20,14 @@ func TestValidateIgnitionTemplate(t *testing.T) {
 	}
 
 	tmpls := []string{
-		`{ "ignition": { "version": "2.2.0" } }`,
-		`{ "ignition": { "version": "2.2.0" },
-		  "storage": { "files": [{ "filesystem": "root", "path": "/etc/hostname", "mode": 420, "contents": { "source": "data:,{{.Serial}}" } }] } }`,
+		`ignition:`,
+		`storage:
+  files:
+  - filesystem: root
+    path: "/etc/hostname"
+    mode: 420
+    contents:
+      inline: "{{.Serial}}"`,
 	}
 	for _, tmpl := range tmpls {
 		err := ValidateIgnitionTemplate(tmpl, testIPAMConfig)
@@ -28,11 +37,15 @@ func TestValidateIgnitionTemplate(t *testing.T) {
 	}
 
 	tmpls = []string{
-		`{ "ignition": { "version": "0.1.0" } }`,
-		`{ "ignition": { "version": "2.2.0`,
-		`{}`,
-		`{ "ignition": { "version": "2.2.0" },
-		  "storage": { "files": [{ "filesystem": "root", "path": "/etc/hostname", "mode": 420, "contents": { "source": "data:,{{.User}}" } }] } }`,
+		`ignition`,
+		``,
+		`storage:
+  files:
+  - filesystem: root
+    path: "/etc/hostname"
+    mode: 420
+    contents:
+      inline: "{{.User}}"`,
 	}
 
 	for _, tmpl := range tmpls {
@@ -49,20 +62,28 @@ func TestRenderIgnition(t *testing.T) {
 		mc   *Machine
 		ign  string
 	}{
-
-		{`{ "ignition": { "version": "2.2.0" } }`, &Machine{}, `{ "ignition": { "version": "2.2.0" } }`},
-		{`{ "ignition": { "version": "2.2.0" },
-"storage": { "files": [{ "filesystem": "root", "path": "/etc/hostname", "mode": 420, "contents": { "source": "data:,{{.Serial}}" } }] } }`,
+		{`ignition:`, &Machine{}, `{"ignition":{"config":{},"security":{"tls":{}},"timeouts":{},"version":"2.2.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}`},
+		{`storage:
+  files:
+    - path: /opt/file1
+      filesystem: root
+      contents:
+        inline: {{.Serial}}
+      mode: 0644
+      user:
+        id: 500
+      group:
+        id: 501`,
 			&Machine{Serial: "abcd1234"},
-			`{ "ignition": { "version": "2.2.0" },
-"storage": { "files": [{ "filesystem": "root", "path": "/etc/hostname", "mode": 420, "contents": { "source": "data:,abcd1234" } }] } }`},
+			`{"ignition":{"config":{},"security":{"tls":{}},"timeouts":{},"version":"2.2.0"},"networkd":{},"passwd":{},"storage":{"files":[{"filesystem":"root","group":{"id":501},"path":"/opt/file1","user":{"id":500},"contents":{"source":"data:,abcd1234","verification":{}},"mode":420}]},"systemd":{}}`},
 	}
 	for _, c := range cases {
 		ign, err := RenderIgnition(c.tmpl, c.mc)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if ign != c.ign {
+		if diff := deep.Equal(ign, c.ign); diff != nil {
+			t.Error(diff)
 			t.Error("unexpected ignitions:", ign)
 		}
 

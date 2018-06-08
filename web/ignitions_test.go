@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"reflect"
+
 	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/models/mock"
 )
@@ -16,59 +18,72 @@ import (
 func TestIgnitions(t *testing.T) {
 	t.Parallel()
 
-	ign := `{
-    "ignition": { "version": "2.2.0" },
-    "storage": {
-        "files": [{
-            "filesystem": "root",
-            "path": "/etc/hostname",
-            "mode": 420,
-            "contents": { "source": "{{.Serial}}" }
-        },
-        {
-            "contents": {
-                "source": "data:,{{ .Rack }}"
-            },
-			"filesystem": "root",
-            "mode": 420,
-            "path": "/etc/neco/rack"
-        }]
-    },
-    "networkd": {
-        "units": [
-        {
-            "contents": "[Match]\nName=node0\n\n[Network]\nAddress={{ index .Network.node0.IPv4 0 }}/32\n",
-            "name": "10-node0.network"
-        }]
-    }
-}`
+	ign := `storage:
+  files:
+  - filesystem: root
+    path: "/etc/hostname"
+    mode: 420
+    contents:
+      inline: "{{.Serial}}"
+  - contents:
+      inline: "{{ .Rack }}"
+    filesystem: root
+    mode: 420
+    path: "/etc/neco/rack"
+networkd:
+  units:
+  - contents: |
+      [Match]
+      Name=node0
+
+      [Network]
+      Address={{ index .Network.node0.IPv4 0 }}/32
+    name: 10-node0.network
+`
 
 	expected := `{
-    "ignition": { "version": "2.2.0" },
-    "storage": {
-        "files": [{
-            "filesystem": "root",
-            "path": "/etc/hostname",
-            "mode": 420,
-            "contents": { "source": "2222abcd" }
-        },
-        {
-            "contents": {
-                "source": "data:,1"
-            },
-			"filesystem": "root",
-            "mode": 420,
-            "path": "/etc/neco/rack"
-        }]
+  "ignition": {
+    "config": {},
+    "security": {
+      "tls": {}
     },
-    "networkd": {
-        "units": [
-        {
-            "contents": "[Match]\nName=node0\n\n[Network]\nAddress=10.69.0.4/32\n",
-            "name": "10-node0.network"
-        }]
-    }
-}`
+    "timeouts": {},
+    "version": "2.2.0"
+  },
+  "networkd": {
+    "units": [
+      {
+        "contents": "[Match]\nName=node0\n\n[Network]\nAddress=10.69.0.4/32\n",
+        "name": "10-node0.network"
+      }
+    ]
+  },
+  "passwd": {},
+  "storage": {
+    "files": [
+      {
+        "filesystem": "root",
+        "path": "/etc/hostname",
+        "contents": {
+          "source": "data:,2222abcd",
+          "verification": {}
+        },
+        "mode": 420
+      },
+      {
+        "filesystem": "root",
+        "path": "/etc/neco/rack",
+        "contents": {
+          "source": "data:,1",
+          "verification": {}
+        },
+        "mode": 420
+      }
+    ]
+  },
+  "systemd": {}
+}
+`
 
 	m := mock.NewModel()
 	handler := Server{Model: m}
@@ -108,8 +123,18 @@ func TestIgnitions(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusOK:", resp.StatusCode)
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
-	if string(body) != expected {
-		t.Error("unexpected ignition:", string(body))
+	var d1, d2 map[string]interface{}
+	err = json.Unmarshal([]byte(body), &d1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = json.Unmarshal([]byte(expected), &d2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(d1, d2) {
+		t.Errorf("unexpected ignition actual:%v, expected:%v", d1, d2)
 	}
 
 	// serial is not found
@@ -211,8 +236,8 @@ func testIgnitionTemplatesGet(t *testing.T) {
 func testIgnitionTemplatesPost(t *testing.T) {
 	t.Parallel()
 
-	ign := `{ "ignition": { "version": "2.2.0" } }`
-	invalid := `{ "ignition": { "version": "0.2.0" } }`
+	ign := `ignition:`
+	invalid := `cloudinit:`
 
 	m := mock.NewModel()
 	handler := newTestServer(m)

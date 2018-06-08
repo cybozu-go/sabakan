@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"text/template"
 
 	"github.com/coreos/container-linux-config-transpiler/config"
@@ -15,7 +16,7 @@ const MaxIgnitions = 10
 
 // ValidateIgnitionTemplate validates if the tmpl is a template for a valid ignition.
 // The method returns nil if valid template is given, otherwise returns an error.
-// The method retuders template by tmpl nil value of Machine.
+// The method returns template by tmpl nil value of Machine.
 func ValidateIgnitionTemplate(tmpl string, ipam *IPAMConfig) error {
 	mc := &Machine{
 		Serial: "1234abcd",
@@ -32,7 +33,7 @@ func ValidateIgnitionTemplate(tmpl string, ipam *IPAMConfig) error {
 	if err != nil {
 		return err
 	}
-	if rpt.IsFatal() {
+	if len(rpt.Entries) > 0 {
 		return errors.New(rpt.String())
 	}
 	return nil
@@ -50,14 +51,16 @@ func RenderIgnition(tmpl string, m *Machine) (string, error) {
 		return "", err
 	}
 
-	cfg, ast, report := config.Parse(buf.Bytes())
-	if len(report.Entries) > 0 || report.IsFatal() {
-		return "", errors.New("failed to parse container linux config file")
+	cfg, ast, rpt := config.Parse(buf.Bytes())
+
+	if len(rpt.Entries) > 0 {
+		return "", fmt.Errorf("failed to parse container linux config file %s", rpt.String())
 	}
 
-	ignCfg, report := config.Convert(cfg, "", ast)
-	if len(report.Entries) > 0 || report.IsFatal() {
-		return "", errors.New("failed to convert to ignition file")
+	ignCfg, rpt := config.Convert(cfg, "", ast)
+
+	if len(rpt.Entries) > 0 {
+		return "", fmt.Errorf("failed to convert to ignition file %s", rpt.String())
 	}
 
 	dataOut, err := json.Marshal(&ignCfg)
