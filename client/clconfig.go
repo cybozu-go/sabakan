@@ -2,14 +2,13 @@ package client
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/coreos/container-linux-config-transpiler/config/types"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const baseFileDir = "./files"
@@ -26,6 +25,7 @@ type ignitionSource struct {
 	Files    []string  `yaml:"files"`
 	Systemd  []systemd `yaml:"systemd"`
 	Networkd []string  `yaml:"networkd"`
+	Include  string    `yaml:"include"`
 }
 
 func constructCLConfigTemplate(fname string) (io.Reader, error) {
@@ -47,42 +47,69 @@ func constructCLConfigTemplate(fname string) (io.Reader, error) {
 	}
 
 	var clConf types.Config
+	if source.Include != "" {
+		f, err := os.Open(source.Include)
+		if err != nil {
+			return nil, ErrorStatus(err)
+		}
+		defer f.Close()
+		data, err := ioutil.ReadAll(f)
+		if err != nil {
+			return nil, ErrorStatus(err)
+		}
 
-	if source.Passwd != "" {
-		err = constructPasswd(source.Passwd, &clConf)
+		var source ignitionSource
+		err = yaml.Unmarshal(data, &source)
+		if err != nil {
+			return nil, ErrorStatus(err)
+		}
+		err = constructCLConf(source, &clConf)
 		if err != nil {
 			return nil, ErrorStatus(err)
 		}
 	}
-
-	for _, file := range source.Files {
-		err = constructFile(file, &clConf)
-		if err != nil {
-			return nil, ErrorStatus(err)
-		}
-	}
-
-	for _, s := range source.Systemd {
-		err = constructSystemd(s, &clConf)
-		if err != nil {
-			return nil, ErrorStatus(err)
-		}
-	}
-
-	for _, n := range source.Networkd {
-		err = constructNetworkd(n, &clConf)
-		if err != nil {
-			return nil, ErrorStatus(err)
-		}
+	err = constructCLConf(source, &clConf)
+	if err != nil {
+		return nil, ErrorStatus(err)
 	}
 
 	b, err := yaml.Marshal(clConf)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
-	fmt.Println(string(b))
 
 	return bytes.NewReader(b), nil
+}
+
+func constructCLConf(source ignitionSource, clConf *types.Config) error {
+	if source.Passwd != "" {
+		err := constructPasswd(source.Passwd, clConf)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, file := range source.Files {
+		err := constructFile(file, clConf)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, s := range source.Systemd {
+		err := constructSystemd(s, clConf)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, n := range source.Networkd {
+		err := constructNetworkd(n, clConf)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func constructPasswd(passwd string, clConf *types.Config) error {

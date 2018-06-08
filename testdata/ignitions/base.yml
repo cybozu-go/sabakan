@@ -1,0 +1,4 @@
+passwd: passwd.yml
+systemd:
+  - enabled: true
+    source: chronyd.service

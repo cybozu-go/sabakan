@@ -1,4 +1,4 @@
-passwd: passwd.yml
+include: base.yml
 files:
   - /etc/hostname
 systemd:
