@@ -28,8 +28,8 @@ REST API
 
 ## Access control
 
-The following requets URLs are allowed for all remote hosts.  The other URLs are
-rejected from remote hosts excluding localhost (`127.0.0.1`).
+The following requets URLs are allowed for all remote hosts.  The other URLs
+are rejected from remote hosts excluding addresses specified in `-allow-ips` option.
 
 - `GET|HEAD /api/v1/boot/*`
 - `PUT /api/v1/crypts`
@@ -38,9 +38,9 @@ rejected from remote hosts excluding localhost (`127.0.0.1`).
 
 This means that localhost can manage all resources, and the remote hosts such
 as worker nodes can only read resources.  `PUT /api/v1/crypts` and `GET
-/api/v1/crypts` are permitted from remote hosts since the encryption keys are
-generated on the worker nodes.  The encryption keys *should* be distributed
-between sabakan nodes and the worker node.
+/api/v1/crypts` are permitted from all remote hosts since the encryption keys
+are generated on the client nodes.  The encryption keys *should* be distributed
+between sabakan nodes and the client node.
 
 ## <a name="putipam" />`PUT /api/v1/config/ipam`
 
