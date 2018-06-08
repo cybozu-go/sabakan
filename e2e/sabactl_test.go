@@ -311,7 +311,7 @@ func testSabactlImages(t *testing.T) {
 }
 
 func testSabactlIgnitions(t *testing.T) {
-	ign := `{ "ignition": { "version": "2.2.0" } }`
+	ign := `ignition:`
 	file, err := ioutil.TempFile("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)

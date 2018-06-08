@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -58,13 +57,7 @@ func IgnitionsSet(ctx context.Context, role string, fname string) (map[string]in
 	}
 	defer res.Body.Close()
 
-	var data map[string]interface{}
-	err = json.NewDecoder(res.Body).Decode(&data)
-	if err != nil {
-		return nil, ErrorStatus(err)
-	}
-
-	return data, nil
+	return nil, ErrorHTTPStatus(res)
 }
 
 // IgnitionsDelete deletes an ignition template specified by role and id

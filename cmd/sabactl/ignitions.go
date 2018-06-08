@@ -100,13 +100,11 @@ func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomma
 		return client.ExitUsageError
 	}
 
-	data, status := client.IgnitionsSet(ctx, f.Arg(0), c.file)
-	if status != nil {
-		return handleError(status)
+	_, err := client.IgnitionsSet(ctx, f.Arg(0), c.file)
+	if err != nil {
+		return handleError(err)
 	}
-
-	err := json.NewEncoder(os.Stdout).Encode(data)
-	return handleError(err)
+	return client.ExitSuccess
 }
 
 func ignitionsSetCommand() subcommands.Command {

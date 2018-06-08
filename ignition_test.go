@@ -1,9 +1,8 @@
 package sabakan
 
 import (
+	"reflect"
 	"testing"
-
-	"github.com/go-test/deep"
 )
 
 func TestValidateIgnitionTemplate(t *testing.T) {
@@ -82,8 +81,7 @@ func TestRenderIgnition(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if diff := deep.Equal(ign, c.ign); diff != nil {
-			t.Error(diff)
+		if !reflect.DeepEqual(ign, c.ign) {
 			t.Error("unexpected ignitions:", ign)
 		}
 
