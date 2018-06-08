@@ -14,7 +14,6 @@ import (
 
 type driver struct {
 	client       *clientv3.Client
-	prefix       string
 	imageDir     string
 	advertiseURL *url.URL
 	mi           *machinesIndex
@@ -23,10 +22,9 @@ type driver struct {
 }
 
 // NewModel returns sabakan.Model
-func NewModel(client *clientv3.Client, prefix, imageDir string, advertiseURL *url.URL) sabakan.Model {
+func NewModel(client *clientv3.Client, imageDir string, advertiseURL *url.URL) sabakan.Model {
 	d := &driver{
 		client:       client,
-		prefix:       prefix,
 		imageDir:     imageDir,
 		advertiseURL: advertiseURL,
 		mi:           newMachinesIndex(),

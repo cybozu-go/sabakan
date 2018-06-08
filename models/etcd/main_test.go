@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/namespace"
 )
 
 const (
@@ -56,7 +57,7 @@ func TestMain(m *testing.M) {
 	os.Exit(testMain(m))
 }
 
-func newEtcdClient() (*clientv3.Client, error) {
+func newEtcdClient(prefix string) (*clientv3.Client, error) {
 	var clientURL string
 	circleci := os.Getenv("CIRCLECI") == "true"
 	if circleci {
@@ -64,14 +65,21 @@ func newEtcdClient() (*clientv3.Client, error) {
 	} else {
 		clientURL = etcdClientURL
 	}
-	return clientv3.New(clientv3.Config{
+	c, err := clientv3.New(clientv3.Config{
 		Endpoints:   []string{clientURL},
 		DialTimeout: 2 * time.Second,
 	})
+	if err != nil {
+		return nil, err
+	}
+	c.KV = namespace.NewKV(c.KV, prefix)
+	c.Watcher = namespace.NewWatcher(c.Watcher, prefix)
+	c.Lease = namespace.NewLease(c.Lease, prefix)
+	return c, nil
 }
 
 func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
-	client, err := newEtcdClient()
+	client, err := newEtcdClient(t.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +89,6 @@ func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 	}
 	d := &driver{
 		client:       client,
-		prefix:       t.Name(),
 		mi:           newMachinesIndex(),
 		advertiseURL: u,
 	}

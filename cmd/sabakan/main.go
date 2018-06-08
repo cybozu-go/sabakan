@@ -112,7 +112,7 @@ func main() {
 	}
 	defer c.Close()
 
-	model := etcd.NewModel(c, e.Prefix, cfg.ImageDir, advertiseURL)
+	model := etcd.NewModel(c, cfg.ImageDir, advertiseURL)
 	ch := make(chan struct{})
 	cmd.Go(func(ctx context.Context) error {
 		return model.Run(ctx, ch)

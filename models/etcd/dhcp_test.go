@@ -27,7 +27,7 @@ func testDHCPPutConfig(t *testing.T) {
 	}
 	<-ch
 
-	resp, err := d.client.Get(context.Background(), t.Name()+KeyDHCP)
+	resp, err := d.client.Get(context.Background(), KeyDHCP)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func testDHCPGetConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.client.Put(context.Background(), t.Name()+KeyDHCP, string(bytes))
+	_, err = d.client.Put(context.Background(), KeyDHCP, string(bytes))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func testDHCPLease(t *testing.T) {
 		t.Error("dhcp lease should fail")
 	}
 
-	resp, err := d.client.Get(context.Background(), t.Name()+KeyLeaseUsages, clientv3.WithPrefix())
+	resp, err := d.client.Get(context.Background(), KeyLeaseUsages, clientv3.WithPrefix())
 	if err != nil {
 		t.Fatal(err)
 	}

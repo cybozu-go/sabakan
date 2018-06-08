@@ -29,7 +29,7 @@ func (d *driver) getImageDir(os string) ImageDir {
 }
 
 func (d *driver) imageGetIndexWithRev(ctx context.Context, os string) (sabakan.ImageIndex, int64, error) {
-	key := path.Join(d.prefix, KeyImages, os)
+	key := path.Join(KeyImages, os)
 	resp, err := d.client.Get(ctx, key)
 	if err != nil {
 		return nil, 0, err
@@ -51,7 +51,7 @@ func (d *driver) imageGetIndexWithRev(ctx context.Context, os string) (sabakan.I
 }
 
 func (d *driver) imageGetDeletedWithRev(ctx context.Context, os string) ([]string, int64, error) {
-	key := path.Join(d.prefix, KeyImages, os, "deleted")
+	key := path.Join(KeyImages, os, "deleted")
 	resp, err := d.client.Get(ctx, key)
 	if err != nil {
 		return nil, 0, err
@@ -77,8 +77,8 @@ func (d *driver) imageCASIndex(ctx context.Context, os string,
 	index sabakan.ImageIndex, indexRev int64,
 	deleted []string, delRev int64) (*clientv3.TxnResponse, error) {
 
-	indexKey := path.Join(d.prefix, KeyImages, os)
-	deletedKey := path.Join(d.prefix, KeyImages, os, "deleted")
+	indexKey := path.Join(KeyImages, os)
+	deletedKey := path.Join(KeyImages, os, "deleted")
 
 	indexJSON, err := json.Marshal(index)
 	if err != nil {

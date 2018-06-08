@@ -50,7 +50,7 @@ RETRY:
 
 	img.URLs = append(img.URLs, d.myURL("/api/v1/images", os, id))
 
-	indexKey := path.Join(d.prefix, KeyImages, os)
+	indexKey := path.Join(KeyImages, os)
 	indexJSON, err := json.Marshal(index)
 	if err != nil {
 		return err
@@ -132,7 +132,7 @@ OUTER:
 }
 
 func (d *driver) updateImage(ctx context.Context, client *cmd.HTTPClient) error {
-	key := path.Join(d.prefix, KeyImages) + "/"
+	key := KeyImages + "/"
 	resp, err := d.client.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return err

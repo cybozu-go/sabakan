@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"path"
 	"sync"
 
 	"github.com/coreos/etcd/clientv3"
@@ -35,9 +34,8 @@ func newMachinesIndex() *machinesIndex {
 	}
 }
 
-func (mi *machinesIndex) init(ctx context.Context, client *clientv3.Client, prefix string) error {
-	key := path.Join(prefix, KeyMachines)
-	resp, err := client.Get(ctx, key, clientv3.WithPrefix())
+func (mi *machinesIndex) init(ctx context.Context, client *clientv3.Client) error {
+	resp, err := client.Get(ctx, KeyMachines, clientv3.WithPrefix())
 	if err != nil {
 		return err
 	}

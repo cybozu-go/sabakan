@@ -16,7 +16,7 @@ func (d *driver) PutTemplate(ctx context.Context, role string, template string) 
 RETRY:
 	now := time.Now()
 	id := strconv.FormatInt(now.UnixNano(), 10)
-	target := path.Join(d.prefix, KeyIgnitions, role, id)
+	target := path.Join(KeyIgnitions, role, id)
 
 	tresp, err := d.client.Txn(ctx).
 		// Prohibit overwriting
@@ -33,7 +33,7 @@ RETRY:
 		goto RETRY
 	}
 
-	prefix := path.Join(d.prefix, KeyIgnitions, role) + "/"
+	prefix := path.Join(KeyIgnitions, role) + "/"
 	resp, err := d.client.Get(ctx, prefix,
 		clientv3.WithPrefix(),
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
@@ -55,7 +55,7 @@ RETRY:
 
 // GetTemplateIDs implements sabakan.IgnitionModel
 func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, error) {
-	target := path.Join(d.prefix, KeyIgnitions, role) + "/"
+	target := path.Join(KeyIgnitions, role) + "/"
 	resp, err := d.client.Get(ctx, target,
 		clientv3.WithPrefix(),
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend),
@@ -79,7 +79,7 @@ func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, err
 
 // GetTemplate implements sabakan.IgnitionModel
 func (d *driver) GetTemplate(ctx context.Context, role string, id string) (string, error) {
-	target := path.Join(d.prefix, KeyIgnitions, role, id)
+	target := path.Join(KeyIgnitions, role, id)
 	resp, err := d.client.Get(ctx, target)
 	if err != nil {
 		return "", err
@@ -94,7 +94,7 @@ func (d *driver) GetTemplate(ctx context.Context, role string, id string) (strin
 
 // DeleteTemplate implements sabakan.IgnitionModel
 func (d *driver) DeleteTemplate(ctx context.Context, role string, id string) error {
-	target := path.Join(d.prefix, KeyIgnitions, role, id)
+	target := path.Join(KeyIgnitions, role, id)
 	resp, err := d.client.Delete(ctx, target)
 	if err != nil {
 		return err

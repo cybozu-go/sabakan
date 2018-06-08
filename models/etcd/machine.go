@@ -68,7 +68,7 @@ func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageM
 	usageCASIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
-		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
+		key := path.Join(KeyMachines, wmc.Serial)
 		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
@@ -112,7 +112,7 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 		log.Debug("etcd/machine: query serial", map[string]interface{}{
 			"serial": serial,
 		})
-		key := path.Join(d.prefix, KeyMachines, serial)
+		key := path.Join(KeyMachines, serial)
 		resp, err := d.client.Get(ctx, key)
 		if err != nil {
 			return nil, err
@@ -188,7 +188,7 @@ RETRY:
 }
 
 func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
-	machineKey := path.Join(d.prefix, KeyMachines, machine.Serial)
+	machineKey := path.Join(KeyMachines, machine.Serial)
 	indexKey := d.indexInRackKey(machine.Rack)
 
 	j, err := json.Marshal(usage)
