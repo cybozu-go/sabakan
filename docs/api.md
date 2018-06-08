@@ -31,7 +31,6 @@ REST API
 The following requets URLs are allowed for all remote hosts.  The other URLs
 are rejected from remote hosts excluding addresses specified in `-allow-ips` option.
 
-- `GET|HEAD /api/v1/boot/*`
 - `PUT /api/v1/crypts`
 - `GET /api/v1/crypts`
 - `GET|HEAD /*`

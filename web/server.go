@@ -74,7 +74,7 @@ func (s Server) hasPermission(r *http.Request) bool {
 	if r.Method == http.MethodGet || r.Method == http.MethodHead {
 		return true
 	}
-	if strings.HasPrefix(p, "boot/") || p == "crypts" {
+	if p == "crypts" {
 		return true
 	}
 	rhost := net.ParseIP(strings.Split(r.RemoteAddr, ":")[0])
