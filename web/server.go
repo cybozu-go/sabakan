@@ -32,6 +32,7 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 
 	if !s.hasPermission(r) {
 		renderError(r.Context(), w, APIErrForbidden)
+		return
 	}
 
 	switch {
