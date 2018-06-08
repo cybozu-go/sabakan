@@ -10,16 +10,6 @@ import (
 	"github.com/google/subcommands"
 )
 
-type ignitionSource struct {
-	Passwd  string   `yaml:"passwd"`
-	Files   []string `yaml:"files"`
-	Systemd []struct {
-		Enabled bool   `yaml:"enabled"`
-		Source  string `yaml:"source"`
-	} `yaml:"systemd"`
-	Networkd []string `yaml:"networkd"`
-}
-
 type ignitionsCmd struct{}
 
 func (r ignitionsCmd) SetFlags(f *flag.FlagSet) {}

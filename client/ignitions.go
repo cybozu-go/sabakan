@@ -4,7 +4,6 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"path"
 )
 
@@ -40,13 +39,13 @@ func IgnitionsCat(ctx context.Context, role, id string) (string, *Status) {
 
 // IgnitionsSet posts an ignition template file
 func IgnitionsSet(ctx context.Context, role string, fname string) (map[string]interface{}, *Status) {
-	f, err := os.Open(fname)
+
+	tmpl, err := constructCLConfigTemplate(fname)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
-	defer f.Close()
 
-	req, err := http.NewRequest("POST", client.endpoint+path.Join("/api/v1/ignitions", role), f)
+	req, err := http.NewRequest("POST", client.endpoint+path.Join("/api/v1/ignitions", role), tmpl)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
