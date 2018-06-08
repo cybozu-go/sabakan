@@ -11,6 +11,7 @@ const (
 
 var (
 	defaultEtcdServers = []string{"http://localhost:2379"}
+	defaultAllowIPs    = []string{"127.0.0.1"}
 )
 
 func newConfig() *config {
@@ -22,6 +23,7 @@ func newConfig() *config {
 		DHCPBind:    defaultDHCPBind,
 		IPXEPath:    defaultIPXEPath,
 		ImageDir:    defaultImageDir,
+		AllowIPs:    defaultAllowIPs,
 	}
 }
 
@@ -34,4 +36,5 @@ type config struct {
 	IPXEPath     string   `yaml:"ipxe-efi-path"`
 	ImageDir     string   `yaml:"image-dir"`
 	AdvertiseURL string   `yaml:"advertise-url"`
+	AllowIPs     []string `yaml:"allow-ips"`
 }
