@@ -29,45 +29,12 @@ type ignitionSource struct {
 }
 
 func constructCLConfigTemplate(fname string) (io.Reader, error) {
-	f, err := os.Open(fname)
-	if err != nil {
-		return nil, ErrorStatus(err)
-	}
-	defer f.Close()
-
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, ErrorStatus(err)
-	}
-
-	var source ignitionSource
-	err = yaml.Unmarshal(data, &source)
+	source, err := loadSource(fname)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
 
 	var clConf types.Config
-	if source.Include != "" {
-		f, err := os.Open(source.Include)
-		if err != nil {
-			return nil, ErrorStatus(err)
-		}
-		defer f.Close()
-		data, err := ioutil.ReadAll(f)
-		if err != nil {
-			return nil, ErrorStatus(err)
-		}
-
-		var source ignitionSource
-		err = yaml.Unmarshal(data, &source)
-		if err != nil {
-			return nil, ErrorStatus(err)
-		}
-		err = constructCLConf(source, &clConf)
-		if err != nil {
-			return nil, ErrorStatus(err)
-		}
-	}
 	err = constructCLConf(source, &clConf)
 	if err != nil {
 		return nil, ErrorStatus(err)
@@ -81,7 +48,36 @@ func constructCLConfigTemplate(fname string) (io.Reader, error) {
 	return bytes.NewReader(b), nil
 }
 
-func constructCLConf(source ignitionSource, clConf *types.Config) error {
+func loadSource(fname string) (*ignitionSource, error) {
+	f, err := os.Open(fname)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	var source ignitionSource
+	err = yaml.Unmarshal(data, &source)
+	if err != nil {
+		return nil, err
+	}
+	return &source, nil
+}
+
+func constructCLConf(source *ignitionSource, clConf *types.Config) error {
+	if source.Include != "" {
+		include, err := loadSource(source.Include)
+		if err != nil {
+			return err
+		}
+		err = constructCLConf(include, clConf)
+		if err != nil {
+			return err
+		}
+	}
 	if source.Passwd != "" {
 		err := constructPasswd(source.Passwd, clConf)
 		if err != nil {
