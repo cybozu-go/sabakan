@@ -1,0 +1,8 @@
+passwd: passwd.yml
+files:
+  - /etc/hostname
+systemd:
+  - enabled: false
+    source: bird.service
+networkd:
+  - 10-node0.netdev
