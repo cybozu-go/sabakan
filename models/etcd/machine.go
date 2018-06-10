@@ -7,7 +7,6 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
-	"github.com/coreos/etcd/etcdserver/etcdserverpb"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
@@ -34,7 +33,7 @@ RETRY:
 		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
-	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+	if !tresp.Responses[0].GetResponseTxn().Succeeded {
 		// inner If, i.e. conflictMachinesIfOps, evaluated to false
 		return sabakan.ErrConflicted
 	}
@@ -179,7 +178,7 @@ RETRY:
 		goto RETRY
 	}
 
-	if !resp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+	if !resp.Responses[0].GetResponseTxn().Succeeded {
 		// KeyExists(machineKey) failed
 		return sabakan.ErrNotFound
 	}
