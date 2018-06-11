@@ -1,6 +1,7 @@
 package sabakan
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -19,14 +20,17 @@ func TestValidateIgnitionTemplate(t *testing.T) {
 	}
 
 	tmpls := []string{
-		`ignition:`,
-		`storage:
+		`ignition:
+  version: "2.1.0"`,
+		`ignition:
+  version: "2.2.0"
+storage:
   files:
   - filesystem: root
     path: "/etc/hostname"
     mode: 420
     contents:
-      inline: "{{.Serial}}"`,
+      source: "{{.Serial}}"`,
 	}
 	for _, tmpl := range tmpls {
 		err := ValidateIgnitionTemplate(tmpl, testIPAMConfig)
@@ -38,13 +42,15 @@ func TestValidateIgnitionTemplate(t *testing.T) {
 	tmpls = []string{
 		`ignition`,
 		``,
-		`storage:
+		`ignition:
+  version: 2.1.0
+storage:
   files:
   - filesystem: root
     path: "/etc/hostname"
     mode: 420
     contents:
-      inline: "{{.User}}"`,
+      source: "{{.User}}"`,
 	}
 
 	for _, tmpl := range tmpls {
@@ -61,29 +67,41 @@ func TestRenderIgnition(t *testing.T) {
 		mc   *Machine
 		ign  string
 	}{
-		{`ignition:`, &Machine{}, `{"ignition":{"config":{},"security":{"tls":{}},"timeouts":{},"version":"2.2.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}`},
-		{`storage:
+		{`"ignition":
+  "version": "2.2.0"`, &Machine{}, `{"ignition":{"version":"2.2.0"}}`},
+		{`ignition:
+  version: "2.2.0"
+storage:
   files:
     - path: /opt/file1
       filesystem: root
       contents:
-        inline: {{.Serial}}
+        source: "{{.Serial}}"
       mode: 0644
       user:
         id: 500
       group:
         id: 501`,
-			&Machine{Serial: "abcd1234"},
-			`{"ignition":{"config":{},"security":{"tls":{}},"timeouts":{},"version":"2.2.0"},"networkd":{},"passwd":{},"storage":{"files":[{"filesystem":"root","group":{"id":501},"path":"/opt/file1","user":{"id":500},"contents":{"source":"data:,abcd1234","verification":{}},"mode":420}]},"systemd":{}}`},
+			&Machine{Serial: "abcd, 1234"},
+			`{"ignition":{"version":"2.2.0"},"storage":{"files":[{"filesystem":"root","group":{"id":501},"path":"/opt/file1","user":{"id":500},"contents":{"source":"data:,abcd%2C%201234"},"mode":420}]}}`},
 	}
 	for _, c := range cases {
 		ign, err := RenderIgnition(c.tmpl, c.mc)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !reflect.DeepEqual(ign, c.ign) {
+		var expected map[string]interface{}
+		var actual map[string]interface{}
+		err = json.Unmarshal([]byte(c.ign), &expected)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = json.Unmarshal([]byte(ign), &actual)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(expected, actual) {
 			t.Error("unexpected ignitions:", ign)
 		}
-
 	}
 }

@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/coreos/container-linux-config-transpiler/config"
 	ignition "github.com/coreos/ignition/config/v2_2"
+	"github.com/vincent-petithory/dataurl"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // MaxIgnitions is a number of the ignitions to keep on etcd
@@ -51,22 +52,52 @@ func RenderIgnition(tmpl string, m *Machine) (string, error) {
 		return "", err
 	}
 
-	cfg, ast, rpt := config.Parse(buf.Bytes())
-
-	if len(rpt.Entries) > 0 {
-		return "", fmt.Errorf("failed to parse container linux config file %s", rpt.String())
+	var ign interface{}
+	err = yaml.Unmarshal(buf.Bytes(), &ign)
+	if err != nil {
+		return "", err
 	}
 
-	ignCfg, rpt := config.Convert(cfg, "", ast)
-
-	if len(rpt.Entries) > 0 {
-		return "", fmt.Errorf("failed to convert to ignition file %s", rpt.String())
+	ign = convert(ign)
+	ignMap, ok := ign.(map[string]interface{})
+	if !ok {
+		return "", errors.New("invalid ignition, failed to convert")
 	}
 
-	dataOut, err := json.Marshal(&ignCfg)
+	if storageMap, ok := ignMap["storage"].(map[string]interface{}); ok {
+		if files, ok := storageMap["files"].([]interface{}); ok {
+			for _, elem := range files {
+				if f, ok := elem.(map[string]interface{}); ok {
+					if contents, ok := f["contents"].(map[string]interface{}); ok {
+						if source, ok := contents["source"].(string); ok {
+							contents["source"] = fmt.Sprintf("data:,%s", dataurl.EscapeString(source))
+						}
+					}
+				}
+			}
+		}
+	}
+
+	dataOut, err := json.Marshal(&ign)
 	if err != nil {
 		return "", err
 	}
 
 	return string(dataOut), nil
+}
+
+func convert(i interface{}) interface{} {
+	switch x := i.(type) {
+	case map[interface{}]interface{}:
+		m2 := map[string]interface{}{}
+		for k, v := range x {
+			m2[k.(string)] = convert(v)
+		}
+		return m2
+	case []interface{}:
+		for i, v := range x {
+			x[i] = convert(v)
+		}
+	}
+	return i
 }
