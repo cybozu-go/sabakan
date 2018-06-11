@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -143,6 +144,9 @@ func (b *ignitionBuilder) constructPasswd(passwd string) error {
 }
 
 func (b *ignitionBuilder) constructFile(inputFile string) error {
+	if !filepath.IsAbs(inputFile) {
+		return errors.New("file source must be absolute path")
+	}
 	p := filepath.Join(b.baseDir, baseFileDir, inputFile)
 	f, err := os.Open(p)
 	if err != nil {
