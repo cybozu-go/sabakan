@@ -40,7 +40,7 @@ func IgnitionsCat(ctx context.Context, role, id string) (string, *Status) {
 // IgnitionsSet posts an ignition template file
 func IgnitionsSet(ctx context.Context, role string, fname string) (map[string]interface{}, *Status) {
 
-	tmpl, err := constructIgnitionTemplate(fname)
+	tmpl, err := generateIgnitionYAML(fname)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
