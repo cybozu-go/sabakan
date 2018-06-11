@@ -311,14 +311,44 @@ func testSabactlImages(t *testing.T) {
 }
 
 func testSabactlIgnitions(t *testing.T) {
-	ign := `ignition:`
+	src := `ignition:`
+	saved := `ignition:
+  config:
+    append: []
+    replace: null
+  timeouts:
+    http_response_headers: null
+    http_total: null
+  security:
+    tls:
+      certificate_authorities: []
+storage:
+  disks: []
+  raid: []
+  filesystems: []
+  files: []
+  directories: []
+  links: []
+systemd:
+  units: []
+networkd:
+  units: []
+passwd:
+  users: []
+  groups: []
+etcd: null
+flannel: null
+update: null
+docker: null
+locksmith: null
+`
 	file, err := ioutil.TempFile("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(file.Name())
 
-	_, err = file.WriteString(ign)
+	_, err = file.WriteString(src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -362,8 +392,8 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to cat ignition template", code)
 	}
-	if stdout.String() != ign {
-		t.Error("stdout.String() != ign", stdout.String())
+	if stdout.String() != saved {
+		t.Error("stdout.String() != saved", stdout.String())
 	}
 
 	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", ids[0])
