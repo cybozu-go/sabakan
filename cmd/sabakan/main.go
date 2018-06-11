@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/namespace"
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/dhcpd"
@@ -23,11 +23,6 @@ import (
 	"go.universe.tf/netboot/dhcp4"
 	yaml "gopkg.in/yaml.v2"
 )
-
-type etcdConfig struct {
-	Servers []string
-	Prefix  string
-}
 
 var (
 	flagHTTP         = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
@@ -91,17 +86,13 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	var e etcdConfig
-	e.Servers = cfg.EtcdServers
-	e.Prefix = path.Clean("/" + cfg.EtcdPrefix)
-
 	timeout, err := time.ParseDuration(cfg.EtcdTimeout)
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
 	etcdCfg := clientv3.Config{
-		Endpoints:   e.Servers,
+		Endpoints:   cfg.EtcdServers,
 		DialTimeout: timeout,
 		Username:    cfg.EtcdUsername,
 		Password:    cfg.EtcdPassword,
@@ -110,9 +101,12 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
+	c.KV = namespace.NewKV(c.KV, cfg.EtcdPrefix)
+	c.Watcher = namespace.NewWatcher(c.Watcher, cfg.EtcdPrefix)
+	c.Lease = namespace.NewLease(c.Lease, cfg.EtcdPrefix)
 	defer c.Close()
 
-	model := etcd.NewModel(c, e.Prefix, cfg.ImageDir, advertiseURL)
+	model := etcd.NewModel(c, cfg.ImageDir, advertiseURL)
 	ch := make(chan struct{})
 	cmd.Go(func(ctx context.Context) error {
 		return model.Run(ctx, ch)

@@ -50,7 +50,7 @@ RETRY:
 
 	img.URLs = append(img.URLs, d.myURL("/api/v1/images", os, id))
 
-	indexKey := path.Join(d.prefix, KeyImages, os)
+	indexKey := path.Join(KeyImages, os)
 	indexJSON, err := json.Marshal(index)
 	if err != nil {
 		return err
@@ -132,15 +132,14 @@ OUTER:
 }
 
 func (d *driver) updateImage(ctx context.Context, client *cmd.HTTPClient) error {
-	key := path.Join(d.prefix, KeyImages) + "/"
-	resp, err := d.client.Get(ctx, key, clientv3.WithPrefix())
+	resp, err := d.client.Get(ctx, KeyImages, clientv3.WithPrefix())
 	if err != nil {
 		return err
 	}
 
 	dataMap := make(map[string]updateData)
 	for _, kv := range resp.Kvs {
-		parts := strings.Split(string(kv.Key)[len(key):], "/")
+		parts := strings.Split(string(kv.Key)[len(KeyImages):], "/")
 		os := parts[0]
 
 		if len(parts) == 1 {

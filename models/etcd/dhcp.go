@@ -20,9 +20,7 @@ func (d *driver) putDHCPConfig(ctx context.Context, config *sabakan.DHCPConfig) 
 		return err
 	}
 
-	configKey := path.Join(d.prefix, KeyDHCP)
-
-	_, err = d.client.Put(ctx, configKey, string(j))
+	_, err = d.client.Put(ctx, KeyDHCP, string(j))
 	return err
 }
 
@@ -186,7 +184,7 @@ func generateDummyMAC(idx int) net.HardwareAddr {
 }
 
 func (d *driver) leaseUsageKey(lrkey string) string {
-	return path.Join(d.prefix, KeyLeaseUsages, lrkey)
+	return path.Join(KeyLeaseUsages, lrkey)
 }
 
 func (d *driver) initializeLeaseUsage(ctx context.Context, lrkey string) error {

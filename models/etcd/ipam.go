@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"path"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
@@ -17,12 +16,9 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 		return err
 	}
 
-	configKey := path.Join(d.prefix, KeyIPAM)
-	machinesKey := path.Join(d.prefix, KeyMachines)
-
 	tresp, err := d.client.Txn(ctx).
-		If(clientv3util.KeyMissing(machinesKey).WithPrefix()).
-		Then(clientv3.OpPut(configKey, string(j))).
+		If(clientv3util.KeyMissing(KeyMachines).WithPrefix()).
+		Then(clientv3.OpPut(KeyIPAM, string(j))).
 		Else().
 		Commit()
 	if err != nil {

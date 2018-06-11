@@ -85,7 +85,7 @@ func (r *rackIndexUsage) release(m *sabakan.Machine) (needUpdate bool) {
 }
 
 func (d *driver) indexInRackKey(rack uint) string {
-	return path.Join(d.prefix, KeyNodeIndices, fmt.Sprint(rack))
+	return path.Join(KeyNodeIndices, fmt.Sprint(rack))
 }
 
 func (d *driver) initializeNodeIndices(ctx context.Context, rack uint) error {

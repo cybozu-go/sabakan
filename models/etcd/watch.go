@@ -3,7 +3,6 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"path"
 	"strings"
 
 	"github.com/coreos/etcd/clientv3"
@@ -11,8 +10,7 @@ import (
 )
 
 func (d *driver) initIPAMConfig(ctx context.Context) error {
-	ipamKey := path.Join(d.prefix, KeyIPAM)
-	resp, err := d.client.Get(ctx, ipamKey)
+	resp, err := d.client.Get(ctx, KeyIPAM)
 	if err != nil {
 		return err
 	}
@@ -31,8 +29,7 @@ func (d *driver) initIPAMConfig(ctx context.Context) error {
 }
 
 func (d *driver) initDHCPConfig(ctx context.Context) error {
-	dhcpKey := path.Join(d.prefix, KeyDHCP)
-	resp, err := d.client.Get(ctx, dhcpKey)
+	resp, err := d.client.Get(ctx, KeyDHCP)
 	if err != nil {
 		return err
 	}
@@ -52,7 +49,7 @@ func (d *driver) initDHCPConfig(ctx context.Context) error {
 
 func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{}) error {
 	// obtain the current revision to avoid missing events.
-	resp, err := d.client.Get(ctx, d.prefix+"/")
+	resp, err := d.client.Get(ctx, "/")
 	if err != nil {
 		return err
 	}
@@ -68,7 +65,7 @@ func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{})
 		return err
 	}
 
-	err = d.mi.init(ctx, d.client, d.prefix)
+	err = d.mi.init(ctx, d.client)
 	if err != nil {
 		return err
 	}
@@ -76,7 +73,7 @@ func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{})
 	// notify the caller of the readiness
 	ch <- struct{}{}
 
-	rch := d.client.Watch(ctx, d.prefix+"/",
+	rch := d.client.Watch(ctx, "",
 		clientv3.WithPrefix(),
 		clientv3.WithPrevKV(),
 		clientv3.WithRev(rev),
@@ -84,7 +81,7 @@ func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{})
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			var err error
-			key := string(ev.Kv.Key[len(d.prefix):])
+			key := string(ev.Kv.Key)
 			switch {
 			case strings.HasPrefix(key, KeyMachines):
 				err = d.handleMachines(ev)

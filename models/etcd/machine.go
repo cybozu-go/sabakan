@@ -7,7 +7,6 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
-	"github.com/coreos/etcd/etcdserver/etcdserverpb"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
@@ -34,7 +33,7 @@ RETRY:
 		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
-	if !tresp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+	if !tresp.Responses[0].GetResponseTxn().Succeeded {
 		// inner If, i.e. conflictMachinesIfOps, evaluated to false
 		return sabakan.ErrConflicted
 	}
@@ -68,7 +67,7 @@ func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageM
 	usageCASIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
-		key := path.Join(d.prefix, KeyMachines, wmc.Serial)
+		key := path.Join(KeyMachines, wmc.Serial)
 		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
@@ -112,7 +111,7 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 		log.Debug("etcd/machine: query serial", map[string]interface{}{
 			"serial": serial,
 		})
-		key := path.Join(d.prefix, KeyMachines, serial)
+		key := path.Join(KeyMachines, serial)
 		resp, err := d.client.Get(ctx, key)
 		if err != nil {
 			return nil, err
@@ -179,7 +178,7 @@ RETRY:
 		goto RETRY
 	}
 
-	if !resp.Responses[0].Response.(*etcdserverpb.ResponseOp_ResponseTxn).ResponseTxn.Succeeded {
+	if !resp.Responses[0].GetResponseTxn().Succeeded {
 		// KeyExists(machineKey) failed
 		return sabakan.ErrNotFound
 	}
@@ -188,7 +187,7 @@ RETRY:
 }
 
 func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
-	machineKey := path.Join(d.prefix, KeyMachines, machine.Serial)
+	machineKey := path.Join(KeyMachines, machine.Serial)
 	indexKey := d.indexInRackKey(machine.Rack)
 
 	j, err := json.Marshal(usage)

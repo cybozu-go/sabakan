@@ -30,7 +30,7 @@ func testIPAMPutConfig(t *testing.T) {
 	}
 	<-ch
 
-	resp, err := d.client.Get(context.Background(), t.Name()+KeyIPAM)
+	resp, err := d.client.Get(context.Background(), KeyIPAM)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func testIPAMGetConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.client.Put(context.Background(), t.Name()+KeyIPAM, string(bytes))
+	_, err = d.client.Put(context.Background(), KeyIPAM, string(bytes))
 	if err != nil {
 		t.Fatal(err)
 	}

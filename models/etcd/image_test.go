@@ -52,7 +52,7 @@ func testImagePutIndex(t *testing.T, d *driver, index sabakan.ImageIndex) {
 		t.Fatal(err)
 	}
 
-	key := path.Join(d.prefix, KeyImages, "coreos")
+	key := path.Join(KeyImages, "coreos")
 	_, err = d.client.Put(context.Background(), key, string(data))
 	if err != nil {
 		t.Fatal(err)
