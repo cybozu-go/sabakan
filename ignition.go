@@ -52,19 +52,46 @@ func RenderIgnition(tmpl string, m *Machine) (string, error) {
 		return "", err
 	}
 
-	var ign interface{}
+	var ign ignitionMap
 	err = yaml.Unmarshal(buf.Bytes(), &ign)
 	if err != nil {
 		return "", err
 	}
+	ign.escapeDataURL()
 
-	ign = convert(ign)
-	ignMap, ok := ign.(map[string]interface{})
-	if !ok {
-		return "", errors.New("invalid ignition, failed to convert")
+	dataOut, err := json.Marshal(&ign)
+	if err != nil {
+		return "", err
 	}
 
-	if storageMap, ok := ignMap["storage"].(map[string]interface{}); ok {
+	return string(dataOut), nil
+}
+
+type ignitionMap struct {
+	fields map[string]interface{}
+}
+
+func (i *ignitionMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var ign interface{}
+	err := unmarshal(&ign)
+	if err != nil {
+		return err
+	}
+	ign = normalizeMap(ign)
+	ignMap, ok := ign.(map[string]interface{})
+	if !ok {
+		return errors.New("invalid ignition, failed to convert")
+	}
+	i.fields = ignMap
+	return nil
+}
+
+func (i *ignitionMap) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&i.fields)
+}
+
+func (i *ignitionMap) escapeDataURL() {
+	if storageMap, ok := i.fields["storage"].(map[string]interface{}); ok {
 		if files, ok := storageMap["files"].([]interface{}); ok {
 			for _, elem := range files {
 				if f, ok := elem.(map[string]interface{}); ok {
@@ -77,27 +104,20 @@ func RenderIgnition(tmpl string, m *Machine) (string, error) {
 			}
 		}
 	}
-
-	dataOut, err := json.Marshal(&ign)
-	if err != nil {
-		return "", err
-	}
-
-	return string(dataOut), nil
 }
 
-func convert(i interface{}) interface{} {
-	switch x := i.(type) {
+func normalizeMap(input interface{}) interface{} {
+	switch x := input.(type) {
 	case map[interface{}]interface{}:
-		m2 := map[string]interface{}{}
+		newMap := map[string]interface{}{}
 		for k, v := range x {
-			m2[k.(string)] = convert(v)
+			newMap[k.(string)] = normalizeMap(v)
 		}
-		return m2
+		return newMap
 	case []interface{}:
 		for i, v := range x {
-			x[i] = convert(v)
+			x[i] = normalizeMap(v)
 		}
 	}
-	return i
+	return input
 }
