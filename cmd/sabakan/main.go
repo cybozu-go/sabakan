@@ -24,11 +24,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-type etcdConfig struct {
-	Servers []string
-	Prefix  string
-}
-
 var (
 	flagHTTP         = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
 	flagEtcdServers  = flag.String("etcd-servers", strings.Join(defaultEtcdServers, ","), "comma-separated URLs of the backend etcd")
@@ -91,17 +86,13 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	var e etcdConfig
-	e.Servers = cfg.EtcdServers
-	e.Prefix = "/" + cfg.EtcdPrefix + "/"
-
 	timeout, err := time.ParseDuration(cfg.EtcdTimeout)
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
 	etcdCfg := clientv3.Config{
-		Endpoints:   e.Servers,
+		Endpoints:   cfg.EtcdServers,
 		DialTimeout: timeout,
 		Username:    cfg.EtcdUsername,
 		Password:    cfg.EtcdPassword,
@@ -110,9 +101,9 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
-	c.KV = namespace.NewKV(c.KV, e.Prefix)
-	c.Watcher = namespace.NewWatcher(c.Watcher, e.Prefix)
-	c.Lease = namespace.NewLease(c.Lease, e.Prefix)
+	c.KV = namespace.NewKV(c.KV, cfg.EtcdPrefix)
+	c.Watcher = namespace.NewWatcher(c.Watcher, cfg.EtcdPrefix)
+	c.Lease = namespace.NewLease(c.Lease, cfg.EtcdPrefix)
 	defer c.Close()
 
 	model := etcd.NewModel(c, cfg.ImageDir, advertiseURL)
