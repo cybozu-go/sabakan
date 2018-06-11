@@ -77,12 +77,12 @@ func (s Server) hasPermission(r *http.Request) bool {
 	if p == "crypts" {
 		return true
 	}
-	rhost := net.ParseIP(strings.Split(r.RemoteAddr, ":")[0])
-	if rhost == nil {
+	rhost, _, err := net.SplitHostPort(r.RemoteAddr)
+	if rhost == "" || err != nil {
 		return false
 	}
 	for _, allowed := range s.AllowdRemotes {
-		if allowed.Contains(rhost) {
+		if allowed.Contains(net.ParseIP(rhost)) {
 			return true
 		}
 	}

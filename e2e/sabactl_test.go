@@ -311,36 +311,58 @@ func testSabactlImages(t *testing.T) {
 }
 
 func testSabactlIgnitions(t *testing.T) {
-	src := `ignition:`
+	src := `ignition:
+  version: "2.2.0"`
 	saved := `ignition:
-  config:
-    append: []
-    replace: null
-  timeouts:
-    http_response_headers: null
-    http_total: null
-  security:
-    tls:
-      certificate_authorities: []
-storage:
-  disks: []
-  raid: []
-  filesystems: []
-  files: []
-  directories: []
-  links: []
-systemd:
-  units: []
+  version: 2.2.0
 networkd:
-  units: []
+  units:
+  - contents: |-
+      [NetDev]
+      Name=node0
+      Kind=dummy
+      Address={{ index .Network.node0.IPv4 0 }}/32
+    name: 10-node0.netdev
 passwd:
-  users: []
-  groups: []
-etcd: null
-flannel: null
-update: null
-docker: null
-locksmith: null
+  groups:
+  - gid: 10000
+    name: cybozu
+  users:
+  - name: core
+    passwordHash: $6$43y3tkl...
+    sshAuthorizedKeys:
+    - key1
+storage:
+  files:
+  - contents:
+      source: '{{ .Serial }}'
+    filesystem: root
+    mode: 420
+    path: /etc/hostname
+systemd:
+  units:
+  - contents: |
+      [Unit]
+      Description=Chrony
+
+      [Service]
+      ExecStart=/usr/bin/chronyd
+
+      [Install]
+      WantedBy=multi-user.target
+    enabled: true
+    name: chronyd.service
+  - contents: |
+      [Unit]
+      Description=bird
+
+      [Service]
+      ExecStart=/usr/bin/bird
+
+      [Install]
+      WantedBy=multi-user.target
+    enabled: false
+    name: bird.service
 `
 	file, err := ioutil.TempFile("", "sabakan-test")
 	if err != nil {
@@ -354,7 +376,7 @@ locksmith: null
 	}
 	file.Close()
 
-	stdout, stderr, err := runSabactl("ignitions", "set", "-f", file.Name(), "cs")
+	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/ignitions/test.yml", "cs")
 	code := exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())

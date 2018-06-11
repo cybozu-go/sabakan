@@ -1,7 +1,7 @@
 users:
   - name: core
-    password_hash: "$6$43y3tkl..."
-    ssh_authorized_keys:
+    passwordHash: "$6$43y3tkl..."
+    sshAuthorizedKeys:
       - key1
 groups:
   - name: cybozu
