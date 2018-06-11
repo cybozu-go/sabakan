@@ -146,10 +146,10 @@ $ sabactl ignitions cat <role> <id>
 `sabactl ignitions set ROLE`
 ----------------------------
 
-Register a new ignition template for a certain role.
+Register a new ignition template for a certain role.  The format ignitions are described in [Ignition Controls](ignition.md).
 
 ```console
-$ sabactl ignitions set -f <template.ign> <role>
+$ sabactl ignitions set -f <ignition.yml> <role>
 ```
 
 `sabactl ignitions delete ROLE ID`
