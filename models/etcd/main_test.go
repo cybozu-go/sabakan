@@ -79,7 +79,7 @@ func newEtcdClient(prefix string) (*clientv3.Client, error) {
 }
 
 func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
-	client, err := newEtcdClient(t.Name())
+	client, err := newEtcdClient(t.Name() + "/")
 	if err != nil {
 		t.Fatal(err)
 	}

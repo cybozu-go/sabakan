@@ -73,7 +73,7 @@ func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{})
 	// notify the caller of the readiness
 	ch <- struct{}{}
 
-	rch := d.client.Watch(ctx, "/",
+	rch := d.client.Watch(ctx, "",
 		clientv3.WithPrefix(),
 		clientv3.WithPrevKV(),
 		clientv3.WithRev(rev),

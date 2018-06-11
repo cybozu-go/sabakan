@@ -132,15 +132,14 @@ OUTER:
 }
 
 func (d *driver) updateImage(ctx context.Context, client *cmd.HTTPClient) error {
-	key := KeyImages + "/"
-	resp, err := d.client.Get(ctx, key, clientv3.WithPrefix())
+	resp, err := d.client.Get(ctx, KeyImages, clientv3.WithPrefix())
 	if err != nil {
 		return err
 	}
 
 	dataMap := make(map[string]updateData)
 	for _, kv := range resp.Kvs {
-		parts := strings.Split(string(kv.Key)[len(key):], "/")
+		parts := strings.Split(string(kv.Key)[len(KeyImages):], "/")
 		os := parts[0]
 
 		if len(parts) == 1 {

@@ -35,7 +35,7 @@ func testRegister(t *testing.T) {
 	<-ch // wait for initialization of rack#0 node-indices
 	<-ch
 
-	resp, err := d.client.Get(context.Background(), KeyMachines+"/5678efgh")
+	resp, err := d.client.Get(context.Background(), KeyMachines+"5678efgh")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func testRegister(t *testing.T) {
 	}
 	<-ch
 
-	resp, err = d.client.Get(context.Background(), KeyMachines+"/00000000")
+	resp, err = d.client.Get(context.Background(), KeyMachines+"00000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -179,7 +179,7 @@ func testDelete(t *testing.T) {
 	<-ch
 
 	// confirm deletion
-	resp, err := d.client.Get(context.Background(), KeyMachines+"/1234abcd")
+	resp, err := d.client.Get(context.Background(), KeyMachines+"1234abcd")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +204,7 @@ func testDelete(t *testing.T) {
 	}
 	<-ch
 
-	resp, err = d.client.Get(context.Background(), KeyMachines+"/1234abcd")
+	resp, err = d.client.Get(context.Background(), KeyMachines+"1234abcd")
 	if err != nil {
 		t.Fatal(err)
 	}
