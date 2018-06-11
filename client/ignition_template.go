@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -29,8 +30,9 @@ type ignitionSource struct {
 }
 
 type ignitionBuilder struct {
-	baseDir  string
-	ignition map[string]interface{}
+	baseDir     string
+	ignition    map[string]interface{}
+	loadedFiles map[string]bool
 }
 
 func generateIgnitionYAML(fname string) (io.Reader, error) {
@@ -39,7 +41,7 @@ func generateIgnitionYAML(fname string) (io.Reader, error) {
 		return nil, ErrorStatus(err)
 	}
 	baseDir := filepath.Dir(absPath)
-	builder := ignitionBuilder{baseDir: baseDir, ignition: make(map[string]interface{})}
+	builder := ignitionBuilder{baseDir: baseDir, ignition: make(map[string]interface{}), loadedFiles: make(map[string]bool)}
 
 	source, err := loadSource(absPath)
 	if err != nil {
@@ -83,6 +85,10 @@ func loadSource(fname string) (*ignitionSource, error) {
 
 func (b *ignitionBuilder) constructIgnitionYAML(source *ignitionSource) error {
 	if source.Include != "" {
+		if b.loadedFiles[source.Include] {
+			return fmt.Errorf("same file was included: %s", source.Include)
+		}
+		b.loadedFiles[source.Include] = true
 		include, err := loadSource(filepath.Join(b.baseDir, source.Include))
 		if err != nil {
 			return err
