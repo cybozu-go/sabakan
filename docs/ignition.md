@@ -35,7 +35,7 @@ How it works
 
 Sabakan generates ignitions from ignition-like YAML format as a source.
 The YAML contains text template to apply machine's parameters and the value of
-`storage.files.source` is in plain text but not URL encoded:
+`storage.files.contents.source` is in plain text but not URL encoded:
 
 ```yaml
 ignition:
@@ -93,11 +93,12 @@ This entry point file contains the following fields:
 - `include`: Relative path to extend YAML file.
 - `passwd`: Relative path to file which describes user and group settings.
 - `files`: String list to deploy static files to Container Linux.
-The file content of the item is extract to `storage.files.source` in the ignition.
+The file content of the item is extract to `storage.files.contents.source` in the ignition.
 The path must be *absolute path* and user need to put the source file in the `files` directory.
 - `systemd`: Systemd services configuration.  The items are extracted to `systemd` field in the ignition.
     - `enabled`: Enable the service if `true`, otherwise the service will be disabled.
     - `source`: Source file of the systemd.  User need to put the source file in `systemd` directory.
+      The basename of the file correspond to the service name.
 - `networkd`: Systemd-networkd configuration files.  User need to put the source file in `networkd` directory.
 
 ```conf
@@ -134,8 +135,8 @@ The file described in `passwd` is described in as `passwd` field in the
 # passwd.yml
 users:
   - name: core
-    password_hash: "$6$43y3tkl..."
-    ssh_authorized_keys:
+    passwordHash: "$6$43y3tkl..."
+    sshAuthorizedKeys:
       - key1
 groups:
   - name: mgmt
