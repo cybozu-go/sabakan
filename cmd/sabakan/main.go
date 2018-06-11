@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/namespace"
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/dhcpd"
@@ -93,7 +93,7 @@ func main() {
 
 	var e etcdConfig
 	e.Servers = cfg.EtcdServers
-	e.Prefix = path.Clean("/" + cfg.EtcdPrefix)
+	e.Prefix = "/" + cfg.EtcdPrefix + "/"
 
 	timeout, err := time.ParseDuration(cfg.EtcdTimeout)
 	if err != nil {
@@ -110,6 +110,9 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
+	c.KV = namespace.NewKV(c.KV, e.Prefix)
+	c.Watcher = namespace.NewWatcher(c.Watcher, e.Prefix)
+	c.Lease = namespace.NewLease(c.Lease, e.Prefix)
 	defer c.Close()
 
 	model := etcd.NewModel(c, cfg.ImageDir, advertiseURL)
