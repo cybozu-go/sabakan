@@ -76,7 +76,7 @@ func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{})
 	rch := d.client.Watch(ctx, "",
 		clientv3.WithPrefix(),
 		clientv3.WithPrevKV(),
-		clientv3.WithRev(rev),
+		clientv3.WithRev(rev+1),
 	)
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
