@@ -311,79 +311,17 @@ func testSabactlImages(t *testing.T) {
 }
 
 func testSabactlIgnitions(t *testing.T) {
-	src := `ignition:
-  version: "2.2.0"`
 	saved := `ignition:
   version: 2.2.0
-networkd:
-  units:
-  - contents: |-
-      [NetDev]
-      Name=node0
-      Kind=dummy
-      Address={{ index .Network.node0.IPv4 0 }}/32
-    name: 10-node0.netdev
-passwd:
-  groups:
-  - gid: 10000
-    name: cybozu
-  users:
-  - name: core
-    passwordHash: $6$43y3tkl...
-    sshAuthorizedKeys:
-    - key1
-storage:
-  files:
-  - contents:
-      source: '{{ .Serial }}'
-    filesystem: root
-    mode: 420
-    path: /etc/hostname
-systemd:
-  units:
-  - contents: |
-      [Unit]
-      Description=Chrony
-
-      [Service]
-      ExecStart=/usr/bin/chronyd
-
-      [Install]
-      WantedBy=multi-user.target
-    enabled: true
-    name: chronyd.service
-  - contents: |
-      [Unit]
-      Description=bird
-
-      [Service]
-      ExecStart=/usr/bin/bird
-
-      [Install]
-      WantedBy=multi-user.target
-    enabled: false
-    name: bird.service
 `
-	file, err := ioutil.TempFile("", "sabakan-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(file.Name())
-
-	_, err = file.WriteString(src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	file.Close()
-
-	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/ignitions/test.yml", "cs")
+	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/ignitions/empty.yml", "cs")
 	code := exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to set ignition template", code)
 	}
-	stdout, stderr, err = runSabactl("ignitions", "set", "-f", file.Name(), "cs")
+	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/ignitions/test.yml", "cs")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -398,7 +336,7 @@ systemd:
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get ignition template IDs of cs", code)
 	}
-	ids := []string{}
+	var ids []string
 	err = json.NewDecoder(stdout).Decode(&ids)
 	if err != nil {
 		t.Fatal(err)
