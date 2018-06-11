@@ -67,10 +67,10 @@ func TestRenderIgnition(t *testing.T) {
 		mc   *Machine
 		ign  string
 	}{
-		{`"ignition":
-  "version": "2.2.0"`, &Machine{}, `{"ignition":{"version":"2.2.0"}}`},
 		{`ignition:
-  version: "2.2.0"
+  version: 2.2.0`, &Machine{}, `{"ignition":{"version":"2.2.0"}}`},
+		{`ignition:
+  version: 2.2.0
 storage:
   files:
     - path: /opt/file1

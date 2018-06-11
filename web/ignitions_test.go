@@ -18,15 +18,17 @@ import (
 func TestIgnitions(t *testing.T) {
 	t.Parallel()
 
-	ign := `storage:
+	ign := `ignition:
+  version: 2.2.0
+storage:
   files:
   - filesystem: root
     path: "/etc/hostname"
     mode: 420
     contents:
-      inline: "{{.Serial}}"
+      source: "{{.Serial}}"
   - contents:
-      inline: "{{ .Rack }}"
+      source: "{{ .Rack }}"
     filesystem: root
     mode: 420
     path: "/etc/neco/rack"
@@ -43,11 +45,6 @@ networkd:
 
 	expected := `{
   "ignition": {
-    "config": {},
-    "security": {
-      "tls": {}
-    },
-    "timeouts": {},
     "version": "2.2.0"
   },
   "networkd": {
@@ -58,15 +55,13 @@ networkd:
       }
     ]
   },
-  "passwd": {},
   "storage": {
     "files": [
       {
         "filesystem": "root",
         "path": "/etc/hostname",
         "contents": {
-          "source": "data:,2222abcd",
-          "verification": {}
+          "source": "data:,2222abcd"
         },
         "mode": 420
       },
@@ -74,14 +69,12 @@ networkd:
         "filesystem": "root",
         "path": "/etc/neco/rack",
         "contents": {
-          "source": "data:,1",
-          "verification": {}
+          "source": "data:,1"
         },
         "mode": 420
       }
     ]
-  },
-  "systemd": {}
+  }
 }
 `
 
@@ -236,8 +229,9 @@ func testIgnitionTemplatesGet(t *testing.T) {
 func testIgnitionTemplatesPost(t *testing.T) {
 	t.Parallel()
 
-	ign := `ignition:`
-	invalid := `cloudinit:`
+	ign := `ignition:
+  version: 2.2.0`
+	invalid := `ignition:`
 
 	m := mock.NewModel()
 	handler := newTestServer(m)
