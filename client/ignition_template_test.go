@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestIgnitionBuilderConstructIgnitionYAML(t *testing.T) {
-	b := ignitionBuilder{baseDir: "../testdata/ignitions", ignition: make(map[string]interface{})}
+func testIgnitionBuilderConstructIgnitionYAML(t *testing.T) {
+	b := newIgnitionBuilder("../testdata/ignitions")
 
 	tests := []struct {
 		name    string
@@ -33,8 +33,8 @@ func TestIgnitionBuilderConstructIgnitionYAML(t *testing.T) {
 	}
 }
 
-func TestIgnitionBuilderConstructFile(t *testing.T) {
-	b := ignitionBuilder{baseDir: "../testdata/ignitions", ignition: make(map[string]interface{})}
+func testIgnitionBuilderConstructFile(t *testing.T) {
+	b := newIgnitionBuilder("../testdata/ignitions")
 	inputFile := "/etc/hostname"
 	if err := b.constructFile(inputFile); err != nil {
 		t.Fatal(err)
@@ -53,8 +53,8 @@ func TestIgnitionBuilderConstructFile(t *testing.T) {
 	}
 }
 
-func TestIgnitionBuilderConstructSystemd(t *testing.T) {
-	b := ignitionBuilder{baseDir: "../testdata/ignitions", ignition: make(map[string]interface{})}
+func testIgnitionBuilderConstructSystemd(t *testing.T) {
+	b := newIgnitionBuilder("../testdata/ignitions")
 	s := systemd{true, "bird.service"}
 	err := b.constructSystemd(s)
 	if err != nil {
@@ -75,8 +75,8 @@ func TestIgnitionBuilderConstructSystemd(t *testing.T) {
 	}
 }
 
-func TestIgnitionBuilderConstructNetworkd(t *testing.T) {
-	b := ignitionBuilder{baseDir: "../testdata/ignitions", ignition: make(map[string]interface{})}
+func testIgnitionBuilderConstructNetworkd(t *testing.T) {
+	b := newIgnitionBuilder("../testdata/ignitions")
 	src := "10-node0.netdev"
 	err := b.constructNetworkd(src)
 	if err != nil {
@@ -97,8 +97,8 @@ func TestIgnitionBuilderConstructNetworkd(t *testing.T) {
 	}
 }
 
-func TestIgnitionBuilderConstructPasswd(t *testing.T) {
-	b := ignitionBuilder{baseDir: "../testdata/ignitions", ignition: make(map[string]interface{})}
+func testIgnitionBuilderConstructPasswd(t *testing.T) {
+	b := newIgnitionBuilder("../testdata/ignitions")
 	src := "passwd.yml"
 	err := b.constructPasswd(src)
 	if err != nil {
@@ -119,8 +119,8 @@ func TestIgnitionBuilderConstructPasswd(t *testing.T) {
 	}
 }
 
-func TestIgnitionBuilderConstructInclude(t *testing.T) {
-	b := ignitionBuilder{baseDir: "../testdata/ignitions", ignition: make(map[string]interface{})}
+func testIgnitionBuilderConstructInclude(t *testing.T) {
+	b := newIgnitionBuilder("../testdata/ignitions")
 
 	err := b.constructIgnitionYAML(&ignitionSource{Systemd: []systemd{{Source: "bird.service"}}, Include: "base.yml"})
 	if err != nil {
@@ -135,4 +135,13 @@ func TestIgnitionBuilderConstructInclude(t *testing.T) {
 	if actual != 2 {
 		t.Errorf("in base.yml, defined a systemd unit, so expected length:%d, actual %d", 2, actual)
 	}
+}
+
+func TestSabactlIgnitionTemplate(t *testing.T) {
+	t.Run("constructIgnitionYAML", testIgnitionBuilderConstructIgnitionYAML)
+	t.Run("constructFiles", testIgnitionBuilderConstructFile)
+	t.Run("constructSystemd", testIgnitionBuilderConstructSystemd)
+	t.Run("constructNetworkd", testIgnitionBuilderConstructNetworkd)
+	t.Run("constructPasswd", testIgnitionBuilderConstructPasswd)
+	t.Run("constructInclude", testIgnitionBuilderConstructInclude)
 }

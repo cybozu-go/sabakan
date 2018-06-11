@@ -35,13 +35,21 @@ type ignitionBuilder struct {
 	loadedFiles map[string]bool
 }
 
+func newIgnitionBuilder(baseDir string) *ignitionBuilder {
+	return &ignitionBuilder{
+		baseDir:     baseDir,
+		ignition:    make(map[string]interface{}),
+		loadedFiles: make(map[string]bool),
+	}
+}
+
 func generateIgnitionYAML(fname string) (io.Reader, error) {
 	absPath, err := filepath.Abs(fname)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
 	baseDir := filepath.Dir(absPath)
-	builder := ignitionBuilder{baseDir: baseDir, ignition: make(map[string]interface{}), loadedFiles: make(map[string]bool)}
+	builder := newIgnitionBuilder(baseDir)
 
 	source, err := loadSource(absPath)
 	if err != nil {
