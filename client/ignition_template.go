@@ -27,28 +27,33 @@ type ignitionSource struct {
 	Include  string    `yaml:"include"`
 }
 
+type ignitionBuilder struct {
+	baseDir  string
+	ignition map[string]interface{}
+}
+
 func generateIgnitionYAML(fname string) (io.Reader, error) {
 	absPath, err := filepath.Abs(fname)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
 	baseDir := filepath.Dir(absPath)
+	builder := ignitionBuilder{baseDir: baseDir, ignition: make(map[string]interface{})}
 
 	source, err := loadSource(absPath)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
 
-	ignition := make(map[string]interface{})
-	ignition["ignition"] = map[string]interface{}{
+	builder.ignition["ignition"] = map[string]interface{}{
 		"version": "2.2.0",
 	}
-	err = constructIgnitionYAML(baseDir, source, ignition)
+	err = builder.constructIgnitionYAML(source)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
 
-	b, err := yaml.Marshal(ignition)
+	b, err := yaml.Marshal(builder.ignition)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
@@ -75,40 +80,40 @@ func loadSource(fname string) (*ignitionSource, error) {
 	return &source, nil
 }
 
-func constructIgnitionYAML(baseDir string, source *ignitionSource, ignMap map[string]interface{}) error {
+func (b *ignitionBuilder) constructIgnitionYAML(source *ignitionSource) error {
 	if source.Include != "" {
-		include, err := loadSource(filepath.Join(baseDir, source.Include))
+		include, err := loadSource(filepath.Join(b.baseDir, source.Include))
 		if err != nil {
 			return err
 		}
-		err = constructIgnitionYAML(baseDir, include, ignMap)
+		err = b.constructIgnitionYAML(include)
 		if err != nil {
 			return err
 		}
 	}
 	if source.Passwd != "" {
-		err := constructPasswd(filepath.Join(baseDir, source.Passwd), ignMap)
+		err := b.constructPasswd(source.Passwd)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, file := range source.Files {
-		err := constructFile(baseDir, file, ignMap)
+		err := b.constructFile(file)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, s := range source.Systemd {
-		err := constructSystemd(baseDir, s, ignMap)
+		err := b.constructSystemd(s)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, n := range source.Networkd {
-		err := constructNetworkd(baseDir, n, ignMap)
+		err := b.constructNetworkd(n)
 		if err != nil {
 			return err
 		}
@@ -116,8 +121,8 @@ func constructIgnitionYAML(baseDir string, source *ignitionSource, ignMap map[st
 	return nil
 }
 
-func constructPasswd(passwd string, ignMap map[string]interface{}) error {
-	pf, err := os.Open(passwd)
+func (b *ignitionBuilder) constructPasswd(passwd string) error {
+	pf, err := os.Open(filepath.Join(b.baseDir, passwd))
 	if err != nil {
 		return err
 	}
@@ -132,13 +137,13 @@ func constructPasswd(passwd string, ignMap map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	ignMap["passwd"] = p
+	b.ignition["passwd"] = p
 
 	return nil
 }
 
-func constructFile(baseDir, inputFile string, ignMap map[string]interface{}) error {
-	p := filepath.Join(baseDir, baseFileDir, inputFile)
+func (b *ignitionBuilder) constructFile(inputFile string) error {
+	p := filepath.Join(b.baseDir, baseFileDir, inputFile)
 	f, err := os.Open(p)
 	if err != nil {
 		return err
@@ -154,7 +159,7 @@ func constructFile(baseDir, inputFile string, ignMap map[string]interface{}) err
 	}
 	mode := int(fi.Mode())
 
-	storage, ok := ignMap["storage"].(map[string]interface{})
+	storage, ok := b.ignition["storage"].(map[string]interface{})
 	if !ok {
 		storage = make(map[string]interface{})
 	}
@@ -172,14 +177,14 @@ func constructFile(baseDir, inputFile string, ignMap map[string]interface{}) err
 	})
 
 	storage["files"] = files
-	ignMap["storage"] = storage
+	b.ignition["storage"] = storage
 
 	return nil
 }
 
-func constructSystemd(baseDir string, s systemd, ignMap map[string]interface{}) error {
+func (b *ignitionBuilder) constructSystemd(s systemd) error {
 
-	f, err := os.Open(filepath.Join(baseDir, baseSystemdDir, s.Source))
+	f, err := os.Open(filepath.Join(b.baseDir, baseSystemdDir, s.Source))
 	if err != nil {
 		return err
 	}
@@ -189,7 +194,7 @@ func constructSystemd(baseDir string, s systemd, ignMap map[string]interface{}) 
 		return err
 	}
 
-	systemd, ok := ignMap["systemd"].(map[string]interface{})
+	systemd, ok := b.ignition["systemd"].(map[string]interface{})
 	if !ok {
 		systemd = make(map[string]interface{})
 	}
@@ -203,14 +208,13 @@ func constructSystemd(baseDir string, s systemd, ignMap map[string]interface{}) 
 		"contents": string(data),
 	})
 	systemd["units"] = units
-	ignMap["systemd"] = systemd
+	b.ignition["systemd"] = systemd
 
 	return nil
 }
 
-func constructNetworkd(baseDir, n string, ignMap map[string]interface{}) error {
-
-	f, err := os.Open(filepath.Join(baseDir, baseNetworkdDir, n))
+func (b *ignitionBuilder) constructNetworkd(n string) error {
+	f, err := os.Open(filepath.Join(b.baseDir, baseNetworkdDir, n))
 	if err != nil {
 		return err
 	}
@@ -220,7 +224,7 @@ func constructNetworkd(baseDir, n string, ignMap map[string]interface{}) error {
 		return err
 	}
 
-	networkd, ok := ignMap["networkd"].(map[string]interface{})
+	networkd, ok := b.ignition["networkd"].(map[string]interface{})
 	if !ok {
 		networkd = make(map[string]interface{})
 	}
@@ -233,7 +237,7 @@ func constructNetworkd(baseDir, n string, ignMap map[string]interface{}) error {
 		"contents": string(data),
 	})
 	networkd["units"] = units
-	ignMap["networkd"] = networkd
+	b.ignition["networkd"] = networkd
 
 	return nil
 }
