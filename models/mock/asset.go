@@ -67,7 +67,7 @@ func (d *assetDriver) Put(ctx context.Context, name, contentType string,
 }
 
 func (d *assetDriver) Get(ctx context.Context, name string,
-	f func(modtime time.Time, content io.ReadSeeker)) error {
+	f func(modtime time.Time, contentType string, content io.ReadSeeker)) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -76,7 +76,7 @@ func (d *assetDriver) Get(ctx context.Context, name string,
 		return sabakan.ErrNotFound
 	}
 
-	f(asset.Date, bytes.NewReader(d.data[name]))
+	f(asset.Date, asset.ContentType, bytes.NewReader(d.data[name]))
 
 	return nil
 }

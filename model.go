@@ -70,7 +70,7 @@ type AssetModel interface {
 	GetInfo(ctx context.Context, name string) (*Asset, error)
 	Put(ctx context.Context, name, contentType string, r io.Reader) (*AssetStatus, error)
 	Get(ctx context.Context, name string,
-		f func(modtime time.Time, content io.ReadSeeker)) error
+		f func(modtime time.Time, contentType string, content io.ReadSeeker)) error
 	Delete(ctx context.Context, name string) error
 }
 
