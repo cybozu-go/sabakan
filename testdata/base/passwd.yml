@@ -1,0 +1,8 @@
+users:
+  - name: core
+    passwordHash: "$6$43y3tkl..."
+    sshAuthorizedKeys:
+      - key1
+groups:
+  - name: cybozu
+    gid: 10000

@@ -11,7 +11,7 @@ const (
 
 var (
 	defaultEtcdServers = []string{"http://localhost:2379"}
-	defaultAllowIPs    = []string{"127.0.0.1"}
+	defaultAllowIPs    = []string{"127.0.0.1", "::1"}
 )
 
 func newConfig() *config {

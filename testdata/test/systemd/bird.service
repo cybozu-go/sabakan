@@ -1,0 +1,8 @@
+[Unit]
+Description=bird
+
+[Service]
+ExecStart=/usr/bin/bird
+
+[Install]
+WantedBy=multi-user.target

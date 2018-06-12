@@ -37,7 +37,7 @@ func TestHandlePermission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := Server{AllowdRemotes: []*net.IPNet{ipnet}}
+	s := Server{AllowedRemotes: []*net.IPNet{ipnet}}
 
 	cases := []struct {
 		remote string

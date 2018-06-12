@@ -2,10 +2,8 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"path"
 )
 
@@ -41,13 +39,13 @@ func IgnitionsCat(ctx context.Context, role, id string) (string, *Status) {
 
 // IgnitionsSet posts an ignition template file
 func IgnitionsSet(ctx context.Context, role string, fname string) (map[string]interface{}, *Status) {
-	f, err := os.Open(fname)
+
+	tmpl, err := generateIgnitionYAML(fname)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
-	defer f.Close()
 
-	req, err := http.NewRequest("POST", client.endpoint+path.Join("/api/v1/ignitions", role), f)
+	req, err := http.NewRequest("POST", client.endpoint+path.Join("/api/v1/ignitions", role), tmpl)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
@@ -58,13 +56,7 @@ func IgnitionsSet(ctx context.Context, role string, fname string) (map[string]in
 	}
 	defer res.Body.Close()
 
-	var data map[string]interface{}
-	err = json.NewDecoder(res.Body).Decode(&data)
-	if err != nil {
-		return nil, ErrorStatus(err)
-	}
-
-	return data, nil
+	return nil, ErrorHTTPStatus(res)
 }
 
 // IgnitionsDelete deletes an ignition template specified by role and id

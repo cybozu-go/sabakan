@@ -36,7 +36,7 @@ var (
 	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
 	flagImageDir     = flag.String("image-dir", defaultImageDir, "directory to store boot images")
 	flagAdvertiseURL = flag.String("advertise-url", "", "public URL of this server")
-	flagAllowIPs     = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowd to change resources")
+	flagAllowIPs     = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
 
 	flagConfigFile = flag.String("config-file", "", "path to configuration file")
 )
@@ -129,10 +129,10 @@ func main() {
 		log.ErrorExit(err)
 	}
 	webServer := web.Server{
-		Model:         model,
-		IPXEFirmware:  cfg.IPXEPath,
-		MyURL:         advertiseURL,
-		AllowdRemotes: allowedIPs,
+		Model:          model,
+		IPXEFirmware:   cfg.IPXEPath,
+		MyURL:          advertiseURL,
+		AllowedRemotes: allowedIPs,
 	}
 	s := &cmd.HTTPServer{
 		Server: &http.Server{

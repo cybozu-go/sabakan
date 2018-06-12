@@ -311,27 +311,17 @@ func testSabactlImages(t *testing.T) {
 }
 
 func testSabactlIgnitions(t *testing.T) {
-	ign := `{ "ignition": { "version": "2.2.0" } }`
-	file, err := ioutil.TempFile("", "sabakan-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(file.Name())
-
-	_, err = file.WriteString(ign)
-	if err != nil {
-		t.Fatal(err)
-	}
-	file.Close()
-
-	stdout, stderr, err := runSabactl("ignitions", "set", "-f", file.Name(), "cs")
+	saved := `ignition:
+  version: 2.2.0
+`
+	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "cs")
 	code := exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to set ignition template", code)
 	}
-	stdout, stderr, err = runSabactl("ignitions", "set", "-f", file.Name(), "cs")
+	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "cs")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -346,7 +336,7 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get ignition template IDs of cs", code)
 	}
-	ids := []string{}
+	var ids []string
 	err = json.NewDecoder(stdout).Decode(&ids)
 	if err != nil {
 		t.Fatal(err)
@@ -362,8 +352,8 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to cat ignition template", code)
 	}
-	if stdout.String() != ign {
-		t.Error("stdout.String() != ign", stdout.String())
+	if stdout.String() != saved {
+		t.Error("stdout.String() != saved", stdout.String())
 	}
 
 	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", ids[0])
