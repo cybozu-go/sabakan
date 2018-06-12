@@ -314,14 +314,14 @@ func testSabactlIgnitions(t *testing.T) {
 	saved := `ignition:
   version: 2.2.0
 `
-	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/ignitions/empty.yml", "cs")
+	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "cs")
 	code := exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to set ignition template", code)
 	}
-	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/ignitions/test.yml", "cs")
+	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "cs")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
