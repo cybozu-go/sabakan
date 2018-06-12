@@ -336,7 +336,7 @@ The response for a newly created asset looks like:
 {
     "status": 201,
     "version": 1,
-    "id": 15,
+    "id": "15"
 }
 ```
 
@@ -345,7 +345,7 @@ The response for an updated asset looks like:
 {
     "status": 200,
     "version": 3,
-    "id": 19,
+    "id": "19"
 }
 ```
 
