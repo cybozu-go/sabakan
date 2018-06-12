@@ -2,7 +2,7 @@ package main
 
 const (
 	defaultListenHTTP  = "0.0.0.0:10080"
-	defaultEtcdPrefix  = "/sabakan"
+	defaultEtcdPrefix  = "/sabakan/"
 	defaultEtcdTimeout = "2s"
 	defaultDHCPBind    = "0.0.0.0:10067"
 	defaultIPXEPath    = "/usr/lib/ipxe/ipxe.efi"
