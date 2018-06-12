@@ -416,7 +416,8 @@ $ curl -XGET localhost:10080/api/v1/ignitions/cs/1527731687
 
 ## <a name="postignitions" />`POST /api/v1/ignitions/<role>`
 
-Create CoreOS ignition for a certain role.  It returns a new assigned ID for the ignition.
+Create CoreOS ignition for a certain role from ignition-like YAML format (see [Ignition Controls](ignition.md)).
+It returns a new assigned ID for the ignition.
 
 **Successful response**
 
@@ -440,7 +441,7 @@ Create CoreOS ignition for a certain role.  It returns a new assigned ID for the
 
 -
 ```console
-$ curl -XPOST localhost:10080/api/v1/boot/ignitions/cs
+$ curl -XPOST -d $'ignition:\n version: "2.2.0' localhost:10080/api/v1/ignitions/cs
 {"status": 201, "role": "cs", "id": "1507731659"}
 ```
 
