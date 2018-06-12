@@ -30,7 +30,7 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&machines)
 	if err != nil {
-		renderError(r.Context(), w, APIErrBadRequest)
+		renderError(r.Context(), w, BadRequest(err.Error()))
 		return
 	}
 

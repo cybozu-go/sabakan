@@ -36,7 +36,7 @@ func (s Server) handleConfigIPAMPut(w http.ResponseWriter, r *http.Request) {
 	var sc sabakan.IPAMConfig
 	err := json.NewDecoder(r.Body).Decode(&sc)
 	if err != nil {
-		renderError(ctx, w, APIErrBadRequest)
+		renderError(ctx, w, BadRequest(err.Error()))
 		return
 	}
 	err = sc.Validate()
