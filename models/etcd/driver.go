@@ -14,7 +14,7 @@ import (
 
 type driver struct {
 	client       *clientv3.Client
-	imageDir     string
+	dataDir      string
 	advertiseURL *url.URL
 	mi           *machinesIndex
 	ipamConfig   atomic.Value
@@ -22,10 +22,10 @@ type driver struct {
 }
 
 // NewModel returns sabakan.Model
-func NewModel(client *clientv3.Client, imageDir string, advertiseURL *url.URL) sabakan.Model {
+func NewModel(client *clientv3.Client, dataDir string, advertiseURL *url.URL) sabakan.Model {
 	d := &driver{
 		client:       client,
-		imageDir:     imageDir,
+		dataDir:      dataDir,
 		advertiseURL: advertiseURL,
 		mi:           newMachinesIndex(),
 	}

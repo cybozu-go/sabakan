@@ -34,7 +34,7 @@ var (
 
 	flagDHCPBind     = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
 	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
-	flagImageDir     = flag.String("image-dir", defaultImageDir, "directory to store boot images")
+	flagDataDir      = flag.String("data-dir", defaultDataDir, "directory to store files")
 	flagAdvertiseURL = flag.String("advertise-url", "", "public URL of this server")
 	flagAllowIPs     = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
 
@@ -58,7 +58,7 @@ func main() {
 		cfg.EtcdPassword = *flagEtcdPassword
 		cfg.DHCPBind = *flagDHCPBind
 		cfg.IPXEPath = *flagIPXEPath
-		cfg.ImageDir = *flagImageDir
+		cfg.DataDir = *flagDataDir
 		cfg.AdvertiseURL = *flagAdvertiseURL
 		cfg.AllowIPs = strings.Split(*flagAllowIPs, ",")
 	} else {
@@ -73,8 +73,8 @@ func main() {
 		f.Close()
 	}
 
-	if !filepath.IsAbs(cfg.ImageDir) {
-		fmt.Fprintln(os.Stderr, "image-dir must be an absolute path")
+	if !filepath.IsAbs(cfg.DataDir) {
+		fmt.Fprintln(os.Stderr, "data-dir must be an absolute path")
 		os.Exit(1)
 	}
 	if cfg.AdvertiseURL == "" {
@@ -106,7 +106,7 @@ func main() {
 	c.Lease = namespace.NewLease(c.Lease, cfg.EtcdPrefix)
 	defer c.Close()
 
-	model := etcd.NewModel(c, cfg.ImageDir, advertiseURL)
+	model := etcd.NewModel(c, cfg.DataDir, advertiseURL)
 	ch := make(chan struct{})
 	cmd.Go(func(ctx context.Context) error {
 		return model.Run(ctx, ch)

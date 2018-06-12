@@ -24,7 +24,7 @@ var (
 
 func (d *driver) getImageDir(os string) ImageDir {
 	return ImageDir{
-		Dir: filepath.Join(d.imageDir, os),
+		Dir: filepath.Join(d.dataDir, "images", os),
 	}
 }
 
