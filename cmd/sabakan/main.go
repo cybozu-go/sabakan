@@ -111,6 +111,11 @@ func main() {
 	cmd.Go(func(ctx context.Context) error {
 		return model.Run(ctx, ch)
 	})
+	cmd.Go(func(ctx context.Context) error {
+		<-ctx.Done()
+		ch <- struct{}{}
+		return nil
+	})
 	// waiting the driver gets ready
 	<-ch
 
