@@ -25,7 +25,6 @@ Meta data of assets are stored in etcd as follows:
         "http://10.1.2.3:10080/api/v1/assets/hoge.tar.gz",
         "http://10.98.76.54:10080/api/v1/assets/hoge.tar.gz"
     ],
-    "version": 1,
     "exists": true
 }
 ```
@@ -35,10 +34,6 @@ updated, a new `id` will be assigned.
 
 `urls` is a list of URLs where the asset can be downloaded.
 Details are described in the next section.
-
-`version` is only meaningful when this JSON is returned from a REST API.
-It indicates how many times the key was updated.  Internally, it is [the
-version of the key](https://coreos.com/etcd/docs/latest/learning/api.html#key-value-pair).
 
 `exists` is only meaningful when this JSON is returned from a REST API.
 It becomes `true` if the server has a local copy of the asset.

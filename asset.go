@@ -10,13 +10,11 @@ type Asset struct {
 	Date        time.Time `json:"date"`
 	Sha256      string    `json:"sha256"`
 	URLs        []string  `json:"urls"`
-	Version     int64     `json:"version"`
 	Exists      bool      `json:"exists"`
 }
 
 // AssetStatus is the status of an asset.
 type AssetStatus struct {
-	Status  int   `json:"status"`
-	Version int64 `json:"version"`
-	ID      int   `json:"id,string"`
+	Status int `json:"status"`
+	ID     int `json:"id,string"`
 }

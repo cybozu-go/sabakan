@@ -335,7 +335,6 @@ The response for a newly created asset looks like:
 ```json
 {
     "status": 201,
-    "version": 1,
     "id": "15"
 }
 ```
@@ -344,7 +343,6 @@ The response for an updated asset looks like:
 ```json
 {
     "status": 200,
-    "version": 3,
     "id": "19"
 }
 ```
@@ -354,6 +352,10 @@ The response for an updated asset looks like:
 - No content-type request header:
 
     HTTP status code: 400 Bad Request
+
+- Upload conflicted:
+
+    HTTP status code: 409 Conflicted
 
 - No content-length request header:
 
@@ -369,7 +371,13 @@ Download the named asset.
 
 **Successful response**
 
-- HTTP status code: 200 OK
+HTTP status code:
+- 200 OK
+
+Response headers:
+
+- `X-Sabakan-Asset-ID`: ID of the asset
+- `X-Sabakan-Asset-SHA256`: SHA256 checksum of the asset
 
 **Failure responses**
 
@@ -383,8 +391,11 @@ Fetch the meta data of the named asset.
 
 **Successful response**
 
-- HTTP status code: 200 OK
-- HTTP response header: `application/json`
+HTTP status code:
+- 200 OK
+
+HTTP response header:
+- `Content-Type`: `application/json`
 
 The response JSON is described in [asset management](assets.md).
 

@@ -3,8 +3,8 @@ package web
 import (
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
-	"time"
 
 	"github.com/cybozu-go/sabakan"
 )
@@ -54,12 +54,25 @@ func (s Server) handleAssetsIndex(w http.ResponseWriter, r *http.Request) {
 	renderJSON(w, index, http.StatusOK)
 }
 
+type assetHandler struct {
+	w http.ResponseWriter
+	r *http.Request
+}
+
+func (h assetHandler) ServeContent(asset *sabakan.Asset, content io.ReadSeeker) {
+	header := h.w.Header()
+	header.Set("content-type", asset.ContentType)
+	header.Set("X-Sabakan-Asset-ID", strconv.Itoa(asset.ID))
+	header.Set("X-Sabakan-Asset-SHA256", asset.Sha256)
+	http.ServeContent(h.w, h.r, asset.Name, asset.Date, content)
+}
+
+func (h assetHandler) Redirect(u string) {
+	http.Redirect(h.w, h.r, u, http.StatusFound)
+}
+
 func (s Server) handleAssetsGet(w http.ResponseWriter, r *http.Request, name string) {
-	f := func(modtime time.Time, contentType string, content io.ReadSeeker) {
-		w.Header().Set("content-type", contentType)
-		http.ServeContent(w, r, name, modtime, content)
-	}
-	err := s.Model.Asset.Get(r.Context(), name, f)
+	err := s.Model.Asset.Get(r.Context(), name, assetHandler{w, r})
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
@@ -97,7 +110,12 @@ func (s Server) handleAssetsPut(w http.ResponseWriter, r *http.Request, name str
 		renderError(r.Context(), w, APIErrTooLargeAsset)
 		return
 	}
+
 	status, err := s.Model.Asset.Put(r.Context(), name, contentType, r.Body)
+	if err == sabakan.ErrConflicted {
+		renderError(r.Context(), w, APIErrConflict)
+		return
+	}
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return

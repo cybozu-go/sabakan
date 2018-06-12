@@ -36,6 +36,7 @@ func NewModel(client *clientv3.Client, dataDir string, advertiseURL *url.URL) sa
 		IPAM:     ipamDriver{d},
 		DHCP:     dhcpDriver{d},
 		Image:    imageDriver{d},
+		Asset:    assetDriver{d},
 		Ignition: d,
 	}
 }

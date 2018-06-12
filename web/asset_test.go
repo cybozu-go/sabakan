@@ -180,9 +180,6 @@ func testHandleAssetsPut(t *testing.T) {
 	if status.Status != http.StatusCreated {
 		t.Error("status.Status != http.StatusCreated:", status.Status)
 	}
-	if status.Version != 1 {
-		t.Error("status.Version != 1:", status.Version)
-	}
 
 	w = httptest.NewRecorder()
 	r = httptest.NewRequest("PUT", "/api/v1/assets/foo", strings.NewReader("bar"))
@@ -200,9 +197,6 @@ func testHandleAssetsPut(t *testing.T) {
 	}
 	if status.Status != http.StatusOK {
 		t.Error("status.Status != httpStatusOK:", status.Status)
-	}
-	if status.Version != 2 {
-		t.Error("status.Version != 2:", status.Version)
 	}
 
 	w = httptest.NewRecorder()

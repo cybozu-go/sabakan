@@ -93,8 +93,8 @@ This type of key holds a list of deleted image IDs as follows:
 ["123.45.6", "789.0.1", "2018.04.01"]
 ```
 
-`<prefix>/assets`
------------------
+`<prefix>/assets/`
+------------------
 
 This key stores the last ID of the asset.  Each time an asset is added
 or updated, the value will be incremented by one.
@@ -123,7 +123,7 @@ This type of key holds DHCP configurations.
 The value is [DHCPConfig](dhcp.md#dhcpconfig) formatted in JSON.
 
 `<prefix>/lease-usages/<ip>`
-------------------------------
+----------------------------
 
 Name | Description
 ---- | -----------

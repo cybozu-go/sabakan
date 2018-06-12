@@ -9,6 +9,7 @@ const (
 	KeyMachines    = "machines/"
 	KeyNodeIndices = "node-indices/"
 	KeyImages      = "images/"
+	KeyAssets      = "assets/"
 	KeyIgnitions   = "ignitions/"
 )
 

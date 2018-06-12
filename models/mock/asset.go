@@ -66,8 +66,7 @@ func (d *assetDriver) Put(ctx context.Context, name, contentType string,
 	return d.newAsset(ctx, name, contentType, r)
 }
 
-func (d *assetDriver) Get(ctx context.Context, name string,
-	f func(modtime time.Time, contentType string, content io.ReadSeeker)) error {
+func (d *assetDriver) Get(ctx context.Context, name string, h sabakan.AssetHandler) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -76,7 +75,7 @@ func (d *assetDriver) Get(ctx context.Context, name string,
 		return sabakan.ErrNotFound
 	}
 
-	f(asset.Date, asset.ContentType, bytes.NewReader(d.data[name]))
+	h.ServeContent(asset, bytes.NewReader(d.data[name]))
 
 	return nil
 }
@@ -117,7 +116,6 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
 		Date:        time.Now().UTC(),
 		Sha256:      sum,
 		URLs:        nil,
-		Version:     1,
 		Exists:      true,
 	}
 
@@ -125,9 +123,8 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
 	d.data[name] = data
 
 	status := &sabakan.AssetStatus{
-		Status:  http.StatusCreated,
-		Version: 1,
-		ID:      id,
+		Status: http.StatusCreated,
+		ID:     id,
 	}
 
 	return status, nil
@@ -151,14 +148,12 @@ func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
 	asset.ContentType = contentType
 	asset.Date = time.Now().UTC()
 	asset.Sha256 = sum
-	asset.Version++
 
 	d.data[asset.Name] = data
 
 	status := &sabakan.AssetStatus{
-		Status:  http.StatusOK,
-		Version: asset.Version,
-		ID:      id,
+		Status: http.StatusOK,
+		ID:     id,
 	}
 
 	return status, nil
