@@ -18,7 +18,7 @@ How it works
 
 ### Image directory
 
-sabakan saves uploaded images under `/var/lib/sabakan/OS` directory.
+sabakan saves uploaded images under `/var/lib/sabakan/images/OS` directory.
 `OS` can be an arbitrary identifier such as "coreos".
 
 ### Index of images
@@ -59,13 +59,13 @@ It becomes `true` if the server has a local copy of the image.
 Firstly, only one sabakan server in the cluster has a new image.
 Other sabakan servers need to pull the image from the first server.
 
+To distribute new images, the first server update the index in etcd and
+stores a download URL from the server in `urls` field.
+
 Each sabakan server watches the index in etcd, and finds new images.
 When a server finds a new image in the index, it downloads the image through
 a URL in `urls`.  After the server pulled the image, it may optionally add
 a URL to download the image from itself for load-balancing.
-
-To distribute new images, the first server that receives a new image
-adds an index entry having a download URL from the server in `urls`.
 
 ### Removing images that are no longer in the index
 

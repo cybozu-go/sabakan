@@ -12,6 +12,11 @@ REST API
 * [PUT /api/v1/images/coreos/ID](#putimages)
 * [GET /api/v1/images/coreos/ID](#getimages)
 * [DELETE /api/v1/images/coreos/ID](#deleteimages)
+* [GET /api/v1/assets](#getassetsindex)
+* [PUT /api/v1/assets/NAME](#putassets)
+* [GET|HEAD /api/v1/assets/NAME](#getassets)
+* [GET /api/v1/assets/NAME/meta](#getassetsmeta)
+* [DELETE /api/v1/assets/NAME](#deleteassets)
 * [GET /api/v1/boot/ipxe.efi](#getipxe)
 * [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
 * [GET /api/v1/boot/coreos/ipxe/SERIAL](#getcoreosipxeserial)
@@ -310,6 +315,99 @@ Remove the image specified by `<id>` from the index.
 - No image has the ID.
 
   HTTP status code: 404 Not found
+
+## <a name="getassetsindex" />`GET /api/v1/assets`
+
+Get the list of asset names as JSON array.
+
+## <a name="putassets" />`PUT /api/v1/assets/<NAME>`
+
+Upload a file as an asset.  Content-type and content-length headers must be
+supplied by requests.
+
+**Successful response**
+
+- HTTP status code: 201 Created, or 200 OK
+- HTTP response header: `application/json`
+- HTTP response body: JSON
+
+The response for a newly created asset looks like:
+```json
+{
+    "status": 201,
+    "version": 1,
+    "id": 15,
+}
+```
+
+The response for an updated asset looks like:
+```json
+{
+    "status": 200,
+    "version": 3,
+    "id": 19,
+}
+```
+
+**Failure responses**
+
+- No content-type request header:
+
+    HTTP status code: 400 Bad Request
+
+- No content-length request header:
+
+    HTTP status code: 411 Length Required
+
+- Content is too large:
+
+    HTTP status code: 413 Payload Too Large
+
+## <a name="getassets" />`GET /api/v1/assets/<NAME>`
+
+Download the named asset.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- The asset was not found.
+
+    HTTP status code: 404 Not found
+
+## <a name="getassetsmeta" />`GET /api/v1/assets/<NAME>/meta`
+
+Fetch the meta data of the named asset.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `application/json`
+
+The response JSON is described in [asset management](assets.md).
+
+**Failure responses**
+
+- The asset was not found.
+
+    HTTP status code: 404 Not found
+
+## <a name="deleteassets" />`DELETE /api/v1/assets/<NAME>`
+
+Remove the named asset.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response body: empty
+
+**Failure responses**
+
+- The asset was not found.
+
+    HTTP status code: 404 Not found
 
 ## <a name="getipxe" />`GET /api/v1/boot/ipxe.efi`
 

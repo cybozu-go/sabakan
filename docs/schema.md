@@ -93,6 +93,18 @@ This type of key holds a list of deleted image IDs as follows:
 ["123.45.6", "789.0.1", "2018.04.01"]
 ```
 
+`<prefix>/assets`
+-----------------
+
+This key stores the last ID of the asset.  Each time an asset is added
+or updated, the value will be incremented by one.
+
+`<prefix>/assets/<NAME>`
+------------------------
+
+This type of key holds the meta data of an asset.
+The value is described in [asset management](assets.md).
+
 `<prefix>/ignitions/<role>/<id>`
 -------------------------
 

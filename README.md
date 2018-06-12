@@ -45,6 +45,11 @@ Planned features
 
     Sabakan provides API to change server status for life-cycle management.
 
+* Asset management
+
+    In order to help initialization of client servers, sabakan can work
+    as a file server from which clients can download assets via HTTP.
+
 * Logs
 
     To track problems and life-cycle events, sabakan keeps operation logs
