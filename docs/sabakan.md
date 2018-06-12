@@ -10,7 +10,7 @@ Usage of /home/ymmt/go/bin/sabakan:
   -advertise-url string
         public URL of this server
   -allow-ips string
-        comma-separated IPs allowd to change resources (default "127.0.0.1")
+        comma-separated IPs allowed to change resources (default "127.0.0.1,::1")
   -config-file string
         path to configuration file
   -dhcp-bind string
@@ -42,7 +42,7 @@ Usage of /home/ymmt/go/bin/sabakan:
 Option          | Default value            | Description
 --------------- | ------------------------ | -----------
 `advertise-url` | ""                       | Public URL to access this server.  Required.
-`allow-ips`     | "127.0.0.1"              | comma-separated IPs allowd to change resources
+`allow-ips`     | "127.0.0.1,::1"          | comma-separated IPs allowed to change resources
 `config-file`   | ""                       | If given, configurations are read from the file.
 `dhcp-bind`     | `0.0.0.0:10067`          | bound ip addresses and port dhcp server
 `etcd-prefix`   | `/sabakan`               | etcd prefix

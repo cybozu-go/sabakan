@@ -99,7 +99,6 @@ func runSabakan() (func(), error) {
 		"-dhcp-bind", "0.0.0.0:10067",
 		"-etcd-servers", servers,
 		"-advertise-url", "http://localhost:10080",
-		"-allow-ips", "127.0.0.1,::1",
 		"-image-dir", imageDir,
 	)
 	command.Stdout = os.Stdout

@@ -14,7 +14,7 @@ func newTestServer(m sabakan.Model) *Server {
 		panic(err)
 	}
 	return &Server{
-		Model:         m,
-		AllowdRemotes: []*net.IPNet{ipnet},
+		Model:          m,
+		AllowedRemotes: []*net.IPNet{ipnet},
 	}
 }
