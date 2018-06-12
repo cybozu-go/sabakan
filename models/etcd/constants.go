@@ -10,6 +10,7 @@ const (
 	KeyNodeIndices = "node-indices/"
 	KeyImages      = "images/"
 	KeyAssets      = "assets/"
+	KeyAssetsID    = "assets"
 	KeyIgnitions   = "ignitions/"
 )
 

@@ -34,14 +34,14 @@ func (d *driver) assetExists(id int) bool {
 
 func (d *driver) assetNewID(ctx context.Context) (int, error) {
 RETRY:
-	resp, err := d.client.Get(ctx, KeyAssets)
+	resp, err := d.client.Get(ctx, KeyAssetsID)
 	if err != nil {
 		return 0, err
 	}
 	if resp.Count == 0 {
 		_, err := d.client.Txn(ctx).
-			If(clientv3util.KeyMissing(KeyAssets)).
-			Then(clientv3.OpPut(KeyAssets, "0")).
+			If(clientv3util.KeyMissing(KeyAssetsID)).
+			Then(clientv3.OpPut(KeyAssetsID, "0")).
 			Commit()
 		if err != nil {
 			return 0, err
@@ -58,8 +58,8 @@ RETRY:
 	value := strconv.Itoa(id)
 
 	tresp, err := d.client.Txn(ctx).
-		If(clientv3.Compare(clientv3.ModRevision(KeyAssets), "=", rev)).
-		Then(clientv3.OpPut(KeyAssets, value)).
+		If(clientv3.Compare(clientv3.ModRevision(KeyAssetsID), "=", rev)).
+		Then(clientv3.OpPut(KeyAssetsID, value)).
 		Commit()
 	if err != nil {
 		return 0, err
