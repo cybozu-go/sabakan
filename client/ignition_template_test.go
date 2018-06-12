@@ -12,11 +12,11 @@ func testIgnitionBuilderConstructIgnitionYAML(t *testing.T) {
 		source  *ignitionSource
 		wantErr bool
 	}{
-		{name: "passwd", source: &ignitionSource{Passwd: "passwd.yml"}, wantErr: false},
+		{name: "passwd", source: &ignitionSource{Passwd: "base/passwd.yml"}, wantErr: false},
 		{name: "files", source: &ignitionSource{Files: []string{"/etc/hostname"}}, wantErr: false},
 		{name: "systemd", source: &ignitionSource{Systemd: []systemd{{Source: "bird.service"}}}, wantErr: false},
 		{name: "networkd", source: &ignitionSource{Networkd: []string{"10-node0.netdev"}}, wantErr: false},
-		{name: "include", source: &ignitionSource{Include: "base.yml"}, wantErr: false},
+		{name: "include yml from different working directory", source: &ignitionSource{Include: "base/base.yml"}, wantErr: false},
 
 		{name: "passwd not found", source: &ignitionSource{Passwd: "nonexists_file.yml"}, wantErr: true},
 		{name: "files not found", source: &ignitionSource{Files: []string{"/etc/not_file"}}, wantErr: true},
@@ -99,7 +99,7 @@ func testIgnitionBuilderConstructNetworkd(t *testing.T) {
 
 func testIgnitionBuilderConstructPasswd(t *testing.T) {
 	b := newIgnitionBuilder("../testdata/ignitions")
-	src := "passwd.yml"
+	src := "base/passwd.yml"
 	err := b.constructPasswd(src)
 	if err != nil {
 		t.Fatal(err)
@@ -122,7 +122,7 @@ func testIgnitionBuilderConstructPasswd(t *testing.T) {
 func testIgnitionBuilderConstructInclude(t *testing.T) {
 	b := newIgnitionBuilder("../testdata/ignitions")
 
-	err := b.constructIgnitionYAML(&ignitionSource{Systemd: []systemd{{Source: "bird.service"}}, Include: "base.yml"})
+	err := b.constructIgnitionYAML(&ignitionSource{Systemd: []systemd{{Source: "bird.service"}}, Include: "base/base.yml"})
 	if err != nil {
 		t.Fatal(err)
 	}

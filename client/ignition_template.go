@@ -2,13 +2,13 @@ package client
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -97,11 +97,15 @@ func (b *ignitionBuilder) constructIgnitionYAML(source *ignitionSource) error {
 			return fmt.Errorf("same file was included: %s", source.Include)
 		}
 		b.loadedFiles[source.Include] = true
+
 		include, err := loadSource(filepath.Join(b.baseDir, source.Include))
 		if err != nil {
 			return err
 		}
-		err = b.constructIgnitionYAML(include)
+
+		childBaseDir := filepath.Dir(filepath.Join(b.baseDir, source.Include))
+		childBuilder := ignitionBuilder{baseDir: childBaseDir, ignition: b.ignition, loadedFiles: b.loadedFiles}
+		err = childBuilder.constructIgnitionYAML(include)
 		if err != nil {
 			return err
 		}
