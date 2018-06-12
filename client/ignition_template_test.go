@@ -49,7 +49,7 @@ func testIgnitionBuilderConstructFile(t *testing.T) {
 
 	actual := len(storage["files"].([]interface{}))
 	if actual != 2 {
-		t.Errorf("constructFiles appends a unit, so expected length:%d, actual %d", 2, actual)
+		t.Errorf("Should not overwrite units, so expected length:%d, actual %d", 2, actual)
 	}
 }
 
@@ -71,7 +71,7 @@ func testIgnitionBuilderConstructSystemd(t *testing.T) {
 
 	actual := len(systemd["units"].([]interface{}))
 	if actual != 2 {
-		t.Errorf("constructSystemd appends a unit, so expected length:%d, actual %d", 2, actual)
+		t.Errorf("Should not overwrite units, so expected length:%d, actual %d", 2, actual)
 	}
 }
 
@@ -93,7 +93,7 @@ func testIgnitionBuilderConstructNetworkd(t *testing.T) {
 
 	actual := len(networkd["units"].([]interface{}))
 	if actual != 2 {
-		t.Errorf("constructNetworkd appends a unit, so expected length:%d, actual %d", 2, actual)
+		t.Errorf("Should not overwrite units, so expected length:%d, actual %d", 2, actual)
 	}
 }
 

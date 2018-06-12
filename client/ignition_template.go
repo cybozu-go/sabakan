@@ -185,10 +185,7 @@ func (b *ignitionBuilder) constructFile(inputFile string) error {
 	if !ok {
 		storage = make(map[string]interface{})
 	}
-	files, ok := storage["files"].([]interface{})
-	if !ok {
-		files = make([]interface{}, 0)
-	}
+	files, _ := storage["files"].([]interface{})
 	files = append(files, map[string]interface{}{
 		"path":       inputFile,
 		"filesystem": "root",
@@ -220,10 +217,7 @@ func (b *ignitionBuilder) constructSystemd(s systemd) error {
 	if !ok {
 		systemd = make(map[string]interface{})
 	}
-	units, ok := systemd["units"].([]interface{})
-	if !ok {
-		units = make([]interface{}, 0)
-	}
+	units, _ := systemd["units"].([]interface{})
 	units = append(units, map[string]interface{}{
 		"name":     s.Source,
 		"enabled":  s.Enabled,
@@ -250,10 +244,7 @@ func (b *ignitionBuilder) constructNetworkd(n string) error {
 	if !ok {
 		networkd = make(map[string]interface{})
 	}
-	units, ok := networkd["units"].([]interface{})
-	if !ok {
-		units = make([]interface{}, 0)
-	}
+	units, _ := networkd["units"].([]interface{})
 	units = append(units, map[string]interface{}{
 		"name":     n,
 		"contents": string(data),
