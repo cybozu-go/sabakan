@@ -116,7 +116,7 @@ func (s Server) handleIgnitionTemplatesPost(w http.ResponseWriter, r *http.Reque
 	}
 	err = sabakan.ValidateIgnitionTemplate(string(body), ipam)
 	if err != nil {
-		renderError(r.Context(), w, APIErrBadRequest)
+		renderError(r.Context(), w, BadRequest(err.Error()))
 		return
 	}
 	id, err := s.Model.Ignition.PutTemplate(r.Context(), role, string(body))
