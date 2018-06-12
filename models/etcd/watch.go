@@ -47,31 +47,42 @@ func (d *driver) initDHCPConfig(ctx context.Context) error {
 	return nil
 }
 
-func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{}) error {
+func (d *driver) init(ctx context.Context, ch chan<- struct{}) (int64, error) {
+	defer func() {
+		// notify the caller of the readiness
+		ch <- struct{}{}
+	}()
+
 	// obtain the current revision to avoid missing events.
 	resp, err := d.client.Get(ctx, "/")
 	if err != nil {
-		return err
+		return 0, err
 	}
 	rev := resp.Header.Revision
 
 	err = d.initIPAMConfig(ctx)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	err = d.initDHCPConfig(ctx)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	err = d.mi.init(ctx, d.client)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	// notify the caller of the readiness
-	ch <- struct{}{}
+	return rev, nil
+}
+
+func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{}) error {
+	rev, err := d.init(ctx, ch)
+	if err != nil {
+		return err
+	}
 
 	rch := d.client.Watch(ctx, "",
 		clientv3.WithPrefix(),
