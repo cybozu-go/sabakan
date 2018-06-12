@@ -155,6 +155,12 @@ func testHandleAssetsGet(t *testing.T) {
 	if resp.Header.Get("content-type") != "text/plain" {
 		t.Error("content-type != text/plain", resp.Header.Get("content-type"))
 	}
+	if len(resp.Header.Get("X-Sabakan-Asset-ID")) == 0 {
+		t.Error("X-Sabakan-Asset-ID is not set")
+	}
+	if resp.Header.Get("X-Sabakan-Asset-SHA256") != "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9" {
+		t.Error("X-Sabakan-Asset-SHA256 is not valid:", resp.Header.Get("X-Sabakan-Asset-SHA256"))
+	}
 }
 
 func testHandleAssetsPut(t *testing.T) {
