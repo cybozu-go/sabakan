@@ -24,7 +24,7 @@ func NewModel() sabakan.Model {
 	return sabakan.Model{
 		Runner:   d,
 		Storage:  newStorageDriver(),
-		Machine:  d,
+		Machine:  newMachineDriver(d),
 		IPAM:     ipamDriver{d},
 		DHCP:     newDHCPDriver(d),
 		Image:    newImageDriver(),
