@@ -47,6 +47,12 @@ func (d *driver) myURL(p ...string) string {
 	return u.String()
 }
 
+// EventPool is a pool of events.
+type EventPool struct {
+	Rev    int64
+	Events []*clientv3.Event
+}
+
 // Run starts etcd watcher.  This should be called as a goroutine.
 //
 // The watcher sends an object when it completes the initialization
@@ -57,14 +63,26 @@ func (d *driver) myURL(p ...string) string {
 // This can be used by tests to synchronize with the watcher.
 func (d *driver) Run(ctx context.Context, ch chan<- struct{}) error {
 	imageIndexCh := make(chan struct{}, 1)
+	epCh := make(chan EventPool, 1)
 
 	env := cmd.NewEnvironment(ctx)
+
+	// stateless watcher and its consumer
 	env.Go(func(ctx context.Context) error {
-		return d.startWatching(ctx, ch, imageIndexCh)
+		return d.startStatelessWatcher(ctx, ch, imageIndexCh)
 	})
 	env.Go(func(ctx context.Context) error {
 		return d.startImageUpdater(ctx, imageIndexCh)
 	})
+
+	// stateful watcher and its consumer
+	env.Go(func(ctx context.Context) error {
+		return d.startStatefulWatcher(ctx, epCh)
+	})
+	env.Go(func(ctx context.Context) error {
+		return d.startAssetUpdater(ctx, epCh)
+	})
+
 	env.Stop()
 
 	return env.Wait()
