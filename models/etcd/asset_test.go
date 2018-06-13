@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -104,7 +105,7 @@ func testAssetGetInfo(t *testing.T) {
 	}
 
 	// force local copy absent
-	// this may cause watcher to panic, so stop it beforehand
+	// TODO: this may cause watcher to panic, so stop it beforehand
 	err = os.Remove(d.assetPath(asset.ID))
 	if err != nil {
 		t.Fatal(err)
@@ -130,6 +131,7 @@ func testAssetPut(t *testing.T) {
 	d.dataDir = tempdir
 	defer os.RemoveAll(tempdir)
 
+	// case 1. creation
 	status, err := d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
@@ -142,6 +144,53 @@ func testAssetPut(t *testing.T) {
 		t.Error("status.ID != 1:", status.ID)
 	}
 
+	// check etcd data directly
+	resp, err := d.client.Get(context.Background(), KeyAssets+"foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Kvs) != 1 {
+		t.Fatal("asset not stored in etcd; len(resp.Kvs) != 1:", len(resp.Kvs))
+	}
+	asset := new(sabakan.Asset)
+	err = json.Unmarshal(resp.Kvs[0].Value, asset)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if asset.Name != "foo" {
+		t.Error("asset.Name != foo:", asset.Name)
+	}
+	if asset.ID != 1 {
+		t.Error("asset.ID != 1:", asset.ID)
+	}
+	if asset.ContentType != "text/plain" {
+		t.Error("asset.ContentType != text/plain:", asset.ContentType)
+	}
+	if asset.Sha256 != "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9" {
+		t.Error("wrong Sha256:", asset.Sha256)
+	}
+	u := *d.advertiseURL
+	u.Path = "/api/v1/assets/foo"
+	if !reflect.DeepEqual(asset.URLs, []string{u.String()}) {
+		t.Error("wrong URLs", asset.URLs)
+	}
+	// asset.Exists in etcd has no meaning
+
+	// check local file directly
+	f1, err := os.Open(d.assetPath(status.ID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f1.Close()
+	buf, err := ioutil.ReadAll(f1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(buf) != "bar" {
+		t.Error("local copy corrupted")
+	}
+
+	// case 2. update
 	status, err = d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("baz"))
 	if err != nil {
 		t.Fatal(err)
@@ -154,12 +203,40 @@ func testAssetPut(t *testing.T) {
 		t.Error("status.ID != 2:", status.ID)
 	}
 
-	f, err := os.Open(d.assetPath(status.ID))
+	resp, err = d.client.Get(context.Background(), KeyAssets+"foo")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
-	buf, err := ioutil.ReadAll(f)
+	if len(resp.Kvs) != 1 {
+		t.Fatal("asset not stored in etcd; len(resp.Kvs) != 1:", len(resp.Kvs))
+	}
+	asset = new(sabakan.Asset)
+	err = json.Unmarshal(resp.Kvs[0].Value, asset)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if asset.Name != "foo" {
+		t.Error("asset.Name != foo:", asset.Name)
+	}
+	if asset.ID != 2 {
+		t.Error("asset.ID != 2:", asset.ID)
+	}
+	if asset.ContentType != "text/plain" {
+		t.Error("asset.ContentType != text/plain:", asset.ContentType)
+	}
+	if asset.Sha256 != "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096" {
+		t.Error("wrong Sha256:", asset.Sha256)
+	}
+	if !reflect.DeepEqual(asset.URLs, []string{u.String()}) {
+		t.Error("wrong URLs", asset.URLs)
+	}
+
+	f2, err := os.Open(d.assetPath(status.ID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f2.Close()
+	buf, err = ioutil.ReadAll(f2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,7 +312,7 @@ func testAssetGet(t *testing.T) {
 	}
 
 	// force local copy absent
-	// this may cause watcher to panic, so stop it beforehand
+	// TODO: this may cause watcher to panic, so stop it beforehand
 	err = os.Remove(d.assetPath(status.ID))
 	if err != nil {
 		t.Fatal(err)
@@ -291,6 +368,17 @@ func testAssetDelete(t *testing.T) {
 	if err != sabakan.ErrNotFound {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
+
+	// check etcd data directly
+	resp, err := d.client.Get(context.Background(), KeyAssets+"foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Kvs) != 0 {
+		t.Error("asset not deleted from etcd; len(resp.Kvs) != 0:", len(resp.Kvs))
+	}
+
+	// TODO: check local file directly; this needs watcher
 
 	status, err := d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("baz"))
 	if err != nil {
