@@ -24,6 +24,7 @@ func main() {
 	subcommands.Register(ipamCommand(), "")
 	subcommands.Register(machinesCommand(), "")
 	subcommands.Register(imagesCommand(), "")
+	subcommands.Register(assetsCommand(), "")
 	subcommands.Register(ignitionsCommand(), "")
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
