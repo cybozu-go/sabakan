@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/namespace"
+	"github.com/cybozu-go/cmd"
 )
 
 const (
@@ -88,7 +90,10 @@ func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 		t.Fatal(err)
 	}
 	d := &driver{
-		client:       client,
+		client: client,
+		httpclient: &cmd.HTTPClient{
+			Client: &http.Client{},
+		},
 		mi:           newMachinesIndex(),
 		advertiseURL: u,
 	}

@@ -11,12 +11,8 @@ import (
 	"github.com/cybozu-go/log"
 )
 
-const (
-	lastRevFile = "lastrev"
-)
-
 func (d *driver) loadLastRev() int64 {
-	p := filepath.Join(d.dataDir, lastRevFile)
+	p := filepath.Join(d.dataDir, LastRevFile)
 	f, err := os.Open(p)
 	if err != nil {
 		log.Warn("failed to open lastrev file", map[string]interface{}{
@@ -49,7 +45,7 @@ func (d *driver) loadLastRev() int64 {
 }
 
 func (d *driver) saveLastRev(rev int64) error {
-	p := filepath.Join(d.dataDir, lastRevFile)
+	p := filepath.Join(d.dataDir, LastRevFile)
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
 	if err != nil {
 		return err

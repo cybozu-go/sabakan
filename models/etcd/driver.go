@@ -3,6 +3,7 @@ package etcd
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"path"
 	"sync/atomic"
@@ -14,6 +15,7 @@ import (
 
 type driver struct {
 	client       *clientv3.Client
+	httpclient   *cmd.HTTPClient
 	dataDir      string
 	advertiseURL *url.URL
 	mi           *machinesIndex
@@ -24,7 +26,10 @@ type driver struct {
 // NewModel returns sabakan.Model
 func NewModel(client *clientv3.Client, dataDir string, advertiseURL *url.URL) sabakan.Model {
 	d := &driver{
-		client:       client,
+		client: client,
+		httpclient: &cmd.HTTPClient{
+			Client: &http.Client{},
+		},
 		dataDir:      dataDir,
 		advertiseURL: advertiseURL,
 		mi:           newMachinesIndex(),
@@ -47,6 +52,16 @@ func (d *driver) myURL(p ...string) string {
 	return u.String()
 }
 
+func (d *driver) pullURL(ctx context.Context, u string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req = req.WithContext(ctx)
+	return d.httpclient.Do(req)
+}
+
 // EventPool is a pool of events.
 type EventPool struct {
 	Rev    int64
@@ -63,7 +78,7 @@ type EventPool struct {
 // This can be used by tests to synchronize with the watcher.
 func (d *driver) Run(ctx context.Context, ch chan<- struct{}) error {
 	imageIndexCh := make(chan struct{}, 1)
-	epCh := make(chan EventPool, 1)
+	epCh := make(chan EventPool)
 
 	env := cmd.NewEnvironment(ctx)
 

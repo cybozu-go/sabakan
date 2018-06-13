@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/sabakan"
+	"github.com/pkg/errors"
 )
 
 type assetDriver struct {
@@ -53,17 +54,17 @@ func (d *assetDriver) GetInfo(ctx context.Context, name string) (*sabakan.Asset,
 	return asset, nil
 }
 
-func (d *assetDriver) Put(ctx context.Context, name, contentType string,
+func (d *assetDriver) Put(ctx context.Context, name, contentType, csum string,
 	r io.Reader) (*sabakan.AssetStatus, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	asset, ok := d.assets[name]
 	if ok {
-		return d.updateAsset(ctx, asset, contentType, r)
+		return d.updateAsset(ctx, asset, contentType, csum, r)
 	}
 
-	return d.newAsset(ctx, name, contentType, r)
+	return d.newAsset(ctx, name, contentType, csum, r)
 }
 
 func (d *assetDriver) Get(ctx context.Context, name string, h sabakan.AssetHandler) error {
@@ -95,7 +96,7 @@ func (d *assetDriver) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
+func (d *assetDriver) newAsset(ctx context.Context, name, contentType, csum string,
 	r io.Reader) (*sabakan.AssetStatus, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -108,6 +109,10 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
 	h := sha256.New()
 	h.Write(data)
 	sum := hex.EncodeToString(h.Sum(nil))
+
+	if len(csum) > 0 && csum != sum {
+		return nil, errors.New("checksum mismatch")
+	}
 
 	asset := &sabakan.Asset{
 		Name:        name,
@@ -131,7 +136,7 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
 }
 
 func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
-	contentType string, r io.Reader) (*sabakan.AssetStatus, error) {
+	contentType, csum string, r io.Reader) (*sabakan.AssetStatus, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -143,6 +148,10 @@ func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
 	h := sha256.New()
 	h.Write(data)
 	sum := hex.EncodeToString(h.Sum(nil))
+
+	if len(csum) > 0 && csum != sum {
+		return nil, errors.New("checksum mismatch")
+	}
 
 	asset.ID = id
 	asset.ContentType = contentType

@@ -2,11 +2,9 @@ package etcd
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -19,17 +17,10 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
-func (d *driver) assetDir() string {
-	return filepath.Join(d.dataDir, "assets")
-}
-
-func (d *driver) assetPath(id int) string {
-	return filepath.Join(d.assetDir(), strconv.Itoa(id))
-}
-
-func (d *driver) assetExists(id int) bool {
-	_, err := os.Stat(d.assetPath(id))
-	return err == nil
+func (d *driver) getAssetDir() AssetDir {
+	return AssetDir{
+		Dir: filepath.Join(d.dataDir, "assets"),
+	}
 }
 
 func (d *driver) assetNewID(ctx context.Context) (int, error) {
@@ -86,59 +77,42 @@ func (d *driver) assetGetIndex(ctx context.Context) ([]string, error) {
 	return ret, nil
 }
 
-func (d *driver) assetGetInfo(ctx context.Context, name string) (*sabakan.Asset, error) {
+func (d *driver) assetGetInfoWithRev(ctx context.Context, name string) (*sabakan.Asset, int64, error) {
 	key := KeyAssets + name
 	resp, err := d.client.Get(ctx, key)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if resp.Count == 0 {
-		return nil, sabakan.ErrNotFound
+		return nil, 0, sabakan.ErrNotFound
 	}
 
 	a := new(sabakan.Asset)
 	err = json.Unmarshal(resp.Kvs[0].Value, a)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	a.Exists = d.assetExists(a.ID)
-
-	return a, nil
+	return a, resp.Kvs[0].ModRevision, nil
 }
 
-func (d *driver) assetPut(ctx context.Context, name, contentType string, r io.Reader) (*sabakan.AssetStatus, error) {
+func (d *driver) assetGetInfo(ctx context.Context, name string) (*sabakan.Asset, error) {
+	a, _, err := d.assetGetInfoWithRev(ctx, name)
+	if a != nil {
+		a.Exists = d.getAssetDir().Exists(a.ID)
+	}
+	return a, err
+}
+
+func (d *driver) assetPut(ctx context.Context, name, contentType, csum string, r io.Reader) (*sabakan.AssetStatus, error) {
 	id, err := d.assetNewID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	dir := d.assetDir()
-	err = os.MkdirAll(dir, 0755)
-	if err != nil {
-		return nil, err
-	}
-
-	f, err := ioutil.TempFile(dir, ".tmp")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	w := io.MultiWriter(f, h)
-	_, err = io.Copy(w, r)
-	if err != nil {
-		return nil, err
-	}
-	err = f.Sync()
-	if err != nil {
-		return nil, err
-	}
-
-	dest := d.assetPath(id)
-	err = os.Rename(f.Name(), dest)
+	dir := d.getAssetDir()
+	hsum, err := dir.Save(id, r, csum)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +122,7 @@ func (d *driver) assetPut(ctx context.Context, name, contentType string, r io.Re
 		ID:          id,
 		ContentType: contentType,
 		Date:        time.Now().UTC(),
-		Sha256:      hex.EncodeToString(h.Sum(nil)),
+		Sha256:      hex.EncodeToString(hsum),
 		URLs:        []string{d.myURL("/api/v1/assets", name)},
 	}
 	data, err := json.Marshal(a)
@@ -177,7 +151,7 @@ func (d *driver) assetPut(ctx context.Context, name, contentType string, r io.Re
 		return nil, err
 	}
 	if !tresp.Succeeded {
-		os.Remove(dest)
+		os.Remove(dir.Path(id))
 		return nil, sabakan.ErrConflicted
 	}
 
@@ -204,8 +178,10 @@ func (d *driver) assetGet(ctx context.Context, name string, h sabakan.AssetHandl
 		return err
 	}
 
-	if d.assetExists(a.ID) {
-		g, err := os.Open(d.assetPath(a.ID))
+	dir := d.getAssetDir()
+
+	if dir.Exists(a.ID) {
+		g, err := os.Open(dir.Path(a.ID))
 		if err != nil {
 			return err
 		}
@@ -248,8 +224,8 @@ func (d assetDriver) GetInfo(ctx context.Context, name string) (*sabakan.Asset, 
 	return d.assetGetInfo(ctx, name)
 }
 
-func (d assetDriver) Put(ctx context.Context, name, contentType string, r io.Reader) (*sabakan.AssetStatus, error) {
-	return d.assetPut(ctx, name, contentType, r)
+func (d assetDriver) Put(ctx context.Context, name, contentType, csum string, r io.Reader) (*sabakan.AssetStatus, error) {
+	return d.assetPut(ctx, name, contentType, csum, r)
 }
 
 func (d assetDriver) Get(ctx context.Context, name string, h sabakan.AssetHandler) error {

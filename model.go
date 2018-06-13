@@ -74,7 +74,7 @@ type AssetHandler interface {
 type AssetModel interface {
 	GetIndex(ctx context.Context) ([]string, error)
 	GetInfo(ctx context.Context, name string) (*Asset, error)
-	Put(ctx context.Context, name, contentType string, r io.Reader) (*AssetStatus, error)
+	Put(ctx context.Context, name, contentType, csum string, r io.Reader) (*AssetStatus, error)
 	Get(ctx context.Context, name string, h AssetHandler) error
 	Delete(ctx context.Context, name string) error
 }

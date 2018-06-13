@@ -322,8 +322,13 @@ Get the list of asset names as JSON array.
 
 ## <a name="putassets" />`PUT /api/v1/assets/<NAME>`
 
-Upload a file as an asset.  Content-type and content-length headers must be
-supplied by requests.
+Upload a file as an asset.
+
+**Request headers**
+
+- `Content-Type`: required
+- `Content-Length`: required
+- `X-Sabakan-Asset-SHA256`: if given, the uploaded data will be verified by SHA256.
 
 **Successful response**
 

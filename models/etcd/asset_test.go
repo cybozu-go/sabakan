@@ -34,15 +34,15 @@ func testAssetGetIndex(t *testing.T) {
 		t.Error("initial asset index should be empty")
 	}
 
-	_, err = d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.assetPut(context.Background(), "abc", "text/plain", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "abc", "text/plain", "", strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.assetPut(context.Background(), "xyz", "text/plain", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "xyz", "text/plain", "", strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func testAssetGetInfo(t *testing.T) {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
 
-	_, err = d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +106,7 @@ func testAssetGetInfo(t *testing.T) {
 
 	// force local copy absent
 	// TODO: this may cause watcher to panic, so stop it beforehand
-	err = os.Remove(d.assetPath(asset.ID))
+	err = os.Remove(d.getAssetDir().Path(asset.ID))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,7 @@ func testAssetPut(t *testing.T) {
 	defer os.RemoveAll(tempdir)
 
 	// case 1. creation
-	status, err := d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("bar"))
+	status, err := d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,7 +177,7 @@ func testAssetPut(t *testing.T) {
 	// asset.Exists in etcd has no meaning
 
 	// check local file directly
-	f1, err := os.Open(d.assetPath(status.ID))
+	f1, err := os.Open(d.getAssetDir().Path(status.ID))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +191,7 @@ func testAssetPut(t *testing.T) {
 	}
 
 	// case 2. update
-	status, err = d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("baz"))
+	status, err = d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("baz"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +231,7 @@ func testAssetPut(t *testing.T) {
 		t.Error("wrong URLs", asset.URLs)
 	}
 
-	f2, err := os.Open(d.assetPath(status.ID))
+	f2, err := os.Open(d.getAssetDir().Path(status.ID))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -288,7 +288,7 @@ func testAssetGet(t *testing.T) {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
 
-	status, err := d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("bar"))
+	status, err := d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -313,7 +313,7 @@ func testAssetGet(t *testing.T) {
 
 	// force local copy absent
 	// TODO: this may cause watcher to panic, so stop it beforehand
-	err = os.Remove(d.assetPath(status.ID))
+	err = os.Remove(d.getAssetDir().Path(status.ID))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -354,7 +354,7 @@ func testAssetDelete(t *testing.T) {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
 
-	_, err = d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -380,7 +380,7 @@ func testAssetDelete(t *testing.T) {
 
 	// TODO: check local file directly; this needs watcher
 
-	status, err := d.assetPut(context.Background(), "foo", "text/plain", strings.NewReader("baz"))
+	status, err := d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("baz"))
 	if err != nil {
 		t.Fatal(err)
 	}

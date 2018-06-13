@@ -16,3 +16,15 @@ const (
 
 // MaxDeleted is the maximum number of deleted image IDs stored in etcd.
 const MaxDeleted = 10
+
+// LastRevFile is the filename that keeps the last revision that
+// the stateful watcher processed successfully.
+const LastRevFile = "lastrev"
+
+// Miscellaneous
+const (
+	assetPageSize    = 100
+	maxJitterSeconds = 60
+	maxAssetURLs     = 10
+	maxImageURLs     = 10
+)

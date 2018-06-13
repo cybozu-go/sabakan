@@ -111,7 +111,8 @@ func (s Server) handleAssetsPut(w http.ResponseWriter, r *http.Request, name str
 		return
 	}
 
-	status, err := s.Model.Asset.Put(r.Context(), name, contentType, r.Body)
+	csum := r.Header.Get("X-Sabakan-Asset-SHA256")
+	status, err := s.Model.Asset.Put(r.Context(), name, contentType, csum, r.Body)
 	if err == sabakan.ErrConflicted {
 		renderError(r.Context(), w, APIErrConflict)
 		return
