@@ -29,6 +29,11 @@ func (d AssetDir) Exists(id int) bool {
 	return err == nil
 }
 
+// Remove removes an asset.
+func (d AssetDir) Remove(id int) error {
+	return os.Remove(d.Path(id))
+}
+
 // Save stores an asset.
 // When successful, this returns SHA256 checksum of the contents.
 func (d AssetDir) Save(id int, r io.Reader, csum string) ([]byte, error) {

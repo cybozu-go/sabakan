@@ -15,6 +15,15 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
+func decodeAsset(data []byte) (*sabakan.Asset, error) {
+	asset := new(sabakan.Asset)
+	err := json.Unmarshal(data, asset)
+	if err != nil {
+		return nil, err
+	}
+	return asset, err
+}
+
 func (d *driver) addAssetURL(ctx context.Context, asset *sabakan.Asset) error {
 RETRY:
 	a, rev, err := d.assetGetInfoWithRev(ctx, asset.Name)
@@ -70,7 +79,7 @@ func (d *driver) downloadAsset(ctx context.Context, asset *sabakan.Asset) error 
 	}
 
 	if err != nil {
-		log.Error("failed to pull an asset", map[string]interface{}{
+		log.Error("asset: failed to pull", map[string]interface{}{
 			"name": asset.Name,
 			"id":   asset.ID,
 			"urls": asset.URLs,
@@ -94,10 +103,10 @@ func (d *driver) downloadAsset(ctx context.Context, asset *sabakan.Asset) error 
 
 	if asset.ID != id {
 		// the asset has been replaced with newer one
-		log.Info("received newer asset", map[string]interface{}{
-			"expected": asset.ID,
-			"received": id,
-			"name":     asset.Name,
+		log.Info("asset: replaced during pull", map[string]interface{}{
+			"requested": asset.ID,
+			"received":  id,
+			"name":      asset.Name,
 		})
 		return nil
 	}
@@ -133,8 +142,7 @@ func (d *driver) initAssets(ctx context.Context, rev int64) error {
 
 REDO:
 	for _, kv := range kvs {
-		asset := new(sabakan.Asset)
-		err = json.Unmarshal(kv.Value, asset)
+		asset, err := decodeAsset(kv.Value)
 		if err != nil {
 			return err
 		}
@@ -143,9 +151,22 @@ REDO:
 			continue
 		}
 		err = d.downloadAsset(ctx, asset)
-		if err != nil {
-			return err
+		if err == nil {
+			log.Info("asset: downloaded a local copy", map[string]interface{}{
+				"name": asset.Name,
+				"id":   asset.ID,
+			})
+			continue
 		}
+
+		// continue even when download failed because, if sabakan died,
+		// operators could not workaround by, for example, re-uploading
+		// the asset.
+		log.Error("asset: download failed", map[string]interface{}{
+			log.FnError: err,
+			"name":      asset.Name,
+			"id":        asset.ID,
+		})
 	}
 
 	if resp.More {
@@ -167,8 +188,89 @@ REDO:
 	return nil
 }
 
-func (d *driver) handleAssetEvent(ctx context.Context, ev *clientv3.Event) error {
+func (d *driver) handleAssetAdd(ctx context.Context, asset *sabakan.Asset) error {
+	if d.getAssetDir().Exists(asset.ID) {
+		return nil
+	}
+
+	err := d.downloadAsset(ctx, asset)
+	if err == nil {
+		log.Info("asset: downloaded a local copy", map[string]interface{}{
+			"name": asset.Name,
+			"id":   asset.ID,
+		})
+	} else {
+		// continue even when download failed because, if sabakan died,
+		// operators could not workaround by, for example, re-uploading
+		// the asset.
+		log.Error("asset: download failed", map[string]interface{}{
+			log.FnError: err,
+			"name":      asset.Name,
+			"id":        asset.ID,
+		})
+	}
+
 	return nil
+}
+
+func (d *driver) handleAssetUpdate(ctx context.Context, oldA, newA *sabakan.Asset) error {
+	if oldA.ID != newA.ID {
+		err := d.handleAssetDelete(ctx, oldA)
+		if err != nil {
+			return err
+		}
+	}
+
+	return d.handleAssetAdd(ctx, newA)
+}
+
+func (d *driver) handleAssetDelete(ctx context.Context, asset *sabakan.Asset) error {
+	dir := d.getAssetDir()
+
+	if !dir.Exists(asset.ID) {
+		return nil
+	}
+
+	log.Info("asset: delete a local copy", map[string]interface{}{
+		"name": asset.Name,
+		"id":   asset.ID,
+	})
+	err := dir.Remove(asset.ID)
+	if err != nil {
+		log.Error("asset: failed to remove a local copy", map[string]interface{}{
+			log.FnError: err,
+			"name":      asset.Name,
+			"id":        asset.ID,
+		})
+	}
+	return nil
+}
+
+func (d *driver) handleAssetEvent(ctx context.Context, ev *clientv3.Event) error {
+	switch {
+	case ev.IsCreate():
+		a, err := decodeAsset(ev.Kv.Value)
+		if err != nil {
+			return err
+		}
+		return d.handleAssetAdd(ctx, a)
+	case ev.IsModify():
+		prevA, err := decodeAsset(ev.PrevKv.Value)
+		if err != nil {
+			return err
+		}
+		newA, err := decodeAsset(ev.Kv.Value)
+		if err != nil {
+			return err
+		}
+		return d.handleAssetUpdate(ctx, prevA, newA)
+	default: // DELETE
+		a, err := decodeAsset(ev.PrevKv.Value)
+		if err != nil {
+			return err
+		}
+		return d.handleAssetDelete(ctx, a)
+	}
 }
 
 func (d *driver) startAssetUpdater(ctx context.Context, ch <-chan EventPool) error {

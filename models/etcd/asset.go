@@ -151,7 +151,7 @@ func (d *driver) assetPut(ctx context.Context, name, contentType, csum string, r
 		return nil, err
 	}
 	if !tresp.Succeeded {
-		os.Remove(dir.Path(id))
+		dir.Remove(id)
 		return nil, sabakan.ErrConflicted
 	}
 
