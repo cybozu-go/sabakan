@@ -12,7 +12,6 @@ import (
 type driver struct {
 	mu       sync.Mutex
 	machines map[string]*sabakan.Machine
-	leases   map[string]*leaseUsage
 	ipam     *sabakan.IPAMConfig
 	dhcp     *sabakan.DHCPConfig
 }
@@ -21,14 +20,13 @@ type driver struct {
 func NewModel() sabakan.Model {
 	d := &driver{
 		machines: make(map[string]*sabakan.Machine),
-		leases:   make(map[string]*leaseUsage),
 	}
 	return sabakan.Model{
 		Runner:   d,
 		Storage:  newStorageDriver(),
 		Machine:  d,
 		IPAM:     ipamDriver{d},
-		DHCP:     dhcpDriver{d},
+		DHCP:     newDHCPDriver(d),
 		Image:    newImageDriver(),
 		Asset:    newAssetDriver(),
 		Ignition: newIgnitionDriver(),
