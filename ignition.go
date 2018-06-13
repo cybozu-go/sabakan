@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"text/template"
 
 	ignition "github.com/coreos/ignition/config/v2_2"
@@ -23,9 +24,13 @@ func ValidateIgnitionTemplate(tmpl string, ipam *IPAMConfig) error {
 		Serial: "1234abcd",
 		Rack:   1,
 	}
+	u, err := url.Parse("http://localhost:10080")
+	if err != nil {
+		return err
+	}
 
 	ipam.GenerateIP(mc)
-	ign, err := RenderIgnition(tmpl, mc)
+	ign, err := RenderIgnition(tmpl, mc, u)
 
 	if err != nil {
 		return err
@@ -41,8 +46,13 @@ func ValidateIgnitionTemplate(tmpl string, ipam *IPAMConfig) error {
 }
 
 // RenderIgnition returns the rendered ignition from the template and a machine
-func RenderIgnition(tmpl string, m *Machine) (string, error) {
-	t, err := template.New("ignition").Parse(tmpl)
+func RenderIgnition(tmpl string, m *Machine, sabakanURL *url.URL) (string, error) {
+	getSabakanURL := func() string {
+		return sabakanURL.String()
+	}
+	t, err := template.New("ignition").
+		Funcs(template.FuncMap{"SabakanURL": getSabakanURL}).
+		Parse(tmpl)
 	if err != nil {
 		return "", err
 	}

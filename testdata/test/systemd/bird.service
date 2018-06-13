@@ -2,7 +2,7 @@
 Description=bird
 
 [Service]
-ExecStart=/usr/bin/bird
+ExecStart=/usr/bin/bird --server={{ SabakanURL }}
 
 [Install]
 WantedBy=multi-user.target
