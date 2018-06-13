@@ -10,32 +10,28 @@ import (
 
 // driver implements all interfaces for sabakan model.
 type driver struct {
-	mu        sync.Mutex
-	storage   map[string][]byte
-	machines  map[string]*sabakan.Machine
-	leases    map[string]*leaseUsage
-	ipam      *sabakan.IPAMConfig
-	dhcp      *sabakan.DHCPConfig
-	ignitions map[string]map[string]string
+	mu       sync.Mutex
+	machines map[string]*sabakan.Machine
+	leases   map[string]*leaseUsage
+	ipam     *sabakan.IPAMConfig
+	dhcp     *sabakan.DHCPConfig
 }
 
 // NewModel returns sabakan.Model
 func NewModel() sabakan.Model {
 	d := &driver{
-		storage:   make(map[string][]byte),
-		machines:  make(map[string]*sabakan.Machine),
-		leases:    make(map[string]*leaseUsage),
-		ignitions: make(map[string]map[string]string),
+		machines: make(map[string]*sabakan.Machine),
+		leases:   make(map[string]*leaseUsage),
 	}
 	return sabakan.Model{
 		Runner:   d,
-		Storage:  d,
+		Storage:  newStorageDriver(),
 		Machine:  d,
 		IPAM:     ipamDriver{d},
 		DHCP:     dhcpDriver{d},
 		Image:    newImageDriver(),
 		Asset:    newAssetDriver(),
-		Ignition: d,
+		Ignition: newIgnitionDriver(),
 	}
 }
 

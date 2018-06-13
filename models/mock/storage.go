@@ -4,12 +4,24 @@ import (
 	"context"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/cybozu-go/sabakan"
 )
 
+type storageDriver struct {
+	mu      sync.Mutex
+	storage map[string][]byte
+}
+
+func newStorageDriver() *storageDriver {
+	return &storageDriver{
+		storage: make(map[string][]byte),
+	}
+}
+
 // GetEncryptionKey implements sabakan.StorageModel
-func (d *driver) GetEncryptionKey(ctx context.Context, serial string, diskByPath string) ([]byte, error) {
+func (d *storageDriver) GetEncryptionKey(ctx context.Context, serial string, diskByPath string) ([]byte, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -23,7 +35,7 @@ func (d *driver) GetEncryptionKey(ctx context.Context, serial string, diskByPath
 }
 
 // PutEncryptionKey implements sabakan.StorageModel
-func (d *driver) PutEncryptionKey(ctx context.Context, serial string, diskByPath string, key []byte) error {
+func (d *storageDriver) PutEncryptionKey(ctx context.Context, serial string, diskByPath string, key []byte) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -38,7 +50,7 @@ func (d *driver) PutEncryptionKey(ctx context.Context, serial string, diskByPath
 }
 
 // DeleteEncryptionKeys implements sabakan.StorageModel
-func (d *driver) DeleteEncryptionKeys(ctx context.Context, serial string) ([]string, error) {
+func (d *storageDriver) DeleteEncryptionKeys(ctx context.Context, serial string) ([]string, error) {
 	prefix := serial + "/"
 
 	d.mu.Lock()

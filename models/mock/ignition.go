@@ -4,11 +4,23 @@ import (
 	"context"
 	"sort"
 	"strconv"
+	"sync"
 
 	"github.com/cybozu-go/sabakan"
 )
 
-func (d *driver) PutTemplate(ctx context.Context, role string, template string) (string, error) {
+type ignitionDriver struct {
+	mu        sync.Mutex
+	ignitions map[string]map[string]string
+}
+
+func newIgnitionDriver() *ignitionDriver {
+	return &ignitionDriver{
+		ignitions: make(map[string]map[string]string),
+	}
+}
+
+func (d *ignitionDriver) PutTemplate(ctx context.Context, role string, template string) (string, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	templateMap := d.ignitions[role]
@@ -21,7 +33,7 @@ func (d *driver) PutTemplate(ctx context.Context, role string, template string) 
 	return id, nil
 }
 
-func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, error) {
+func (d *ignitionDriver) GetTemplateIDs(ctx context.Context, role string) ([]string, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	templateMap, ok := d.ignitions[role]
@@ -36,7 +48,7 @@ func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, err
 	return res, nil
 }
 
-func (d *driver) GetTemplate(ctx context.Context, role string, id string) (string, error) {
+func (d *ignitionDriver) GetTemplate(ctx context.Context, role string, id string) (string, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	res, ok := d.ignitions[role][id]
@@ -46,7 +58,7 @@ func (d *driver) GetTemplate(ctx context.Context, role string, id string) (strin
 	return res, nil
 }
 
-func (d *driver) DeleteTemplate(ctx context.Context, role string, id string) error {
+func (d *ignitionDriver) DeleteTemplate(ctx context.Context, role string, id string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	ids, ok := d.ignitions[role]
