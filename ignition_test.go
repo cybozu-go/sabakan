@@ -2,6 +2,7 @@ package sabakan
 
 import (
 	"encoding/json"
+	"net/url"
 	"reflect"
 	"testing"
 )
@@ -85,8 +86,13 @@ storage:
 			&Machine{Serial: "abcd, 1234"},
 			`{"ignition":{"version":"2.2.0"},"storage":{"files":[{"filesystem":"root","group":{"id":501},"path":"/opt/file1","user":{"id":500},"contents":{"source":"data:,abcd%2C%201234"},"mode":420}]}}`},
 	}
+	u, err := url.Parse("http://localhost:10080")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	for _, c := range cases {
-		ign, err := RenderIgnition(c.tmpl, c.mc)
+		ign, err := RenderIgnition(c.tmpl, c.mc, u)
 		if err != nil {
 			t.Fatal(err)
 		}

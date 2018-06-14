@@ -159,7 +159,7 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, id, serial
 		renderError(r.Context(), w, APIErrNotFound)
 		return
 	}
-	ign, err := sabakan.RenderIgnition(tmpl, ms[0])
+	ign, err := sabakan.RenderIgnition(tmpl, ms[0], s.MyURL)
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return
