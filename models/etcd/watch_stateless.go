@@ -47,7 +47,7 @@ func (d *driver) initDHCPConfig(ctx context.Context) error {
 	return nil
 }
 
-func (d *driver) init(ctx context.Context, ch chan<- struct{}) (int64, error) {
+func (d *driver) initStateless(ctx context.Context, ch chan<- struct{}) (int64, error) {
 	defer func() {
 		// notify the caller of the readiness
 		ch <- struct{}{}
@@ -78,8 +78,12 @@ func (d *driver) init(ctx context.Context, ch chan<- struct{}) (int64, error) {
 	return rev, nil
 }
 
-func (d *driver) startWatching(ctx context.Context, ch, indexCh chan<- struct{}) error {
-	rev, err := d.init(ctx, ch)
+// startStatelessWatcher is a goroutine to begin watching for etcd events.
+//
+// This goroutine does not keep states between restarts; i.e. it loads
+// the up-to-date database entries in memory and keeps updating them.
+func (d *driver) startStatelessWatcher(ctx context.Context, ch, indexCh chan<- struct{}) error {
+	rev, err := d.initStateless(ctx, ch)
 	if err != nil {
 		return err
 	}

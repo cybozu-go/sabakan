@@ -34,6 +34,7 @@ func NewModel() sabakan.Model {
 		IPAM:     ipamDriver{d},
 		DHCP:     dhcpDriver{d},
 		Image:    newImageDriver(),
+		Asset:    newAssetDriver(),
 		Ignition: d,
 	}
 }

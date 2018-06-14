@@ -310,6 +310,105 @@ func testSabactlImages(t *testing.T) {
 	}
 }
 
+func testSabactlAssets(t *testing.T) {
+	// upload asset
+	file, err := ioutil.TempFile("", "sabakan-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+	_, err = file.WriteString("bar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	file.Close()
+
+	stdout, stderr, err := runSabactl("assets", "upload", "foo", file.Name())
+	code := exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to upload asset", code)
+	}
+
+	// retrieve index
+	stdout, stderr, err = runSabactl("assets", "index")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to get index of assets", code)
+	}
+
+	var index []string
+	err = json.Unmarshal(stdout.Bytes(), &index)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(index, []string{"foo"}) {
+		t.Error("wrong index", index)
+	}
+
+	// retrieve asset info
+	stdout, stderr, err = runSabactl("assets", "info", "foo")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to get meta data of asset", code)
+	}
+
+	var asset sabakan.Asset
+	err = json.Unmarshal(stdout.Bytes(), &asset)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if asset.Name != "foo" {
+		t.Error("asset.Name != foo:", asset.Name)
+	}
+	if asset.ID == 0 {
+		t.Error("asset.ID should not be 0")
+	}
+	if asset.ContentType != "application/octet-stream" {
+		t.Error("asset.ContentType != application/octet-stream:", asset.ContentType)
+	}
+	if asset.Sha256 != "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9" {
+		t.Error("wrong Sha256:", asset.Sha256)
+	}
+	if len(asset.URLs) != 1 {
+		t.Error("wrong number of URLs:", asset.URLs)
+	}
+	if !asset.Exists {
+		t.Error("asset info says that local asset file is not stored")
+	}
+
+	// delete asset
+	stdout, stderr, err = runSabactl("assets", "delete", "foo")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to delete asset", code)
+	}
+
+	// retrieve empty index
+	stdout, stderr, err = runSabactl("assets", "index")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to get index of assets", code)
+	}
+
+	err = json.Unmarshal(stdout.Bytes(), &index)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(index) != 0 {
+		t.Error("index was not empty")
+	}
+}
+
 func testSabactlIgnitions(t *testing.T) {
 	saved := `ignition:
   version: 2.2.0
@@ -390,5 +489,6 @@ func TestSabactl(t *testing.T) {
 	t.Run("IPAM", testSabactlIPAM)
 	t.Run("Machines", testSabactlMachines)
 	t.Run("Images", testSabactlImages)
+	t.Run("Assets", testSabactlAssets)
 	t.Run("Ignitions", testSabactlIgnitions)
 }

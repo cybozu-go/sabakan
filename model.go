@@ -64,6 +64,21 @@ type ImageModel interface {
 		f func(modtime time.Time, content io.ReadSeeker)) error
 }
 
+// AssetHandler is an interface for AssetModel.Get
+type AssetHandler interface {
+	ServeContent(asset *Asset, content io.ReadSeeker)
+	Redirect(url string)
+}
+
+// AssetModel is an interface to manage assets.
+type AssetModel interface {
+	GetIndex(ctx context.Context) ([]string, error)
+	GetInfo(ctx context.Context, name string) (*Asset, error)
+	Put(ctx context.Context, name, contentType string, csum []byte, r io.Reader) (*AssetStatus, error)
+	Get(ctx context.Context, name string, h AssetHandler) error
+	Delete(ctx context.Context, name string) error
+}
+
 // IgnitionModel is an interface for ignition template.
 type IgnitionModel interface {
 	PutTemplate(ctx context.Context, role string, template string) (string, error)
@@ -95,5 +110,6 @@ type Model struct {
 	IPAM     IPAMModel
 	DHCP     DHCPModel
 	Image    ImageModel
+	Asset    AssetModel
 	Ignition IgnitionModel
 }

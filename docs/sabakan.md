@@ -13,6 +13,8 @@ Usage of /home/ymmt/go/bin/sabakan:
         comma-separated IPs allowed to change resources (default "127.0.0.1,::1")
   -config-file string
         path to configuration file
+  -data-dir string
+        directory to store boot images and assets (default "/var/lib/sabakan")
   -dhcp-bind string
         bound ip addresses and port for dhcp server (default "0.0.0.0:10067")
   -etcd-password string
@@ -27,8 +29,6 @@ Usage of /home/ymmt/go/bin/sabakan:
         username for etcd authentication
   -http string
         <Listen IP>:<Port number> (default "0.0.0.0:10080")
-  -image-dir string
-        directory to store boot images (default "/var/lib/sabakan")
   -ipxe-efi-path string
         path to ipxe.efi (default "/usr/lib/ipxe/ipxe.efi")
   -logfile string
@@ -51,7 +51,7 @@ Option          | Default value            | Description
 `etcd-username` | ""                       | username for etcd authentication
 `etcd-password` | ""                       | password for etcd authentication
 `http`          | `0.0.0.0:10080`          | Listen IP:Port number
-`image-dir`     | `/var/lib/sabakan`       | Directory to store boot images.
+`data-dir`      | `/var/lib/sabakan`       | Directory to store files.
 `ipxe-efi-path` | `/usr/lib/ipxe/ipxe.efi` | path to ipxe.efi
 
 Config file

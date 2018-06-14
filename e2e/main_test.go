@@ -85,21 +85,16 @@ func TestMain(m *testing.M) {
 }
 
 func runSabakan() (func(), error) {
-	servers := etcdClientURL
-	if circleci {
-		servers = "http://localhost:2379"
-	}
-
-	imageDir, err := ioutil.TempDir("", "")
+	dataDir, err := ioutil.TempDir("", "")
 	if err != nil {
 		return nil, err
 	}
 
 	command := exec.Command("../sabakan",
 		"-dhcp-bind", "0.0.0.0:10067",
-		"-etcd-servers", servers,
+		"-etcd-servers", etcdClientURL,
 		"-advertise-url", "http://localhost:10080",
-		"-image-dir", imageDir,
+		"-data-dir", dataDir,
 	)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
@@ -117,7 +112,7 @@ func runSabakan() (func(), error) {
 			return func() {
 				command.Process.Kill()
 				command.Wait()
-				os.RemoveAll(imageDir)
+				os.RemoveAll(dataDir)
 			}, nil
 		}
 		time.Sleep(1 * time.Second)

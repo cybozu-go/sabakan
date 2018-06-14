@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"math/rand"
-	"net/http"
 	"path"
 	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
@@ -18,21 +16,6 @@ import (
 type updateData struct {
 	index   sabakan.ImageIndex
 	deleted []string
-}
-
-const (
-	maxJitterSeconds = 60
-	maxImageURLs     = 10
-)
-
-func pullImage(ctx context.Context, client *cmd.HTTPClient, u string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", u, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req = req.WithContext(ctx)
-	return client.Do(req)
 }
 
 func (d *driver) addImageURL(ctx context.Context, os, id string) error {
@@ -74,7 +57,7 @@ RETRY:
 	return nil
 }
 
-func (d *driver) updateImageForOS(ctx context.Context, client *cmd.HTTPClient, os string, data updateData) error {
+func (d *driver) updateImageForOS(ctx context.Context, os string, data updateData) error {
 	dir := d.getImageDir(os)
 
 	err := dir.GC(data.deleted)
@@ -94,7 +77,7 @@ OUTER:
 		}
 
 		for _, u := range urls {
-			resp, err := pullImage(ctx, client, u)
+			resp, err := d.pullURL(ctx, u)
 			if err != nil {
 				continue
 			}
@@ -131,7 +114,7 @@ OUTER:
 	return nil
 }
 
-func (d *driver) updateImage(ctx context.Context, client *cmd.HTTPClient) error {
+func (d *driver) updateImage(ctx context.Context) error {
 	resp, err := d.client.Get(ctx, KeyImages, clientv3.WithPrefix())
 	if err != nil {
 		return err
@@ -174,7 +157,7 @@ func (d *driver) updateImage(ctx context.Context, client *cmd.HTTPClient) error 
 	}
 
 	for os, data := range dataMap {
-		err = d.updateImageForOS(ctx, client, os, data)
+		err = d.updateImageForOS(ctx, os, data)
 		if err != nil {
 			return err
 		}
@@ -184,24 +167,20 @@ func (d *driver) updateImage(ctx context.Context, client *cmd.HTTPClient) error 
 }
 
 func (d *driver) startImageUpdater(ctx context.Context, ch <-chan struct{}) error {
-	client := &cmd.HTTPClient{
-		Client: &http.Client{},
-	}
-
 	for {
-		err := d.updateImage(ctx, client)
+		err := d.updateImage(ctx)
 		if err != nil {
 			return err
 		}
 
 		select {
 		case <-ch:
-			jitter := rand.Intn(maxJitterSeconds)
+			jitter := rand.Intn(maxJitterSeconds * 100)
 			log.Info("image updater: waiting...", map[string]interface{}{
-				"seconds": jitter,
+				"centiseconds": jitter,
 			})
 			select {
-			case <-time.After(time.Duration(jitter) * time.Second):
+			case <-time.After(time.Duration(jitter) * 10 * time.Millisecond):
 			case <-ctx.Done():
 				return nil
 			}

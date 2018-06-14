@@ -125,6 +125,35 @@ Delete an image.
 
 * `-os`: specifies OS of the image.  Default is "coreos"
 
+`sabactl assets index`
+----------------------
+
+Get the index of assets as a JSON array of asset names.
+
+`sabactl assets info NAME`
+--------------------------
+
+Get the meta data of the named asset.
+
+`sabactl assets upload NAME FILE`
+---------------------------------
+
+```console
+$ sabactl assets upload data.tar.gz /path/to/data.tar.gz
+```
+
+Upload an asset.  NAME is the asset filename.
+The data is read from FILE.
+
+`sabactl assets delete NAME`
+----------------------------
+
+```console
+$ sabactl assets delete data.tar.gz
+```
+
+Delete an asset.
+
 `sabactl ignitions get ROLE`
 ----------------------------
 

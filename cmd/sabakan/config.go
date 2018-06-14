@@ -6,7 +6,7 @@ const (
 	defaultEtcdTimeout = "2s"
 	defaultDHCPBind    = "0.0.0.0:10067"
 	defaultIPXEPath    = "/usr/lib/ipxe/ipxe.efi"
-	defaultImageDir    = "/var/lib/sabakan"
+	defaultDataDir     = "/var/lib/sabakan"
 )
 
 var (
@@ -22,7 +22,7 @@ func newConfig() *config {
 		EtcdTimeout: defaultEtcdTimeout,
 		DHCPBind:    defaultDHCPBind,
 		IPXEPath:    defaultIPXEPath,
-		ImageDir:    defaultImageDir,
+		DataDir:     defaultDataDir,
 		AllowIPs:    defaultAllowIPs,
 	}
 }
@@ -36,7 +36,7 @@ type config struct {
 	EtcdPassword string   `yaml:"etcd-password"`
 	DHCPBind     string   `yaml:"dhcp-bind"`
 	IPXEPath     string   `yaml:"ipxe-efi-path"`
-	ImageDir     string   `yaml:"image-dir"`
+	DataDir      string   `yaml:"data-dir"`
 	AdvertiseURL string   `yaml:"advertise-url"`
 	AllowIPs     []string `yaml:"allow-ips"`
 }

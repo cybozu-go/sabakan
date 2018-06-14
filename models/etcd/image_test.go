@@ -68,7 +68,7 @@ func testImageGetIndex(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d.imageDir = tempdir
+	d.dataDir = tempdir
 	defer os.RemoveAll(tempdir)
 
 	index, err := d.imageGetIndex(context.Background(), "coreos")
@@ -108,7 +108,7 @@ func testImageGetIndex(t *testing.T) {
 		}
 	}
 
-	err = os.MkdirAll(filepath.Join(tempdir, "coreos", "1234.5"), 0755)
+	err = os.MkdirAll(filepath.Join(tempdir, "images", "coreos", "1234.5"), 0755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func testImageUpload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d.imageDir = tempdir
+	d.dataDir = tempdir
 	defer os.RemoveAll(tempdir)
 
 	err = d.imageUpload(context.Background(), "coreos", "1234.5", archive)
@@ -216,7 +216,7 @@ func testImageDownload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d.imageDir = tempdir
+	d.dataDir = tempdir
 	defer os.RemoveAll(tempdir)
 
 	index := sabakan.ImageIndex{
@@ -319,7 +319,7 @@ func testImageDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d.imageDir = tempdir
+	d.dataDir = tempdir
 	defer os.RemoveAll(tempdir)
 
 	index := sabakan.ImageIndex{
@@ -400,7 +400,7 @@ func testImageServeFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d.imageDir = tempdir
+	d.dataDir = tempdir
 	defer os.RemoveAll(tempdir)
 
 	index := sabakan.ImageIndex{
