@@ -54,8 +54,8 @@ func (d *assetDriver) GetInfo(ctx context.Context, name string) (*sabakan.Asset,
 	return asset, nil
 }
 
-func (d *assetDriver) Put(ctx context.Context, name, contentType, csum string,
-	r io.Reader) (*sabakan.AssetStatus, error) {
+func (d *assetDriver) Put(ctx context.Context, name, contentType string,
+	csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -96,8 +96,9 @@ func (d *assetDriver) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
-func (d *assetDriver) newAsset(ctx context.Context, name, contentType, csum string,
-	r io.Reader) (*sabakan.AssetStatus, error) {
+func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
+	csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
+
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -108,9 +109,8 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType, csum stri
 
 	h := sha256.New()
 	h.Write(data)
-	sum := hex.EncodeToString(h.Sum(nil))
-
-	if len(csum) > 0 && csum != sum {
+	hsum := h.Sum(nil)
+	if csum != nil && !bytes.Equal(csum, hsum) {
 		return nil, errors.New("checksum mismatch")
 	}
 
@@ -119,7 +119,7 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType, csum stri
 		ID:          id,
 		ContentType: contentType,
 		Date:        time.Now().UTC(),
-		Sha256:      sum,
+		Sha256:      hex.EncodeToString(hsum),
 		URLs:        nil,
 		Exists:      true,
 	}
@@ -136,7 +136,8 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType, csum stri
 }
 
 func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
-	contentType, csum string, r io.Reader) (*sabakan.AssetStatus, error) {
+	contentType string, csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
+
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -147,16 +148,15 @@ func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
 
 	h := sha256.New()
 	h.Write(data)
-	sum := hex.EncodeToString(h.Sum(nil))
-
-	if len(csum) > 0 && csum != sum {
+	hsum := h.Sum(nil)
+	if csum != nil && !bytes.Equal(csum, hsum) {
 		return nil, errors.New("checksum mismatch")
 	}
 
 	asset.ID = id
 	asset.ContentType = contentType
 	asset.Date = time.Now().UTC()
-	asset.Sha256 = sum
+	asset.Sha256 = hex.EncodeToString(hsum)
 
 	d.data[asset.Name] = data
 

@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -34,15 +35,15 @@ func testAssetGetIndex(t *testing.T) {
 		t.Error("initial asset index should be empty")
 	}
 
-	_, err = d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.assetPut(context.Background(), "abc", "text/plain", "", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "abc", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.assetPut(context.Background(), "xyz", "text/plain", "", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "xyz", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +75,7 @@ func testAssetGetInfo(t *testing.T) {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
 
-	_, err = d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +133,7 @@ func testAssetPut(t *testing.T) {
 	defer os.RemoveAll(tempdir)
 
 	// case 1. creation
-	status, err := d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
+	status, err := d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +192,7 @@ func testAssetPut(t *testing.T) {
 	}
 
 	// case 2. update
-	status, err = d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("baz"))
+	status, err = d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("baz"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,6 +244,23 @@ func testAssetPut(t *testing.T) {
 	if string(buf) != "baz" {
 		t.Error("local copy corrupted")
 	}
+
+	// case 3. checksum validation
+	csum, err := hex.DecodeString("baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	status, err = d.assetPut(context.Background(), "foo", "text/plain", csum, strings.NewReader("baz"))
+	if err != nil {
+		t.Error(err)
+	}
+
+	// case 4. checksum mismatch
+	status, err = d.assetPut(context.Background(), "foo", "text/plain", csum, strings.NewReader("zot"))
+	if err == nil {
+		t.Error("checksum mismatch should have been detected")
+	}
 }
 
 type mockHandler struct {
@@ -288,7 +306,7 @@ func testAssetGet(t *testing.T) {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
 
-	status, err := d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
+	status, err := d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -354,7 +372,7 @@ func testAssetDelete(t *testing.T) {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
 
-	_, err = d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -380,7 +398,7 @@ func testAssetDelete(t *testing.T) {
 
 	// TODO: check local file directly; this needs watcher
 
-	status, err := d.assetPut(context.Background(), "foo", "text/plain", "", strings.NewReader("baz"))
+	status, err := d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("baz"))
 	if err != nil {
 		t.Fatal(err)
 	}

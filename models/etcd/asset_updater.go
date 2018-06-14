@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -99,7 +100,10 @@ func (d *driver) downloadAsset(ctx context.Context, asset *sabakan.Asset) error 
 		})
 		return errors.New("invalid asset ID")
 	}
-	csum := resp.Header.Get("X-Sabakan-Asset-SHA256")
+	csum, err := hex.DecodeString(resp.Header.Get("X-Sabakan-Asset-SHA256"))
+	if err != nil {
+		return err
+	}
 
 	if asset.ID != id {
 		// the asset has been replaced with newer one

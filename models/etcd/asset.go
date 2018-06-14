@@ -105,7 +105,7 @@ func (d *driver) assetGetInfo(ctx context.Context, name string) (*sabakan.Asset,
 	return a, err
 }
 
-func (d *driver) assetPut(ctx context.Context, name, contentType, csum string, r io.Reader) (*sabakan.AssetStatus, error) {
+func (d *driver) assetPut(ctx context.Context, name, contentType string, csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
 	id, err := d.assetNewID(ctx)
 	if err != nil {
 		return nil, err
@@ -224,7 +224,7 @@ func (d assetDriver) GetInfo(ctx context.Context, name string) (*sabakan.Asset, 
 	return d.assetGetInfo(ctx, name)
 }
 
-func (d assetDriver) Put(ctx context.Context, name, contentType, csum string, r io.Reader) (*sabakan.AssetStatus, error) {
+func (d assetDriver) Put(ctx context.Context, name, contentType string, csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
 	return d.assetPut(ctx, name, contentType, csum, r)
 }
 

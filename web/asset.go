@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/hex"
 	"io"
 	"net/http"
 	"strconv"
@@ -111,7 +112,16 @@ func (s Server) handleAssetsPut(w http.ResponseWriter, r *http.Request, name str
 		return
 	}
 
-	csum := r.Header.Get("X-Sabakan-Asset-SHA256")
+	sum := r.Header.Get("X-Sabakan-Asset-SHA256")
+	var csum []byte
+	if len(sum) > 0 {
+		c, err := hex.DecodeString(sum)
+		if err != nil {
+			renderError(r.Context(), w, BadRequest("bad checksum: "+err.Error()))
+			return
+		}
+		csum = c
+	}
 	status, err := s.Model.Asset.Put(r.Context(), name, contentType, csum, r.Body)
 	if err == sabakan.ErrConflicted {
 		renderError(r.Context(), w, APIErrConflict)

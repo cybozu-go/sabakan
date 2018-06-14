@@ -40,15 +40,15 @@ func testHandleAssetsGetIndex(t *testing.T) {
 		t.Error("len(data) != 0:", len(data))
 	}
 
-	_, err = m.Asset.Put(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
+	_, err = m.Asset.Put(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = m.Asset.Put(context.Background(), "abc", "text/plain", "", strings.NewReader("bar"))
+	_, err = m.Asset.Put(context.Background(), "abc", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = m.Asset.Put(context.Background(), "xyz", "text/plain", "", strings.NewReader("bar"))
+	_, err = m.Asset.Put(context.Background(), "xyz", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func testHandleAssetsGetInfo(t *testing.T) {
 		t.Fatal("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
+	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func testHandleAssetsGet(t *testing.T) {
 		t.Fatal("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
+	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -252,7 +252,7 @@ func testHandleAssetsPut(t *testing.T) {
 	r = httptest.NewRequest("PUT", "/api/v1/assets/foo", strings.NewReader("bar"))
 	r.Header.Set("content-length", "3")
 	r.Header.Set("content-type", "text/plain")
-	r.Header.Set("X-Sabakan-Asset-SHA256", "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9")
+	r.Header.Set("X-Sabakan-Asset-SHA256", "FCDE2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9")
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -289,7 +289,7 @@ func testHandleAssetsDelete(t *testing.T) {
 		t.Fatal("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", "", strings.NewReader("bar"))
+	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}

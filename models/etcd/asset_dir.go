@@ -1,8 +1,8 @@
 package etcd
 
 import (
+	"bytes"
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -36,7 +36,7 @@ func (d AssetDir) Remove(id int) error {
 
 // Save stores an asset.
 // When successful, this returns SHA256 checksum of the contents.
-func (d AssetDir) Save(id int, r io.Reader, csum string) ([]byte, error) {
+func (d AssetDir) Save(id int, r io.Reader, csum []byte) ([]byte, error) {
 	err := os.MkdirAll(d.Dir, 0755)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (d AssetDir) Save(id int, r io.Reader, csum string) ([]byte, error) {
 	}
 
 	hsum := h.Sum(nil)
-	if len(csum) > 0 && hex.EncodeToString(hsum) != csum {
+	if csum != nil && !bytes.Equal(csum, hsum) {
 		os.Remove(f.Name())
 		return nil, fmt.Errorf("checksum mismatch for id %d", id)
 	}
