@@ -106,7 +106,6 @@ func testAssetGetInfo(t *testing.T) {
 	}
 
 	// force local copy absent
-	// TODO: this may cause watcher to panic, so stop it beforehand
 	err = os.Remove(d.getAssetDir().Path(asset.ID))
 	if err != nil {
 		t.Fatal(err)
@@ -330,7 +329,6 @@ func testAssetGet(t *testing.T) {
 	}
 
 	// force local copy absent
-	// TODO: this may cause watcher to panic, so stop it beforehand
 	err = os.Remove(d.getAssetDir().Path(status.ID))
 	if err != nil {
 		t.Fatal(err)
@@ -395,8 +393,6 @@ func testAssetDelete(t *testing.T) {
 	if len(resp.Kvs) != 0 {
 		t.Error("asset not deleted from etcd; len(resp.Kvs) != 0:", len(resp.Kvs))
 	}
-
-	// TODO: check local file directly; this needs watcher
 
 	status, err := d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("baz"))
 	if err != nil {
