@@ -2,14 +2,12 @@ package mock
 
 import (
 	"context"
-	"sync"
 
 	"github.com/cybozu-go/sabakan"
 )
 
 type machineDriver struct {
 	driver *driver
-	mu     sync.Mutex
 }
 
 func newMachineDriver(d *driver) *machineDriver {
@@ -19,8 +17,8 @@ func newMachineDriver(d *driver) *machineDriver {
 }
 
 func (d *machineDriver) Register(ctx context.Context, machines []*sabakan.Machine) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.driver.mu.Lock()
+	defer d.driver.mu.Unlock()
 
 	for _, m := range machines {
 		if _, ok := d.driver.machines[m.Serial]; ok {
@@ -34,8 +32,8 @@ func (d *machineDriver) Register(ctx context.Context, machines []*sabakan.Machin
 }
 
 func (d *machineDriver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.driver.mu.Lock()
+	defer d.driver.mu.Unlock()
 
 	res := make([]*sabakan.Machine, 0)
 	for _, m := range d.driver.machines {
@@ -47,8 +45,8 @@ func (d *machineDriver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan
 }
 
 func (d *machineDriver) Delete(ctx context.Context, serial string) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.driver.mu.Lock()
+	defer d.driver.mu.Unlock()
 
 	_, ok := d.driver.machines[serial]
 	if !ok {

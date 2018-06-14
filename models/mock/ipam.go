@@ -7,11 +7,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+type ipamDriver struct {
+	driver *driver
+	ipam   *sabakan.IPAMConfig
+}
 
-	if len(d.machines) > 0 {
+func newIPAMDriver(d *driver) *ipamDriver {
+	return &ipamDriver{
+		driver: d,
+	}
+}
+
+func (d *ipamDriver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) error {
+	d.driver.mu.Lock()
+	defer d.driver.mu.Unlock()
+
+	if len(d.driver.machines) > 0 {
 		return errors.New("machines already exist")
 	}
 	copied := *config
@@ -19,24 +30,12 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 	return nil
 }
 
-func (d *driver) getIPAMConfig() (*sabakan.IPAMConfig, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+func (d *ipamDriver) GetConfig() (*sabakan.IPAMConfig, error) {
+	d.driver.mu.Lock()
+	defer d.driver.mu.Unlock()
 	if d.ipam == nil {
 		return nil, errors.New("IPAMConfig is not set")
 	}
 	copied := *d.ipam
 	return &copied, nil
-}
-
-type ipamDriver struct {
-	*driver
-}
-
-func (d ipamDriver) PutConfig(ctx context.Context, config *sabakan.IPAMConfig) error {
-	return d.putIPAMConfig(ctx, config)
-}
-
-func (d ipamDriver) GetConfig() (*sabakan.IPAMConfig, error) {
-	return d.getIPAMConfig()
 }

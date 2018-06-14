@@ -10,10 +10,10 @@ import (
 
 // driver implements all interfaces for sabakan model.
 type driver struct {
-	mu       sync.Mutex
-	machines map[string]*sabakan.Machine
-	ipam     *sabakan.IPAMConfig
-	dhcp     *sabakan.DHCPConfig
+	mu            sync.Mutex
+	ipamDriver    *ipamDriver
+	machineDriver *machineDriver
+	machines      map[string]*sabakan.Machine
 }
 
 // NewModel returns sabakan.Model
@@ -25,7 +25,7 @@ func NewModel() sabakan.Model {
 		Runner:   d,
 		Storage:  newStorageDriver(),
 		Machine:  newMachineDriver(d),
-		IPAM:     ipamDriver{d},
+		IPAM:     newIPAMDriver(d),
 		DHCP:     newDHCPDriver(d),
 		Image:    newImageDriver(),
 		Asset:    newAssetDriver(),
