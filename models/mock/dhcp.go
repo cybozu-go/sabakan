@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"sync"
 
 	"github.com/cybozu-go/sabakan"
 )
@@ -83,7 +84,21 @@ func newLeaseUsage(lr *sabakan.LeaseRange) *leaseUsage {
 	}
 }
 
-func (d *driver) putDHCPConfig(ctx context.Context, config *sabakan.DHCPConfig) error {
+type dhcpDriver struct {
+	mu     sync.Mutex
+	driver *driver
+	dhcp   *sabakan.DHCPConfig
+	leases map[string]*leaseUsage
+}
+
+func newDHCPDriver(d *driver) *dhcpDriver {
+	return &dhcpDriver{
+		driver: d,
+		leases: make(map[string]*leaseUsage),
+	}
+}
+
+func (d *dhcpDriver) PutConfig(ctx context.Context, config *sabakan.DHCPConfig) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	copied := *config
@@ -91,7 +106,7 @@ func (d *driver) putDHCPConfig(ctx context.Context, config *sabakan.DHCPConfig) 
 	return nil
 }
 
-func (d *driver) getDHCPConfig() (*sabakan.DHCPConfig, error) {
+func (d *dhcpDriver) GetConfig() (*sabakan.DHCPConfig, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.dhcp == nil {
@@ -101,14 +116,14 @@ func (d *driver) getDHCPConfig() (*sabakan.DHCPConfig, error) {
 	return &copied, nil
 }
 
-func (d *driver) dhcpLease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error) {
-	ipam, err := d.getIPAMConfig()
+func (d *dhcpDriver) Lease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	ipam, err := d.driver.getIPAMConfig()
 	if err != nil {
 		return nil, err
 	}
-
-	d.mu.Lock()
-	defer d.mu.Unlock()
 
 	lr := ipam.LeaseRange(ifaddr)
 	if lr == nil {
@@ -125,14 +140,14 @@ func (d *driver) dhcpLease(ctx context.Context, ifaddr net.IP, mac net.HardwareA
 	return lu.lease(mac)
 }
 
-func (d *driver) dhcpRenew(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	ipam, err := d.getIPAMConfig()
+func (d *dhcpDriver) Renew(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	ipam, err := d.driver.getIPAMConfig()
 	if err != nil {
 		return err
 	}
-
-	d.mu.Lock()
-	defer d.mu.Unlock()
 
 	lr := ipam.LeaseRange(ciaddr)
 	if lr == nil {
@@ -147,14 +162,14 @@ func (d *driver) dhcpRenew(ctx context.Context, ciaddr net.IP, mac net.HardwareA
 	return lu.renew(mac)
 }
 
-func (d *driver) dhcpRelease(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	ipam, err := d.getIPAMConfig()
+func (d *dhcpDriver) Release(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	ipam, err := d.driver.getIPAMConfig()
 	if err != nil {
 		return err
 	}
-
-	d.mu.Lock()
-	defer d.mu.Unlock()
 
 	lr := ipam.LeaseRange(ciaddr)
 	if lr == nil {
@@ -169,14 +184,14 @@ func (d *driver) dhcpRelease(ctx context.Context, ciaddr net.IP, mac net.Hardwar
 	return nil
 }
 
-func (d *driver) dhcpDecline(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	ipam, err := d.getIPAMConfig()
+func (d *dhcpDriver) Decline(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	ipam, err := d.driver.getIPAMConfig()
 	if err != nil {
 		return err
 	}
-
-	d.mu.Lock()
-	defer d.mu.Unlock()
 
 	lr := ipam.LeaseRange(ciaddr)
 	if lr == nil {
@@ -189,32 +204,4 @@ func (d *driver) dhcpDecline(ctx context.Context, ciaddr net.IP, mac net.Hardwar
 		lu.decline(mac)
 	}
 	return nil
-}
-
-type dhcpDriver struct {
-	*driver
-}
-
-func (d dhcpDriver) PutConfig(ctx context.Context, config *sabakan.DHCPConfig) error {
-	return d.putDHCPConfig(ctx, config)
-}
-
-func (d dhcpDriver) GetConfig() (*sabakan.DHCPConfig, error) {
-	return d.getDHCPConfig()
-}
-
-func (d dhcpDriver) Lease(ctx context.Context, ifaddr net.IP, mac net.HardwareAddr) (net.IP, error) {
-	return d.dhcpLease(ctx, ifaddr, mac)
-}
-
-func (d dhcpDriver) Renew(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	return d.dhcpRenew(ctx, ciaddr, mac)
-}
-
-func (d dhcpDriver) Release(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	return d.dhcpRelease(ctx, ciaddr, mac)
-}
-
-func (d dhcpDriver) Decline(ctx context.Context, ciaddr net.IP, mac net.HardwareAddr) error {
-	return d.dhcpDecline(ctx, ciaddr, mac)
 }
