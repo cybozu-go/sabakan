@@ -120,7 +120,7 @@ func (d *dhcpDriver) Lease(ctx context.Context, ifaddr net.IP, mac net.HardwareA
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	ipam, err := d.driver.ipamDriver.GetConfig()
+	ipam, err := d.driver.getIPAMConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (d *dhcpDriver) Renew(ctx context.Context, ciaddr net.IP, mac net.HardwareA
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	ipam, err := d.driver.ipamDriver.GetConfig()
+	ipam, err := d.driver.getIPAMConfig()
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func (d *dhcpDriver) Release(ctx context.Context, ciaddr net.IP, mac net.Hardwar
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	ipam, err := d.driver.ipamDriver.GetConfig()
+	ipam, err := d.driver.getIPAMConfig()
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func (d *dhcpDriver) Decline(ctx context.Context, ciaddr net.IP, mac net.Hardwar
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	ipam, err := d.driver.ipamDriver.GetConfig()
+	ipam, err := d.driver.getIPAMConfig()
 	if err != nil {
 		return err
 	}

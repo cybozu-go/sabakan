@@ -6,37 +6,27 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
-type machineDriver struct {
-	driver *driver
-}
-
-func newMachineDriver(d *driver) *machineDriver {
-	return &machineDriver{
-		driver: d,
-	}
-}
-
-func (d *machineDriver) Register(ctx context.Context, machines []*sabakan.Machine) error {
-	d.driver.mu.Lock()
-	defer d.driver.mu.Unlock()
+func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
 	for _, m := range machines {
-		if _, ok := d.driver.machines[m.Serial]; ok {
+		if _, ok := d.machines[m.Serial]; ok {
 			return sabakan.ErrConflicted
 		}
 	}
 	for _, m := range machines {
-		d.driver.machines[m.Serial] = m
+		d.machines[m.Serial] = m
 	}
 	return nil
 }
 
-func (d *machineDriver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
-	d.driver.mu.Lock()
-	defer d.driver.mu.Unlock()
+func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
 	res := make([]*sabakan.Machine, 0)
-	for _, m := range d.driver.machines {
+	for _, m := range d.machines {
 		if q.Match(m) {
 			res = append(res, m)
 		}
@@ -44,15 +34,15 @@ func (d *machineDriver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan
 	return res, nil
 }
 
-func (d *machineDriver) Delete(ctx context.Context, serial string) error {
-	d.driver.mu.Lock()
-	defer d.driver.mu.Unlock()
+func (d *driver) Delete(ctx context.Context, serial string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
-	_, ok := d.driver.machines[serial]
+	_, ok := d.machines[serial]
 	if !ok {
 		return sabakan.ErrNotFound
 	}
 
-	delete(d.driver.machines, serial)
+	delete(d.machines, serial)
 	return nil
 }
