@@ -79,6 +79,7 @@ func AssetsUpload(ctx context.Context, name, filename string) (*sabakan.AssetSta
 
 	req.ContentLength = size
 	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("Expect", "100-continue")
 
 	res, err := client.http.Do(req)
 	if err != nil {
