@@ -24,7 +24,7 @@ const LastRevFile = "lastrev"
 // Miscellaneous
 const (
 	assetPageSize    = 100
-	maxJitterSeconds = 60
+	maxJitterSeconds = 30
 	maxAssetURLs     = 10
 	maxImageURLs     = 10
 )

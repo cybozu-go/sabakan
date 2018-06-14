@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/log"
@@ -279,6 +280,16 @@ func (d *driver) handleAssetEvent(ctx context.Context, ev *clientv3.Event) error
 
 func (d *driver) startAssetUpdater(ctx context.Context, ch <-chan EventPool) error {
 	for ep := range ch {
+		jitter := rand.Intn(maxJitterSeconds)
+		log.Info("asset updater: waiting...", map[string]interface{}{
+			"seconds": jitter,
+		})
+		select {
+		case <-time.After(time.Duration(jitter) * time.Second):
+		case <-ctx.Done():
+			return nil
+		}
+
 		for _, ev := range ep.Events {
 			err := d.handleAssetEvent(ctx, ev)
 			if err != nil {
