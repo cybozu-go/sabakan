@@ -1,10 +1,14 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
+	"github.com/cybozu-go/log"
 	"github.com/google/subcommands"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -54,23 +58,36 @@ func ErrorStatus(err error) *Status {
 
 // ErrorHTTPStatus creates new Status from HTTP response.
 func ErrorHTTPStatus(res *http.Response) *Status {
-	err := fmt.Errorf("Server returned HTTP status %s", res.Status)
+	errmsg := fmt.Sprintf("Server returned %s", res.Status)
 
 	switch {
 	case 200 <= res.StatusCode && res.StatusCode < 300:
 		return nil
-	case 400 <= res.StatusCode && res.StatusCode < 500:
-		switch res.StatusCode {
-		case http.StatusNotFound:
-			return NewStatus(ExitNotFound, err)
-		case http.StatusConflict:
-			return NewStatus(ExitConflicted, err)
-		default:
-			return NewStatus(ExitResponse4xx, err)
+	case 400 <= res.StatusCode && res.StatusCode < 600:
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return ErrorStatus(err)
 		}
-	case 500 <= res.StatusCode && res.StatusCode < 600:
-		return NewStatus(ExitResponse5xx, err)
-	default:
-		return ErrorStatus(err)
+		var msg map[string]interface{}
+		err = json.Unmarshal(body, &msg)
+		if err != nil {
+			return ErrorStatus(err)
+		}
+		errmsg = fmt.Sprintf("%s, %s", errmsg, msg[log.FnError])
+
+		switch {
+		case 400 <= res.StatusCode && res.StatusCode < 500:
+			switch res.StatusCode {
+			case http.StatusNotFound:
+				return NewStatus(ExitNotFound, errors.New(errmsg))
+			case http.StatusConflict:
+				return NewStatus(ExitConflicted, errors.New(errmsg))
+			default:
+				return NewStatus(ExitResponse4xx, errors.New(errmsg))
+			}
+		case 500 <= res.StatusCode && res.StatusCode < 600:
+			return NewStatus(ExitResponse5xx, errors.New(errmsg))
+		}
 	}
+	return ErrorStatus(errors.New(errmsg))
 }
