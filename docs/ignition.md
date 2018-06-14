@@ -52,7 +52,7 @@ storage:
 The variables `sabakan` used in YAML are defined in [Machine](https://github.com/cybozu-go/sabakan/blob/d1a01d79307d3b3e188ff7a909204d71b5c2b9bb/machines.go#L12-L22) struct.
 The context of the template is the instance of the struct.
 For example, the YAML can refers serial number of the machine by `.Serial`.
-And the `SabakanURL` function can be used in YAML. The function will return the url of the sabakan itself.
+And the `MyURL` function can be used in YAML. The function will return the url of this sabakan server itself.
 
 User can set YAML files to sabakan via REST API `POST /api/v1/ignitions/ROLE` for each roles.
 The iPXE booted machine loads rendered ignitions in JSON via REST API `GET /api/v1/boot/coreos/ipxe/SERIAL`.
@@ -113,7 +113,7 @@ The path must be *absolute path* and user need to put the source file in the `fi
 Description=Some simple daemon
 
 [Service]
-ExecStart=/usr/share/oem/bin/myapp.service --server={{ SabakanURL }}
+ExecStart=/usr/share/oem/bin/myapp.service --server={{ MyURL }}
 
 [Install]
 WantedBy=multi-user.target
