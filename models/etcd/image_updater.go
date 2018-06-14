@@ -175,12 +175,12 @@ func (d *driver) startImageUpdater(ctx context.Context, ch <-chan struct{}) erro
 
 		select {
 		case <-ch:
-			jitter := rand.Intn(maxJitterSeconds)
+			jitter := rand.Intn(maxJitterSeconds * 100)
 			log.Info("image updater: waiting...", map[string]interface{}{
-				"seconds": jitter,
+				"centiseconds": jitter,
 			})
 			select {
-			case <-time.After(time.Duration(jitter) * time.Second):
+			case <-time.After(time.Duration(jitter) * 10 * time.Millisecond):
 			case <-ctx.Done():
 				return nil
 			}

@@ -280,12 +280,12 @@ func (d *driver) handleAssetEvent(ctx context.Context, ev *clientv3.Event) error
 
 func (d *driver) startAssetUpdater(ctx context.Context, ch <-chan EventPool) error {
 	for ep := range ch {
-		jitter := rand.Intn(maxJitterSeconds)
+		jitter := rand.Intn(maxJitterSeconds * 100)
 		log.Info("asset updater: waiting...", map[string]interface{}{
-			"seconds": jitter,
+			"centiseconds": jitter,
 		})
 		select {
-		case <-time.After(time.Duration(jitter) * time.Second):
+		case <-time.After(time.Duration(jitter) * 10 * time.Millisecond):
 		case <-ctx.Done():
 			return nil
 		}
