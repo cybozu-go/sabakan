@@ -210,7 +210,6 @@ Query                      | Description
 `datacenter=<datacenter>`  | The data center name where the machine is in
 `rack=<rack>`              | The rack number where the machine is in
 `role=<role>`              | The role of the machine
-`index-in-rack=<rack>`     | The unique index number of the machine. It is not relevant with the physical location
 `product=<product>`        | The product name of the machine(e.g. `R630`)
 `ipv4=<ip address>`        | IPv4 address
 `ipv6=<ip address>`        | IPv6 address
