@@ -1,5 +1,5 @@
 _sabactl_help_complete() {
-  COMPREPLY=( $(compgen -W "commands dhcp flags help ignitions images ipam machines" -- "$cur") )
+  COMPREPLY=( $(compgen -W "commands dhcp flags help ignitions images assets ipam machines" -- "$cur") )
 }
 
 _sabactl_dhcp_complete() {
@@ -43,6 +43,18 @@ _sabactl_images_complete() {
   fi
 }
 
+_sabactl_assets_complete() {
+    # sabactl assets index
+    # sabactl assets delete NAME
+    # sabactl assets info NAME
+    # sabactl assets upload NAME FILE
+    if [[ "$cword" == 1 || "$cword" == 2 ]]; then
+        COMPREPLY=( $(compgen -W "index delete info upload" -- "$cur") )
+    elif [[ "$cword" == 4  && "${words[2]}" == "upload" ]]; then
+        COMPREPLY=( $(compgen -o filenames -A file -- "$cur") )
+    fi
+}
+
 _sabactl_ipam_complete() {
   # sabactl ipam get
   # sabactl ipam set -f FILE
@@ -84,6 +96,7 @@ _sabactl() {
     dhcp) _sabactl_dhcp_complete ;;
     ignitions) _sabactl_ignitions_complete ;;
     images) _sabactl_images_complete ;;
+    assets) _sabactl_assets_complete ;;
     ipam) _sabactl_ipam_complete ;;
     machines) _sabactl_machines_complete ;;
   esac

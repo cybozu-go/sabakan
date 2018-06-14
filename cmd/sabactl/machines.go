@@ -40,6 +40,7 @@ var machinesGetQuery = map[string]string{
 	"serial":     "Serial name",
 	"datacenter": "Datacenter name",
 	"rack":       "Rack name",
+	"role":       "Role name",
 	"product":    "Product name (e.g. 'R630')",
 	"ipv4":       "IPv4 address",
 	"ipv6":       "IPv6 address",
