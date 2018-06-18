@@ -87,8 +87,15 @@ $ sabactl machines get \
 
 Detailed specification of the query parameters and the output JSON content is same as those of the [`GET /api/v1/machines` API](api.md#getmachines).
 
-!!! Note
-    `--state <state>` will not be implemented until the policy of machines life-cycle management is fixed.
+`sabactl machines set-state`
+----------------------------
+
+Set the state of a machine.
+State is one of `healthy`, `unhealthy`, `dead` or `retiring`.
+
+```console
+$ sabactl machines set-state <serial> <state>
+```
 
 `sabactl machines remove`
 -------------------------

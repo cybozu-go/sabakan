@@ -8,6 +8,8 @@ REST API
 * [POST /api/v1/machines](#postmachines)
 * [GET /api/v1/machines](#getmachines)
 * [DELETE /api/v1/machines](#deletemachines)
+* [PUT /api/v1/state/<serial>](#putstate)
+* [GET /api/v1/state/<serial>](#getstate)
 * [GET /api/v1/images/coreos](#getimageindex)
 * [PUT /api/v1/images/coreos/ID](#putimages)
 * [GET /api/v1/images/coreos/ID](#getimages)
@@ -22,7 +24,7 @@ REST API
 * [GET /api/v1/boot/coreos/ipxe/SERIAL](#getcoreosipxeserial)
 * [GET|HEAD /api/v1/boot/coreos/kernel](#getcoreoskernel)
 * [GET|HEAD /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
-* [GET /api/v1/boot/ignitions/ID/SERIAL](#getigitionsid)
+* [GET /api/v1/boot/ignitions/SERIAL/ID](#getigitionsid)
 * [GET /api/v1/ignitions/ROLE](#getignitions)
 * [GET /api/v1/ignitions/ROLE/ID](#getignitionsid)
 * [POST /api/v1/ignitions/ROLE](#postignitions)
@@ -247,6 +249,10 @@ Delete registered machine of the `<serial>`.
 
 **Failure responses**
 
+- The state of the machine is not `retired`
+
+  HTTP status code: 500 Internal Server Error
+
 - No specified machine found.
 
   HTTP status code: 404 Not Found
@@ -255,6 +261,47 @@ Delete registered machine of the `<serial>`.
 $ curl -i -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 (No output in stdout)
 ```
+
+## <a name="putstate" />`PUT /api/v1/state/<serial>`
+
+Put the state of a machine.
+The new state is given by contents of request body and should be one of:
+* healthy
+* unhealthy
+* dead
+* retiring
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- Invalid state value.
+
+  HTTP status code: 400 Bad Request
+
+- No specified machine found.
+
+  HTTP status code: 404 Not Found
+
+## <a name="getstate" />`GET /api/v1/state/<serial>`
+
+Get the state of a machine.
+The state will be returned by response body and should be one of:
+* healthy
+* unhealthy
+* dead
+* retiring
+* retired
+
+**Successful response**
+- HTTP status code: 200 OK
+
+**Failure responses**
+- No specified machine found.
+
+  HTTP status code: 404 Not Found
 
 ## <a name="getimageindex" />`GET /api/v1/images/coreos`
 
@@ -600,6 +647,10 @@ Register disk encryption key. The request body is raw binary format of the key.
 ```
 
 **Failure responses**
+
+- The state of the machine is `retired`.
+
+  HTTP status code: 500 Internal Server Error
 
 - `/<prefix>/crypts/<serial>/<path>` already exists.
 
