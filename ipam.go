@@ -2,7 +2,6 @@ package sabakan
 
 import (
 	"errors"
-	"fmt"
 	"net"
 
 	"github.com/cybozu-go/netutil"
@@ -87,14 +86,11 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	}
 
 	ips := calc(c.NodeIPv4Pool, c.NodeRangeSize, c.NodeIPPerNode, mc.Rack, mc.IndexInRack)
-	res := map[string]MachineNetwork{}
-	for i := 0; i < int(c.NodeIPPerNode); i++ {
-		name := fmt.Sprintf("node%d", i)
-		res[name] = MachineNetwork{
-			IPv4: []string{ips[i].String()},
-		}
+	strIPs := make([]string, len(ips))
+	for i, p := range ips {
+		strIPs[i] = p.String()
 	}
-	mc.Network = res
+	mc.IPv4 = strIPs
 
 	bmcIPs := calc(c.BMCIPv4Pool, c.BMCRangeSize, 1, mc.Rack, mc.IndexInRack)
 	mc.BMC.IPv4 = bmcIPs[0].String()

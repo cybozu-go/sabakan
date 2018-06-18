@@ -2,6 +2,7 @@ package sabakan
 
 import (
 	"net"
+	"reflect"
 	"testing"
 )
 
@@ -24,7 +25,7 @@ func testGenerateIP(t *testing.T) {
 
 	cases := []struct {
 		machine       *Machine
-		nodeAddresses map[string]string
+		nodeAddresses []string
 		bmcAddress    string
 	}{
 		{
@@ -33,10 +34,10 @@ func testGenerateIP(t *testing.T) {
 				Rack:        1,
 				IndexInRack: 3,
 			},
-			map[string]string{
-				"node0": "10.69.0.195",
-				"node1": "10.69.1.3",
-				"node2": "10.69.1.67",
+			[]string{
+				"10.69.0.195",
+				"10.69.1.3",
+				"10.69.1.67",
 			},
 			"10.72.17.35",
 		},
@@ -46,10 +47,10 @@ func testGenerateIP(t *testing.T) {
 				Rack:        0,
 				IndexInRack: 5,
 			},
-			map[string]string{
-				"node0": "10.69.0.5",
-				"node1": "10.69.0.69",
-				"node2": "10.69.0.133",
+			[]string{
+				"10.69.0.5",
+				"10.69.0.69",
+				"10.69.0.133",
 			},
 			"10.72.17.5",
 		},
@@ -58,13 +59,11 @@ func testGenerateIP(t *testing.T) {
 	for _, c := range cases {
 		testIPAMConfig.GenerateIP(c.machine)
 
-		if len(c.machine.Network) != int(testIPAMConfig.NodeIPPerNode) {
+		if len(c.machine.IPv4) != int(testIPAMConfig.NodeIPPerNode) {
 			t.Fatal("wrong number of networks")
 		}
-		for k, v := range c.nodeAddresses {
-			if c.machine.Network[k].IPv4[0] != v {
-				t.Error("wrong IP Address: ", c.machine.Network[k].IPv4[0])
-			}
+		if !reflect.DeepEqual(c.nodeAddresses, c.machine.IPv4) {
+			t.Error("wrong IP addresses: ", c.machine.IPv4)
 		}
 		if c.machine.BMC.IPv4 != c.bmcAddress {
 			t.Errorf("wrong IP Address: %v", c.machine.BMC.IPv4)
