@@ -48,8 +48,8 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(saved.Network) != int(testIPAMConfig.NodeIPPerNode) {
-		t.Errorf("unexpected assigned IP addresses: %v", len(saved.Network))
+	if len(saved.IPv4) != int(testIPAMConfig.NodeIPPerNode) {
+		t.Errorf("unexpected assigned IP addresses: %v", len(saved.IPv4))
 	}
 	if saved.IndexInRack != testIPAMConfig.NodeIndexOffset+2 {
 		t.Errorf("node index of 2nd worker should be %v but %v", testIPAMConfig.NodeIndexOffset+2, saved.IndexInRack)
