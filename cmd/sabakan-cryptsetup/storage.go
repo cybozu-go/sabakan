@@ -4,6 +4,8 @@ import (
 	"context"
 	"path/filepath"
 	"regexp"
+
+	"github.com/cybozu-go/sabakan/client"
 )
 
 type StorageDevice struct {
@@ -45,4 +47,26 @@ func detectStorageDevices(ctx context.Context, patterns []string) ([]*StorageDev
 		ret = append(ret, device)
 	}
 	return ret, nil
+}
+
+func (s *StorageDevice) fetchKey(ctx context.Context, serial string) *client.Status {
+	data, status := client.CryptsGet(ctx, serial, s.path)
+	if status != nil {
+		return status
+	}
+	s.key = data
+	return nil
+}
+
+func (s *StorageDevice) registerKey(ctx context.Context, serial string) *client.Status {
+	return client.CryptsPut(ctx, serial, s.path, s.key)
+}
+
+// encrypt the disk, then set properties (d.key)
+func (s *StorageDevice) encrypt(ctx context.Context) error {
+	return nil
+}
+
+func (s *StorageDevice) decrypt(ctx context.Context) error {
+	return nil
 }
