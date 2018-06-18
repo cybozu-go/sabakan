@@ -16,6 +16,7 @@ import (
 const (
 	envSabakanURL = "SABAKAN_URL"
 	serialFile    = "/sys/class/dmi/id/product_serial"
+	modProbe      = "/sbin/cryptsetup"
 )
 
 var (
@@ -65,6 +66,14 @@ func getSerial() (string, error) {
 }
 
 func execute(ctx context.Context) error {
+	err := cmd.CommandContext(ctx, modProbe, "aesni-intel").Run()
+	if err != nil {
+		err := cmd.CommandContext(ctx, modProbe, "aes-x86_64").Run()
+		if err != nil {
+			return err
+		}
+	}
+
 	serial, err := getSerial()
 	if err != nil {
 		return err
