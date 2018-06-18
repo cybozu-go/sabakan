@@ -1,7 +1,7 @@
 Machine Lifecycle Management
 ============================
 
-To automate machine lifecycle management sabakan provides a set of API and ability to
+To automate machine lifecycle management, sabakan provides a set of API and ability to
 manage states of machines.
 
 Scope
@@ -33,15 +33,16 @@ No new disk encryption keys can be added to retired machines.
 ::uml::
 @startuml
 [*] --> Healthy
-Healthy --> Unhealthy: Detects an error
-Healthy --> Dead: Network unreachable
+Healthy -right-> Unhealthy: Detects an error
+Healthy -left-> Dead: Network unreachable
+Healthy --> Retiring: Declare retiring
 Unhealthy --> Retiring: Declare retiring
 Unhealthy --> Healthy
 Dead --> Retiring: Declare retiring
 Dead --> Healthy
 Retiring --> Retired: Removes the disk encryption key
-Retired --> [*]: Remove the machine from sabakan
 Retired --> Healthy: Repaired the machine
+Retired --> [*]: Remove the machine from sabakan
 @enduml
 ::end-uml::
 

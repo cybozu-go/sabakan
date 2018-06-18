@@ -26,7 +26,8 @@ Machine
   "bmc": {
     "type": "iDRAC-9",
     "ipv4": "10.72.17.37"
-  }
+  },
+  "state": "healthy"
 ```
 
 Key              | Description
