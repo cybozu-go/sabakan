@@ -1,34 +1,59 @@
-Machine Lifecycle Management
-============================
+Lifecycle management
+====================
 
-To automate machine lifecycle management, sabakan provides a set of API and ability to
-manage states of machines.
+Machines go through state transitions such as breakdown, repair, or re-setup,
+until it is finally discarded.  These are called *lifecycle events*.
 
-Scope
------
+Sabakan is designed to be the central part of a system that automates
+handling of these lifecycle events.
+
+Design
+------
 
 Sabakan *DOES NOT* control machines nor applications.
 It only does followings:
 
-* Keep the states of the machines
+* Hold the states of the machines
 * Accept requests to change the state of machines
-* Remove disk encryption keys before repairing machines
+* Remove disk encryption keys before repairing/retiring machines
 * Share machine states with external controllers
+
+External controllers watch events shared by sabakan and execute necessary
+actions to keep the system healthy.
 
 Machine States
 --------------
 
-* Healthy: Machines that can run applications
-* Unhealthy: Machines need to be repaired
-* Dead: Machines that can not be accessed
-* Retiring: Machines to be retired
-* Retired: Machines whose disk encryption keys were deleted
+Sabakan defines following machine states:
 
-Healthy, unhealthy, dead and retiring can be declared by administrators and monitoring programs.
-Machines become retired state only when their disk encryption keys are deleted.
-The controller is responsible to safely remove disk encryption keys of retiring machines.
-Only retired machines can be removed from sabakan.
-No new disk encryption keys can be added to retired machines.
+* **Healthy**: Machines that can run applications
+* **Unhealthy**: Machines having problems to be repaired
+* **Dead**: Machines that cannot be accessed
+* **Retiring**: Machines to be retired/repaired
+* **Retired**: Machines whose disk encryption keys were deleted
+
+### Role of external controllers
+
+External controllers are expected to:
+
+* Allocate **healthy** machines to applications like Kubernetes or Ceph.
+* Turn-off the power of **dead** machines.
+* Drain **unhealthy**, **dead** and **retiring** machines from applications.
+* Remove disk encryption keys of **retiring** machines after drain.
+
+### Transition constraints
+
+* A machine can be transitioned to any state other than **retired** through sabakan API.
+* Disk encryption keys of a machine can be deleted iff the machine is in **retiring** state.
+* A machine transitions to **retired** when its disk encryption keys are deleted.
+* Only **retired** machines can be removed from sabakan.
+* No new disk encryption keys can be added to **retired** machines.
+
+In short, retired machines are guaranteed that they do not have disk encryption keys,
+therefore any application data.  And only such retired machines can be removed from
+sabakan.
+
+### Transition diagram
 
 ::uml::
 @startuml
