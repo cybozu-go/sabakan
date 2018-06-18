@@ -74,13 +74,11 @@ func (mi *machinesIndex) addNoLock(m *sabakan.Machine) {
 	mi.Rack[mcrack] = append(mi.Rack[mcrack], m.Serial)
 	mi.Role[m.Role] = append(mi.Role[m.Role], m.Serial)
 	mi.BMCType[m.BMC.Type] = append(mi.BMCType[m.BMC.Type], m.Serial)
-	for _, ifn := range m.Network {
-		for _, v := range ifn.IPv4 {
-			mi.IPv4[v] = m.Serial
-		}
-		for _, v := range ifn.IPv6 {
-			mi.IPv6[v] = m.Serial
-		}
+	for _, ip := range m.IPv4 {
+		mi.IPv4[ip] = m.Serial
+	}
+	for _, ip := range m.IPv6 {
+		mi.IPv6[ip] = m.Serial
 	}
 	if len(m.BMC.IPv4) > 0 {
 		mi.IPv4[m.BMC.IPv4] = m.Serial
@@ -117,13 +115,11 @@ func (mi *machinesIndex) deleteNoLock(m *sabakan.Machine) {
 	mi.Role[m.Role] = append(mi.Role[m.Role][:i], mi.Role[m.Role][i+1:]...)
 	i = indexOf(mi.BMCType[m.BMC.Type], m.Serial)
 	mi.BMCType[m.BMC.Type] = append(mi.BMCType[m.BMC.Type][:i], mi.BMCType[m.BMC.Type][i+1:]...)
-	for _, ifn := range m.Network {
-		for _, v := range ifn.IPv4 {
-			delete(mi.IPv4, v)
-		}
-		for _, v := range ifn.IPv6 {
-			delete(mi.IPv6, v)
-		}
+	for _, ip := range m.IPv4 {
+		delete(mi.IPv4, ip)
+	}
+	for _, ip := range m.IPv6 {
+		delete(mi.IPv6, ip)
 	}
 	delete(mi.IPv4, m.BMC.IPv4)
 	delete(mi.IPv6, m.BMC.IPv6)

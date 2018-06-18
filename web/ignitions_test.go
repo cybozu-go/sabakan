@@ -39,7 +39,7 @@ networkd:
       Name=node0
 
       [Network]
-      Address={{ index .Network.node0.IPv4 0 }}/32
+      Address={{ index .IPv4 0 }}/32
     name: 10-node0.network
 `
 
@@ -93,12 +93,8 @@ networkd:
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "cs",
-			Network: map[string]sabakan.MachineNetwork{
-				"node0": sabakan.MachineNetwork{
-					IPv4: []string{"10.69.0.4"},
-				},
-			},
-			BMC: sabakan.MachineBMC{Type: "iDRAC-9"},
+			IPv4:       []string{"10.69.0.4"},
+			BMC:        sabakan.MachineBMC{Type: "iDRAC-9"},
 		},
 	}
 

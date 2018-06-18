@@ -165,8 +165,8 @@ Field                        | Description
 `serial=<serial>`            | The serial number of the machine
 `datacenter=<datacenter>`    | The data center name where the machine is in
 `rack=<rack>`                | The rack number where the machine is in. If it is omitted, value set to `0`
-`role=<role>`                | The role of the machine(`boot` or `worker`)
-`product=<product>`          | The product name of the machine(e.g. `R630`)
+`role=<role>`                | The role of the machine (e.g. `boot` or `worker`)
+`product=<product>`          | The product name of the machine (e.g. `R630`)
 `bmc=<bmc>`                  | The BMC spec
 
 **Successful response**
@@ -228,15 +228,6 @@ Query                      | Description
 - No such machines found.
 
   HTTP status code: 404 Not Found
-
-```console
-$ curl -XGET 'localhost:10080/api/v1/machines?serial=1234abcd'
-[{"serial":"1234abcd","product":"R630","datacenter":"us","rack":1,"index-in-rack":1,"role":"boot","network":{"node0":{"ipv4":["10.69.0.197"],"ipv6":null},"node1":{"ipv4":["10.69.1.5"],"ipv6":null},"node2":{"ipv4":["10.69.1.69"],"ipv6":null}},"bmc":{"type":"iDRAC-9","ipv4":["10.72.17.37"]}}]
-$ curl -XGET 'localhost:10080/api/v1/machines?datacenter=ty3&rack=1&product=R630'
-[{"serial":"10000000","product":"R630","datacenter":"ty3","rack":1,"index-in-rack":1,"role":"boot","network":{"node0":{"ipv4":["10.69.0.197"],"ipv6":null},"node1":{"ipv4":["10.69.1.5"],"ipv6":null},"node2":{"ipv4":["10.69.1.69"],"ipv6":null}},"bmc":{"type":"iDRAC-9","ipv4":["10.72.17.37"]}},{"serial":"10000001","product":"R630","datacenter":"ty3","rack":1,"index-in-rack":1,"role":"boot","network":{"node0":{"ipv4":["10.69.0.197"],"ipv6":null},"node1":{"ipv4":["10.69.1.5"],"ipv6":null},"node2":{"ipv4":["10.69.1.69"],"ipv6":null}},"bmc":{"type":"iDRAC-9","ipv4":["10.72.17.37"]}}]
-$ curl -XGET 'localhost:10080/api/v1/machines?ipv4=10.20.30.40'
-[{"serial":"20000000","product":"R630","datacenter":"us","rack":1,"index-in-rack":1,"role":"boot","network":{"node0":{"ipv4":["10.69.0.197"],"ipv6":null},"node1":{"ipv4":["10.20.30.40"],"ipv6":null},"node2":{"ipv4":["10.69.1.69"],"ipv6":null}},"bmc":{"type":"iDRAC-9","ipv4":["10.72.17.37"]}}]
-```
 
 ## <a name="deletemachines" />`DELETE /api/v1/machines/<serial>`
 

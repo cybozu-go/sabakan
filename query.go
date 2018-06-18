@@ -21,8 +21,8 @@ func (q *Query) Match(m *Machine) bool {
 	}
 	if len(q.IPv4) > 0 {
 		ok := false
-		for _, n := range m.Network {
-			if n.hasIPv4(q.IPv4) {
+		for _, ip := range m.IPv4 {
+			if ip == q.IPv4 {
 				ok = true
 				break
 			}
@@ -33,8 +33,8 @@ func (q *Query) Match(m *Machine) bool {
 	}
 	if len(q.IPv6) > 0 {
 		ok := false
-		for _, n := range m.Network {
-			if n.hasIPv6(q.IPv6) {
+		for _, ip := range m.IPv6 {
+			if ip == q.IPv6 {
 				ok = true
 				break
 			}
