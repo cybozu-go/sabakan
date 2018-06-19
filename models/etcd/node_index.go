@@ -39,7 +39,7 @@ func (r *rackIndexUsage) assign(m *sabakan.Machine, c *sabakan.IPAMConfig) error
 	var idx uint
 
 OUT:
-	switch m.Role {
+	switch m.Spec.Role {
 	case "boot":
 		idx = c.NodeIndexOffset
 		if r.indexMap[idx] {
@@ -57,24 +57,24 @@ OUT:
 
 	r.indexMap[idx] = true
 	r.usedIndices = append(r.usedIndices, idx)
-	m.IndexInRack = idx
+	m.Spec.IndexInRack = idx
 	return nil
 }
 
 func (r *rackIndexUsage) release(m *sabakan.Machine) (needUpdate bool) {
-	if _, ok := r.indexMap[m.IndexInRack]; !ok {
+	if _, ok := r.indexMap[m.Spec.IndexInRack]; !ok {
 		log.Info("etcd: node_index not found in indexMap; deleted by another sabakan", map[string]interface{}{
-			"node_index": m.IndexInRack,
+			"node_index": m.Spec.IndexInRack,
 		})
 		needUpdate = false
 		return
 	}
 	needUpdate = true
-	delete(r.indexMap, m.IndexInRack)
+	delete(r.indexMap, m.Spec.IndexInRack)
 
 	used := make([]uint, 0, len(r.usedIndices)-1)
 	for _, idx := range r.usedIndices {
-		if idx == m.IndexInRack {
+		if idx == m.Spec.IndexInRack {
 			continue
 		}
 		used = append(used, idx)
@@ -135,13 +135,13 @@ RETRY:
 func (d *driver) assignNodeIndex(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) (map[uint]*rackIndexUsage, error) {
 	usageMap := make(map[uint]*rackIndexUsage)
 	for _, m := range machines {
-		usage := usageMap[m.Rack]
+		usage := usageMap[m.Spec.Rack]
 		if usage == nil {
-			u, err := d.getRackIndexUsage(ctx, m.Rack)
+			u, err := d.getRackIndexUsage(ctx, m.Spec.Rack)
 			if err != nil {
 				return nil, err
 			}
-			usageMap[m.Rack] = u
+			usageMap[m.Spec.Rack] = u
 			usage = u
 		}
 

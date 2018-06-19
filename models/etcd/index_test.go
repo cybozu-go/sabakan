@@ -11,9 +11,9 @@ func TestMachinesIndex(t *testing.T) {
 	mi := newMachinesIndex()
 
 	machines := []*sabakan.Machine{
-		{Serial: "1", Product: "R630", Datacenter: "ty3", Role: "boot", BMC: sabakan.MachineBMC{Type: sabakan.BmcIpmi2}},
-		{Serial: "2", Product: "R630", Datacenter: "ty3", Role: "worker", BMC: sabakan.MachineBMC{Type: sabakan.BmcIpmi2}},
-		{Serial: "3", Product: "R730xd", Datacenter: "ty3", Role: "worker", BMC: sabakan.MachineBMC{Type: sabakan.BmcIpmi2}},
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "1", Product: "R630", Datacenter: "ty3", Role: "boot", BMC: sabakan.MachineBMC{Type: sabakan.BmcIpmi2}}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "2", Product: "R630", Datacenter: "ty3", Role: "worker", BMC: sabakan.MachineBMC{Type: sabakan.BmcIpmi2}}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "3", Product: "R730xd", Datacenter: "ty3", Role: "worker", BMC: sabakan.MachineBMC{Type: sabakan.BmcIpmi2}}),
 	}
 
 	for _, m := range machines {
@@ -29,20 +29,22 @@ func TestMachinesIndex(t *testing.T) {
 	}
 
 	mi.UpdateIndex(
-		&sabakan.Machine{
-			Serial:     "2",
-			Product:    "R630",
-			Datacenter: "ty3",
-			Role:       "worker",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
-		},
-		&sabakan.Machine{
-			Serial:     "2",
-			Product:    "R730xd",
-			Datacenter: "ty3",
-			Role:       "worker",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
-		})
+		sabakan.NewMachine(
+			sabakan.MachineSpec{
+				Serial:     "2",
+				Product:    "R630",
+				Datacenter: "ty3",
+				Role:       "worker",
+				BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
+			}),
+		sabakan.NewMachine(
+			sabakan.MachineSpec{
+				Serial:     "2",
+				Product:    "R730xd",
+				Datacenter: "ty3",
+				Role:       "worker",
+				BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
+			}))
 
 	serials = mi.query(&sabakan.Query{Product: "R730xd"})
 	if len(serials) != 2 {
@@ -53,13 +55,14 @@ func TestMachinesIndex(t *testing.T) {
 		t.Error("wrong query serials:", serials)
 	}
 
-	mi.DeleteIndex(&sabakan.Machine{
-		Serial:     "3",
-		Product:    "R730xd",
-		Datacenter: "ty3",
-		Role:       "worker",
-		BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
-	})
+	mi.DeleteIndex(sabakan.NewMachine(
+		sabakan.MachineSpec{
+			Serial:     "3",
+			Product:    "R730xd",
+			Datacenter: "ty3",
+			Role:       "worker",
+			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
+		}))
 
 	serials = mi.query(&sabakan.Query{Product: "R730xd"})
 	if len(serials) != 1 {

@@ -62,6 +62,12 @@ func (q *Query) Match(m *MachineSpec) bool {
 	return true
 }
 
+// IsEmpty returns true if query is empty
+func (q *Query) IsEmpty() bool {
+	return q.Serial == "" && q.Product == "" && q.Datacenter == "" && q.Rack == "" &&
+		q.Role == "" && q.IPv4 == "" && q.BMCType == ""
+}
+
 // QueryBySerial create Query by serial
 func QueryBySerial(serial string) *Query {
 	return &Query{

@@ -18,14 +18,16 @@ func testRegister(t *testing.T) {
 	<-ch
 
 	machines := []*sabakan.Machine{
-		&sabakan.Machine{
-			Serial: "1234abcd",
-			Role:   "worker",
-		},
-		&sabakan.Machine{
-			Serial: "5678efgh",
-			Role:   "worker",
-		},
+		sabakan.NewMachine(
+			sabakan.MachineSpec{
+				Serial: "1234abcd",
+				Role:   "worker",
+			}),
+		sabakan.NewMachine(
+			sabakan.MachineSpec{
+				Serial: "5678efgh",
+				Role:   "worker",
+			}),
 	}
 
 	err = d.Register(context.Background(), machines)
@@ -48,11 +50,11 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(saved.IPv4) != int(testIPAMConfig.NodeIPPerNode) {
-		t.Errorf("unexpected assigned IP addresses: %v", len(saved.IPv4))
+	if len(saved.Spec.IPv4) != int(testIPAMConfig.NodeIPPerNode) {
+		t.Errorf("unexpected assigned IP addresses: %v", len(saved.Spec.IPv4))
 	}
-	if saved.IndexInRack != testIPAMConfig.NodeIndexOffset+2 {
-		t.Errorf("node index of 2nd worker should be %v but %v", testIPAMConfig.NodeIndexOffset+2, saved.IndexInRack)
+	if saved.Spec.IndexInRack != testIPAMConfig.NodeIndexOffset+2 {
+		t.Errorf("node index of 2nd worker should be %v but %v", testIPAMConfig.NodeIndexOffset+2, saved.Spec.IndexInRack)
 	}
 
 	err = d.Register(context.Background(), machines)
@@ -63,16 +65,18 @@ func testRegister(t *testing.T) {
 	// so it does not generate event
 
 	bootServer := []*sabakan.Machine{
-		&sabakan.Machine{
-			Serial: "00000000",
-			Role:   "boot",
-		},
+		sabakan.NewMachine(
+			sabakan.MachineSpec{
+				Serial: "00000000",
+				Role:   "boot",
+			}),
 	}
 	bootServer2 := []*sabakan.Machine{
-		&sabakan.Machine{
-			Serial: "00000001",
-			Role:   "boot",
-		},
+		sabakan.NewMachine(
+			sabakan.MachineSpec{
+				Serial: "00000001",
+				Role:   "boot",
+			}),
 	}
 
 	err = d.Register(context.Background(), bootServer)
@@ -90,8 +94,8 @@ func testRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if saved.IndexInRack != testIPAMConfig.NodeIndexOffset {
-		t.Errorf("node index of boot server should be %v but %v", testIPAMConfig.NodeIndexOffset, saved.IndexInRack)
+	if saved.Spec.IndexInRack != testIPAMConfig.NodeIndexOffset {
+		t.Errorf("node index of boot server should be %v but %v", testIPAMConfig.NodeIndexOffset, saved.Spec.IndexInRack)
 	}
 
 	err = d.Register(context.Background(), bootServer2)
@@ -111,9 +115,9 @@ func testQuery(t *testing.T) {
 	<-ch
 
 	machines := []*sabakan.Machine{
-		&sabakan.Machine{Serial: "12345678", Product: "R630", Role: "worker"},
-		&sabakan.Machine{Serial: "12345679", Product: "R630", Role: "worker"},
-		&sabakan.Machine{Serial: "12345680", Product: "R730", Role: "worker"},
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345678", Product: "R630", Role: "worker"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345679", Product: "R630", Role: "worker"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345680", Product: "R730", Role: "worker"}),
 	}
 	err = d.Register(context.Background(), machines)
 	if err != nil {
@@ -130,7 +134,7 @@ func testQuery(t *testing.T) {
 	if len(resp) != 1 {
 		t.Fatalf("unexpected query result: %#v", resp)
 	}
-	if !q.Match(resp[0]) {
+	if !q.Match(&resp[0].Spec) {
 		t.Errorf("unexpected responsed machine: %#v", resp[0])
 	}
 
@@ -142,8 +146,65 @@ func testQuery(t *testing.T) {
 	if len(resp) != 2 {
 		t.Fatalf("unexpected query result: %#v", resp)
 	}
-	if !(q.Match(resp[0]) && q.Match(resp[1])) {
+	if !(q.Match(&resp[0].Spec) && q.Match(&resp[1].Spec)) {
 		t.Errorf("unexpected responsed machine: %#v", resp)
+	}
+
+	q = &sabakan.Query{}
+	resp, err = d.Query(context.Background(), q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp) != 3 {
+		t.Fatalf("unexpected query result: %#v", resp)
+	}
+}
+
+func testSetState(t *testing.T) {
+	d, ch := testNewDriver(t)
+	ctx := context.Background()
+
+	config := &testIPAMConfig
+	err := d.putIPAMConfig(ctx, config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+
+	machines := []*sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345678", Product: "R630", Role: "worker"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345679", Product: "R630", Role: "worker"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345680", Product: "R730", Role: "worker"}),
+	}
+	err = d.Register(ctx, machines)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+	<-ch
+
+	ms, err := d.Query(ctx, sabakan.QueryBySerial("12345678"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ms) == 0 {
+		t.Fatal("len(ms) == 0")
+	}
+	m := ms[0]
+	if m.Status.State != sabakan.StateHealthy {
+		t.Error("m.Status.State == sabakan.StateHealthy:", m.Status.State)
+	}
+	err = d.SetState(ctx, "12345678", sabakan.StateDead)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ms, err = d.Query(ctx, sabakan.QueryBySerial("12345678"))
+	if len(ms) == 0 {
+		t.Fatal(err)
+	}
+	m = ms[0]
+	if m.Status.State != sabakan.StateDead {
+		t.Error("m.Status.State == sabakan.StateDead:", m.Status.State)
 	}
 }
 
@@ -157,10 +218,11 @@ func testDelete(t *testing.T) {
 	<-ch
 
 	machines := []*sabakan.Machine{
-		&sabakan.Machine{
-			Serial: "1234abcd",
-			Role:   "worker",
-		},
+		sabakan.NewMachine(
+			sabakan.MachineSpec{
+				Serial: "1234abcd",
+				Role:   "worker",
+			}),
 	}
 
 	// register one
@@ -222,9 +284,9 @@ func testRegisterRace(t *testing.T) {
 	}
 	<-ch
 
-	machines := []*sabakan.Machine{&sabakan.Machine{
+	machines := []*sabakan.Machine{sabakan.NewMachine(sabakan.MachineSpec{
 		Serial: "1234abcd", Role: "worker",
-	}}
+	})}
 
 RETRY:
 	// retrieve usage data #1 and #2 with revision, and update data on memory
@@ -267,9 +329,9 @@ func testDeleteRace(t *testing.T) {
 	}
 	<-ch
 
-	machines := []*sabakan.Machine{&sabakan.Machine{
+	machines := []*sabakan.Machine{sabakan.NewMachine(sabakan.MachineSpec{
 		Serial: "1234abcd", Role: "worker",
-	}}
+	})}
 
 	// prepare data to be deleted
 	err = d.Register(context.Background(), machines)
@@ -283,13 +345,13 @@ func testDeleteRace(t *testing.T) {
 
 RETRY:
 	// retrieve usage data #1 and #2 with revision, and update data on memory
-	usage1, err := d.getRackIndexUsage(context.Background(), m.Rack)
+	usage1, err := d.getRackIndexUsage(context.Background(), m.Spec.Rack)
 	if err != nil {
 		t.Fatal(err)
 	}
 	usage1.release(m)
 
-	usage2, err := d.getRackIndexUsage(context.Background(), m.Rack)
+	usage2, err := d.getRackIndexUsage(context.Background(), m.Spec.Rack)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -318,6 +380,7 @@ RETRY:
 func TestMachine(t *testing.T) {
 	t.Run("Register", testRegister)
 	t.Run("Query", testQuery)
+	t.Run("SetState", testSetState)
 	t.Run("Delete", testDelete)
 	t.Run("RegisterRace", testRegisterRace)
 	t.Run("DeleteRace", testDeleteRace)

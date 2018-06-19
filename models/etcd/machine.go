@@ -41,6 +41,45 @@ RETRY:
 	return nil
 }
 
+// SetState implements sabakan.MachineModel
+func (d *driver) SetState(ctx context.Context, serial string, state sabakan.MachineState) error {
+	key := KeyMachines + serial
+RETRY:
+	resp, err := d.client.Get(ctx, key)
+	if err != nil {
+		return err
+	}
+	if resp.Count == 0 {
+		return sabakan.ErrNotFound
+	}
+
+	var m sabakan.Machine
+	err = json.Unmarshal(resp.Kvs[0].Value, &m)
+	if err != nil {
+		return err
+	}
+	err = m.SetState(state)
+	if err != nil {
+		return err
+	}
+	data, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	tresp, err := d.client.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", resp.Kvs[0].ModRevision)).
+		Then(clientv3.OpPut(key, string(data))).
+		Commit()
+	if err != nil {
+		return err
+	}
+	if !tresp.Succeeded {
+		goto RETRY
+	}
+	return nil
+}
+
 func (d *driver) updateMachines(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) ([]*sabakan.Machine, map[uint]*rackIndexUsage, error) {
 	usageMap, err := d.assignNodeIndex(ctx, machines, config)
 	if err != nil {
@@ -52,10 +91,10 @@ func (d *driver) updateMachines(ctx context.Context, machines []*sabakan.Machine
 		config.GenerateIP(rmc)
 		wmcs[i] = rmc
 		log.Debug("etcd/machine: register", map[string]interface{}{
-			"serial":     rmc.Serial,
-			"rack":       rmc.Rack,
-			"node_index": rmc.IndexInRack,
-			"role":       rmc.Role,
+			"serial":     rmc.Spec.Serial,
+			"rack":       rmc.Spec.Rack,
+			"node_index": rmc.Spec.IndexInRack,
+			"role":       rmc.Spec.Role,
 		})
 	}
 	return wmcs, usageMap, nil
@@ -67,7 +106,7 @@ func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageM
 	usageCASIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
-		key := path.Join(KeyMachines, wmc.Serial)
+		key := path.Join(KeyMachines, wmc.Spec.Serial)
 		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
@@ -100,9 +139,20 @@ func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageM
 // Query implements sabakan.MachineModel
 func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
-	if len(q.Serial) > 0 {
+
+	switch {
+	case q.IsEmpty():
+		resp, err := d.client.Get(ctx, KeyMachines, clientv3.WithPrefix(), clientv3.WithKeysOnly())
+		if err != nil {
+			return nil, err
+		}
+		serials = make([]string, resp.Count)
+		for i, kv := range resp.Kvs {
+			serials[i] = string(kv.Key[len(KeyMachines):])
+		}
+	case len(q.Serial) > 0:
 		serials = []string{q.Serial}
-	} else {
+	default:
 		serials = d.mi.query(q)
 	}
 
@@ -127,7 +177,7 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 			return nil, err
 		}
 
-		if q.Match(m) {
+		if q.Match(&m.Spec) {
 			res = append(res, m)
 		}
 	}
@@ -151,14 +201,14 @@ func (d *driver) Delete(ctx context.Context, serial string) error {
 
 	m := machines[0]
 	log.Debug("etcd/machine: delete", map[string]interface{}{
-		"serial":     m.Serial,
-		"rack":       m.Rack,
-		"node_index": m.IndexInRack,
-		"role":       m.Role,
+		"serial":     m.Spec.Serial,
+		"rack":       m.Spec.Rack,
+		"node_index": m.Spec.IndexInRack,
+		"role":       m.Spec.Role,
 	})
 
 RETRY:
-	usage, err := d.getRackIndexUsage(ctx, m.Rack)
+	usage, err := d.getRackIndexUsage(ctx, m.Spec.Rack)
 	if err != nil {
 		return err
 	}
@@ -187,8 +237,8 @@ RETRY:
 }
 
 func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
-	machineKey := path.Join(KeyMachines, machine.Serial)
-	indexKey := d.indexInRackKey(machine.Rack)
+	machineKey := path.Join(KeyMachines, machine.Spec.Serial)
+	indexKey := d.indexInRackKey(machine.Spec.Rack)
 
 	j, err := json.Marshal(usage)
 	if err != nil {

@@ -11,14 +11,25 @@ func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 	defer d.mu.Unlock()
 
 	for _, m := range machines {
-		if _, ok := d.machines[m.Serial]; ok {
+		if _, ok := d.machines[m.Spec.Serial]; ok {
 			return sabakan.ErrConflicted
 		}
 	}
 	for _, m := range machines {
-		d.machines[m.Serial] = m
+		d.machines[m.Spec.Serial] = m
 	}
 	return nil
+}
+
+func (d *driver) SetState(ctx context.Context, serial string, state sabakan.MachineState) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	m, ok := d.machines[serial]
+	if !ok {
+		return sabakan.ErrNotFound
+	}
+	return m.SetState(state)
 }
 
 func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
@@ -27,7 +38,7 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 
 	res := make([]*sabakan.Machine, 0)
 	for _, m := range d.machines {
-		if q.Match(m) {
+		if q.Match(&m.Spec) {
 			res = append(res, m)
 		}
 	}
