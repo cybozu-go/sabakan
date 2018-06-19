@@ -235,8 +235,23 @@ func testDelete(t *testing.T) {
 
 	// delete one
 	err = d.machineDelete(context.Background(), "1234abcd")
+	if err == nil {
+		t.Error("non-retired machine should not be deleted")
+	}
+
+	err = d.machineSetState(context.Background(), "1234abcd", sabakan.StateRetiring)
 	if err != nil {
 		t.Fatal(err)
+	}
+	<-ch
+	err = d.machineSetState(context.Background(), "1234abcd", sabakan.StateRetired)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+	err = d.machineDelete(context.Background(), "1234abcd")
+	if err != nil {
+		t.Error(err)
 	}
 	<-ch
 
@@ -321,9 +336,10 @@ RETRY:
 }
 
 func testDeleteRace(t *testing.T) {
+	ctx := context.Background()
 	d, ch := testNewDriver(t)
 	cfg := &testIPAMConfig
-	err := d.putIPAMConfig(context.Background(), cfg)
+	err := d.putIPAMConfig(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -334,31 +350,34 @@ func testDeleteRace(t *testing.T) {
 	})}
 
 	// prepare data to be deleted
-	err = d.machineRegister(context.Background(), machines)
+	err = d.machineRegister(ctx, machines)
 	if err != nil {
 		t.Fatal(err)
 	}
 	<-ch
 	<-ch
 
-	m := machines[0]
+	m, rev, err := d.machineGetWithRev(ctx, "1234abcd")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 RETRY:
 	// retrieve usage data #1 and #2 with revision, and update data on memory
-	usage1, err := d.getRackIndexUsage(context.Background(), m.Spec.Rack)
+	usage1, err := d.getRackIndexUsage(ctx, m.Spec.Rack)
 	if err != nil {
 		t.Fatal(err)
 	}
 	usage1.release(m)
 
-	usage2, err := d.getRackIndexUsage(context.Background(), m.Spec.Rack)
+	usage2, err := d.getRackIndexUsage(ctx, m.Spec.Rack)
 	if err != nil {
 		t.Fatal(err)
 	}
 	usage2.release(m)
 
 	// update data#2 on etcd; this increments revision
-	resp2, err := d.machineDoDelete(context.Background(), m, usage2)
+	resp2, err := d.machineDoDelete(ctx, m, rev, usage2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -368,7 +387,7 @@ RETRY:
 	<-ch
 
 	// try to update data#1 on etcd; this must fail
-	resp1, err := d.machineDoDelete(context.Background(), m, usage1)
+	resp1, err := d.machineDoDelete(ctx, m, rev, usage1)
 	if err != nil {
 		t.Fatal(err)
 	}

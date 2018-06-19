@@ -2,6 +2,8 @@ package etcd
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
@@ -27,18 +29,36 @@ func (d *driver) GetEncryptionKey(ctx context.Context, serial string, diskByPath
 // PutEncryptionKey implements sabakan.StorageModel
 func (d *driver) PutEncryptionKey(ctx context.Context, serial string, diskByPath string, key []byte) error {
 	target := path.Join(KeyCrypts, serial, diskByPath)
+	mkey := KeyMachines + serial
+
+RETRY:
+	m, rev, err := d.machineGetWithRev(ctx, serial)
+	if err != nil {
+		return err
+	}
+	if m.Status.State == sabakan.StateRetired {
+		return errors.New("machine was retired")
+	}
 
 	tresp, err := d.client.Txn(ctx).
-		// Prohibit overwriting
-		If(clientv3util.KeyMissing(target)).
-		Then(clientv3.OpPut(target, string(key))).
-		Else().
+		If(clientv3.Compare(clientv3.ModRevision(mkey), "=", rev)).
+		Then(
+			clientv3.OpTxn(
+				[]clientv3.Cmp{clientv3util.KeyMissing(target)},
+				[]clientv3.Op{clientv3.OpPut(target, string(key))},
+				nil,
+			),
+		).
 		Commit()
 	if err != nil {
 		return err
 	}
 
 	if !tresp.Succeeded {
+		goto RETRY
+	}
+
+	if !tresp.Responses[0].GetResponseTxn().Succeeded {
 		return sabakan.ErrConflicted
 	}
 
@@ -47,16 +67,48 @@ func (d *driver) PutEncryptionKey(ctx context.Context, serial string, diskByPath
 
 // DeleteEncryptionKeys implements sabakan.StorageModel
 func (d *driver) DeleteEncryptionKeys(ctx context.Context, serial string) ([]string, error) {
-	target := path.Join(KeyCrypts, serial) + "/"
+	mkey := KeyMachines + serial
+	ckey := path.Join(KeyCrypts, serial) + "/"
 
-	dresp, err := d.client.Delete(ctx, target, clientv3.WithPrefix(), clientv3.WithPrevKV())
+RETRY:
+	m, rev, err := d.machineGetWithRev(ctx, serial)
+	if err != nil {
+		return nil, err
+	}
+	if m.Status.State != sabakan.StateRetiring {
+		return nil, errors.New("machine is not retiring")
+	}
+
+	err = m.SetState(sabakan.StateRetired)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := make([]string, len(dresp.PrevKvs))
-	for i, ev := range dresp.PrevKvs {
-		resp[i] = string(ev.Key[len(target):])
+	j, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
 	}
-	return resp, nil
+
+	resp, err := d.client.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(mkey), "=", rev)).
+		Then(
+			clientv3.OpDelete(ckey, clientv3.WithPrefix(), clientv3.WithPrevKV()),
+			clientv3.OpPut(mkey, string(j)),
+		).
+		Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	if !resp.Succeeded {
+		goto RETRY
+	}
+
+	dresp := resp.Responses[0].GetResponseDeleteRange()
+
+	ret := make([]string, len(dresp.PrevKvs))
+	for i, ev := range dresp.PrevKvs {
+		ret[i] = string(ev.Key[len(ckey):])
+	}
+	return ret, nil
 }

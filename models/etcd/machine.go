@@ -3,6 +3,7 @@ package etcd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
@@ -68,20 +69,13 @@ func (d *driver) machineGet(ctx context.Context, serial string) (*sabakan.Machin
 
 func (d *driver) machineSetState(ctx context.Context, serial string, state sabakan.MachineState) error {
 	key := KeyMachines + serial
+
 RETRY:
-	resp, err := d.client.Get(ctx, key)
+	m, rev, err := d.machineGetWithRev(ctx, serial)
 	if err != nil {
 		return err
-	}
-	if resp.Count == 0 {
-		return sabakan.ErrNotFound
 	}
 
-	var m sabakan.Machine
-	err = json.Unmarshal(resp.Kvs[0].Value, &m)
-	if err != nil {
-		return err
-	}
 	err = m.SetState(state)
 	if err != nil {
 		return err
@@ -92,7 +86,7 @@ RETRY:
 	}
 
 	tresp, err := d.client.Txn(ctx).
-		If(clientv3.Compare(clientv3.ModRevision(key), "=", resp.Kvs[0].ModRevision)).
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", rev)).
 		Then(clientv3.OpPut(key, string(data))).
 		Commit()
 	if err != nil {
@@ -213,23 +207,16 @@ func (d *driver) machineQuery(ctx context.Context, q *sabakan.Query) ([]*sabakan
 }
 
 func (d *driver) machineDelete(ctx context.Context, serial string) error {
-	machines, err := d.machineQuery(ctx, sabakan.QueryBySerial(serial))
+RETRY:
+	m, rev, err := d.machineGetWithRev(ctx, serial)
 	if err != nil {
 		return err
 	}
-	if len(machines) != 1 {
-		return sabakan.ErrNotFound
+
+	if m.Status.State != sabakan.StateRetired {
+		return errors.New("non-retired machine cannot be deleted")
 	}
 
-	m := machines[0]
-	log.Debug("etcd/machine: delete", map[string]interface{}{
-		"serial":     m.Spec.Serial,
-		"rack":       m.Spec.Rack,
-		"node_index": m.Spec.IndexInRack,
-		"role":       m.Spec.Role,
-	})
-
-RETRY:
 	usage, err := d.getRackIndexUsage(ctx, m.Spec.Rack)
 	if err != nil {
 		return err
@@ -239,7 +226,7 @@ RETRY:
 		return nil
 	}
 
-	resp, err := d.machineDoDelete(ctx, m, usage)
+	resp, err := d.machineDoDelete(ctx, m, rev, usage)
 	if err != nil {
 		return err
 	}
@@ -250,16 +237,13 @@ RETRY:
 		goto RETRY
 	}
 
-	if !resp.Responses[0].GetResponseTxn().Succeeded {
-		// KeyExists(machineKey) failed
-		return sabakan.ErrNotFound
-	}
-
 	return nil
 }
 
-func (d *driver) machineDoDelete(ctx context.Context, machine *sabakan.Machine, usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
-	machineKey := path.Join(KeyMachines, machine.Spec.Serial)
+func (d *driver) machineDoDelete(ctx context.Context, machine *sabakan.Machine, rev int64,
+	usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
+
+	machineKey := KeyMachines + machine.Spec.Serial
 	indexKey := d.indexInRackKey(machine.Spec.Rack)
 
 	j, err := json.Marshal(usage)
@@ -268,17 +252,14 @@ func (d *driver) machineDoDelete(ctx context.Context, machine *sabakan.Machine, 
 	}
 
 	return d.client.Txn(ctx).
-		If(clientv3.Compare(clientv3.ModRevision(indexKey), "=", usage.revision)).
-		Then(
-			clientv3.OpTxn(
-				[]clientv3.Cmp{clientv3util.KeyExists(machineKey)},
-				[]clientv3.Op{
-					clientv3.OpDelete(machineKey),
-					clientv3.OpPut(indexKey, string(j)),
-				},
-				nil),
+		If(
+			clientv3.Compare(clientv3.ModRevision(machineKey), "=", rev),
+			clientv3.Compare(clientv3.ModRevision(indexKey), "=", usage.revision),
 		).
-		Else().
+		Then(
+			clientv3.OpDelete(machineKey),
+			clientv3.OpPut(indexKey, string(j)),
+		).
 		Commit()
 }
 
