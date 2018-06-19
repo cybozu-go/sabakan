@@ -63,6 +63,9 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	case p == "images/coreos" || strings.HasPrefix(p, "images/coreos/"):
 		s.handleImages(w, r)
 		return
+	case strings.HasPrefix(p, "state/"):
+		s.handleState(w, r)
+		return
 	case strings.HasPrefix(p, "machines"):
 		s.handleMachines(w, r)
 		return

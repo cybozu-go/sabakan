@@ -92,7 +92,7 @@ func (m *Machine) SetState(ms MachineState) error {
 		}
 	case StateRetiring:
 		if ms != StateRetired {
-			return errors.New("transtion to state other than retired is forbidden")
+			return errors.New("transition to state other than retired is forbidden")
 		}
 	case StateRetired:
 		if ms != StateHealthy {
