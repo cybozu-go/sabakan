@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"os"
+	"strings"
 
 	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/client"
@@ -128,12 +129,12 @@ type machinesRemoveCmd struct{}
 func (r machinesRemoveCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	if len(f.Args()) != 1 {
+	if f.NArg() != 1 {
 		f.Usage()
 		return client.ExitUsageError
 	}
 
-	errorStatus := client.MachinesRemove(ctx, f.Args()[0])
+	errorStatus := client.MachinesRemove(ctx, f.Arg(0))
 	return handleError(errorStatus)
 }
 
@@ -151,12 +152,15 @@ type machinesSetStateCmd struct{}
 func (r machinesSetStateCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r machinesSetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	if len(f.Args()) != 2 {
+	if f.NArg() != 2 {
 		f.Usage()
 		return client.ExitUsageError
 	}
 
-	errorStatus := client.MachinesSetState(ctx, f.Args()[0], f.Args()[1])
+	serial := f.Arg(0)
+	state := strings.ToLower(f.Arg(1))
+
+	errorStatus := client.MachinesSetState(ctx, serial, state)
 	return handleError(errorStatus)
 }
 
@@ -165,7 +169,14 @@ func machinesSetStateCommand() subcommands.Command {
 		machinesSetStateCmd{},
 		"set-state",
 		"set the state of the machine",
-		"set-state SERIAL STATE",
+		`Usage: sabactl machines set-state SERIAL STATE
+
+STATE can be one of:
+    healthy      The machine has no problems.
+    unhealthy    The machine has some problems.
+    dead         The machine does not communicate with others.
+    retiring     The machine should soon be retired/repaired.
+`,
 	}
 }
 
@@ -174,12 +185,12 @@ type machinesGetStateCmd struct{}
 func (r machinesGetStateCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r machinesGetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	if len(f.Args()) != 1 {
+	if f.NArg() != 1 {
 		f.Usage()
 		return client.ExitUsageError
 	}
 
-	state, errorStatus := client.MachinesGetState(ctx, f.Args()[0])
+	state, errorStatus := client.MachinesGetState(ctx, f.Arg(0))
 	if errorStatus != nil {
 		return handleError(errorStatus)
 	}
