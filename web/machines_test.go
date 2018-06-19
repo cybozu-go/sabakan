@@ -180,14 +180,25 @@ func testMachinesGet(t *testing.T) {
 			expected: map[string]bool{"1234abcd": true, "1234efgh": true},
 		},
 		{
+			query:    map[string][]string{"bmc-type": {"iDRAC-9"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
+		},
+		{
+			query:    map[string][]string{"state": {"healthy"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true, "1234efgh": true},
+		},
+
+		{
 			query:    map[string][]string{"serial": {"5689abcd"}},
 			status:   http.StatusNotFound,
 			expected: nil,
 		},
 		{
-			query:    map[string][]string{"bmc-type": {"iDRAC-9"}},
-			status:   http.StatusOK,
-			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
+			query:    map[string][]string{"state": {"dead"}},
+			status:   http.StatusNotFound,
+			expected: nil,
 		},
 	}
 	for _, c := range cases {

@@ -89,6 +89,7 @@ func getMachinesQuery(r *http.Request) *sabakan.Query {
 	q.IPv4 = vals.Get("ipv4")
 	q.IPv6 = vals.Get("ipv6")
 	q.BMCType = vals.Get("bmc-type")
+	q.State = vals.Get("state")
 	return &q
 }
 

@@ -20,6 +20,7 @@ type machinesIndex struct {
 	IPv4       map[string]string
 	IPv6       map[string]string
 	BMCType    map[string][]string
+	State      map[sabakan.MachineState][]string
 }
 
 func newMachinesIndex() *machinesIndex {
@@ -31,6 +32,7 @@ func newMachinesIndex() *machinesIndex {
 		IPv4:       make(map[string]string),
 		IPv6:       make(map[string]string),
 		BMCType:    make(map[string][]string),
+		State:      make(map[sabakan.MachineState][]string),
 	}
 }
 
@@ -87,6 +89,7 @@ func (mi *machinesIndex) addNoLock(m *sabakan.Machine) {
 	if len(spec.BMC.IPv6) > 0 {
 		mi.IPv6[spec.BMC.IPv6] = spec.Serial
 	}
+	mi.State[m.Status.State] = append(mi.State[m.Status.State], spec.Serial)
 }
 
 func indexOf(data []string, element string) int {
@@ -125,6 +128,9 @@ func (mi *machinesIndex) deleteNoLock(m *sabakan.Machine) {
 	}
 	delete(mi.IPv4, spec.BMC.IPv4)
 	delete(mi.IPv6, spec.BMC.IPv6)
+
+	i = indexOf(mi.State[m.Status.State], spec.Serial)
+	mi.State[m.Status.State] = append(mi.State[m.Status.State][:i], mi.State[m.Status.State][i+1:]...)
 }
 
 // UpdateIndex updates target machine on the index
@@ -164,6 +170,9 @@ func (mi *machinesIndex) query(q *sabakan.Query) []string {
 		}
 	}
 	for _, serial := range mi.BMCType[q.BMCType] {
+		res[serial] = struct{}{}
+	}
+	for _, serial := range mi.State[sabakan.MachineState(q.State)] {
 		res[serial] = struct{}{}
 	}
 
