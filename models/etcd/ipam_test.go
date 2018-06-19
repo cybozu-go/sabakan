@@ -22,6 +22,8 @@ var testIPAMConfig = sabakan.IPAMConfig{
 }
 
 func testIPAMPutConfig(t *testing.T) {
+	t.Parallel()
+
 	d, ch := testNewDriver(t)
 	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
@@ -63,8 +65,9 @@ func testIPAMPutConfig(t *testing.T) {
 }
 
 func testIPAMGetConfig(t *testing.T) {
-	d, ch := testNewDriver(t)
+	t.Parallel()
 
+	d, ch := testNewDriver(t)
 	config := &testIPAMConfig
 
 	bytes, err := json.Marshal(config)

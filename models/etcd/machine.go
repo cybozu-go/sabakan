@@ -8,7 +8,6 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
-	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -19,18 +18,19 @@ func (d *driver) machineRegister(ctx context.Context, machines []*sabakan.Machin
 	}
 RETRY:
 	// Assign node indices and addresses temporarily
-	wmcs, usageMap, err := d.updateMachines(ctx, machines, cfg)
+	usageMap, err := d.assignNodeIndex(ctx, machines, cfg)
 	if err != nil {
 		return err
 	}
+	for _, m := range machines {
+		cfg.GenerateIP(m)
+	}
 
-	tresp, err := d.machineDoRegister(ctx, wmcs, usageMap)
+	tresp, err := d.machineDoRegister(ctx, machines, usageMap)
 	if err != nil {
 		return err
 	}
 	if !tresp.Succeeded {
-		// outer If, i.e. usageCASIfOPs, evaluated to false; index usage was updated by another txn.
-		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
 	if !tresp.Responses[0].GetResponseTxn().Succeeded {
@@ -39,6 +39,37 @@ RETRY:
 	}
 
 	return nil
+}
+
+func (d *driver) machineDoRegister(ctx context.Context, wmcs []*sabakan.Machine, usageMap map[uint]*rackIndexUsage) (*clientv3.TxnResponse, error) {
+	// Put machines into etcd
+	conflictMachinesIfOps := []clientv3.Cmp{}
+	usageCASIfOps := []clientv3.Cmp{}
+	txnThenOps := []clientv3.Op{}
+	for _, wmc := range wmcs {
+		key := path.Join(KeyMachines, wmc.Spec.Serial)
+		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
+		j, err := json.Marshal(wmc)
+		if err != nil {
+			return nil, err
+		}
+		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
+	}
+	for rack, usage := range usageMap {
+		key := d.indexInRackKey(rack)
+		j, err := json.Marshal(usage)
+		if err != nil {
+			return nil, err
+		}
+
+		usageCASIfOps = append(usageCASIfOps, clientv3.Compare(clientv3.ModRevision(key), "=", usage.revision))
+		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
+	}
+
+	return d.client.Txn(ctx).
+		If(usageCASIfOps...).
+		Then(clientv3.OpTxn(conflictMachinesIfOps, txnThenOps, nil)).
+		Commit()
 }
 
 func (d *driver) machineGetWithRev(ctx context.Context, serial string) (*sabakan.Machine, int64, error) {
@@ -98,62 +129,6 @@ RETRY:
 	return nil
 }
 
-func (d *driver) updateMachines(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) ([]*sabakan.Machine, map[uint]*rackIndexUsage, error) {
-	usageMap, err := d.assignNodeIndex(ctx, machines, config)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	wmcs := make([]*sabakan.Machine, len(machines))
-	for i, rmc := range machines {
-		config.GenerateIP(rmc)
-		wmcs[i] = rmc
-		log.Debug("etcd/machine: register", map[string]interface{}{
-			"serial":     rmc.Spec.Serial,
-			"rack":       rmc.Spec.Rack,
-			"node_index": rmc.Spec.IndexInRack,
-			"role":       rmc.Spec.Role,
-		})
-	}
-	return wmcs, usageMap, nil
-}
-
-func (d *driver) machineDoRegister(ctx context.Context, wmcs []*sabakan.Machine, usageMap map[uint]*rackIndexUsage) (*clientv3.TxnResponse, error) {
-	// Put machines into etcd
-	conflictMachinesIfOps := []clientv3.Cmp{}
-	usageCASIfOps := []clientv3.Cmp{}
-	txnThenOps := []clientv3.Op{}
-	for _, wmc := range wmcs {
-		key := path.Join(KeyMachines, wmc.Spec.Serial)
-		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
-		j, err := json.Marshal(wmc)
-		if err != nil {
-			return nil, err
-		}
-		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
-	}
-	for rack, usage := range usageMap {
-		key := d.indexInRackKey(rack)
-		j, err := json.Marshal(usage)
-		if err != nil {
-			return nil, err
-		}
-
-		usageCASIfOps = append(usageCASIfOps, clientv3.Compare(clientv3.ModRevision(key), "=", usage.revision))
-		txnThenOps = append(txnThenOps, clientv3.OpPut(key, string(j)))
-	}
-
-	return d.client.Txn(ctx).
-		If(
-			usageCASIfOps...,
-		).
-		Then(
-			clientv3.OpTxn(conflictMachinesIfOps, txnThenOps, nil),
-		).
-		Else().
-		Commit()
-}
-
 func (d *driver) machineQuery(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
 
@@ -175,9 +150,6 @@ func (d *driver) machineQuery(ctx context.Context, q *sabakan.Query) ([]*sabakan
 
 	res := make([]*sabakan.Machine, 0, len(serials))
 	for _, serial := range serials {
-		log.Debug("etcd/machine: query serial", map[string]interface{}{
-			"serial": serial,
-		})
 		key := path.Join(KeyMachines, serial)
 		resp, err := d.client.Get(ctx, key)
 		if err != nil {
@@ -232,8 +204,6 @@ RETRY:
 	}
 
 	if !resp.Succeeded {
-		// revision mismatch
-		log.Info("etcd: revision mismatch; retrying...", nil)
 		goto RETRY
 	}
 

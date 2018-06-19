@@ -107,15 +107,11 @@ func testMachinesPost(t *testing.T) {
 			continue
 		}
 
-		machines, err := m.Machine.Query(context.Background(), sabakan.QueryBySerial("1234abcd"))
+		_, err := m.Machine.Get(context.Background(), "1234abcd")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(machines) != 1 {
-			t.Error("machine not register")
-		}
 	}
-
 }
 
 func testMachinesGet(t *testing.T) {

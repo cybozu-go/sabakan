@@ -71,19 +71,13 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 		console = "console=ttyS0"
 	}
 
-	q := sabakan.QueryBySerial(serial)
-	ms, err := s.Model.Machine.Query(r.Context(), q)
+	m, err := s.Model.Machine.Get(r.Context(), serial)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
 	}
 
-	if len(ms) == 0 {
-		renderError(r.Context(), w, APIErrNotFound)
-		return
-	}
-
-	role := ms[0].Spec.Role
+	role := m.Spec.Role
 	ids, err := s.Model.Ignition.GetTemplateIDs(r.Context(), role)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)

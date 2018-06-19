@@ -9,6 +9,8 @@ import (
 )
 
 func testRegister(t *testing.T) {
+	t.Parallel()
+
 	d, ch := testNewDriver(t)
 	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
@@ -104,7 +106,45 @@ func testRegister(t *testing.T) {
 	}
 }
 
+func testGet(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	d, ch := testNewDriver(t)
+	config := &testIPAMConfig
+	err := d.putIPAMConfig(ctx, config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+
+	machines := []*sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345678"}),
+	}
+	err = d.machineRegister(ctx, machines)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+
+	_, err = d.machineGet(ctx, "a")
+	if err != sabakan.ErrNotFound {
+		t.Error(`err != sabakan.ErrNotFound`)
+	}
+
+	m, err := d.machineGet(ctx, "12345678")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if m.Spec.Serial != "12345678" {
+		t.Error(`m.Spec.Serial != "12345678"`)
+	}
+}
+
 func testQuery(t *testing.T) {
+	t.Parallel()
+
 	d, ch := testNewDriver(t)
 
 	config := &testIPAMConfig
@@ -183,14 +223,10 @@ func testSetState(t *testing.T) {
 	<-ch
 	<-ch
 
-	ms, err := d.machineQuery(ctx, sabakan.QueryBySerial("12345678"))
+	m, err := d.machineGet(ctx, "12345678")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ms) == 0 {
-		t.Fatal("len(ms) == 0")
-	}
-	m := ms[0]
 	if m.Status.State != sabakan.StateHealthy {
 		t.Error("m.Status.State == sabakan.StateHealthy:", m.Status.State)
 	}
@@ -198,17 +234,19 @@ func testSetState(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ms, err = d.machineQuery(ctx, sabakan.QueryBySerial("12345678"))
-	if len(ms) == 0 {
+
+	m, err = d.machineGet(ctx, "12345678")
+	if err != nil {
 		t.Fatal(err)
 	}
-	m = ms[0]
 	if m.Status.State != sabakan.StateDead {
 		t.Error("m.Status.State == sabakan.StateDead:", m.Status.State)
 	}
 }
 
 func testDelete(t *testing.T) {
+	t.Parallel()
+
 	d, ch := testNewDriver(t)
 	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)
@@ -290,52 +328,9 @@ func testDelete(t *testing.T) {
 	}
 }
 
-func testRegisterRace(t *testing.T) {
-	d, ch := testNewDriver(t)
-	cfg := &testIPAMConfig
-	err := d.putIPAMConfig(context.Background(), cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	<-ch
-
-	machines := []*sabakan.Machine{sabakan.NewMachine(sabakan.MachineSpec{
-		Serial: "1234abcd", Role: "worker",
-	})}
-
-RETRY:
-	// retrieve usage data #1 and #2 with revision, and update data on memory
-	wmcs1, usageMap1, err := d.updateMachines(context.Background(), machines, cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	wmcs2, usageMap2, err := d.updateMachines(context.Background(), machines, cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// update data#2 on etcd; this increments revision
-	tresp2, err := d.machineDoRegister(context.Background(), wmcs2, usageMap2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !tresp2.Succeeded {
-		goto RETRY
-	}
-	<-ch
-
-	// try to update data#1 on etcd; this must fail
-	tresp1, err := d.machineDoRegister(context.Background(), wmcs1, usageMap1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if tresp1.Succeeded {
-		t.Error("update operations should fail, if revision number has been changed")
-	}
-}
-
 func testDeleteRace(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	d, ch := testNewDriver(t)
 	cfg := &testIPAMConfig
@@ -398,9 +393,9 @@ RETRY:
 
 func TestMachine(t *testing.T) {
 	t.Run("Register", testRegister)
+	t.Run("Get", testGet)
 	t.Run("Query", testQuery)
 	t.Run("SetState", testSetState)
 	t.Run("Delete", testDelete)
-	t.Run("RegisterRace", testRegisterRace)
 	t.Run("DeleteRace", testDeleteRace)
 }

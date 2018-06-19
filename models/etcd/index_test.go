@@ -8,6 +8,8 @@ import (
 )
 
 func TestMachinesIndex(t *testing.T) {
+	t.Parallel()
+
 	mi := newMachinesIndex()
 
 	machines := []*sabakan.Machine{

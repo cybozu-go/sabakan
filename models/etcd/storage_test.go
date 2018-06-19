@@ -9,6 +9,8 @@ import (
 )
 
 func TestStorage(t *testing.T) {
+	t.Parallel()
+
 	d, ch := testNewDriver(t)
 	config := &testIPAMConfig
 	err := d.putIPAMConfig(context.Background(), config)

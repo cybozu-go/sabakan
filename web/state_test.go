@@ -92,11 +92,11 @@ func testStatePut(t *testing.T) {
 			t.Error("wrong status code, expects:", td.status, ", actual:", resp.StatusCode)
 		}
 
-		stored, err := m.Machine.Query(ctx, sabakan.QueryBySerial("123"))
+		stored, err := m.Machine.Get(ctx, "123")
 		if err != nil {
 			t.Fatal(err)
 		}
-		storedState := string(stored[0].Status.State)
+		storedState := string(stored.Status.State)
 		if td.status == http.StatusOK && td.state != storedState {
 			t.Error("stored state is wrong, expect:", td.state, ", actual:", storedState)
 		}

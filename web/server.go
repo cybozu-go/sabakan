@@ -38,40 +38,30 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case p == "assets" || strings.HasPrefix(p, "assets/"):
 		s.handleAssets(w, r)
-		return
 	case p == "boot/ipxe.efi":
 		http.ServeFile(w, r, s.IPXEFirmware)
-		return
 	case strings.HasPrefix(p, "boot/coreos/"):
 		s.handleCoreOS(w, r)
-		return
 	case strings.HasPrefix(p, "boot/ignitions/"):
 		s.handleIgnitions(w, r)
-		return
 	case p == "config/dhcp":
 		s.handleConfigDHCP(w, r)
-		return
 	case p == "config/ipam":
 		s.handleConfigIPAM(w, r)
-		return
 	case strings.HasPrefix(p, "crypts/"):
 		s.handleCrypts(w, r)
-		return
 	case strings.HasPrefix(p, "ignitions/"):
 		s.handleIgnitionTemplates(w, r)
-		return
 	case p == "images/coreos" || strings.HasPrefix(p, "images/coreos/"):
 		s.handleImages(w, r)
-		return
-	case strings.HasPrefix(p, "state/"):
-		s.handleState(w, r)
-		return
 	case strings.HasPrefix(p, "machines"):
 		s.handleMachines(w, r)
-		return
+	case strings.HasPrefix(p, "state/"):
+		s.handleState(w, r)
+	default:
+		renderError(r.Context(), w, APIErrNotFound)
 	}
 
-	renderError(r.Context(), w, APIErrNotFound)
 }
 
 // hasPermission returns true if the request has a permission to the resource

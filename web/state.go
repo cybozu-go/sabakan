@@ -28,17 +28,19 @@ func (s Server) handleState(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleStateGet(w http.ResponseWriter, r *http.Request, serial string) {
-	machines, err := s.Model.Machine.Query(r.Context(), sabakan.QueryBySerial(serial))
-	if err != nil {
+	m, err := s.Model.Machine.Get(r.Context(), serial)
+	switch err {
+	case sabakan.ErrNotFound:
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	case nil:
+	default:
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
-	if len(machines) == 0 {
-		renderError(r.Context(), w, APIErrNotFound)
-		return
-	}
+
 	w.Header().Set("content-type", "text/plain")
-	io.WriteString(w, machines[0].Status.State.String())
+	io.WriteString(w, m.Status.State.String())
 }
 
 func (s Server) handleStatePut(w http.ResponseWriter, r *http.Request, serial string) {

@@ -142,24 +142,18 @@ func (s Server) handleIgnitionTemplatesDelete(w http.ResponseWriter, r *http.Req
 }
 
 func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, id, serial string) {
-	q := sabakan.QueryBySerial(serial)
-	ms, err := s.Model.Machine.Query(r.Context(), q)
+	m, err := s.Model.Machine.Get(r.Context(), serial)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
 	}
 
-	if len(ms) == 0 {
-		renderError(r.Context(), w, APIErrNotFound)
-		return
-	}
-
-	tmpl, err := s.Model.Ignition.GetTemplate(r.Context(), ms[0].Spec.Role, id)
+	tmpl, err := s.Model.Ignition.GetTemplate(r.Context(), m.Spec.Role, id)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
 	}
-	ign, err := sabakan.RenderIgnition(tmpl, ms[0], s.MyURL)
+	ign, err := sabakan.RenderIgnition(tmpl, m, s.MyURL)
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return

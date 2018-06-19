@@ -19,6 +19,8 @@ var testDHCPConfig = sabakan.DHCPConfig{
 }
 
 func testDHCPPutConfig(t *testing.T) {
+	t.Parallel()
+
 	d, ch := testNewDriver(t)
 	config := &testDHCPConfig
 	err := d.putDHCPConfig(context.Background(), config)
@@ -47,8 +49,9 @@ func testDHCPPutConfig(t *testing.T) {
 }
 
 func testDHCPGetConfig(t *testing.T) {
-	d, ch := testNewDriver(t)
+	t.Parallel()
 
+	d, ch := testNewDriver(t)
 	config := &testDHCPConfig
 
 	bytes, err := json.Marshal(config)
@@ -89,8 +92,9 @@ func testSetupConfig(t *testing.T, d *driver, ch <-chan struct{}) {
 }
 
 func testDHCPLease(t *testing.T) {
-	d, ch := testNewDriver(t)
+	t.Parallel()
 
+	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
 	interfaceip := net.ParseIP("10.69.0.195")
@@ -149,8 +153,9 @@ func testDHCPLease(t *testing.T) {
 }
 
 func testDHCPRenew(t *testing.T) {
-	d, ch := testNewDriver(t)
+	t.Parallel()
 
+	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
 	leasedip := net.ParseIP("10.69.0.224")
@@ -173,8 +178,9 @@ func testDHCPRenew(t *testing.T) {
 }
 
 func testDHCPRelease(t *testing.T) {
-	d, ch := testNewDriver(t)
+	t.Parallel()
 
+	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
 	interfaceip := net.ParseIP("10.69.0.195")
@@ -202,8 +208,9 @@ func testDHCPRelease(t *testing.T) {
 }
 
 func testDHCPDecline(t *testing.T) {
-	d, ch := testNewDriver(t)
+	t.Parallel()
 
+	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
 	interfaceip := net.ParseIP("10.69.0.195")
@@ -230,8 +237,9 @@ func testDHCPDecline(t *testing.T) {
 }
 
 func testDHCPLeaseExpiration(t *testing.T) {
-	d, ch := testNewDriver(t)
+	t.Parallel()
 
+	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
 	ipam, err := d.getIPAMConfig()
@@ -282,6 +290,8 @@ RETRY:
 }
 
 func testDHCPLeaseRace(t *testing.T) {
+	t.Parallel()
+
 	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 	ipam, err := d.getIPAMConfig()
@@ -325,6 +335,8 @@ RETRY:
 }
 
 func testDummyMAC(t *testing.T) {
+	t.Parallel()
+
 	mac := generateDummyMAC(257)
 	if mac.String() != "ff:00:00:00:01:01" {
 		t.Error("unexpected MAC address", mac)
