@@ -177,7 +177,7 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 			return nil, err
 		}
 
-		if q.Match(&m.Spec) {
+		if q.Match(m) {
 			res = append(res, m)
 		}
 	}

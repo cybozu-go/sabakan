@@ -134,7 +134,7 @@ func testQuery(t *testing.T) {
 	if len(resp) != 1 {
 		t.Fatalf("unexpected query result: %#v", resp)
 	}
-	if !q.Match(&resp[0].Spec) {
+	if !q.Match(resp[0]) {
 		t.Errorf("unexpected responsed machine: %#v", resp[0])
 	}
 
@@ -146,7 +146,7 @@ func testQuery(t *testing.T) {
 	if len(resp) != 2 {
 		t.Fatalf("unexpected query result: %#v", resp)
 	}
-	if !(q.Match(&resp[0].Spec) && q.Match(&resp[1].Spec)) {
+	if !(q.Match(resp[0]) && q.Match(resp[1])) {
 		t.Errorf("unexpected responsed machine: %#v", resp)
 	}
 

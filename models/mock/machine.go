@@ -38,7 +38,7 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 
 	res := make([]*sabakan.Machine, 0)
 	for _, m := range d.machines {
-		if q.Match(&m.Spec) {
+		if q.Match(m) {
 			res = append(res, m)
 		}
 	}
