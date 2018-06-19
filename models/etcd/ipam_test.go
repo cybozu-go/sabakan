@@ -48,7 +48,9 @@ func testIPAMPutConfig(t *testing.T) {
 		t.Errorf("unexpected saved config %#v", actual)
 	}
 
-	err = d.Register(context.Background(), []*sabakan.Machine{sabakan.NewMachine(sabakan.MachineSpec{Serial: "1234abcd", Role: "worker"})})
+	err = d.machineRegister(context.Background(),
+		[]*sabakan.Machine{sabakan.NewMachine(
+			sabakan.MachineSpec{Serial: "1234abcd", Role: "worker"})})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -60,6 +60,8 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("unknown BMC type"))
 			return
 		}
+		m.IPv4 = nil
+		m.IPv6 = nil
 	}
 	machines := make([]*sabakan.Machine, len(specs))
 	for i, spec := range specs {

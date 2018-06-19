@@ -4,24 +4,13 @@ import (
 	"context"
 	"path"
 	"strings"
-	"sync"
 
 	"github.com/cybozu-go/sabakan"
+	"github.com/pkg/errors"
 )
 
-type storageDriver struct {
-	mu      sync.Mutex
-	storage map[string][]byte
-}
-
-func newStorageDriver() *storageDriver {
-	return &storageDriver{
-		storage: make(map[string][]byte),
-	}
-}
-
 // GetEncryptionKey implements sabakan.StorageModel
-func (d *storageDriver) GetEncryptionKey(ctx context.Context, serial string, diskByPath string) ([]byte, error) {
+func (d *driver) GetEncryptionKey(ctx context.Context, serial string, diskByPath string) ([]byte, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -35,12 +24,20 @@ func (d *storageDriver) GetEncryptionKey(ctx context.Context, serial string, dis
 }
 
 // PutEncryptionKey implements sabakan.StorageModel
-func (d *storageDriver) PutEncryptionKey(ctx context.Context, serial string, diskByPath string, key []byte) error {
+func (d *driver) PutEncryptionKey(ctx context.Context, serial string, diskByPath string, key []byte) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	m, ok := d.machines[serial]
+	if !ok {
+		return sabakan.ErrNotFound
+	}
+	if m.Status.State == sabakan.StateRetired {
+		return errors.New("machine was retired")
+	}
+
 	target := path.Join(serial, diskByPath)
-	_, ok := d.storage[target]
+	_, ok = d.storage[target]
 	if ok {
 		return sabakan.ErrConflicted
 	}
@@ -50,11 +47,24 @@ func (d *storageDriver) PutEncryptionKey(ctx context.Context, serial string, dis
 }
 
 // DeleteEncryptionKeys implements sabakan.StorageModel
-func (d *storageDriver) DeleteEncryptionKeys(ctx context.Context, serial string) ([]string, error) {
+func (d *driver) DeleteEncryptionKeys(ctx context.Context, serial string) ([]string, error) {
 	prefix := serial + "/"
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
+
+	m, ok := d.machines[serial]
+	if !ok {
+		return nil, sabakan.ErrNotFound
+	}
+	if m.Status.State != sabakan.StateRetiring {
+		return nil, errors.New("machine is not retiring")
+	}
+
+	err := m.SetState(sabakan.StateRetired)
+	if err != nil {
+		return nil, err
+	}
 
 	var resp []string
 	for k := range d.storage {

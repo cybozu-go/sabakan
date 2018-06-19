@@ -30,7 +30,7 @@ func testRegister(t *testing.T) {
 			}),
 	}
 
-	err = d.Register(context.Background(), machines)
+	err = d.machineRegister(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func testRegister(t *testing.T) {
 		t.Errorf("node index of 2nd worker should be %v but %v", testIPAMConfig.NodeIndexOffset+2, saved.Spec.IndexInRack)
 	}
 
-	err = d.Register(context.Background(), machines)
+	err = d.machineRegister(context.Background(), machines)
 	if err != sabakan.ErrConflicted {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -79,7 +79,7 @@ func testRegister(t *testing.T) {
 			}),
 	}
 
-	err = d.Register(context.Background(), bootServer)
+	err = d.machineRegister(context.Background(), bootServer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func testRegister(t *testing.T) {
 		t.Errorf("node index of boot server should be %v but %v", testIPAMConfig.NodeIndexOffset, saved.Spec.IndexInRack)
 	}
 
-	err = d.Register(context.Background(), bootServer2)
+	err = d.machineRegister(context.Background(), bootServer2)
 	if err != sabakan.ErrConflicted {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -119,7 +119,7 @@ func testQuery(t *testing.T) {
 		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345679", Product: "R630", Role: "worker"}),
 		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345680", Product: "R730", Role: "worker"}),
 	}
-	err = d.Register(context.Background(), machines)
+	err = d.machineRegister(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func testQuery(t *testing.T) {
 	<-ch
 
 	q := sabakan.QueryBySerial("12345678")
-	resp, err := d.Query(context.Background(), q)
+	resp, err := d.machineQuery(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +139,7 @@ func testQuery(t *testing.T) {
 	}
 
 	q = &sabakan.Query{Product: "R630"}
-	resp, err = d.Query(context.Background(), q)
+	resp, err = d.machineQuery(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +151,7 @@ func testQuery(t *testing.T) {
 	}
 
 	q = &sabakan.Query{}
-	resp, err = d.Query(context.Background(), q)
+	resp, err = d.machineQuery(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,14 +176,14 @@ func testSetState(t *testing.T) {
 		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345679", Product: "R630", Role: "worker"}),
 		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345680", Product: "R730", Role: "worker"}),
 	}
-	err = d.Register(ctx, machines)
+	err = d.machineRegister(ctx, machines)
 	if err != nil {
 		t.Fatal(err)
 	}
 	<-ch
 	<-ch
 
-	ms, err := d.Query(ctx, sabakan.QueryBySerial("12345678"))
+	ms, err := d.machineQuery(ctx, sabakan.QueryBySerial("12345678"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,11 +194,11 @@ func testSetState(t *testing.T) {
 	if m.Status.State != sabakan.StateHealthy {
 		t.Error("m.Status.State == sabakan.StateHealthy:", m.Status.State)
 	}
-	err = d.SetState(ctx, "12345678", sabakan.StateDead)
+	err = d.machineSetState(ctx, "12345678", sabakan.StateDead)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ms, err = d.Query(ctx, sabakan.QueryBySerial("12345678"))
+	ms, err = d.machineQuery(ctx, sabakan.QueryBySerial("12345678"))
 	if len(ms) == 0 {
 		t.Fatal(err)
 	}
@@ -226,7 +226,7 @@ func testDelete(t *testing.T) {
 	}
 
 	// register one
-	err = d.Register(context.Background(), machines)
+	err = d.machineRegister(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,7 +234,7 @@ func testDelete(t *testing.T) {
 	<-ch
 
 	// delete one
-	err = d.Delete(context.Background(), "1234abcd")
+	err = d.machineDelete(context.Background(), "1234abcd")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,7 +250,7 @@ func testDelete(t *testing.T) {
 	}
 
 	// double delete
-	err = d.Delete(context.Background(), "1234abcd")
+	err = d.machineDelete(context.Background(), "1234abcd")
 	if err != sabakan.ErrNotFound {
 		if err == nil {
 			t.Error("delete succeeded for already deleted machine")
@@ -260,7 +260,7 @@ func testDelete(t *testing.T) {
 	}
 
 	// register after delete
-	err = d.Register(context.Background(), machines)
+	err = d.machineRegister(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -301,7 +301,7 @@ RETRY:
 	}
 
 	// update data#2 on etcd; this increments revision
-	tresp2, err := d.doRegister(context.Background(), wmcs2, usageMap2)
+	tresp2, err := d.machineDoRegister(context.Background(), wmcs2, usageMap2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -311,7 +311,7 @@ RETRY:
 	<-ch
 
 	// try to update data#1 on etcd; this must fail
-	tresp1, err := d.doRegister(context.Background(), wmcs1, usageMap1)
+	tresp1, err := d.machineDoRegister(context.Background(), wmcs1, usageMap1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -334,7 +334,7 @@ func testDeleteRace(t *testing.T) {
 	})}
 
 	// prepare data to be deleted
-	err = d.Register(context.Background(), machines)
+	err = d.machineRegister(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -358,7 +358,7 @@ RETRY:
 	usage2.release(m)
 
 	// update data#2 on etcd; this increments revision
-	resp2, err := d.doDelete(context.Background(), m, usage2)
+	resp2, err := d.machineDoDelete(context.Background(), m, usage2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -368,7 +368,7 @@ RETRY:
 	<-ch
 
 	// try to update data#1 on etcd; this must fail
-	resp1, err := d.doDelete(context.Background(), m, usage1)
+	resp1, err := d.machineDoDelete(context.Background(), m, usage1)
 	if err != nil {
 		t.Fatal(err)
 	}

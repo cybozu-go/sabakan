@@ -642,13 +642,17 @@ Register disk encryption key. The request body is raw binary format of the key.
 
 **Failure responses**
 
+- The machine is not found.
+
+    HTTP status code: 404 Not Found
+
 - The state of the machine is `retired`.
 
-  HTTP status code: 500 Internal Server Error
+    HTTP status code: 500 Internal Server Error
 
 - `/<prefix>/crypts/<serial>/<path>` already exists.
 
-  HTTP status code: 409 Conflict
+    HTTP status code: 409 Conflict
 
 - The request body is empty.
 
@@ -712,3 +716,13 @@ Content-Length: 18
 
 ["abdef", "aaaaa"]
 ```
+
+**Failure responses**
+
+- The machine's state is not `retiring`.
+
+    HTTP status code: 500 Internal Server Error
+
+- The machine is not found.
+
+    HTTP status code: 404 Not Found

@@ -11,8 +11,7 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
-// Register implements sabakan.MachineModel
-func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
+func (d *driver) machineRegister(ctx context.Context, machines []*sabakan.Machine) error {
 	cfg, err := d.getIPAMConfig()
 	if err != nil {
 		return err
@@ -24,7 +23,7 @@ RETRY:
 		return err
 	}
 
-	tresp, err := d.doRegister(ctx, wmcs, usageMap)
+	tresp, err := d.machineDoRegister(ctx, wmcs, usageMap)
 	if err != nil {
 		return err
 	}
@@ -41,8 +40,33 @@ RETRY:
 	return nil
 }
 
-// SetState implements sabakan.MachineModel
-func (d *driver) SetState(ctx context.Context, serial string, state sabakan.MachineState) error {
+func (d *driver) machineGetWithRev(ctx context.Context, serial string) (*sabakan.Machine, int64, error) {
+	key := KeyMachines + serial
+
+	resp, err := d.client.Get(ctx, key)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if resp.Count == 0 {
+		return nil, 0, sabakan.ErrNotFound
+	}
+
+	m := new(sabakan.Machine)
+	err = json.Unmarshal(resp.Kvs[0].Value, m)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return m, resp.Kvs[0].ModRevision, nil
+}
+
+func (d *driver) machineGet(ctx context.Context, serial string) (*sabakan.Machine, error) {
+	m, _, err := d.machineGetWithRev(ctx, serial)
+	return m, err
+}
+
+func (d *driver) machineSetState(ctx context.Context, serial string, state sabakan.MachineState) error {
 	key := KeyMachines + serial
 RETRY:
 	resp, err := d.client.Get(ctx, key)
@@ -100,7 +124,7 @@ func (d *driver) updateMachines(ctx context.Context, machines []*sabakan.Machine
 	return wmcs, usageMap, nil
 }
 
-func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageMap map[uint]*rackIndexUsage) (*clientv3.TxnResponse, error) {
+func (d *driver) machineDoRegister(ctx context.Context, wmcs []*sabakan.Machine, usageMap map[uint]*rackIndexUsage) (*clientv3.TxnResponse, error) {
 	// Put machines into etcd
 	conflictMachinesIfOps := []clientv3.Cmp{}
 	usageCASIfOps := []clientv3.Cmp{}
@@ -136,8 +160,7 @@ func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageM
 		Commit()
 }
 
-// Query implements sabakan.MachineModel
-func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
+func (d *driver) machineQuery(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
 
 	switch {
@@ -189,9 +212,8 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 	return res, nil
 }
 
-// Delete implements sabakan.MachineModel
-func (d *driver) Delete(ctx context.Context, serial string) error {
-	machines, err := d.Query(ctx, sabakan.QueryBySerial(serial))
+func (d *driver) machineDelete(ctx context.Context, serial string) error {
+	machines, err := d.machineQuery(ctx, sabakan.QueryBySerial(serial))
 	if err != nil {
 		return err
 	}
@@ -217,7 +239,7 @@ RETRY:
 		return nil
 	}
 
-	resp, err := d.doDelete(ctx, m, usage)
+	resp, err := d.machineDoDelete(ctx, m, usage)
 	if err != nil {
 		return err
 	}
@@ -236,7 +258,7 @@ RETRY:
 	return nil
 }
 
-func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
+func (d *driver) machineDoDelete(ctx context.Context, machine *sabakan.Machine, usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
 	machineKey := path.Join(KeyMachines, machine.Spec.Serial)
 	indexKey := d.indexInRackKey(machine.Spec.Rack)
 
@@ -258,4 +280,33 @@ func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *
 		).
 		Else().
 		Commit()
+}
+
+type machineDriver struct {
+	*driver
+}
+
+// Register implements sabakan.MachineModel
+func (d machineDriver) Register(ctx context.Context, machines []*sabakan.Machine) error {
+	return d.machineRegister(ctx, machines)
+}
+
+// Get implements sabakan.MachineModel
+func (d machineDriver) Get(ctx context.Context, serial string) (*sabakan.Machine, error) {
+	return d.machineGet(ctx, serial)
+}
+
+// SetState implements sabakan.MachineModel
+func (d machineDriver) SetState(ctx context.Context, serial string, state sabakan.MachineState) error {
+	return d.machineSetState(ctx, serial, state)
+}
+
+// Query implements sabakan.MachineModel
+func (d machineDriver) Query(ctx context.Context, query *sabakan.Query) ([]*sabakan.Machine, error) {
+	return d.machineQuery(ctx, query)
+}
+
+// Delete implements sabakan.MachineModel
+func (d machineDriver) Delete(ctx context.Context, serial string) error {
+	return d.machineDelete(ctx, serial)
 }

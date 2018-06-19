@@ -236,15 +236,26 @@ func testMachinesDelete(t *testing.T) {
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
-	m.Machine.Register(context.Background(), []*sabakan.Machine{
-		sabakan.NewMachine(sabakan.MachineSpec{
-			Serial:     "1234abcd",
-			Product:    "R630",
-			Datacenter: "ty3",
-			Rack:       1,
-			Role:       "boot",
-		}),
+	m1 := sabakan.NewMachine(sabakan.MachineSpec{
+		Serial:     "1234abcd",
+		Product:    "R630",
+		Datacenter: "ty3",
+		Rack:       1,
+		Role:       "boot",
 	})
+	m2 := sabakan.NewMachine(sabakan.MachineSpec{
+		Serial:     "qqq",
+		Product:    "R630",
+		Datacenter: "ty3",
+		Rack:       2,
+		Role:       "cs",
+	})
+	m2.Status.State = sabakan.StateRetired
+
+	err := m.Machine.Register(context.Background(), []*sabakan.Machine{m1, m2})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cases := []struct {
 		serial string
@@ -252,6 +263,10 @@ func testMachinesDelete(t *testing.T) {
 	}{
 		{
 			serial: "1234abcd",
+			status: http.StatusInternalServerError,
+		},
+		{
+			serial: "qqq",
 			status: http.StatusOK,
 		},
 		{

@@ -4,9 +4,10 @@ import (
 	"context"
 
 	"github.com/cybozu-go/sabakan"
+	"github.com/pkg/errors"
 )
 
-func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
+func (d *driver) machineRegister(ctx context.Context, machines []*sabakan.Machine) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -21,7 +22,19 @@ func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) erro
 	return nil
 }
 
-func (d *driver) SetState(ctx context.Context, serial string, state sabakan.MachineState) error {
+func (d *driver) machineGet(ctx context.Context, serial string) (*sabakan.Machine, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	m, ok := d.machines[serial]
+	if !ok {
+		return nil, sabakan.ErrNotFound
+	}
+
+	return m, nil
+}
+
+func (d *driver) machineSetState(ctx context.Context, serial string, state sabakan.MachineState) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -32,7 +45,7 @@ func (d *driver) SetState(ctx context.Context, serial string, state sabakan.Mach
 	return m.SetState(state)
 }
 
-func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
+func (d *driver) machineQuery(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -45,15 +58,43 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 	return res, nil
 }
 
-func (d *driver) Delete(ctx context.Context, serial string) error {
+func (d *driver) machineDelete(ctx context.Context, serial string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	_, ok := d.machines[serial]
+	m, ok := d.machines[serial]
 	if !ok {
 		return sabakan.ErrNotFound
 	}
 
+	if m.Status.State != sabakan.StateRetired {
+		return errors.New("non-retired machine cannot be deleted")
+	}
+
 	delete(d.machines, serial)
 	return nil
+}
+
+type machineDriver struct {
+	*driver
+}
+
+func (d machineDriver) Register(ctx context.Context, machines []*sabakan.Machine) error {
+	return d.machineRegister(ctx, machines)
+}
+
+func (d machineDriver) Get(ctx context.Context, serial string) (*sabakan.Machine, error) {
+	return d.machineGet(ctx, serial)
+}
+
+func (d machineDriver) SetState(ctx context.Context, serial string, state sabakan.MachineState) error {
+	return d.machineSetState(ctx, serial, state)
+}
+
+func (d machineDriver) Query(ctx context.Context, query *sabakan.Query) ([]*sabakan.Machine, error) {
+	return d.machineQuery(ctx, query)
+}
+
+func (d machineDriver) Delete(ctx context.Context, serial string) error {
+	return d.machineDelete(ctx, serial)
 }
