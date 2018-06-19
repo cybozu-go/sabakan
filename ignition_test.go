@@ -31,7 +31,7 @@ storage:
     path: "/etc/hostname"
     mode: 420
     contents:
-      source: "{{.Spec.Serial}}"`,
+      source: "{{.Serial}}"`,
 	}
 	for _, tmpl := range tmpls {
 		err := ValidateIgnitionTemplate(tmpl, testIPAMConfig)
@@ -77,7 +77,7 @@ storage:
     - path: /opt/file1
       filesystem: root
       contents:
-        source: "{{.Spec.Serial}}"
+        source: "{{.Serial}}"
       mode: 0644
       user:
         id: 500

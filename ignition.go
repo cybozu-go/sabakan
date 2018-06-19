@@ -57,7 +57,7 @@ func RenderIgnition(tmpl string, m *Machine, myURL *url.URL) (string, error) {
 		return "", err
 	}
 	buf := new(bytes.Buffer)
-	err = t.Execute(buf, m)
+	err = t.Execute(buf, m.Spec)
 	if err != nil {
 		return "", err
 	}
