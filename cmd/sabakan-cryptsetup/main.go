@@ -16,7 +16,7 @@ import (
 const (
 	envSabakanURL = "SABAKAN_URL"
 	serialFile    = "/sys/class/dmi/id/product_serial"
-	modProbe      = "/sbin/cryptsetup"
+	modProbe      = "/sbin/modprobe"
 )
 
 var (
