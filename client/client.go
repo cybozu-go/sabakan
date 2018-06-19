@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"path"
 
 	"github.com/cybozu-go/cmd"
 )
@@ -57,6 +59,29 @@ func (c *Client) getJSON(ctx context.Context, path string, params map[string]str
 	return nil
 }
 
+func (c *Client) getBytes(ctx context.Context, path string) ([]byte, *Status) {
+	req, err := http.NewRequest("GET", c.endpoint+"/api/v1"+path, nil)
+	if err != nil {
+		return nil, ErrorStatus(err)
+	}
+	req = req.WithContext(ctx)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return nil, ErrorStatus(err)
+	}
+	defer res.Body.Close()
+	errorStatus := ErrorHTTPStatus(res)
+	if errorStatus != nil {
+		return nil, errorStatus
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, ErrorStatus(err)
+	}
+	return body, nil
+}
+
 func (c *Client) sendRequestWithJSON(ctx context.Context, method string, path string, data interface{}) *Status {
 	b := new(bytes.Buffer)
 	err := json.NewEncoder(b).Encode(data)
@@ -78,8 +103,8 @@ func (c *Client) sendRequestWithJSON(ctx context.Context, method string, path st
 	return ErrorHTTPStatus(res)
 }
 
-func (c *Client) sendRequest(ctx context.Context, method, path string) *Status {
-	req, err := http.NewRequest(method, c.endpoint+"/api/v1"+path, nil)
+func (c *Client) sendRequestWithBytes(ctx context.Context, method, resource string, body []byte) *Status {
+	req, err := http.NewRequest(method, c.endpoint+path.Join("/api/v1", resource), bytes.NewBuffer(body))
 	if err != nil {
 		return ErrorStatus(err)
 	}
@@ -91,4 +116,8 @@ func (c *Client) sendRequest(ctx context.Context, method, path string) *Status {
 	defer res.Body.Close()
 
 	return ErrorHTTPStatus(res)
+}
+
+func (c *Client) sendRequest(ctx context.Context, method, path string) *Status {
+	return c.sendRequestWithBytes(ctx, method, path, nil)
 }

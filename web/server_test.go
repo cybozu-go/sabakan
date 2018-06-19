@@ -46,8 +46,8 @@ func TestHandlePermission(t *testing.T) {
 	}{
 		{"10.69.0.4", "GET", "/api/v1/config/ipam"},
 		{"127.0.0.1", "POST", "/api/v1/config/ipam"},
-		{"10.69.0.4", "GET", "/api/v1/crypts"},
-		{"10.69.0.4", "POST", "/api/v1/crypts"},
+		{"10.69.0.4", "GET", "/api/v1/crypts/abcd1234/virtio-pci-0000:00:05.0"},
+		{"10.69.0.4", "PUT", "/api/v1/crypts/abcd1234/virtio-pci-0000:00:05.0"},
 		{"10.69.0.4", "GET", "/api/v1/boot/coreos/kernel"},
 	}
 	for _, c := range cases {

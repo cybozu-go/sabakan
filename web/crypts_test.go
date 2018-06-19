@@ -72,6 +72,7 @@ func testCryptsPut(t *testing.T) {
 		{"put-path", 201, "aaa"},
 		{"put-path", 409, "bbb"},
 		{"another-path", 201, string([]byte{0, 1, 2, 100, 50, 200})},
+		{"put-path", 400, ""},
 	}
 
 	for _, td := range testData {

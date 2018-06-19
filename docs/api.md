@@ -647,6 +647,10 @@ Register disk encryption key. The request body is raw binary format of the key.
 
   HTTP status code: 409 Conflict
 
+- The request body is empty.
+
+  HTTP status code: 400 Bad Request
+
 ```console
 $ echo "binary key data" | curl -i -X PUT -d - \
    'http://localhost:10080/api/v1/crypts/1/aaaaa'

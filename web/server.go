@@ -77,7 +77,7 @@ func (s Server) hasPermission(r *http.Request) bool {
 	if r.Method == http.MethodGet || r.Method == http.MethodHead {
 		return true
 	}
-	if p == "crypts" {
+	if strings.HasPrefix(p, "crypts/") {
 		return true
 	}
 	rhost, _, err := net.SplitHostPort(r.RemoteAddr)
