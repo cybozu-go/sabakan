@@ -15,7 +15,7 @@ type Query struct {
 }
 
 // Match returns true if all non-empty fields matches Machine
-func (q *Query) Match(m *Machine) bool {
+func (q *Query) Match(m *MachineSpec) bool {
 	if len(q.Serial) > 0 && q.Serial != m.Serial {
 		return false
 	}

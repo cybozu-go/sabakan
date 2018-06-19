@@ -29,11 +29,11 @@ func testGenerateIP(t *testing.T) {
 		bmcAddress    string
 	}{
 		{
-			&Machine{
+			NewMachine(MachineSpec{
 				Serial:      "1234",
 				Rack:        1,
 				IndexInRack: 3,
-			},
+			}),
 			[]string{
 				"10.69.0.195",
 				"10.69.1.3",
@@ -42,11 +42,11 @@ func testGenerateIP(t *testing.T) {
 			"10.72.17.35",
 		},
 		{
-			&Machine{
+			NewMachine(MachineSpec{
 				Serial:      "5678",
 				Rack:        0,
 				IndexInRack: 5,
-			},
+			}),
 			[]string{
 				"10.69.0.5",
 				"10.69.0.69",
@@ -58,15 +58,16 @@ func testGenerateIP(t *testing.T) {
 
 	for _, c := range cases {
 		testIPAMConfig.GenerateIP(c.machine)
+		spec := c.machine.Spec
 
-		if len(c.machine.IPv4) != int(testIPAMConfig.NodeIPPerNode) {
+		if len(spec.IPv4) != int(testIPAMConfig.NodeIPPerNode) {
 			t.Fatal("wrong number of networks")
 		}
-		if !reflect.DeepEqual(c.nodeAddresses, c.machine.IPv4) {
-			t.Error("wrong IP addresses: ", c.machine.IPv4)
+		if !reflect.DeepEqual(c.nodeAddresses, spec.IPv4) {
+			t.Error("wrong IP addresses: ", spec.IPv4)
 		}
-		if c.machine.BMC.IPv4 != c.bmcAddress {
-			t.Errorf("wrong IP Address: %v", c.machine.BMC.IPv4)
+		if spec.BMC.IPv4 != c.bmcAddress {
+			t.Errorf("wrong IP Address: %v", spec.BMC.IPv4)
 		}
 	}
 }

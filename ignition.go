@@ -20,10 +20,10 @@ const MaxIgnitions = 10
 // The method returns nil if valid template is given, otherwise returns an error.
 // The method returns template by tmpl nil value of Machine.
 func ValidateIgnitionTemplate(tmpl string, ipam *IPAMConfig) error {
-	mc := &Machine{
+	mc := NewMachine(MachineSpec{
 		Serial: "1234abcd",
 		Rack:   1,
-	}
+	})
 	u, err := url.Parse("http://localhost:10080")
 	if err != nil {
 		return err

@@ -1,1 +1,1 @@
-{{ .Serial }}
+{{ .Spec.Serial }}
