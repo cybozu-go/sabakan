@@ -83,7 +83,7 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	role := ms[0].Role
+	role := ms[0].Spec.Role
 	ids, err := s.Model.Ignition.GetTemplateIDs(r.Context(), role)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)

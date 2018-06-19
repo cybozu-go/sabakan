@@ -87,7 +87,7 @@ networkd:
 	}
 
 	machines := []*sabakan.Machine{
-		&sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial:     "2222abcd",
 			Product:    "R630",
 			Datacenter: "ty3",
@@ -95,7 +95,7 @@ networkd:
 			Role:       "cs",
 			IPv4:       []string{"10.69.0.4"},
 			BMC:        sabakan.MachineBMC{Type: "iDRAC-9"},
-		},
+		}),
 	}
 
 	err = m.Machine.Register(context.Background(), machines)

@@ -3,6 +3,7 @@ package etcd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"path"
 
 	"github.com/coreos/etcd/clientv3"
@@ -11,8 +12,7 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
-// Register implements sabakan.MachineModel
-func (d *driver) Register(ctx context.Context, machines []*sabakan.Machine) error {
+func (d *driver) machineRegister(ctx context.Context, machines []*sabakan.Machine) error {
 	cfg, err := d.getIPAMConfig()
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ RETRY:
 		return err
 	}
 
-	tresp, err := d.doRegister(ctx, wmcs, usageMap)
+	tresp, err := d.machineDoRegister(ctx, wmcs, usageMap)
 	if err != nil {
 		return err
 	}
@@ -41,6 +41,63 @@ RETRY:
 	return nil
 }
 
+func (d *driver) machineGetWithRev(ctx context.Context, serial string) (*sabakan.Machine, int64, error) {
+	key := KeyMachines + serial
+
+	resp, err := d.client.Get(ctx, key)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if resp.Count == 0 {
+		return nil, 0, sabakan.ErrNotFound
+	}
+
+	m := new(sabakan.Machine)
+	err = json.Unmarshal(resp.Kvs[0].Value, m)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return m, resp.Kvs[0].ModRevision, nil
+}
+
+func (d *driver) machineGet(ctx context.Context, serial string) (*sabakan.Machine, error) {
+	m, _, err := d.machineGetWithRev(ctx, serial)
+	return m, err
+}
+
+func (d *driver) machineSetState(ctx context.Context, serial string, state sabakan.MachineState) error {
+	key := KeyMachines + serial
+
+RETRY:
+	m, rev, err := d.machineGetWithRev(ctx, serial)
+	if err != nil {
+		return err
+	}
+
+	err = m.SetState(state)
+	if err != nil {
+		return err
+	}
+	data, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	tresp, err := d.client.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", rev)).
+		Then(clientv3.OpPut(key, string(data))).
+		Commit()
+	if err != nil {
+		return err
+	}
+	if !tresp.Succeeded {
+		goto RETRY
+	}
+	return nil
+}
+
 func (d *driver) updateMachines(ctx context.Context, machines []*sabakan.Machine, config *sabakan.IPAMConfig) ([]*sabakan.Machine, map[uint]*rackIndexUsage, error) {
 	usageMap, err := d.assignNodeIndex(ctx, machines, config)
 	if err != nil {
@@ -52,22 +109,22 @@ func (d *driver) updateMachines(ctx context.Context, machines []*sabakan.Machine
 		config.GenerateIP(rmc)
 		wmcs[i] = rmc
 		log.Debug("etcd/machine: register", map[string]interface{}{
-			"serial":     rmc.Serial,
-			"rack":       rmc.Rack,
-			"node_index": rmc.IndexInRack,
-			"role":       rmc.Role,
+			"serial":     rmc.Spec.Serial,
+			"rack":       rmc.Spec.Rack,
+			"node_index": rmc.Spec.IndexInRack,
+			"role":       rmc.Spec.Role,
 		})
 	}
 	return wmcs, usageMap, nil
 }
 
-func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageMap map[uint]*rackIndexUsage) (*clientv3.TxnResponse, error) {
+func (d *driver) machineDoRegister(ctx context.Context, wmcs []*sabakan.Machine, usageMap map[uint]*rackIndexUsage) (*clientv3.TxnResponse, error) {
 	// Put machines into etcd
 	conflictMachinesIfOps := []clientv3.Cmp{}
 	usageCASIfOps := []clientv3.Cmp{}
 	txnThenOps := []clientv3.Op{}
 	for _, wmc := range wmcs {
-		key := path.Join(KeyMachines, wmc.Serial)
+		key := path.Join(KeyMachines, wmc.Spec.Serial)
 		conflictMachinesIfOps = append(conflictMachinesIfOps, clientv3util.KeyMissing(key))
 		j, err := json.Marshal(wmc)
 		if err != nil {
@@ -97,12 +154,22 @@ func (d *driver) doRegister(ctx context.Context, wmcs []*sabakan.Machine, usageM
 		Commit()
 }
 
-// Query implements sabakan.MachineModel
-func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
+func (d *driver) machineQuery(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
-	if len(q.Serial) > 0 {
+
+	switch {
+	case q.IsEmpty():
+		resp, err := d.client.Get(ctx, KeyMachines, clientv3.WithPrefix(), clientv3.WithKeysOnly())
+		if err != nil {
+			return nil, err
+		}
+		serials = make([]string, resp.Count)
+		for i, kv := range resp.Kvs {
+			serials[i] = string(kv.Key[len(KeyMachines):])
+		}
+	case len(q.Serial) > 0:
 		serials = []string{q.Serial}
-	} else {
+	default:
 		serials = d.mi.query(q)
 	}
 
@@ -139,26 +206,18 @@ func (d *driver) Query(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machin
 	return res, nil
 }
 
-// Delete implements sabakan.MachineModel
-func (d *driver) Delete(ctx context.Context, serial string) error {
-	machines, err := d.Query(ctx, sabakan.QueryBySerial(serial))
+func (d *driver) machineDelete(ctx context.Context, serial string) error {
+RETRY:
+	m, rev, err := d.machineGetWithRev(ctx, serial)
 	if err != nil {
 		return err
 	}
-	if len(machines) != 1 {
-		return sabakan.ErrNotFound
+
+	if m.Status.State != sabakan.StateRetired {
+		return errors.New("non-retired machine cannot be deleted")
 	}
 
-	m := machines[0]
-	log.Debug("etcd/machine: delete", map[string]interface{}{
-		"serial":     m.Serial,
-		"rack":       m.Rack,
-		"node_index": m.IndexInRack,
-		"role":       m.Role,
-	})
-
-RETRY:
-	usage, err := d.getRackIndexUsage(ctx, m.Rack)
+	usage, err := d.getRackIndexUsage(ctx, m.Spec.Rack)
 	if err != nil {
 		return err
 	}
@@ -167,7 +226,7 @@ RETRY:
 		return nil
 	}
 
-	resp, err := d.doDelete(ctx, m, usage)
+	resp, err := d.machineDoDelete(ctx, m, rev, usage)
 	if err != nil {
 		return err
 	}
@@ -178,17 +237,14 @@ RETRY:
 		goto RETRY
 	}
 
-	if !resp.Responses[0].GetResponseTxn().Succeeded {
-		// KeyExists(machineKey) failed
-		return sabakan.ErrNotFound
-	}
-
 	return nil
 }
 
-func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
-	machineKey := path.Join(KeyMachines, machine.Serial)
-	indexKey := d.indexInRackKey(machine.Rack)
+func (d *driver) machineDoDelete(ctx context.Context, machine *sabakan.Machine, rev int64,
+	usage *rackIndexUsage) (*clientv3.TxnResponse, error) {
+
+	machineKey := KeyMachines + machine.Spec.Serial
+	indexKey := d.indexInRackKey(machine.Spec.Rack)
 
 	j, err := json.Marshal(usage)
 	if err != nil {
@@ -196,16 +252,42 @@ func (d *driver) doDelete(ctx context.Context, machine *sabakan.Machine, usage *
 	}
 
 	return d.client.Txn(ctx).
-		If(clientv3.Compare(clientv3.ModRevision(indexKey), "=", usage.revision)).
-		Then(
-			clientv3.OpTxn(
-				[]clientv3.Cmp{clientv3util.KeyExists(machineKey)},
-				[]clientv3.Op{
-					clientv3.OpDelete(machineKey),
-					clientv3.OpPut(indexKey, string(j)),
-				},
-				nil),
+		If(
+			clientv3.Compare(clientv3.ModRevision(machineKey), "=", rev),
+			clientv3.Compare(clientv3.ModRevision(indexKey), "=", usage.revision),
 		).
-		Else().
+		Then(
+			clientv3.OpDelete(machineKey),
+			clientv3.OpPut(indexKey, string(j)),
+		).
 		Commit()
+}
+
+type machineDriver struct {
+	*driver
+}
+
+// Register implements sabakan.MachineModel
+func (d machineDriver) Register(ctx context.Context, machines []*sabakan.Machine) error {
+	return d.machineRegister(ctx, machines)
+}
+
+// Get implements sabakan.MachineModel
+func (d machineDriver) Get(ctx context.Context, serial string) (*sabakan.Machine, error) {
+	return d.machineGet(ctx, serial)
+}
+
+// SetState implements sabakan.MachineModel
+func (d machineDriver) SetState(ctx context.Context, serial string, state sabakan.MachineState) error {
+	return d.machineSetState(ctx, serial, state)
+}
+
+// Query implements sabakan.MachineModel
+func (d machineDriver) Query(ctx context.Context, query *sabakan.Query) ([]*sabakan.Machine, error) {
+	return d.machineQuery(ctx, query)
+}
+
+// Delete implements sabakan.MachineModel
+func (d machineDriver) Delete(ctx context.Context, serial string) error {
+	return d.machineDelete(ctx, serial)
 }

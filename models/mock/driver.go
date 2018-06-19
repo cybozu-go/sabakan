@@ -13,18 +13,20 @@ type driver struct {
 	mu       sync.Mutex
 	ipam     *sabakan.IPAMConfig
 	machines map[string]*sabakan.Machine
+	storage  map[string][]byte
 }
 
 // NewModel returns sabakan.Model
 func NewModel() sabakan.Model {
 	d := &driver{
 		machines: make(map[string]*sabakan.Machine),
+		storage:  make(map[string][]byte),
 	}
 	return sabakan.Model{
 		Runner:   d,
-		Storage:  newStorageDriver(),
-		Machine:  d,
 		IPAM:     ipamDriver{d},
+		Machine:  machineDriver{d},
+		Storage:  d,
 		DHCP:     newDHCPDriver(d),
 		Image:    newImageDriver(),
 		Asset:    newAssetDriver(),

@@ -83,7 +83,7 @@ storage:
         id: 500
       group:
         id: 501`,
-			&Machine{Serial: "abcd, 1234"},
+			NewMachine(MachineSpec{Serial: "abcd, 1234"}),
 			`{"ignition":{"version":"2.2.0"},"storage":{"files":[{"filesystem":"root","group":{"id":501},"path":"/opt/file1","user":{"id":500},"contents":{"source":"data:,abcd%2C%201234"},"mode":420}]}}`},
 	}
 	u, err := url.Parse("http://localhost:10080")

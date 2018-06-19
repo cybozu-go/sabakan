@@ -16,10 +16,9 @@ It only does followings:
 * Hold the states of the machines
 * Accept requests to change the state of machines
 * Remove disk encryption keys before repairing/retiring machines
-* Share machine states with external controllers
 
-External controllers watch events shared by sabakan and execute necessary
-actions to keep the system healthy.
+External controllers periodically retrieve machine data through REST API
+and execute necessary actions to keep the system healthy.
 
 Machine States
 --------------
@@ -43,7 +42,8 @@ External controllers are expected to:
 
 ### Transition constraints
 
-* A machine can be transitioned to any state other than **retired** through sabakan API.
+* A **retiring** machine can transition only to **retired**.
+* A machine can be transitioned freely between **healthy**, **unhealthy**, and **dead**.
 * Disk encryption keys of a machine can be deleted iff the machine is in **retiring** state.
 * A machine transitions to **retired** when its disk encryption keys are deleted.
 * Only **retired** machines can be removed from sabakan.
@@ -55,27 +55,4 @@ sabakan.
 
 ### Transition diagram
 
-::uml::
-@startuml
-[*] --> Healthy
-Healthy -right-> Unhealthy: Detects an error
-Healthy -left-> Dead: Network unreachable
-Healthy --> Retiring: Declare retiring
-Unhealthy --> Retiring: Declare retiring
-Unhealthy --> Healthy
-Dead --> Retiring: Declare retiring
-Dead --> Healthy
-Retiring --> Retired: Removes the disk encryption key
-Retired --> Healthy: Repaired the machine
-Retired --> [*]: Remove the machine from sabakan
-@enduml
-::end-uml::
-
-Sharing the machine states
---------------------------
-
-Sabakan publishes machine states to etcd under some prefix (default: `/states/`).
-Keys under this prefix are shared with external controllers.
-
-Key is a serial number of a machine.
-Value is a JSON as defined in [Machine](machine.md).
+![state transition diagram](http://www.plantuml.com/plantuml/svg/bP6nJiCm48RtFCNDI7c13AX31oO692R4SBN_rbRiStI-KFNjQOeBAHqGIsnz-lxxVSgc6glDENLl3-_K-tAK_f6UmCd2gMldDt-Ly4K6siBWh18BGRNedRi5-u6UOSUY8ysYO1Tubt1dli2YHZaiGrrY1MaZNIlyjpnFgorMNECXM7jSjtoeJzZRUhM6_wnhtatJrRwDmm_dIouVg6G1v6CT2UBqD5aiGYDQ4h_cBR69Btp9PNOX2dxSLdB-SzU2jKTxBPagxtXawJOGF-Vq2G00)

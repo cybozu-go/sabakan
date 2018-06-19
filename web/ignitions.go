@@ -154,7 +154,7 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, id, serial
 		return
 	}
 
-	tmpl, err := s.Model.Ignition.GetTemplate(r.Context(), ms[0].Role, id)
+	tmpl, err := s.Model.Ignition.GetTemplate(r.Context(), ms[0].Spec.Role, id)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return

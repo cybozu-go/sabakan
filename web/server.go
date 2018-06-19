@@ -63,6 +63,9 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	case p == "images/coreos" || strings.HasPrefix(p, "images/coreos/"):
 		s.handleImages(w, r)
 		return
+	case strings.HasPrefix(p, "state/"):
+		s.handleState(w, r)
+		return
 	case strings.HasPrefix(p, "machines"):
 		s.handleMachines(w, r)
 		return
@@ -77,7 +80,7 @@ func (s Server) hasPermission(r *http.Request) bool {
 	if r.Method == http.MethodGet || r.Method == http.MethodHead {
 		return true
 	}
-	if strings.HasPrefix(p, "crypts/") {
+	if strings.HasPrefix(p, "crypts/") && r.Method != http.MethodDelete {
 		return true
 	}
 	rhost, _, err := net.SplitHostPort(r.RemoteAddr)

@@ -30,6 +30,8 @@ type StorageModel interface {
 // MachineModel is an interface for machine database.
 type MachineModel interface {
 	Register(ctx context.Context, machines []*Machine) error
+	Get(ctx context.Context, serial string) (*Machine, error)
+	SetState(ctx context.Context, serial string, state MachineState) error
 	Query(ctx context.Context, query *Query) ([]*Machine, error)
 	Delete(ctx context.Context, serial string) error
 }

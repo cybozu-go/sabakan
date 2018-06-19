@@ -11,19 +11,27 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/models/mock"
 )
 
 func testCryptsGet(t *testing.T) {
+	ctx := context.Background()
 	m := mock.NewModel()
 	handler := Server{Model: m}
+
+	err := m.Machine.Register(ctx, []*sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "1"}),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	serial := "1"
 	diskPath := "exists-path"
 	key := "aaa"
 
-	ctx := context.Background()
-	err := m.Storage.PutEncryptionKey(ctx, serial, diskPath, []byte(key))
+	err = m.Storage.PutEncryptionKey(ctx, serial, diskPath, []byte(key))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,8 +67,16 @@ func testCryptsGet(t *testing.T) {
 }
 
 func testCryptsPut(t *testing.T) {
+	ctx := context.Background()
 	m := mock.NewModel()
 	handler := newTestServer(m)
+
+	err := m.Machine.Register(ctx, []*sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "1"}),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	serial := "1"
 
@@ -110,7 +126,7 @@ func testCryptsPut(t *testing.T) {
 			t.Error("invalid path in JSON:", respJSON.Path)
 		}
 
-		stored, err := m.Storage.GetEncryptionKey(context.Background(), serial, td.path)
+		stored, err := m.Storage.GetEncryptionKey(ctx, serial, td.path)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -122,10 +138,18 @@ func testCryptsPut(t *testing.T) {
 }
 
 func testCryptsDelete(t *testing.T) {
+	ctx := context.Background()
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
-	ctx := context.Background()
+	err := m.Machine.Register(ctx, []*sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "abc"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "abcd"}),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	expected := make(map[string]struct{})
 	serial := "abc"
 	key := "aaa"
@@ -140,7 +164,7 @@ func testCryptsDelete(t *testing.T) {
 
 	// dummy data to test bug in delete logic.
 	serial2 := "abcd"
-	err := m.Storage.PutEncryptionKey(ctx, serial2, "path1", []byte(key))
+	err = m.Storage.PutEncryptionKey(ctx, serial2, "path1", []byte(key))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,8 +174,35 @@ func testCryptsDelete(t *testing.T) {
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
+	if resp.StatusCode != 500 {
+		t.Fatal("expected: 500, actual:", resp.StatusCode)
+	}
+
+	err = m.Machine.SetState(ctx, serial, sabakan.StateRetiring)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("DELETE", path.Join("/api/v1/crypts", serial), nil)
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
 	if resp.StatusCode != 200 {
 		t.Fatal("expected: 200, actual:", resp.StatusCode)
+	}
+
+	retired, err := m.Machine.Get(ctx, serial)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if retired.Status.State != sabakan.StateRetired {
+		t.Error(`retired.Status.State != sabakan.StateRetired`)
+	}
+
+	err = m.Storage.PutEncryptionKey(ctx, serial, "pathx", []byte("abc"))
+	if err == nil {
+		t.Error("no new encryption key can be added to retired machine")
 	}
 
 	var deletedPaths []string

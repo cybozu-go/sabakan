@@ -156,7 +156,10 @@ $ curl -XGET localhost:10080/api/v1/config/dhcp
 
 ## <a name="postmachines" />`POST /api/v1/machines`
 
-Register machines. Sabakan automatically set the `status` to `running,` and `index-in-rack` which is the index number of its machine in the rack and IP addresses. All of the machines in the requested JSON is an atomic operation to register. If Sabakan fails to register at least one machine, it all fails. In other words, the result will be registered all machines or not registered at all. There is no possibility that part of machines will be registered.
+Register machines.
+All of the machines in the requested JSON is an atomic operation to register.
+If Sabakan fails to register at least one machine, it all fails. In other words, the result will be registered all machines or not registered at all.
+There is no possibility that part of machines will be registered.
 
 In the HTTP request body, specify the following list of the machine information in JSON format.
 
@@ -216,6 +219,7 @@ Query                      | Description
 `ipv4=<ip address>`        | IPv4 address
 `ipv6=<ip address>`        | IPv6 address
 `bmc-type=<bmc-type>`      | BMC type
+`state=<state>`            | The state of the machine
 
 **Successful response**
 
@@ -639,13 +643,17 @@ Register disk encryption key. The request body is raw binary format of the key.
 
 **Failure responses**
 
+- The machine is not found.
+
+    HTTP status code: 404 Not Found
+
 - The state of the machine is `retired`.
 
-  HTTP status code: 500 Internal Server Error
+    HTTP status code: 500 Internal Server Error
 
 - `/<prefix>/crypts/<serial>/<path>` already exists.
 
-  HTTP status code: 409 Conflict
+    HTTP status code: 409 Conflict
 
 - The request body is empty.
 
@@ -709,3 +717,13 @@ Content-Length: 18
 
 ["abdef", "aaaaa"]
 ```
+
+**Failure responses**
+
+- The machine's state is not `retiring`.
+
+    HTTP status code: 500 Internal Server Error
+
+- The machine is not found.
+
+    HTTP status code: 404 Not Found

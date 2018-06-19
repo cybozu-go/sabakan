@@ -123,30 +123,30 @@ func testMachinesGet(t *testing.T) {
 	handler := Server{Model: m}
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
-		{
+		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial:     "1234abcd",
 			Product:    "R630",
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "boot",
 			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
-		},
-		{
+		}),
+		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial:     "5678abcd",
 			Product:    "R740",
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "worker",
 			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
-		},
-		{
+		}),
+		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial:     "1234efgh",
 			Product:    "R630",
 			Datacenter: "ty3",
 			Rack:       2,
 			Role:       "boot",
 			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
-		},
+		}),
 	})
 
 	cases := []struct {
@@ -180,14 +180,25 @@ func testMachinesGet(t *testing.T) {
 			expected: map[string]bool{"1234abcd": true, "1234efgh": true},
 		},
 		{
+			query:    map[string][]string{"bmc-type": {"iDRAC-9"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
+		},
+		{
+			query:    map[string][]string{"state": {"healthy"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true, "1234efgh": true},
+		},
+
+		{
 			query:    map[string][]string{"serial": {"5689abcd"}},
 			status:   http.StatusNotFound,
 			expected: nil,
 		},
 		{
-			query:    map[string][]string{"bmc-type": {"iDRAC-9"}},
-			status:   http.StatusOK,
-			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
+			query:    map[string][]string{"state": {"dead"}},
+			status:   http.StatusNotFound,
+			expected: nil,
 		},
 	}
 	for _, c := range cases {
@@ -213,7 +224,7 @@ func testMachinesGet(t *testing.T) {
 
 		serials := make(map[string]bool)
 		for _, m := range machines {
-			serials[m.Serial] = true
+			serials[m.Spec.Serial] = true
 		}
 		if !reflect.DeepEqual(serials, c.expected) {
 			t.Errorf("wrong query result: %#v", serials)
@@ -225,15 +236,26 @@ func testMachinesDelete(t *testing.T) {
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
-	m.Machine.Register(context.Background(), []*sabakan.Machine{
-		{
-			Serial:     "1234abcd",
-			Product:    "R630",
-			Datacenter: "ty3",
-			Rack:       1,
-			Role:       "boot",
-		},
+	m1 := sabakan.NewMachine(sabakan.MachineSpec{
+		Serial:     "1234abcd",
+		Product:    "R630",
+		Datacenter: "ty3",
+		Rack:       1,
+		Role:       "boot",
 	})
+	m2 := sabakan.NewMachine(sabakan.MachineSpec{
+		Serial:     "qqq",
+		Product:    "R630",
+		Datacenter: "ty3",
+		Rack:       2,
+		Role:       "cs",
+	})
+	m2.Status.State = sabakan.StateRetired
+
+	err := m.Machine.Register(context.Background(), []*sabakan.Machine{m1, m2})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cases := []struct {
 		serial string
@@ -241,6 +263,10 @@ func testMachinesDelete(t *testing.T) {
 	}{
 		{
 			serial: "1234abcd",
+			status: http.StatusInternalServerError,
+		},
+		{
+			serial: "qqq",
 			status: http.StatusOK,
 		},
 		{

@@ -85,15 +85,18 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 		return result
 	}
 
-	ips := calc(c.NodeIPv4Pool, c.NodeRangeSize, c.NodeIPPerNode, mc.Rack, mc.IndexInRack)
+	lrn := mc.Spec.Rack
+	idx := mc.Spec.IndexInRack
+
+	ips := calc(c.NodeIPv4Pool, c.NodeRangeSize, c.NodeIPPerNode, lrn, idx)
 	strIPs := make([]string, len(ips))
 	for i, p := range ips {
 		strIPs[i] = p.String()
 	}
-	mc.IPv4 = strIPs
+	mc.Spec.IPv4 = strIPs
 
-	bmcIPs := calc(c.BMCIPv4Pool, c.BMCRangeSize, 1, mc.Rack, mc.IndexInRack)
-	mc.BMC.IPv4 = bmcIPs[0].String()
+	bmcIPs := calc(c.BMCIPv4Pool, c.BMCRangeSize, 1, lrn, idx)
+	mc.Spec.BMC.IPv4 = bmcIPs[0].String()
 }
 
 // LeaseRange is a range of IP addresses for DHCP lease.

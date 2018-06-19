@@ -20,6 +20,7 @@ type machinesIndex struct {
 	IPv4       map[string]string
 	IPv6       map[string]string
 	BMCType    map[string][]string
+	State      map[sabakan.MachineState][]string
 }
 
 func newMachinesIndex() *machinesIndex {
@@ -31,6 +32,7 @@ func newMachinesIndex() *machinesIndex {
 		IPv4:       make(map[string]string),
 		IPv6:       make(map[string]string),
 		BMCType:    make(map[string][]string),
+		State:      make(map[sabakan.MachineState][]string),
 	}
 }
 
@@ -68,24 +70,26 @@ func (mi *machinesIndex) AddIndex(m *sabakan.Machine) {
 }
 
 func (mi *machinesIndex) addNoLock(m *sabakan.Machine) {
-	mi.Product[m.Product] = append(mi.Product[m.Product], m.Serial)
-	mi.Datacenter[m.Datacenter] = append(mi.Datacenter[m.Datacenter], m.Serial)
-	mcrack := fmt.Sprint(m.Rack)
-	mi.Rack[mcrack] = append(mi.Rack[mcrack], m.Serial)
-	mi.Role[m.Role] = append(mi.Role[m.Role], m.Serial)
-	mi.BMCType[m.BMC.Type] = append(mi.BMCType[m.BMC.Type], m.Serial)
-	for _, ip := range m.IPv4 {
-		mi.IPv4[ip] = m.Serial
+	spec := &m.Spec
+	mi.Product[spec.Product] = append(mi.Product[spec.Product], spec.Serial)
+	mi.Datacenter[spec.Datacenter] = append(mi.Datacenter[spec.Datacenter], spec.Serial)
+	mcrack := fmt.Sprint(spec.Rack)
+	mi.Rack[mcrack] = append(mi.Rack[mcrack], spec.Serial)
+	mi.Role[spec.Role] = append(mi.Role[spec.Role], spec.Serial)
+	mi.BMCType[spec.BMC.Type] = append(mi.BMCType[spec.BMC.Type], spec.Serial)
+	for _, ip := range spec.IPv4 {
+		mi.IPv4[ip] = spec.Serial
 	}
-	for _, ip := range m.IPv6 {
-		mi.IPv6[ip] = m.Serial
+	for _, ip := range spec.IPv6 {
+		mi.IPv6[ip] = spec.Serial
 	}
-	if len(m.BMC.IPv4) > 0 {
-		mi.IPv4[m.BMC.IPv4] = m.Serial
+	if len(spec.BMC.IPv4) > 0 {
+		mi.IPv4[spec.BMC.IPv4] = spec.Serial
 	}
-	if len(m.BMC.IPv6) > 0 {
-		mi.IPv6[m.BMC.IPv6] = m.Serial
+	if len(spec.BMC.IPv6) > 0 {
+		mi.IPv6[spec.BMC.IPv6] = spec.Serial
 	}
+	mi.State[m.Status.State] = append(mi.State[m.Status.State], spec.Serial)
 }
 
 func indexOf(data []string, element string) int {
@@ -104,25 +108,29 @@ func (mi *machinesIndex) DeleteIndex(m *sabakan.Machine) {
 }
 
 func (mi *machinesIndex) deleteNoLock(m *sabakan.Machine) {
-	i := indexOf(mi.Product[m.Product], m.Serial)
-	mi.Product[m.Product] = append(mi.Product[m.Product][:i], mi.Product[m.Product][i+1:]...)
-	i = indexOf(mi.Datacenter[m.Datacenter], m.Serial)
-	mi.Datacenter[m.Datacenter] = append(mi.Datacenter[m.Datacenter][:i], mi.Datacenter[m.Datacenter][i+1:]...)
-	mcrack := fmt.Sprint(m.Rack)
-	i = indexOf(mi.Rack[mcrack], m.Serial)
+	spec := &m.Spec
+	i := indexOf(mi.Product[spec.Product], spec.Serial)
+	mi.Product[spec.Product] = append(mi.Product[spec.Product][:i], mi.Product[spec.Product][i+1:]...)
+	i = indexOf(mi.Datacenter[spec.Datacenter], spec.Serial)
+	mi.Datacenter[spec.Datacenter] = append(mi.Datacenter[spec.Datacenter][:i], mi.Datacenter[spec.Datacenter][i+1:]...)
+	mcrack := fmt.Sprint(spec.Rack)
+	i = indexOf(mi.Rack[mcrack], spec.Serial)
 	mi.Rack[mcrack] = append(mi.Rack[mcrack][:i], mi.Rack[mcrack][i+1:]...)
-	i = indexOf(mi.Role[m.Role], m.Serial)
-	mi.Role[m.Role] = append(mi.Role[m.Role][:i], mi.Role[m.Role][i+1:]...)
-	i = indexOf(mi.BMCType[m.BMC.Type], m.Serial)
-	mi.BMCType[m.BMC.Type] = append(mi.BMCType[m.BMC.Type][:i], mi.BMCType[m.BMC.Type][i+1:]...)
-	for _, ip := range m.IPv4 {
+	i = indexOf(mi.Role[spec.Role], spec.Serial)
+	mi.Role[spec.Role] = append(mi.Role[spec.Role][:i], mi.Role[spec.Role][i+1:]...)
+	i = indexOf(mi.BMCType[spec.BMC.Type], spec.Serial)
+	mi.BMCType[spec.BMC.Type] = append(mi.BMCType[spec.BMC.Type][:i], mi.BMCType[spec.BMC.Type][i+1:]...)
+	for _, ip := range spec.IPv4 {
 		delete(mi.IPv4, ip)
 	}
-	for _, ip := range m.IPv6 {
+	for _, ip := range spec.IPv6 {
 		delete(mi.IPv6, ip)
 	}
-	delete(mi.IPv4, m.BMC.IPv4)
-	delete(mi.IPv6, m.BMC.IPv6)
+	delete(mi.IPv4, spec.BMC.IPv4)
+	delete(mi.IPv6, spec.BMC.IPv6)
+
+	i = indexOf(mi.State[m.Status.State], spec.Serial)
+	mi.State[m.Status.State] = append(mi.State[m.Status.State][:i], mi.State[m.Status.State][i+1:]...)
 }
 
 // UpdateIndex updates target machine on the index
@@ -162,6 +170,9 @@ func (mi *machinesIndex) query(q *sabakan.Query) []string {
 		}
 	}
 	for _, serial := range mi.BMCType[q.BMCType] {
+		res[serial] = struct{}{}
+	}
+	for _, serial := range mi.State[sabakan.MachineState(q.State)] {
 		res[serial] = struct{}{}
 	}
 

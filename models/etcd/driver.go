@@ -37,7 +37,7 @@ func NewModel(client *clientv3.Client, dataDir string, advertiseURL *url.URL) sa
 	return sabakan.Model{
 		Runner:   d,
 		Storage:  d,
-		Machine:  d,
+		Machine:  machineDriver{d},
 		IPAM:     ipamDriver{d},
 		DHCP:     dhcpDriver{d},
 		Image:    imageDriver{d},
