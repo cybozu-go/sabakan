@@ -26,16 +26,16 @@ func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var machines []*sabakan.Machine
+	var specs []*sabakan.MachineSpec
 
-	err := json.NewDecoder(r.Body).Decode(&machines)
+	err := json.NewDecoder(r.Body).Decode(&specs)
 	if err != nil {
 		renderError(r.Context(), w, BadRequest(err.Error()))
 		return
 	}
 
 	// Validation
-	for _, m := range machines {
+	for _, m := range specs {
 		if m.Serial == "" {
 			renderError(r.Context(), w, BadRequest("serial is empty"))
 			return
@@ -60,6 +60,10 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("unknown BMC type"))
 			return
 		}
+	}
+	machines := make([]*sabakan.Machine, len(specs))
+	for i, spec := range specs {
+		machines[i] = sabakan.NewMachine(*spec)
 	}
 
 	err = s.Model.Machine.Register(r.Context(), machines)

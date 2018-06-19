@@ -101,13 +101,13 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 	}
 	defer file.Close()
 
-	var machines []sabakan.Machine
-	err = json.NewDecoder(file).Decode(&machines)
+	var specs []*sabakan.MachineSpec
+	err = json.NewDecoder(file).Decode(&specs)
 	if err != nil {
 		return handleError(err)
 	}
 
-	errorStatus := client.MachinesCreate(ctx, machines)
+	errorStatus := client.MachinesCreate(ctx, specs)
 	return handleError(errorStatus)
 }
 

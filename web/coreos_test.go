@@ -41,14 +41,14 @@ func testHandleiPXEWithSerial(t *testing.T) {
 	t.Parallel()
 
 	machines := []*sabakan.Machine{
-		&sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial:     "2222abcd",
 			Product:    "R630",
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "cs",
 			BMC:        sabakan.MachineBMC{Type: "iDRAC-9"},
-		},
+		}),
 	}
 
 	ign := `{ "ignition": { "version": "2.2.0" } }`

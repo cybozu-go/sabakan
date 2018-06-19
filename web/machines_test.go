@@ -123,30 +123,30 @@ func testMachinesGet(t *testing.T) {
 	handler := Server{Model: m}
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
-		{
+		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial:     "1234abcd",
 			Product:    "R630",
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "boot",
 			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
-		},
-		{
+		}),
+		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial:     "5678abcd",
 			Product:    "R740",
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "worker",
 			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
-		},
-		{
+		}),
+		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial:     "1234efgh",
 			Product:    "R630",
 			Datacenter: "ty3",
 			Rack:       2,
 			Role:       "boot",
 			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
-		},
+		}),
 	})
 
 	cases := []struct {
@@ -213,7 +213,7 @@ func testMachinesGet(t *testing.T) {
 
 		serials := make(map[string]bool)
 		for _, m := range machines {
-			serials[m.Serial] = true
+			serials[m.Spec.Serial] = true
 		}
 		if !reflect.DeepEqual(serials, c.expected) {
 			t.Errorf("wrong query result: %#v", serials)
@@ -226,13 +226,13 @@ func testMachinesDelete(t *testing.T) {
 	handler := newTestServer(m)
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
-		{
+		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial:     "1234abcd",
 			Product:    "R630",
 			Datacenter: "ty3",
 			Rack:       1,
 			Role:       "boot",
-		},
+		}),
 	})
 
 	cases := []struct {

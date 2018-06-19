@@ -18,8 +18,8 @@ func MachinesGet(ctx context.Context, params map[string]string) ([]sabakan.Machi
 }
 
 // MachinesCreate create machines information to sabakan server
-func MachinesCreate(ctx context.Context, machines []sabakan.Machine) *Status {
-	return client.sendRequestWithJSON(ctx, "POST", "/machines", machines)
+func MachinesCreate(ctx context.Context, specs []*sabakan.MachineSpec) *Status {
+	return client.sendRequestWithJSON(ctx, "POST", "/machines", specs)
 }
 
 // MachinesRemove removes machine information from sabakan server

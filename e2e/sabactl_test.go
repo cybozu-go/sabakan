@@ -171,7 +171,7 @@ func testSabactlMachines(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	machines := []sabakan.Machine{
+	specs := []*sabakan.MachineSpec{
 		{
 			Serial:     "12345678",
 			Product:    "R730xd",
@@ -191,7 +191,7 @@ func testSabactlMachines(t *testing.T) {
 			},
 		},
 	}
-	stdout, stderr, err = runSabactlWithFile(t, &machines, "machines", "create")
+	stdout, stderr, err = runSabactlWithFile(t, specs, "machines", "create")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())

@@ -156,7 +156,10 @@ $ curl -XGET localhost:10080/api/v1/config/dhcp
 
 ## <a name="postmachines" />`POST /api/v1/machines`
 
-Register machines. Sabakan automatically set the `status` to `running,` and `index-in-rack` which is the index number of its machine in the rack and IP addresses. All of the machines in the requested JSON is an atomic operation to register. If Sabakan fails to register at least one machine, it all fails. In other words, the result will be registered all machines or not registered at all. There is no possibility that part of machines will be registered.
+Register machines.
+All of the machines in the requested JSON is an atomic operation to register.
+If Sabakan fails to register at least one machine, it all fails. In other words, the result will be registered all machines or not registered at all.
+There is no possibility that part of machines will be registered.
 
 In the HTTP request body, specify the following list of the machine information in JSON format.
 

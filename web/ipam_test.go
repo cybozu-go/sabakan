@@ -122,9 +122,9 @@ func testConfigIPAMPut(t *testing.T) {
 		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
 	}
 
-	machine := &sabakan.Machine{
+	machine := sabakan.NewMachine(sabakan.MachineSpec{
 		Serial: "1234",
-	}
+	})
 	err = m.Machine.Register(context.Background(), []*sabakan.Machine{machine})
 	if err != nil {
 		t.Fatal(err)
