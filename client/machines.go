@@ -32,7 +32,7 @@ func MachinesSetState(ctx context.Context, serial string, state string) *Status 
 	return client.sendRequestWithBytes(ctx, "PUT", path.Join("/state", serial), []byte(state))
 }
 
-// MachinesSetState get the state of the machine from sabakan server
+// MachinesGetState get the state of the machine from sabakan server
 func MachinesGetState(ctx context.Context, serial string) (sabakan.MachineState, *Status) {
 	state, err := client.getBytes(ctx, path.Join("/state", serial))
 	if err != nil {
