@@ -98,6 +98,10 @@ func execute(ctx context.Context) error {
 		}
 
 		// (3) if error is NotFound, then initialize the device
+		err = d.makePartition(ctx)
+		if err != nil {
+			return err
+		}
 		err = d.encrypt(ctx)
 		if err != nil {
 			return err
