@@ -97,6 +97,16 @@ State is one of `healthy`, `unhealthy`, `dead` or `retiring`.
 $ sabactl machines set-state <serial> <state>
 ```
 
+`sabactl machines get-state`
+----------------------------
+
+Get the state of a machine.
+State is one of `healthy`, `unhealthy`, `dead` or `retiring`.
+
+```console
+$ sabactl machines get-state <serial>
+```
+
 `sabactl machines remove`
 -------------------------
 

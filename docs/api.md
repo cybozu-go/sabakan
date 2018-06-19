@@ -219,6 +219,7 @@ Query                      | Description
 `ipv4=<ip address>`        | IPv4 address
 `ipv6=<ip address>`        | IPv6 address
 `bmc-type=<bmc-type>`      | BMC type
+`state=<state>`            | The state of the machine
 
 **Successful response**
 

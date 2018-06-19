@@ -20,6 +20,8 @@ func (r machinesCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.E
 	cmdr.Register(machinesGetCommand(), "")
 	cmdr.Register(machinesCreateCommand(), "")
 	cmdr.Register(machinesRemoveCommand(), "")
+	cmdr.Register(machinesSetStateCommand(), "")
+	cmdr.Register(machinesGetStateCommand(), "")
 	return cmdr.Execute(ctx)
 }
 
@@ -45,6 +47,7 @@ var machinesGetQuery = map[string]string{
 	"ipv4":       "IPv4 address",
 	"ipv6":       "IPv6 address",
 	"bmc-type":   "BMC type",
+	"state":      "State",
 }
 
 func (r *machinesGetCmd) SetFlags(f *flag.FlagSet) {
@@ -140,5 +143,55 @@ func machinesRemoveCommand() subcommands.Command {
 		"remove",
 		"remove a machine information",
 		"remove SERIAL",
+	}
+}
+
+type machinesSetStateCmd struct{}
+
+func (r machinesSetStateCmd) SetFlags(f *flag.FlagSet) {}
+
+func (r machinesSetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	if len(f.Args()) != 2 {
+		f.Usage()
+		return client.ExitUsageError
+	}
+
+	errorStatus := client.MachinesSetState(ctx, f.Args()[0], f.Args()[1])
+	return handleError(errorStatus)
+}
+
+func machinesSetStateCommand() subcommands.Command {
+	return subcmd{
+		machinesSetStateCmd{},
+		"set-state",
+		"set the state of the machine",
+		"set-state SERIAL STATE",
+	}
+}
+
+type machinesGetStateCmd struct{}
+
+func (r machinesGetStateCmd) SetFlags(f *flag.FlagSet) {}
+
+func (r machinesGetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	if len(f.Args()) != 1 {
+		f.Usage()
+		return client.ExitUsageError
+	}
+
+	state, errorStatus := client.MachinesGetState(ctx, f.Args()[0])
+	if errorStatus != nil {
+		return handleError(errorStatus)
+	}
+	_, err := os.Stdout.WriteString(state.String())
+	return handleError(err)
+}
+
+func machinesGetStateCommand() subcommands.Command {
+	return subcmd{
+		machinesGetStateCmd{},
+		"get-state",
+		"get the state of the machine",
+		"get-state SERIAL",
 	}
 }
