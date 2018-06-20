@@ -166,7 +166,7 @@ func testQuery(t *testing.T) {
 	<-ch
 	<-ch
 
-	q := sabakan.QueryBySerial("12345678")
+	q := &sabakan.Query{Serial: "12345678"}
 	resp, err := d.machineQuery(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)

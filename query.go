@@ -71,17 +71,3 @@ func (q *Query) IsEmpty() bool {
 	return q.Serial == "" && q.Product == "" && q.Datacenter == "" && q.Rack == "" &&
 		q.Role == "" && q.IPv4 == "" && q.BMCType == "" && q.State == ""
 }
-
-// QueryBySerial create Query by serial
-func QueryBySerial(serial string) *Query {
-	return &Query{
-		Serial: serial,
-	}
-}
-
-// QueryByIPv4 create Query by IPv4 address
-func QueryByIPv4(ipv4 string) *Query {
-	return &Query{
-		IPv4: ipv4,
-	}
-}
