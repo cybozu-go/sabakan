@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 )
 
@@ -72,6 +73,32 @@ func (d *driver) initStateful(ctx context.Context) (int64, error) {
 	return rev, nil
 }
 
+// Helper function to pool events
+func poolEvents(ctx context.Context, sendCh chan<- EventPool, recvCh <-chan EventPool) error {
+	var ep EventPool
+
+	for {
+		if len(ep.Events) > 0 {
+			select {
+			case sendCh <- ep:
+				ep.Events = nil
+			case <-ctx.Done():
+				return nil
+			case ep2 := <-recvCh:
+				ep.Rev = ep2.Rev
+				ep.Events = append(ep.Events, ep2.Events...)
+			}
+			continue
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil
+		case ep = <-recvCh:
+		}
+	}
+}
+
 // startStatefulWatcher is a goroutine to begin watching for etcd events.
 //
 // This goroutine keeps the last seen revision in the data directory
@@ -102,7 +129,14 @@ RETRY:
 		clientv3.WithRev(rev+1),
 		clientv3.WithCreatedNotify(),
 	)
-	var ep EventPool
+
+	// a helper goroutine to pool events
+	poolCh := make(chan EventPool)
+	env := cmd.NewEnvironment(ctx)
+	env.Go(func(ctx context.Context) error {
+		return poolEvents(ctx, ch, poolCh)
+	})
+	env.Stop()
 
 	for resp := range rch {
 		if resp.CompactRevision != 0 {
@@ -118,20 +152,16 @@ RETRY:
 			goto RETRY
 		}
 
-		ep.Rev = resp.Header.Revision
-		ep.Events = append(ep.Events, resp.Events...)
-
-		if len(ep.Events) == 0 {
+		if len(resp.Events) == 0 {
 			continue
 		}
 
-		select {
-		case ch <- ep:
-			ep.Events = nil
-		default:
-			// events are pooled
+		poolCh <- EventPool{
+			Rev:    resp.Header.Revision,
+			Events: resp.Events,
 		}
 	}
 
-	return nil
+	env.Cancel(nil)
+	return env.Wait()
 }
