@@ -22,7 +22,7 @@ func TestMachinesIndex(t *testing.T) {
 		mi.AddIndex(m)
 	}
 
-	serials := mi.query(&sabakan.Query{Product: "R730xd"})
+	serials := mi.query(sabakan.Query{"product": "R730xd"})
 	if len(serials) != 1 {
 		t.Fatal("wrong query count:", len(serials))
 	}
@@ -50,7 +50,7 @@ func TestMachinesIndex(t *testing.T) {
 
 	mi.UpdateIndex(prev, current)
 
-	serials = mi.query(&sabakan.Query{Product: "R730xd"})
+	serials = mi.query(sabakan.Query{"product": "R730xd"})
 	if len(serials) != 2 {
 		t.Fatal("wrong query count:", len(serials))
 	}
@@ -59,7 +59,7 @@ func TestMachinesIndex(t *testing.T) {
 		t.Error("wrong query serials:", serials)
 	}
 
-	serials = mi.query(&sabakan.Query{State: "retiring"})
+	serials = mi.query(sabakan.Query{"state": "retiring"})
 	if len(serials) != 1 {
 		t.Fatal("wrong query count:", len(serials))
 	}
@@ -73,7 +73,7 @@ func TestMachinesIndex(t *testing.T) {
 			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
 		}))
 
-	serials = mi.query(&sabakan.Query{Product: "R730xd"})
+	serials = mi.query(sabakan.Query{"product": "R730xd"})
 	if len(serials) != 1 {
 		t.Fatal("wrong query count:", len(serials))
 	}

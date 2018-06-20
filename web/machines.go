@@ -80,23 +80,17 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func getMachinesQuery(r *http.Request) *sabakan.Query {
-	var q sabakan.Query
+func getQueryMap(r *http.Request) sabakan.Query {
+	var q sabakan.Query = make(sabakan.Query)
 	vals := r.URL.Query()
-	q.Serial = vals.Get("serial")
-	q.Product = vals.Get("product")
-	q.Datacenter = vals.Get("datacenter")
-	q.Rack = vals.Get("rack")
-	q.Role = vals.Get("role")
-	q.IPv4 = vals.Get("ipv4")
-	q.IPv6 = vals.Get("ipv6")
-	q.BMCType = vals.Get("bmc-type")
-	q.State = vals.Get("state")
-	return &q
+	for k, _ := range vals {
+		q[k] = vals.Get(k)
+	}
+	return q
 }
 
 func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
-	q := getMachinesQuery(r)
+	q := getQueryMap(r)
 
 	machines, err := s.Model.Machine.Query(r.Context(), q)
 	if err != nil {
