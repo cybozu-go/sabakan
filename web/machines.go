@@ -81,9 +81,9 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func getQueryMap(r *http.Request) sabakan.Query {
-	var q sabakan.Query = make(sabakan.Query)
+	q := make(sabakan.Query)
 	vals := r.URL.Query()
-	for k, _ := range vals {
+	for k := range vals {
 		q[k] = vals.Get(k)
 	}
 	return q

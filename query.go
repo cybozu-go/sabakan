@@ -57,15 +57,32 @@ func (q Query) Match(m *Machine) bool {
 	return true
 }
 
-func (q Query) Serial() string     { return q["serial"] }
-func (q Query) Product() string    { return q["product"] }
+// Serial returns value of serial in the query
+func (q Query) Serial() string { return q["serial"] }
+
+// Product returns value of product in the query
+func (q Query) Product() string { return q["product"] }
+
+// Datacenter returns value of datacenter in the query
 func (q Query) Datacenter() string { return q["datacenter"] }
-func (q Query) Rack() string       { return q["rack"] }
-func (q Query) Role() string       { return q["role"] }
-func (q Query) IPv4() string       { return q["ipv4"] }
-func (q Query) IPv6() string       { return q["ipv6"] }
-func (q Query) BMCType() string    { return q["bmc-type"] }
-func (q Query) State() string      { return q["state"] }
+
+// Rack returns value of rack in the query
+func (q Query) Rack() string { return q["rack"] }
+
+// Role returns value of role in the query
+func (q Query) Role() string { return q["role"] }
+
+// IPv4 returns value of ipv4 in the query
+func (q Query) IPv4() string { return q["ipv4"] }
+
+// IPv6 returns value of ipv6 in the query
+func (q Query) IPv6() string { return q["ipv6"] }
+
+// BMCType returns value of bmc-type in the query
+func (q Query) BMCType() string { return q["bmc-type"] }
+
+// State returns value of state in the query
+func (q Query) State() string { return q["state"] }
 
 // IsEmpty returns true if query is empty
 func (q Query) IsEmpty() bool {
