@@ -14,6 +14,7 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/namespace"
 	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/sabakan"
 )
 
 const (
@@ -101,4 +102,27 @@ func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 	go d.startStatelessWatcher(context.Background(), ch, nil)
 	<-ch
 	return d, ch
+}
+
+func initializeTestData(d *driver, ch <-chan struct{}) ([]*sabakan.Machine, error) {
+	ctx := context.Background()
+	config := &testIPAMConfig
+	err := d.putIPAMConfig(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+	<-ch
+
+	machines := []*sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345678", Product: "R630", Role: "worker"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345679", Product: "R630", Role: "worker"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "123456789", Product: "R730", Role: "worker"}),
+	}
+	err = d.machineRegister(ctx, machines)
+	if err != nil {
+		return nil, err
+	}
+	<-ch
+	<-ch
+	return machines, nil
 }
