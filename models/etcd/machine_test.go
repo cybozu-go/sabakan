@@ -12,34 +12,12 @@ func testRegister(t *testing.T) {
 	t.Parallel()
 
 	d, ch := testNewDriver(t)
-	config := &testIPAMConfig
-	err := d.putIPAMConfig(context.Background(), config)
+	machines, err := initializeTestData(d, ch)
 	if err != nil {
 		t.Fatal(err)
 	}
-	<-ch
 
-	machines := []*sabakan.Machine{
-		sabakan.NewMachine(
-			sabakan.MachineSpec{
-				Serial: "1234abcd",
-				Role:   "worker",
-			}),
-		sabakan.NewMachine(
-			sabakan.MachineSpec{
-				Serial: "5678efgh",
-				Role:   "worker",
-			}),
-	}
-
-	err = d.machineRegister(context.Background(), machines)
-	if err != nil {
-		t.Fatal(err)
-	}
-	<-ch // wait for initialization of rack#0 node-indices
-	<-ch
-
-	resp, err := d.client.Get(context.Background(), KeyMachines+"5678efgh")
+	resp, err := d.client.Get(context.Background(), KeyMachines+"12345679")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,21 +89,10 @@ func testGet(t *testing.T) {
 
 	ctx := context.Background()
 	d, ch := testNewDriver(t)
-	config := &testIPAMConfig
-	err := d.putIPAMConfig(ctx, config)
+	_, err := initializeTestData(d, ch)
 	if err != nil {
 		t.Fatal(err)
 	}
-	<-ch
-
-	machines := []*sabakan.Machine{
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345678"}),
-	}
-	err = d.machineRegister(ctx, machines)
-	if err != nil {
-		t.Fatal(err)
-	}
-	<-ch
 
 	_, err = d.machineGet(ctx, "a")
 	if err != sabakan.ErrNotFound {
@@ -146,25 +113,10 @@ func testQuery(t *testing.T) {
 	t.Parallel()
 
 	d, ch := testNewDriver(t)
-
-	config := &testIPAMConfig
-	err := d.putIPAMConfig(context.Background(), config)
+	_, err := initializeTestData(d, ch)
 	if err != nil {
 		t.Fatal(err)
 	}
-	<-ch
-
-	machines := []*sabakan.Machine{
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345678", Product: "R630", Role: "worker"}),
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345679", Product: "R630", Role: "worker"}),
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345680", Product: "R730", Role: "worker"}),
-	}
-	err = d.machineRegister(context.Background(), machines)
-	if err != nil {
-		t.Fatal(err)
-	}
-	<-ch
-	<-ch
 
 	q := sabakan.Query{"serial": "12345678"}
 	resp, err := d.machineQuery(context.Background(), q)
@@ -203,25 +155,10 @@ func testQuery(t *testing.T) {
 func testSetState(t *testing.T) {
 	d, ch := testNewDriver(t)
 	ctx := context.Background()
-
-	config := &testIPAMConfig
-	err := d.putIPAMConfig(ctx, config)
+	_, err := initializeTestData(d, ch)
 	if err != nil {
 		t.Fatal(err)
 	}
-	<-ch
-
-	machines := []*sabakan.Machine{
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345678", Product: "R630", Role: "worker"}),
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345679", Product: "R630", Role: "worker"}),
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345680", Product: "R730", Role: "worker"}),
-	}
-	err = d.machineRegister(ctx, machines)
-	if err != nil {
-		t.Fatal(err)
-	}
-	<-ch
-	<-ch
 
 	m, err := d.machineGet(ctx, "12345678")
 	if err != nil {
@@ -248,53 +185,35 @@ func testDelete(t *testing.T) {
 	t.Parallel()
 
 	d, ch := testNewDriver(t)
-	config := &testIPAMConfig
-	err := d.putIPAMConfig(context.Background(), config)
+	machines, err := initializeTestData(d, ch)
 	if err != nil {
 		t.Fatal(err)
 	}
-	<-ch
-
-	machines := []*sabakan.Machine{
-		sabakan.NewMachine(
-			sabakan.MachineSpec{
-				Serial: "1234abcd",
-				Role:   "worker",
-			}),
-	}
-
-	// register one
-	err = d.machineRegister(context.Background(), machines)
-	if err != nil {
-		t.Fatal(err)
-	}
-	<-ch
-	<-ch
 
 	// delete one
-	err = d.machineDelete(context.Background(), "1234abcd")
+	err = d.machineDelete(context.Background(), "12345678")
 	if err == nil {
 		t.Error("non-retired machine should not be deleted")
 	}
 
-	err = d.machineSetState(context.Background(), "1234abcd", sabakan.StateRetiring)
+	err = d.machineSetState(context.Background(), "12345678", sabakan.StateRetiring)
 	if err != nil {
 		t.Fatal(err)
 	}
 	<-ch
-	err = d.machineSetState(context.Background(), "1234abcd", sabakan.StateRetired)
+	err = d.machineSetState(context.Background(), "12345678", sabakan.StateRetired)
 	if err != nil {
 		t.Fatal(err)
 	}
 	<-ch
-	err = d.machineDelete(context.Background(), "1234abcd")
+	err = d.machineDelete(context.Background(), "12345678")
 	if err != nil {
 		t.Error(err)
 	}
 	<-ch
 
 	// confirm deletion
-	resp, err := d.client.Get(context.Background(), KeyMachines+"1234abcd")
+	resp, err := d.client.Get(context.Background(), KeyMachines+"12345678")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -303,7 +222,7 @@ func testDelete(t *testing.T) {
 	}
 
 	// double delete
-	err = d.machineDelete(context.Background(), "1234abcd")
+	err = d.machineDelete(context.Background(), "12345678")
 	if err != sabakan.ErrNotFound {
 		if err == nil {
 			t.Error("delete succeeded for already deleted machine")
@@ -313,13 +232,13 @@ func testDelete(t *testing.T) {
 	}
 
 	// register after delete
-	err = d.machineRegister(context.Background(), machines)
+	err = d.machineRegister(context.Background(), machines[:1])
 	if err != nil {
 		t.Fatal(err)
 	}
 	<-ch
 
-	resp, err = d.client.Get(context.Background(), KeyMachines+"1234abcd")
+	resp, err = d.client.Get(context.Background(), KeyMachines+"12345678")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -333,26 +252,12 @@ func testDeleteRace(t *testing.T) {
 
 	ctx := context.Background()
 	d, ch := testNewDriver(t)
-	cfg := &testIPAMConfig
-	err := d.putIPAMConfig(ctx, cfg)
+	_, err := initializeTestData(d, ch)
 	if err != nil {
 		t.Fatal(err)
 	}
-	<-ch
 
-	machines := []*sabakan.Machine{sabakan.NewMachine(sabakan.MachineSpec{
-		Serial: "1234abcd", Role: "worker",
-	})}
-
-	// prepare data to be deleted
-	err = d.machineRegister(ctx, machines)
-	if err != nil {
-		t.Fatal(err)
-	}
-	<-ch
-	<-ch
-
-	m, rev, err := d.machineGetWithRev(ctx, "1234abcd")
+	m, rev, err := d.machineGetWithRev(ctx, "12345678")
 	if err != nil {
 		t.Fatal(err)
 	}
