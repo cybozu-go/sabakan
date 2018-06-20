@@ -23,13 +23,11 @@ type storageDevice struct {
 }
 
 const (
-	cryptSetup    = "/sbin/cryptsetup"
-	gdisk         = "/sbin/gdisk"
-	gdiskCommands = "o\nY\nn\n\n\n\n\nw\nY\n" // make partition using whole disk
-	cipher        = "aes-xts-plain64"
-	keyBytes      = 64
-	prefix        = "crypt-"
-	offset        = 4096 // keep the first 2 MiB for meta data.
+	cryptSetup = "/sbin/cryptsetup"
+	cipher     = "aes-xts-plain64"
+	keyBytes   = 64
+	prefix     = "crypt-"
+	offset     = 4096 // keep the first 2 MiB for meta data.
 )
 
 var (
@@ -50,8 +48,8 @@ func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDev
 		}
 
 		for _, device := range matches {
-			base := filepath.Base(device)
 			// ignore partition device "*-part[0-9]+"
+			base := filepath.Base(device)
 			partition, err := regexp.MatchString("^.*-part[0-9]+$", base)
 			if err != nil {
 				return nil, err
@@ -59,6 +57,7 @@ func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDev
 			if partition {
 				continue
 			}
+
 			rp, err := filepath.EvalSymlinks(device)
 			if err != nil {
 				return nil, err
