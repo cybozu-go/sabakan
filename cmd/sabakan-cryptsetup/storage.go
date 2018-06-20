@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -17,16 +18,17 @@ import (
 )
 
 type storageDevice struct {
-	id     []byte
-	byPath string
-	key    []byte
+	id       []byte
+	byPath   string
+	realPath string
+	key      []byte
 }
 
 const (
 	cryptSetup = "/sbin/cryptsetup"
 	cipher     = "aes-xts-plain64"
 	keyBytes   = 64
-	prefix     = "crypt-"
+	prefix     = "crypt"
 	offset     = 4096 // keep the first 2 MiB for meta data.
 	idBytes    = 16
 )
@@ -69,7 +71,7 @@ func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDev
 				continue
 			}
 
-			sd := &storageDevice{byPath: device}
+			sd := &storageDevice{byPath: device, realPath: rp}
 			err = sd.findID()
 			if err != nil {
 				return nil, err
@@ -206,9 +208,10 @@ func (s *storageDevice) decrypt(ctx context.Context) error {
 		xorKey[i] = opad[i] ^ s.key[i]
 	}
 
+	cryptName := fmt.Sprintf("%s-%s-%s", prefix, filepath.Base(s.realPath), s.idString())
 	c := cmd.CommandContext(ctx, cryptSetup, "--hash=plain", "--key-file=-",
 		"--cipher="+cipher, "--key-size="+strconv.Itoa(keySize), "--offset="+strconv.Itoa(offset),
-		"--allow-discards", "open", s.byPath, "--type=plain", prefix+s.idString())
+		"--allow-discards", "open", s.byPath, "--type=plain", cryptName)
 	pipe, err := c.StdinPipe()
 	if err != nil {
 		return err
