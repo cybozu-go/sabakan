@@ -81,25 +81,13 @@ func (q Query) IPv6() string { return q["ipv6"] }
 // BMCType returns value of bmc-type in the query
 func (q Query) BMCType() string { return q["bmc-type"] }
 
-// State returns value of state in the query
+// State returns value of state the query
 func (q Query) State() string { return q["state"] }
 
-// IsEmpty returns true if query is empty
+// IsEmpty returns true if query is empty or no values are presented
 func (q Query) IsEmpty() bool {
-	keys := map[string]struct{}{
-		"serial":     struct{}{},
-		"product":    struct{}{},
-		"datacenter": struct{}{},
-		"rack":       struct{}{},
-		"role":       struct{}{},
-		"ipv4":       struct{}{},
-		"ipv6":       struct{}{},
-		"bmc-type":   struct{}{},
-		"state":      struct{}{},
-	}
-
-	for k, v := range q {
-		if _, ok := keys[k]; ok && len(v) > 0 {
+	for _, v := range q {
+		if len(v) > 0 {
 			return false
 		}
 	}

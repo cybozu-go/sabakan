@@ -37,14 +37,14 @@ func TestMatch(t *testing.T) {
 }
 
 func TestIsEmpty(t *testing.T) {
-	blanks := []Query{{"user-filed": "hello"}, {"serial": "", "role": ""}}
+	blanks := []Query{{}, {"serial": "", "role": ""}}
 	for _, q := range blanks {
 		if !q.IsEmpty() {
 			t.Errorf("q.IsEmpty()")
 		}
 	}
 
-	presents := []Query{{"role": "boot"}, {"serial": "1234", "role": ""}}
+	presents := []Query{{"user-filed": "hello"}, {"serial": "1234", "role": ""}}
 	for _, q := range presents {
 		if q.IsEmpty() {
 			t.Errorf("!q.IsEmpty()")
