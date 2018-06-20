@@ -79,7 +79,7 @@ func execute(ctx context.Context) error {
 		return err
 	}
 
-	devices, err := detectStorageDevices(ctx, flag.Args())
+	devices, err := devfs.detectStorageDevices(ctx, flag.Args())
 	if err != nil {
 		return err
 	}

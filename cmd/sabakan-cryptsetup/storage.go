@@ -42,10 +42,16 @@ var (
 	idOffset = int64(len(magic) + keyBytes)
 )
 
-func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDevice, error) {
+type devfsType struct {
+	path string
+}
+
+var devfs = &devfsType{path: "/dev/disk/by-path"}
+
+func (d devfsType) detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDevice, error) {
 	devices := make(map[string]*storageDevice)
 	for _, pattern := range patterns {
-		matches, err := filepath.Glob(filepath.Join("/dev/disk/by-path", pattern))
+		matches, err := filepath.Glob(filepath.Join(d.path, pattern))
 		if err != nil {
 			return nil, err
 		}
