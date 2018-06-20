@@ -45,7 +45,7 @@ func (d *driver) machineSetState(ctx context.Context, serial string, state sabak
 	return m.SetState(state)
 }
 
-func (d *driver) machineQuery(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
+func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.Machine, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -91,7 +91,7 @@ func (d machineDriver) SetState(ctx context.Context, serial string, state sabaka
 	return d.machineSetState(ctx, serial, state)
 }
 
-func (d machineDriver) Query(ctx context.Context, query *sabakan.Query) ([]*sabakan.Machine, error) {
+func (d machineDriver) Query(ctx context.Context, query sabakan.Query) ([]*sabakan.Machine, error) {
 	return d.machineQuery(ctx, query)
 }
 

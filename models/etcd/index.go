@@ -141,38 +141,38 @@ func (mi *machinesIndex) UpdateIndex(prevM *sabakan.Machine, newM *sabakan.Machi
 	mi.mux.Unlock()
 }
 
-func (mi *machinesIndex) query(q *sabakan.Query) []string {
+func (mi *machinesIndex) query(q sabakan.Query) []string {
 	mi.mux.RLock()
 	defer mi.mux.RUnlock()
 
 	res := make(map[string]struct{})
 
-	for _, serial := range mi.Product[q.Product] {
+	for _, serial := range mi.Product[q.Product()] {
 		res[serial] = struct{}{}
 	}
-	for _, serial := range mi.Datacenter[q.Datacenter] {
+	for _, serial := range mi.Datacenter[q.Datacenter()] {
 		res[serial] = struct{}{}
 	}
-	for _, serial := range mi.Rack[q.Rack] {
+	for _, serial := range mi.Rack[q.Rack()] {
 		res[serial] = struct{}{}
 	}
-	for _, serial := range mi.Role[q.Role] {
+	for _, serial := range mi.Role[q.Role()] {
 		res[serial] = struct{}{}
 	}
-	if len(q.IPv4) > 0 {
-		if serial, ok := mi.IPv4[q.IPv4]; ok {
+	if len(q.IPv4()) > 0 {
+		if serial, ok := mi.IPv4[q.IPv4()]; ok {
 			res[serial] = struct{}{}
 		}
 	}
-	if len(q.IPv6) > 0 {
-		if serial, ok := mi.IPv6[q.IPv6]; ok {
+	if len(q.IPv6()) > 0 {
+		if serial, ok := mi.IPv6[q.IPv6()]; ok {
 			res[serial] = struct{}{}
 		}
 	}
-	for _, serial := range mi.BMCType[q.BMCType] {
+	for _, serial := range mi.BMCType[q.BMCType()] {
 		res[serial] = struct{}{}
 	}
-	for _, serial := range mi.State[sabakan.MachineState(q.State)] {
+	for _, serial := range mi.State[sabakan.MachineState(q.State())] {
 		res[serial] = struct{}{}
 	}
 

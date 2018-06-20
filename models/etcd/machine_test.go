@@ -166,7 +166,7 @@ func testQuery(t *testing.T) {
 	<-ch
 	<-ch
 
-	q := sabakan.QueryBySerial("12345678")
+	q := sabakan.Query{"serial": "12345678"}
 	resp, err := d.machineQuery(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)
@@ -178,7 +178,7 @@ func testQuery(t *testing.T) {
 		t.Errorf("unexpected responsed machine: %#v", resp[0])
 	}
 
-	q = &sabakan.Query{Product: "R630"}
+	q = sabakan.Query{"product": "R630"}
 	resp, err = d.machineQuery(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)
@@ -190,7 +190,7 @@ func testQuery(t *testing.T) {
 		t.Errorf("unexpected responsed machine: %#v", resp)
 	}
 
-	q = &sabakan.Query{}
+	q = sabakan.Query{}
 	resp, err = d.machineQuery(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)

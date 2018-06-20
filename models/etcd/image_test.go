@@ -282,7 +282,6 @@ func testImageDownload(t *testing.T) {
 			expects = "def"
 		default:
 			t.Error("unexpected file in tar:", hdr.Name)
-			break
 		}
 
 		data, err := ioutil.ReadAll(tr)
@@ -414,9 +413,7 @@ func testImageServeFile(t *testing.T) {
 	testImagePutIndex(t, d, index)
 
 	buf := new(bytes.Buffer)
-	var modtime time.Time
 	f := func(mt time.Time, content io.ReadSeeker) {
-		modtime = mt
 		buf.Reset()
 		io.Copy(buf, content)
 	}

@@ -129,7 +129,7 @@ RETRY:
 	return nil
 }
 
-func (d *driver) machineQuery(ctx context.Context, q *sabakan.Query) ([]*sabakan.Machine, error) {
+func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
 
 	switch {
@@ -142,8 +142,8 @@ func (d *driver) machineQuery(ctx context.Context, q *sabakan.Query) ([]*sabakan
 		for i, kv := range resp.Kvs {
 			serials[i] = string(kv.Key[len(KeyMachines):])
 		}
-	case len(q.Serial) > 0:
-		serials = []string{q.Serial}
+	case len(q.Serial()) > 0:
+		serials = []string{q.Serial()}
 	default:
 		serials = d.mi.query(q)
 	}
@@ -253,7 +253,7 @@ func (d machineDriver) SetState(ctx context.Context, serial string, state sabaka
 }
 
 // Query implements sabakan.MachineModel
-func (d machineDriver) Query(ctx context.Context, query *sabakan.Query) ([]*sabakan.Machine, error) {
+func (d machineDriver) Query(ctx context.Context, query sabakan.Query) ([]*sabakan.Machine, error) {
 	return d.machineQuery(ctx, query)
 }
 
