@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"io"
 	"os"
@@ -13,11 +14,10 @@ import (
 
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/sabakan/client"
-	uuid "github.com/satori/go.uuid"
 )
 
 type storageDevice struct {
-	uuid   *uuid.UUID
+	id     []byte
 	byPath string
 	key    []byte
 }
@@ -28,6 +28,7 @@ const (
 	keyBytes   = 64
 	prefix     = "crypt-"
 	offset     = 4096 // keep the first 2 MiB for meta data.
+	idBytes    = 16
 )
 
 var (
@@ -35,8 +36,8 @@ var (
 		0x01, 0x02, 0x03, 0x04, 0xff, 0xfe, 0xfd, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34, 0x78, 0x90,
 		0x01, 0x02, 0x03, 0x04, 0xff, 0xfe, 0xfd, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34, 0x78, 0x90,
 		0x01, 0x02, 0x03, 0x04, 0xff, 0xfe, 0xfd, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34, 0x78, 0x90}
-	keySize    = keyBytes * 8
-	uuidOffset = int64(len(magic) + keyBytes)
+	keySize  = keyBytes * 8
+	idOffset = int64(len(magic) + keyBytes)
 )
 
 func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDevice, error) {
@@ -69,7 +70,7 @@ func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDev
 			}
 
 			sd := &storageDevice{byPath: device}
-			err = sd.findUUID()
+			err = sd.findID()
 			if err != nil {
 				return nil, err
 			}
@@ -84,7 +85,7 @@ func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDev
 	return ret, nil
 }
 
-func (s *storageDevice) findUUID() error {
+func (s *storageDevice) findID() error {
 	f, err := os.Open(s.byPath)
 	if err != nil {
 		return err
@@ -101,31 +102,30 @@ func (s *storageDevice) findUUID() error {
 		return nil
 	}
 
-	_, err = f.Seek(uuidOffset, 0)
+	_, err = f.Seek(idOffset, 0)
 	if err != nil {
 		return err
 	}
 
-	buf := make([]byte, uuid.Size)
+	buf := make([]byte, idBytes)
 	_, err = io.ReadFull(f, buf)
 	if err != nil {
 		return err
 	}
 
-	u, err := uuid.FromBytes(buf)
-	if err != nil {
-		return err
-	}
-
-	s.uuid = &u
+	s.id = buf
 	return nil
 }
 
+func (s *storageDevice) idString() string {
+	return hex.EncodeToString(s.id)
+}
+
 func (s *storageDevice) fetchKey(ctx context.Context, serial string) *client.Status {
-	if s.uuid == nil {
-		return client.NewStatus(client.ExitNotFound, errors.New("uuid not found"))
+	if s.id == nil {
+		return client.NewStatus(client.ExitNotFound, errors.New("ID not found"))
 	}
-	data, status := client.CryptsGet(ctx, serial, s.uuid.String())
+	data, status := client.CryptsGet(ctx, serial, s.idString())
 	if status != nil {
 		return status
 	}
@@ -134,7 +134,7 @@ func (s *storageDevice) fetchKey(ctx context.Context, serial string) *client.Sta
 }
 
 func (s *storageDevice) registerKey(ctx context.Context, serial string) *client.Status {
-	return client.CryptsPut(ctx, serial, s.uuid.String(), s.key)
+	return client.CryptsPut(ctx, serial, s.idString(), s.key)
 }
 
 // encrypt the disk, then set properties (d.key)
@@ -151,11 +151,12 @@ func (s *storageDevice) encrypt(ctx context.Context) error {
 		return err
 	}
 
-	u, err := uuid.NewV1()
+	id := make([]byte, idBytes)
+	_, err = rand.Read(id)
 	if err != nil {
 		return err
 	}
-	s.uuid = &u
+	s.id = id
 
 	f, err := os.OpenFile(s.byPath, os.O_RDWR, 0660)
 	if err != nil {
@@ -165,7 +166,7 @@ func (s *storageDevice) encrypt(ctx context.Context) error {
 
 	f.Write(magic)
 	f.Write(opad)
-	f.Write(u.Bytes())
+	f.Write(id)
 	f.Sync()
 
 	xorKey := make([]byte, keyBytes)
@@ -207,7 +208,7 @@ func (s *storageDevice) decrypt(ctx context.Context) error {
 
 	c := cmd.CommandContext(ctx, cryptSetup, "--hash=plain", "--key-file=-",
 		"--cipher="+cipher, "--key-size="+strconv.Itoa(keySize), "--offset="+strconv.Itoa(offset),
-		"--allow-discards", "open", s.byPath, "--type=plain", prefix+s.uuid.String())
+		"--allow-discards", "open", s.byPath, "--type=plain", prefix+s.idString())
 	pipe, err := c.StdinPipe()
 	if err != nil {
 		return err
