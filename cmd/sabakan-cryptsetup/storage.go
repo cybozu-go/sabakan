@@ -10,17 +10,16 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"time"
 
 	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/sabakan/client"
+	uuid "github.com/satori/go.uuid"
 )
 
 type storageDevice struct {
-	partUUID string
-	byPath   string
-	realPath string
-	key      []byte
+	uuid   *uuid.UUID
+	byPath string
+	key    []byte
 }
 
 const (
@@ -38,15 +37,9 @@ var (
 		0x01, 0x02, 0x03, 0x04, 0xff, 0xfe, 0xfd, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34, 0x78, 0x90,
 		0x01, 0x02, 0x03, 0x04, 0xff, 0xfe, 0xfd, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34, 0x78, 0x90,
 		0x01, 0x02, 0x03, 0x04, 0xff, 0xfe, 0xfd, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34, 0x78, 0x90}
-	keySize = keyBytes * 8
+	keySize    = keyBytes * 8
+	uuidOffset = int64(len(magic) + keyBytes)
 )
-
-func (s *storageDevice) partUUIDPath() string {
-	if s.partUUID == "" {
-		return ""
-	}
-	return filepath.Join("/dev/disk/by-partuuid", s.partUUID)
-}
 
 func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDevice, error) {
 	devices := make(map[string]*storageDevice)
@@ -66,22 +59,22 @@ func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDev
 			if partition {
 				continue
 			}
-
-			// ignore duplicated device
-			if _, ok := devices[device]; ok {
-				continue
-			}
-
 			rp, err := filepath.EvalSymlinks(device)
 			if err != nil {
 				return nil, err
 			}
-			sd := &storageDevice{byPath: device, realPath: rp}
-			err = sd.findPartUUID()
+
+			// ignore duplicated device
+			if _, ok := devices[rp]; ok {
+				continue
+			}
+
+			sd := &storageDevice{byPath: device}
+			err = sd.findUUID()
 			if err != nil {
 				return nil, err
 			}
-			devices[device] = sd
+			devices[rp] = sd
 		}
 	}
 
@@ -92,30 +85,48 @@ func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDev
 	return ret, nil
 }
 
-func (s *storageDevice) findPartUUID() error {
-	partUUIDList, err := filepath.Glob("/dev/disk/by-partuuid/*")
+func (s *storageDevice) findUUID() error {
+	f, err := os.Open(s.byPath)
 	if err != nil {
 		return err
 	}
-	for _, partUUID := range partUUIDList {
-		partitionRealPath, err := filepath.EvalSymlinks(partUUID)
-		if err != nil {
-			return err
-		}
-		if s.realPath+"1" == partitionRealPath {
-			s.partUUID = filepath.Base(partUUID)
-			return nil
-		}
+	defer f.Close()
+
+	m := make([]byte, len(magic))
+	_, err = io.ReadFull(f, m)
+	if err != nil {
+		return err
 	}
-	s.partUUID = ""
+
+	if !bytes.Equal(m, magic) {
+		return nil
+	}
+
+	_, err = f.Seek(uuidOffset, 0)
+	if err != nil {
+		return err
+	}
+
+	buf := make([]byte, uuid.Size)
+	_, err = io.ReadFull(f, buf)
+	if err != nil {
+		return err
+	}
+
+	u, err := uuid.FromBytes(buf)
+	if err != nil {
+		return err
+	}
+
+	s.uuid = &u
 	return nil
 }
 
 func (s *storageDevice) fetchKey(ctx context.Context, serial string) *client.Status {
-	if len(s.partUUID) == 0 {
-		return client.NewStatus(client.ExitNotFound, errors.New("partition not found"))
+	if s.uuid == nil {
+		return client.NewStatus(client.ExitNotFound, errors.New("uuid not found"))
 	}
-	data, status := client.CryptsGet(ctx, serial, s.partUUID)
+	data, status := client.CryptsGet(ctx, serial, s.uuid.String())
 	if status != nil {
 		return status
 	}
@@ -124,43 +135,7 @@ func (s *storageDevice) fetchKey(ctx context.Context, serial string) *client.Sta
 }
 
 func (s *storageDevice) registerKey(ctx context.Context, serial string) *client.Status {
-	return client.CryptsPut(ctx, serial, s.partUUID, s.key)
-}
-
-func (s *storageDevice) makePartition(ctx context.Context) error {
-	c := cmd.CommandContext(ctx, gdisk, s.realPath)
-	pipe, err := c.StdinPipe()
-	if err != nil {
-		return err
-	}
-
-	go func() error {
-		defer pipe.Close()
-		_, err := io.WriteString(pipe, gdiskCommands)
-		if err != nil {
-			return err
-		}
-		return nil
-	}()
-
-	err = c.Run()
-	if err != nil {
-		return err
-	}
-	for {
-		err = s.findPartUUID()
-		if err != nil {
-			return err
-		}
-		if s.partUUID != "" {
-			return nil
-		}
-		select {
-		case <-time.After(time.Duration(500) * time.Millisecond):
-		case <-ctx.Done():
-			return errors.New("failed to get UUID of the partition")
-		}
-	}
+	return client.CryptsPut(ctx, serial, s.uuid.String(), s.key)
 }
 
 // encrypt the disk, then set properties (d.key)
@@ -177,7 +152,13 @@ func (s *storageDevice) encrypt(ctx context.Context) error {
 		return err
 	}
 
-	f, err := os.OpenFile(s.partUUIDPath(), os.O_RDWR, 0660)
+	u, err := uuid.NewV1()
+	if err != nil {
+		return err
+	}
+	s.uuid = &u
+
+	f, err := os.OpenFile(s.byPath, os.O_RDWR, 0660)
 	if err != nil {
 		return err
 	}
@@ -185,6 +166,7 @@ func (s *storageDevice) encrypt(ctx context.Context) error {
 
 	f.Write(magic)
 	f.Write(opad)
+	f.Write(u.Bytes())
 	f.Sync()
 
 	xorKey := make([]byte, keyBytes)
@@ -197,7 +179,7 @@ func (s *storageDevice) encrypt(ctx context.Context) error {
 }
 
 func (s *storageDevice) decrypt(ctx context.Context) error {
-	f, err := os.Open(s.partUUIDPath())
+	f, err := os.Open(s.byPath)
 	if err != nil {
 		return err
 	}
@@ -210,7 +192,7 @@ func (s *storageDevice) decrypt(ctx context.Context) error {
 	}
 
 	if !bytes.Equal(m, magic) {
-		return errors.New("Non-formatted device " + s.partUUIDPath())
+		return errors.New("Non-formatted device " + s.byPath)
 	}
 
 	opad := make([]byte, keyBytes)
@@ -226,7 +208,7 @@ func (s *storageDevice) decrypt(ctx context.Context) error {
 
 	c := cmd.CommandContext(ctx, cryptSetup, "--hash=plain", "--key-file=-",
 		"--cipher="+cipher, "--key-size="+strconv.Itoa(keySize), "--offset="+strconv.Itoa(offset),
-		"--allow-discards", "open", s.partUUIDPath(), "--type=plain", prefix+s.partUUID)
+		"--allow-discards", "open", s.byPath, "--type=plain", prefix+s.uuid.String())
 	pipe, err := c.StdinPipe()
 	if err != nil {
 		return err
