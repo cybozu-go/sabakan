@@ -17,8 +17,9 @@ const baseSystemdDir = "systemd"
 const baseNetworkdDir = "networkd"
 
 type systemd struct {
+	Name    string `yaml:"name"`
 	Enabled bool   `yaml:"enabled"`
-	Source  string `yaml:"source"`
+	Mask    bool   `yaml:"mask"`
 }
 
 type ignitionSource struct {
@@ -202,27 +203,32 @@ func (b *ignitionBuilder) constructFile(inputFile string) error {
 }
 
 func (b *ignitionBuilder) constructSystemd(s systemd) error {
-
-	f, err := os.Open(filepath.Join(b.baseDir, baseSystemdDir, s.Source))
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		return err
-	}
-
 	systemd, ok := b.ignition["systemd"].(map[string]interface{})
 	if !ok {
 		systemd = make(map[string]interface{})
 	}
 	units, _ := systemd["units"].([]interface{})
-	units = append(units, map[string]interface{}{
-		"name":     s.Source,
-		"enabled":  s.Enabled,
-		"contents": string(data),
-	})
+
+	var unit map[string]interface{}
+
+	if s.Mask {
+		unit = map[string]interface{}{
+			"name": s.Name,
+			"mask": s.Mask,
+		}
+	} else {
+		data, err := ioutil.ReadFile(filepath.Join(b.baseDir, baseSystemdDir, s.Name))
+		if err != nil {
+			return err
+		}
+		unit = map[string]interface{}{
+			"name":     s.Name,
+			"enabled":  s.Enabled,
+			"contents": string(data),
+		}
+	}
+
+	units = append(units, unit)
 	systemd["units"] = units
 	b.ignition["systemd"] = systemd
 

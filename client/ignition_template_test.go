@@ -1,6 +1,7 @@
 package client
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -14,13 +15,13 @@ func testIgnitionBuilderConstructIgnitionYAML(t *testing.T) {
 	}{
 		{name: "passwd", source: &ignitionSource{Passwd: "../base/passwd.yml"}, wantErr: false},
 		{name: "files", source: &ignitionSource{Files: []string{"/etc/hostname"}}, wantErr: false},
-		{name: "systemd", source: &ignitionSource{Systemd: []systemd{{Source: "bird.service"}}}, wantErr: false},
+		{name: "systemd", source: &ignitionSource{Systemd: []systemd{{Name: "bird.service"}}}, wantErr: false},
 		{name: "networkd", source: &ignitionSource{Networkd: []string{"10-node0.netdev"}}, wantErr: false},
 		{name: "include yml from different working directory", source: &ignitionSource{Include: "../base/base.yml"}, wantErr: false},
 
 		{name: "passwd not found", source: &ignitionSource{Passwd: "nonexists_file.yml"}, wantErr: true},
 		{name: "files not found", source: &ignitionSource{Files: []string{"/etc/not_file"}}, wantErr: true},
-		{name: "systemd not found", source: &ignitionSource{Systemd: []systemd{{Source: "hoge.service"}}}, wantErr: true},
+		{name: "systemd not found", source: &ignitionSource{Systemd: []systemd{{Name: "hoge.service"}}}, wantErr: true},
 		{name: "networkd not found", source: &ignitionSource{Networkd: []string{"nonexists.netdev"}}, wantErr: true},
 		{name: "include not found", source: &ignitionSource{Include: "nonexits_base.yml"}, wantErr: true},
 	}
@@ -55,23 +56,46 @@ func testIgnitionBuilderConstructFile(t *testing.T) {
 
 func testIgnitionBuilderConstructSystemd(t *testing.T) {
 	b := newIgnitionBuilder("../testdata/test")
-	s := systemd{true, "bird.service"}
-	err := b.constructSystemd(s)
+	bird := systemd{Name: "bird.service", Enabled: true}
+	err := b.constructSystemd(bird)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = b.constructSystemd(s)
+	err = b.constructSystemd(bird)
 	if err != nil {
 		t.Fatal(err)
-	}
-	systemd, ok := b.ignition["systemd"].(map[string]interface{})
-	if !ok {
-		t.Fatal("failed to construct ignition map")
 	}
 
-	actual := len(systemd["units"].([]interface{}))
-	if actual != 2 {
-		t.Errorf("Should not overwrite units, so expected length:%d, actual %d", 2, actual)
+	updateEngine := systemd{Name: "update-engine.service", Mask: true}
+	err = b.constructSystemd(updateEngine)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedBird := `[Unit]
+Description=bird
+`
+	expected := map[string]interface{}{
+		"units": []interface{}{
+			map[string]interface{}{
+				"name":     "bird.service",
+				"enabled":  true,
+				"contents": expectedBird,
+			},
+			map[string]interface{}{
+				"name":     "bird.service",
+				"enabled":  true,
+				"contents": expectedBird,
+			},
+			map[string]interface{}{
+				"name": "update-engine.service",
+				"mask": true,
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(b.ignition["systemd"], expected) {
+		t.Error("b.ignition['systemd'] is not expected: ", b.ignition["systemd"])
 	}
 }
 
@@ -122,7 +146,7 @@ func testIgnitionBuilderConstructPasswd(t *testing.T) {
 func testIgnitionBuilderConstructInclude(t *testing.T) {
 	b := newIgnitionBuilder("../testdata/test")
 
-	err := b.constructIgnitionYAML(&ignitionSource{Systemd: []systemd{{Source: "bird.service"}}, Include: "../base/base.yml"})
+	err := b.constructIgnitionYAML(&ignitionSource{Systemd: []systemd{{Name: "bird.service"}}, Include: "../base/base.yml"})
 	if err != nil {
 		t.Fatal(err)
 	}
