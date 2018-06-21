@@ -24,6 +24,8 @@ func testIgnitionBuilderConstructIgnitionYAML(t *testing.T) {
 		{name: "systemd not found", source: &ignitionSource{Systemd: []systemd{{Name: "hoge.service"}}}, wantErr: true},
 		{name: "networkd not found", source: &ignitionSource{Networkd: []string{"nonexists.netdev"}}, wantErr: true},
 		{name: "include not found", source: &ignitionSource{Include: "nonexits_base.yml"}, wantErr: true},
+
+		{name: "name not found", source: &ignitionSource{Systemd: []systemd{{Enabled: true}}}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

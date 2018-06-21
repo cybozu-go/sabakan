@@ -203,6 +203,10 @@ func (b *ignitionBuilder) constructFile(inputFile string) error {
 }
 
 func (b *ignitionBuilder) constructSystemd(s systemd) error {
+	if len(s.Name) == 0 {
+		return errors.New("name: is not defined in systemd field")
+	}
+
 	systemd, ok := b.ignition["systemd"].(map[string]interface{})
 	if !ok {
 		systemd = make(map[string]interface{})
