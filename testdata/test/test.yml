@@ -2,7 +2,9 @@ include: ../base/base.yml
 files:
   - /etc/hostname
 systemd:
-  - enabled: false
-    source: bird.service
+  - name: bird.service
+    enabled: false
+  - name: update-engine.service
+    mask: true
 networkd:
   - 10-node0.netdev
