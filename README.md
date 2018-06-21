@@ -77,6 +77,7 @@ License
 
 Sabakan is licensed under MIT license.
 
+[releases]: https://github.com/cybozu-go/sabakan/releases
 [godoc]: https://godoc.org/github.com/cybozu-go/sabakan
 [etcd]: https://coreos.com/etcd/
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
