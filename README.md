@@ -1,3 +1,4 @@
+[![GitHub release](https://img.shields.io/github/release/cybozu-go/sabakan.svg?maxAge=60)][releases]
 [![CircleCI](https://circleci.com/gh/cybozu-go/sabakan.svg?style=svg)](https://circleci.com/gh/cybozu-go/sabakan)
 [![GoDoc](https://godoc.org/github.com/cybozu-go/sabakan?status.svg)][godoc]
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/sabakan)](https://goreportcard.com/report/github.com/cybozu-go/sabakan)
@@ -5,7 +6,7 @@
 Sabakan
 =======
 
-![sabakan architecture](http://www.plantuml.com/plantuml/svg/TP3DIWCn58NtUOh32EukWtPNH4frqOMBWds1T7BxWvca93Tr8RwxYI4w3hZ9uhjVphd9AeeEaaQh0W-YtT4oEfR1OB0f2eSE7memMlHUHqOPtSt1_HmiCb2eCiZuTqTLdC4cro68B1-46lvKqwNMtWjUELpRJh-pc9lVjCFDo_buahLDh7wA7cfcSrhNFtmnvsK9vqtkBsUd_fOEOgUb3H65meWUMymIsfYUpLdwmAE_CafSJQPqcOhFcwSjRh7PxROu-82zzwBQ2xDOxYmHJqdA5_Q1luKLEvD6-mK0)
+![sabakan architecture](http://www.plantuml.com/plantuml/svg/ZOv1ImCn58Jl-HL32zv2wUvDH4eLseE7Wlq3hvlNMimcahnKHFplIcAqIrtmai1yysPc4OM2fDwgm9sGErZ6XAKpw6oAmc62TmKO4jfHP6H4CV_pCT2CWLO12kKOslXNfyi1fgj0Rt-XTe0QQ6rvBte8FzJv_ANtWaSEfxh-bqNQqJCvJ1-EXoTPsiJgf_Ic95TFRHpHsmlzQuJpXf4VYlcVNqgD6ixfn7xFMGLcfwfMqczh_3N8c1cReym2z_vKGbKkWKulvyxxzTq6LrXljnliVS3EUydEvb_E1JkJUli9)
 <!-- go to http://www.plantuml.com/plantuml/ and enter the above URL to edit the diagram. -->
 
 Sabakan is an integration service to automate bare-metal server management.
@@ -13,8 +14,8 @@ It uses [etcd][] as a backend datastore for strong consistency and high availabi
 
 **Project Status**: Initial development.
 
-Planned features
-----------------
+Features
+--------
 
 * High availability
 
@@ -22,35 +23,36 @@ Planned features
     strong consistency.  For instance, DHCP lease information are shared
     among sabakan instances to avoid conflicts.
 
-* Server inventory
+* Machine inventory / IP address management (IPAM)
 
-    Servers in a data center can be registered with sabakan's inventory.
-    In addition, sabakan assigns IP addresses automatically to servers.
+    Machines in a data center can be registered with sabakan's inventory.
+    In addition, sabakan assigns IP addresses automatically to machines.
 
 * DHCP service
 
-    Sabakan provides DHCP server service for network boot of servers.
-    The DHCP implementation is primarily for [UEFI HTTP Boot][HTTPBoot].
+    Sabakan provides DHCP service that supports [UEFI HTTP Boot][HTTPBoot]
+    and [iPXE][] HTTP Boot.
 
 * HTTP service
 
-    Sabakan provides HTTP service for network boot of servers.
+    Sabakan serves OS images to machines via HTTP.
 
 * Encryption key store
 
-    Server storages often need to be encrypted.
-    Sabakan provides REST API to store and retrieve encryption keys.
+    Sabakan provides REST API to store and retrieve encryption keys
+    to help automated disk encryption/decryption.
 
-* Server life-cycle management
+* Life-cycle management
 
     Sabakan provides API to change server status for life-cycle management.
 
-* Asset management
+* Distributed asset management
 
     In order to help initialization of client servers, sabakan can work
     as a file server from which clients can download assets via HTTP.
+    Assets are automatically synchronized between sabakan servers.
 
-* Logs
+* Audit logs
 
     To track problems and life-cycle events, sabakan keeps operation logs
     within its etcd storage.
@@ -78,3 +80,4 @@ Sabakan is licensed under MIT license.
 [godoc]: https://godoc.org/github.com/cybozu-go/sabakan
 [etcd]: https://coreos.com/etcd/
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
+[iPXE]: https://ipxe.org/
