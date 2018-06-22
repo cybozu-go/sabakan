@@ -735,10 +735,12 @@ Retrieve logs as [JSONLines](http://jsonlines.org/).
 Each line represents an audit log entry as described in [audit log](audit.md).
 
 If no URL parameter is given, this returns all logs stored in etcd.
-Following parameters may be specified to limit the response:
+Following parameters can be specified to limit the response:
 
 * `since=YYYYMMDD`: retrieve logs after `YYYYMMDD`.
 * `until=YYYYMMDD`: retrieve logs before `YYYYMMDD`.
+
+The dates are interpreted in UTC timezone.
 
 ### Example:
 

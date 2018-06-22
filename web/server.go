@@ -93,6 +93,8 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 		s.handleIgnitionTemplates(w, r)
 	case p == "images/coreos" || strings.HasPrefix(p, "images/coreos/"):
 		s.handleImages(w, r)
+	case p == "logs":
+		s.handleLogs(w, r)
 	case strings.HasPrefix(p, "machines"):
 		s.handleMachines(w, r)
 	case strings.HasPrefix(p, "state/"):
@@ -100,7 +102,6 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	default:
 		renderError(r.Context(), w, APIErrNotFound)
 	}
-
 }
 
 // hasPermission returns true if the request has a permission to the resource
