@@ -32,6 +32,7 @@ REST API
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
+* [GET /api/v1/logs](#getlogs)
 
 ## Access control
 
@@ -727,3 +728,20 @@ Content-Length: 18
 - The machine is not found.
 
     HTTP status code: 404 Not Found
+
+## <a name="getlogs" />`GET /api/v1/logs`
+
+Retrieve logs as [JSONLines](http://jsonlines.org/).
+Each line represents an audit log entry as described in [audit log](audit.md).
+
+If no URL parameter is given, this returns all logs stored in etcd.
+Following parameters may be specified to limit the response:
+
+* `since=YYYYMMDD`: retrieve logs after `YYYYMMDD`.
+* `until=YYYYMMDD`: retrieve logs before `YYYYMMDD`.
+
+### Example:
+
+`GET /api/v1/logs?since=20180404&until=20180407` retrieves logs generated on
+2018-04-04, 2018-04-05, and 2018-04-06.  Note that the date specified for
+`until` is not included.
