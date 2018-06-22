@@ -16,6 +16,8 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 	}
 	copied := *config
 	d.ipam = &copied
+	d.log = sabakan.NewAuditLog(ctx, 1, sabakan.AuditIPAM, "config", "put", "test")
+
 	return nil
 }
 

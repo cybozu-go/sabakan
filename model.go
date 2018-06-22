@@ -89,6 +89,11 @@ type IgnitionModel interface {
 	DeleteTemplate(ctx context.Context, role string, id string) error
 }
 
+// LogModel is an interface for audit logs.
+type LogModel interface {
+	Dump(ctx context.Context, since, until time.Time, w io.Writer) error
+}
+
 // Runner is an interface to run the underlying threads.
 //
 // The caller must pass a channel as follows.
@@ -114,4 +119,5 @@ type Model struct {
 	Image    ImageModel
 	Asset    AssetModel
 	Ignition IgnitionModel
+	Log      LogModel
 }

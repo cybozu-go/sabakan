@@ -1,13 +1,28 @@
 package web
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/cybozu-go/sabakan"
 )
+
+const (
+	// HeaderSabactlUser is the HTTP header name to tell which user run sabactl.
+	HeaderSabactlUser = "X-Sabakan-User"
+)
+
+var (
+	hostnameAtStartup string
+)
+
+func init() {
+	hostnameAtStartup, _ = os.Hostname()
+}
 
 // Server is the sabakan server.
 type Server struct {
@@ -27,6 +42,28 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	renderError(r.Context(), w, APIErrNotFound)
 }
 
+func auditContext(r *http.Request) context.Context {
+	ctx := r.Context()
+
+	u := r.Header.Get(HeaderSabactlUser)
+	if len(u) > 0 {
+		ctx = context.WithValue(ctx, sabakan.AuditKeyUser, u)
+	}
+
+	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+	if len(ip) > 0 {
+		ctx = context.WithValue(ctx, sabakan.AuditKeyIP, ip)
+	}
+
+	if len(hostnameAtStartup) > 0 {
+		ctx = context.WithValue(ctx, sabakan.AuditKeyHost, hostnameAtStartup)
+	} else {
+		ctx = context.WithValue(ctx, sabakan.AuditKeyHost, r.Host)
+	}
+
+	return ctx
+}
+
 func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 	p := r.URL.Path[len("/api/v1/"):]
 
@@ -34,6 +71,8 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 		renderError(r.Context(), w, APIErrForbidden)
 		return
 	}
+
+	r = r.WithContext(auditContext(r))
 
 	switch {
 	case p == "assets" || strings.HasPrefix(p, "assets/"):
