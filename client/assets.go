@@ -15,7 +15,7 @@ import (
 // AssetsIndex retrieves index of assets
 func AssetsIndex(ctx context.Context) ([]string, *Status) {
 	var index []string
-	err := client.getJSON(ctx, "/assets", nil, &index)
+	err := client.getJSON(ctx, "assets", nil, &index)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func AssetsIndex(ctx context.Context) ([]string, *Status) {
 // AssetsInfo retrieves meta data of an asset
 func AssetsInfo(ctx context.Context, name string) (*sabakan.Asset, *Status) {
 	var asset sabakan.Asset
-	err := client.getJSON(ctx, path.Join("/assets", name, "meta"), nil, &asset)
+	err := client.getJSON(ctx, path.Join("assets", name, "meta"), nil, &asset)
 	if err != nil {
 		return nil, err
 	}
@@ -71,37 +71,27 @@ func AssetsUpload(ctx context.Context, name, filename string) (*sabakan.AssetSta
 		return nil, ErrorStatus(err)
 	}
 
-	req, err := http.NewRequest("PUT", client.endpoint+path.Join("/api/v1/assets", name), file)
-	if err != nil {
-		return nil, ErrorStatus(err)
-	}
-	req = req.WithContext(ctx)
-
+	req := client.NewRequest(ctx, "PUT", "assets/"+name, file)
 	req.ContentLength = size
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Expect", "100-continue")
 
-	res, err := client.http.Do(req)
-	if err != nil {
-		return nil, ErrorStatus(err)
+	resp, status := client.Do(req)
+	if status != nil {
+		return nil, status
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	errorStatus := ErrorHTTPStatus(res)
-	if errorStatus != nil {
-		return nil, errorStatus
-	}
-
-	var status sabakan.AssetStatus
-	err = json.NewDecoder(res.Body).Decode(&status)
+	var result sabakan.AssetStatus
+	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		return nil, ErrorStatus(err)
 	}
 
-	return &status, nil
+	return &result, nil
 }
 
 // AssetsDelete deletes an asset
 func AssetsDelete(ctx context.Context, name string) *Status {
-	return client.sendRequest(ctx, "DELETE", path.Join("/assets", name))
+	return client.sendRequest(ctx, "DELETE", path.Join("assets", name), nil)
 }

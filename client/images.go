@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"net/http"
 	"os"
 	"path"
 
@@ -16,7 +15,7 @@ import (
 // ImagesIndex get index of images.
 func ImagesIndex(ctx context.Context, os string) (sabakan.ImageIndex, *Status) {
 	var index sabakan.ImageIndex
-	err := client.getJSON(ctx, path.Join("/images", os), nil, &index)
+	err := client.getJSON(ctx, "images/"+os, nil, &index)
 	if err != nil {
 		return nil, err
 	}
@@ -29,21 +28,8 @@ func ImagesUpload(ctx context.Context, os, id, kernel, initrd string) *Status {
 	if err != nil {
 		return ErrorStatus(err)
 	}
-	req, err := http.NewRequest("PUT", client.endpoint+path.Join("/api/v1/images/", os, id), reader)
-	if err != nil {
-		return ErrorStatus(err)
-	}
 
-	res, err := client.http.Do(req)
-	if err != nil {
-		return ErrorStatus(err)
-	}
-	res.Body.Close()
-	errorStatus := ErrorHTTPStatus(res)
-	if errorStatus != nil {
-		return errorStatus
-	}
-	return nil
+	return client.sendRequest(ctx, "PUT", path.Join("images", os, id), reader)
 }
 
 func addFileToTar(tw *tar.Writer, name, p string) error {
@@ -94,5 +80,5 @@ func createImageArchive(kernelPath, initrdPath string) (io.Reader, error) {
 
 // ImagesDelete deletes image file.
 func ImagesDelete(ctx context.Context, os, id string) *Status {
-	return client.sendRequest(ctx, "DELETE", path.Join("/images", os, id))
+	return client.sendRequest(ctx, "DELETE", path.Join("images", os, id), nil)
 }

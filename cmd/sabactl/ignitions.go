@@ -68,13 +68,8 @@ func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		f.Usage()
 		return client.ExitUsageError
 	}
-	tmpl, status := client.IgnitionsCat(ctx, f.Arg(0), f.Arg(1))
-	if status != nil {
-		return handleError(status)
-	}
-
-	_, err := os.Stdout.WriteString(tmpl)
-	return handleError(err)
+	status := client.IgnitionsCat(ctx, f.Arg(0), f.Arg(1), os.Stdout)
+	return handleError(status)
 }
 
 func ignitionsCatCommand() subcommands.Command {
@@ -100,11 +95,8 @@ func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomma
 		return client.ExitUsageError
 	}
 
-	_, err := client.IgnitionsSet(ctx, f.Arg(0), c.file)
-	if err != nil {
-		return handleError(err)
-	}
-	return client.ExitSuccess
+	err := client.IgnitionsSet(ctx, f.Arg(0), c.file)
+	return handleError(err)
 }
 
 func ignitionsSetCommand() subcommands.Command {

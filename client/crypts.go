@@ -1,21 +1,23 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"path"
 )
 
-// CryptsGet get crypt key bytes from sabakan server
+// CryptsGet gets an encryption key from sabakan server.
 func CryptsGet(ctx context.Context, serial, device string) ([]byte, *Status) {
-	return client.getBytes(ctx, path.Join("/crypts", serial, device))
+	return client.getBytes(ctx, path.Join("crypts", serial, device))
 }
 
-// CryptsPut create the crypt key to sabakan server
+// CryptsPut puts an encryption key to sabakan server.
 func CryptsPut(ctx context.Context, serial, device string, key []byte) *Status {
-	return client.sendRequestWithBytes(ctx, "PUT", path.Join("/crypts", serial, device), key)
+	r := bytes.NewReader(key)
+	return client.sendRequest(ctx, "PUT", path.Join("crypts", serial, device), r)
 }
 
-// CryptsDelete remove the all crypt keys specified serial
+// CryptsDelete removes all encryption keys of the machine specified by serial.
 func CryptsDelete(ctx context.Context, serial string) *Status {
-	return client.sendRequest(ctx, "DELETE", path.Join("/crypts", serial))
+	return client.sendRequest(ctx, "DELETE", path.Join("crypts", serial), nil)
 }

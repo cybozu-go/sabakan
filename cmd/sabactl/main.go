@@ -30,10 +30,13 @@ func main() {
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
 
-	client.Setup(*flagServer, &cmd.HTTPClient{
+	err := client.Setup(*flagServer, &cmd.HTTPClient{
 		Severity: log.LvDebug,
 		Client:   &http.Client{},
 	})
+	if err != nil {
+		log.ErrorExit(err)
+	}
 
 	exitStatus := subcommands.ExitSuccess
 	cmd.Go(func(ctx context.Context) error {
