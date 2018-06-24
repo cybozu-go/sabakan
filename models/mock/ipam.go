@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"time"
 
 	"github.com/cybozu-go/sabakan"
 	"github.com/pkg/errors"
@@ -16,7 +17,8 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 	}
 	copied := *config
 	d.ipam = &copied
-	d.log = sabakan.NewAuditLog(ctx, 1, sabakan.AuditIPAM, "config", "put", "test")
+	d.log = sabakan.NewAuditLog(ctx, time.Now().UTC(), 1, sabakan.AuditIPAM,
+		"config", "put", "test")
 
 	return nil
 }

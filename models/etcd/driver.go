@@ -42,6 +42,7 @@ func NewModel(client *clientv3.Client, dataDir string, advertiseURL *url.URL) sa
 		DHCP:     dhcpDriver{d},
 		Image:    imageDriver{d},
 		Asset:    assetDriver{d},
+		Log:      logDriver{d},
 		Ignition: d,
 	}
 }
@@ -97,6 +98,9 @@ func (d *driver) Run(ctx context.Context, ch chan<- struct{}) error {
 	env.Go(func(ctx context.Context) error {
 		return d.startAssetUpdater(ctx, epCh)
 	})
+
+	// log compaction
+	env.Go(d.logCompactor)
 
 	env.Stop()
 

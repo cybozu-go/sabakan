@@ -1,5 +1,7 @@
 package etcd
 
+import "time"
+
 // Internal schema keys.
 const (
 	KeyCrypts      = "crypts/"
@@ -12,6 +14,8 @@ const (
 	KeyAssets      = "assets/"
 	KeyAssetsID    = "assets"
 	KeyIgnitions   = "ignitions/"
+	KeyAudit       = "audit/"
+	KeyAuditLastGC = "audit"
 )
 
 // MaxDeleted is the maximum number of deleted image IDs stored in etcd.
@@ -27,4 +31,12 @@ const (
 	maxJitterSeconds = 30
 	maxAssetURLs     = 10
 	maxImageURLs     = 10
+)
+
+// Log parameters
+const (
+	logRetentionDays      = 60
+	logCompactionTick     = 1 * time.Hour
+	logCompactionInterval = 23 * time.Hour
+	logPageSize           = 100
 )
