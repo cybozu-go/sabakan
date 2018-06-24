@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"bufio"
 	"bytes"
 	"io/ioutil"
 	"log"
@@ -122,9 +121,10 @@ func runSabakan() (func(), error) {
 }
 
 func runSabactl(args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
-	var stdout, stderr bytes.Buffer
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
 	command := exec.Command("../sabactl", args...)
-	command.Stdout = bufio.NewWriter(&stdout)
-	command.Stderr = bufio.NewWriter(&stderr)
-	return &stdout, &stderr, command.Run()
+	command.Stdout = stdout
+	command.Stderr = stderr
+	return stdout, stderr, command.Run()
 }
