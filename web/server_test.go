@@ -1,12 +1,18 @@
 package web
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/models/mock"
 )
 
@@ -26,11 +32,7 @@ func testHandleAPIV1(t *testing.T) {
 	}
 }
 
-func TestServeHTTP(t *testing.T) {
-	t.Run("APIV1", testHandleAPIV1)
-}
-
-func TestHandlePermission(t *testing.T) {
+func testHandlePermission(t *testing.T) {
 	t.Parallel()
 
 	_, ipnet, err := net.ParseCIDR("127.0.0.1/32")
@@ -74,4 +76,83 @@ func TestHandlePermission(t *testing.T) {
 			t.Errorf("hasPermission(r) == true; r=%v", c)
 		}
 	}
+}
+
+func testAuditContext(t *testing.T) {
+	t.Parallel()
+
+	m := mock.NewModel()
+	handler := newTestServer(m)
+
+	good := `
+{
+   "max-nodes-in-rack": 28,
+   "node-ipv4-pool": "10.69.0.0/20",
+   "node-ipv4-range-size": 6,
+   "node-ipv4-range-mask": 26,
+   "node-index-offset": 3,
+   "node-ip-per-node": 3,
+   "bmc-ipv4-pool": "10.72.16.0/20",
+   "bmc-ipv4-range-size": 5,
+   "bmc-ipv4-range-mask": 20
+}
+`
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("PUT", "/api/v1/config/ipam", strings.NewReader(good))
+	handler.ServeHTTP(w, r)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
+	}
+
+	buf := new(bytes.Buffer)
+	err := m.Log.Dump(context.Background(), time.Time{}, time.Time{}, buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a := new(sabakan.AuditLog)
+	err = json.Unmarshal(buf.Bytes(), a)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if a.IP != "192.0.2.1" {
+		t.Error(`a.IP != "192.0.2.1"`, a.IP)
+	}
+	if a.Category != sabakan.AuditIPAM {
+		t.Error(`a.Category != sabakan.AuditIPAM`, a.Category)
+	}
+	if a.User != "" {
+		t.Error(`a.User != ""`, a.User)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/config/ipam", strings.NewReader(good))
+	r.Header.Set(HeaderSabactlUser, "cybozu")
+	handler.ServeHTTP(w, r)
+
+	buf.Reset()
+	err = m.Log.Dump(context.Background(), time.Time{}, time.Time{}, buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	a = new(sabakan.AuditLog)
+	err = json.Unmarshal(buf.Bytes(), a)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if a.User != "cybozu" {
+		t.Error(`a.User != "cybozu"`, a.User)
+	}
+}
+
+func TestServeHTTP(t *testing.T) {
+	t.Run("APIV1", testHandleAPIV1)
+	t.Run("Permission", testHandlePermission)
+	t.Run("AuditContext", testAuditContext)
 }

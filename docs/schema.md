@@ -104,3 +104,18 @@ The value is a list of assigned indices formatted in JSON.
 $ etcdctl get "/sabakan/node-indices/0"
 [3, 4, 5]
 ```
+
+`<prefix>/audit/<YYYYMMDD>/<16-digit HEX string>`
+------------------------------------------------
+
+Each entry of audit log is stored with this type of key.
+The value is JSON having fields defined in [audit log](audit.md).
+
+* `<YYYYMMDD>` is the date of the event.
+* `<16-digit HEX string>` is the hexadecimal representation of the event revision.
+
+`<prefix>/audit`
+----------------
+
+This key stores RFC3339-format timestamp to record the last compaction
+of audit logs.

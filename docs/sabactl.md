@@ -215,3 +215,16 @@ Delete a ignition template for a certain role.
 ```console
 $ sabactl ignitions delete <role> <id>
 ```
+
+`sabactl log [-json] [START_DATE] [END_DATE]`
+-------------------------------------
+
+Retrieve [audit logs](audit.md) and output them to stdout.
+
+If `-json` is given, each log entry will be displayed in JSON.
+
+If `START_DATE` is given, and `END_DATE` is *not* given, logs
+of `START_DATE` are retrieved.
+
+If `START_DATE` and `END_DATE` is given, logs between them are
+retrieved.

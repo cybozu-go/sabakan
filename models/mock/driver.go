@@ -14,6 +14,7 @@ type driver struct {
 	ipam     *sabakan.IPAMConfig
 	machines map[string]*sabakan.Machine
 	storage  map[string][]byte
+	log      *sabakan.AuditLog
 }
 
 // NewModel returns sabakan.Model
@@ -31,6 +32,7 @@ func NewModel() sabakan.Model {
 		Image:    newImageDriver(),
 		Asset:    newAssetDriver(),
 		Ignition: newIgnitionDriver(),
+		Log:      logDriver{d},
 	}
 }
 
