@@ -22,7 +22,7 @@ Environment variable | Default value | Description
 
 Prepare encryption disks which are detected on the system.
 `DISK_PATH_PATTERN` finds device file path under `/dev/disk/by-path`.
-Detected disks will be encrypted or decrypted using keys where store on `sabakan`.
+Detected disks will be encrypted and/or decrypted using keys where store on `sabakan`. See [details](disk_encryption.md).
 
 ```console
 $ sabakan-cryptsetup virtio-pci-*
