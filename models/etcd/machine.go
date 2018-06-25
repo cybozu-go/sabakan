@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"path"
+	"strings"
+	"time"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
@@ -37,6 +39,13 @@ RETRY:
 		// inner If, i.e. conflictMachinesIfOps, evaluated to false
 		return sabakan.ErrConflicted
 	}
+
+	serials := make([]string, len(machines))
+	for i, m := range machines {
+		serials[i] = m.Spec.Serial
+	}
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditMachines, "", "register",
+		strings.Join(serials, "\n"))
 
 	return nil
 }
@@ -126,6 +135,9 @@ RETRY:
 	if !tresp.Succeeded {
 		goto RETRY
 	}
+
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditMachines, serial,
+		"state", state.String())
 	return nil
 }
 
@@ -206,6 +218,9 @@ RETRY:
 	if !resp.Succeeded {
 		goto RETRY
 	}
+
+	d.addLog(ctx, time.Now(), resp.Header.Revision, sabakan.AuditMachines, serial,
+		"delete", "")
 
 	return nil
 }

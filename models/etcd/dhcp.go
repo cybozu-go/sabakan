@@ -20,8 +20,15 @@ func (d *driver) putDHCPConfig(ctx context.Context, config *sabakan.DHCPConfig) 
 		return err
 	}
 
-	_, err = d.client.Put(ctx, KeyDHCP, string(j))
-	return err
+	sj := string(j)
+	resp, err := d.client.Put(ctx, KeyDHCP, sj)
+	if err != nil {
+		return err
+	}
+
+	d.addLog(ctx, time.Now(), resp.Header.Revision,
+		sabakan.AuditDHCP, "config", "put", sj)
+	return nil
 }
 
 func (d *driver) getDHCPConfig() (*sabakan.DHCPConfig, error) {

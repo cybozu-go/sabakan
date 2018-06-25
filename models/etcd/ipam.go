@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
@@ -16,9 +17,10 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 		return err
 	}
 
+	sj := string(j)
 	tresp, err := d.client.Txn(ctx).
 		If(clientv3util.KeyMissing(KeyMachines).WithPrefix()).
-		Then(clientv3.OpPut(KeyIPAM, string(j))).
+		Then(clientv3.OpPut(KeyIPAM, sj)).
 		Else().
 		Commit()
 	if err != nil {
@@ -28,6 +30,8 @@ func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) 
 	if !tresp.Succeeded {
 		return errors.New("machines already exists")
 	}
+
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditIPAM, "config", "put", sj)
 
 	return nil
 }

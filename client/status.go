@@ -71,7 +71,7 @@ func ErrorHTTPStatus(res *http.Response) *Status {
 		var msg map[string]interface{}
 		err = json.Unmarshal(body, &msg)
 		if err != nil {
-			return ErrorStatus(err)
+			return ErrorStatus(errors.New(string(body)))
 		}
 		errmsg = fmt.Sprintf("%s, %s", errmsg, msg[log.FnError])
 

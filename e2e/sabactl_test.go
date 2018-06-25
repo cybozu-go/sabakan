@@ -519,6 +519,73 @@ func testSabactlIgnitions(t *testing.T) {
 	}
 }
 
+func testSabactlLogs(t *testing.T) {
+	stdout, stderr, err := runSabactl("logs")
+	code := exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
+	newlines := bytes.Count(stdout.Bytes(), []byte{'\n'})
+	if newlines <= 0 {
+		t.Fatal(`newlines <= 0`, newlines)
+	}
+
+	a := new(sabakan.AuditLog)
+	line, err := stdout.ReadBytes('\n')
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = json.Unmarshal(line, a)
+	if err == nil {
+		t.Error("the response should not be JSON")
+	}
+
+	stdout, stderr, err = runSabactl("logs", "-json")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
+	newlines2 := bytes.Count(stdout.Bytes(), []byte{'\n'})
+
+	if newlines != newlines2 {
+		t.Fatal(`newlines != newlines2`, newlines, newlines2)
+	}
+
+	line, err = stdout.ReadBytes('\n')
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = json.Unmarshal(line, a)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.Category != sabakan.AuditDHCP {
+		t.Error(`a.Category != sabakan.AuditDHCP`, a.Category)
+	}
+
+	now := time.Now().UTC()
+	tommorow := now.Add(24 * time.Hour)
+	stdout, stderr, err = runSabactl("logs", tommorow.Format("20060102"))
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
+	newlines3 := bytes.Count(stdout.Bytes(), []byte{'\n'})
+	if newlines3 != 0 {
+		t.Log("stdout:", stdout.String())
+		t.Error(`newlines != 0`, newlines3)
+	}
+}
+
 func TestSabactl(t *testing.T) {
 	_, err := os.Stat("../sabactl")
 	if err != nil {
@@ -530,4 +597,5 @@ func TestSabactl(t *testing.T) {
 	t.Run("Images", testSabactlImages)
 	t.Run("Assets", testSabactlAssets)
 	t.Run("Ignitions", testSabactlIgnitions)
+	t.Run("Logs", testSabactlLogs)
 }

@@ -117,12 +117,13 @@ func (d *driver) assetPut(ctx context.Context, name, contentType string, csum []
 		return nil, err
 	}
 
+	hsumString := hex.EncodeToString(hsum)
 	a := &sabakan.Asset{
 		Name:        name,
 		ID:          id,
 		ContentType: contentType,
 		Date:        time.Now().UTC(),
-		Sha256:      hex.EncodeToString(hsum),
+		Sha256:      hsumString,
 		URLs:        []string{d.myURL("/api/v1/assets", name)},
 	}
 	data, err := json.Marshal(a)
@@ -154,6 +155,9 @@ func (d *driver) assetPut(ctx context.Context, name, contentType string, csum []
 		dir.Remove(id)
 		return nil, sabakan.ErrConflicted
 	}
+
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditAssets,
+		name, "put", "new checksum: "+hsumString)
 
 	return &sabakan.AssetStatus{
 		Status: retStatus,
@@ -209,6 +213,9 @@ func (d *driver) assetDelete(ctx context.Context, name string) error {
 	if !resp.Succeeded {
 		return sabakan.ErrNotFound
 	}
+
+	d.addLog(ctx, time.Now(), resp.Header.Revision, sabakan.AuditAssets, name, "delete", "")
+
 	return nil
 }
 

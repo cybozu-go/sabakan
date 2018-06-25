@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"fmt"
 	"path"
 	"strconv"
 	"time"
@@ -32,6 +33,9 @@ RETRY:
 		time.Sleep(1 * time.Nanosecond)
 		goto RETRY
 	}
+
+	d.addLog(ctx, now, tresp.Header.Revision, sabakan.AuditIgnition, role, "put",
+		fmt.Sprintf("id=%s\n%s", id, template))
 
 	prefix := path.Join(KeyIgnitions, role) + "/"
 	resp, err := d.client.Get(ctx, prefix,
@@ -103,6 +107,8 @@ func (d *driver) DeleteTemplate(ctx context.Context, role string, id string) err
 	if resp.Deleted == 0 {
 		return sabakan.ErrNotFound
 	}
+
+	d.addLog(ctx, time.Now(), resp.Header.Revision, sabakan.AuditIgnition, role, "delete", id)
 
 	return nil
 }

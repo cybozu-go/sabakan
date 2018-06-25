@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"path"
+	"time"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
@@ -62,6 +63,9 @@ RETRY:
 		return sabakan.ErrConflicted
 	}
 
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditCrypts, serial, "put",
+		diskByPath)
+
 	return nil
 }
 
@@ -103,6 +107,9 @@ RETRY:
 	if !resp.Succeeded {
 		goto RETRY
 	}
+
+	d.addLog(ctx, time.Now(), resp.Header.Revision, sabakan.AuditCrypts, serial, "delete",
+		"machine "+serial+" retired")
 
 	dresp := resp.Responses[0].GetResponseDeleteRange()
 

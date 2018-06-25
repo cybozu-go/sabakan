@@ -141,6 +141,9 @@ RETRY:
 		goto RETRY
 	}
 
+	d.addLog(ctx, time.Now(), resp.Header.Revision, sabakan.AuditImage, os, "upload",
+		"id="+id)
+
 	return nil
 }
 
@@ -209,6 +212,9 @@ RETRY:
 	if !resp.Succeeded {
 		goto RETRY
 	}
+
+	d.addLog(ctx, time.Now(), resp.Header.Revision, sabakan.AuditImage, os, "delete",
+		"id="+id)
 
 	return nil
 }
