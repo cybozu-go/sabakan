@@ -5,7 +5,7 @@ In order to mount encrypted disk, Sabakan provides `sabakan-cryptsetup` as follo
 
 * Sabakan keeps an `encryption key` for each disk which is specified by `sabakan-cryptsetup` argument.
 
-    Each node generates a pair of `64 byte` random keys. One is for [cryptsetup][], and another is to encrypt 
+    Each node generates a pair of `64 byte` random keys. One is for [cryptsetup][], and another is to encrypt
     the other by [one-time pad][]. The node keeps this latter key in the first sector of the metadata partition.
 
     The `encryption key` is stored `sabakan`. Hence, the node cannot decrypt its own storage data without `sabakan`, and vice versa.
@@ -15,7 +15,7 @@ In order to mount encrypted disk, Sabakan provides `sabakan-cryptsetup` as follo
 * Operators need to setup RAID, format filesystem, and mount disk after decrypt disks.
 
     Operators needs to prepare own scripts or systemd units to mount disks.
-    
+
 ## Crypt specs
 
 `sabakan-cryptsetup` uses [cryptsetup][] in plain mode, therefore, it is mostly raw dm-crypt.
@@ -50,8 +50,7 @@ In order to mount encrypted disk, Sabakan provides `sabakan-cryptsetup` as follo
 To deploy above procedure for nodes, Operator needs to prepare systemd unit files by Ignition. For example,
 
 - `sabakan-cryptsetup.service` ... An oneshot service executes `sabakan-cryptsetup` to create a device mapper.
-- `var-setup.service` ... Create a filesystem.
-- `var.mount` ... Mount a device mapper.
+- `setup-disk.service` ... Create a filesystem, then mount a device mapper.
 
 [dm-crypt]: https://gitlab.com/cryptsetup/cryptsetup/wikis/DMCrypt
 [one-time pad]: https://en.wikipedia.org/wiki/One-time_pad
