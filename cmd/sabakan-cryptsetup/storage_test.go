@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -98,6 +99,29 @@ func testDetectStorageDevices(t *testing.T) {
 	}
 }
 
+func allZero(b []byte) bool {
+	for _, c := range b {
+		if c != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func xorBytes(a, b []byte) []byte {
+	l := len(a)
+	if l > len(b) {
+		l = len(b)
+	}
+
+	ret := make([]byte, l)
+	for i := 0; i < l; i++ {
+		ret[i] = a[i] ^ b[i]
+	}
+
+	return ret
+}
+
 func testEncrypt(t *testing.T) {
 	t.Parallel()
 
@@ -107,9 +131,10 @@ func testEncrypt(t *testing.T) {
 	}
 	defer os.RemoveAll(d)
 
-	deviceMap, _ := setupTestStorage(t, d)
+	deviceMap, testDevfs := setupTestStorage(t, d)
 
 	device := deviceMap["nvme-1"]
+	rand.Seed(1)
 	err = device.encrypt(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -117,8 +142,14 @@ func testEncrypt(t *testing.T) {
 	if device.id == nil {
 		t.Error("device ID not set")
 	}
+	if allZero(device.id) {
+		t.Error("device ID all zero")
+	}
 	if device.key == nil {
 		t.Error("device key not set")
+	}
+	if allZero(device.key) {
+		t.Error("device key all zero")
 	}
 
 	f, err := os.Open(device.byPath)
@@ -136,17 +167,65 @@ func testEncrypt(t *testing.T) {
 		t.Error("invalid magic:", readMagic)
 	}
 
-	readID := make([]byte, idBytes)
-	_, err = f.Seek(idOffset, 0)
+	readOpad := make([]byte, keyBytes)
+	_, err = io.ReadFull(f, readOpad)
 	if err != nil {
 		t.Fatal(err)
 	}
+	if allZero(readOpad) {
+		t.Error("opad all zero")
+	}
+	if allZero(xorBytes(readOpad, device.key)) {
+		t.Error("encryption key all zero")
+	}
+
+	readID := make([]byte, idBytes)
 	_, err = io.ReadFull(f, readID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(readID, device.id) {
 		t.Error("ID mismatch", readID, device.id)
+	}
+
+	device2 := deviceMap["nvme-2"]
+	rand.Seed(1)
+	err = device2.encrypt(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(device.id, device2.id) {
+		t.Error("device ID not random")
+	}
+
+	f2, err := os.Open(device2.byPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f2.Close()
+
+	readOpad2 := make([]byte, keyBytes)
+	_, err = f2.Seek(int64(len(magic)), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.ReadFull(f2, readOpad2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(readOpad, readOpad2) {
+		t.Error("opad not random")
+	}
+	if bytes.Equal(xorBytes(readOpad, device.key), xorBytes(readOpad2, device2.key)) {
+		t.Error("encryption key not random")
+	}
+
+	detected, err := testDevfs.detectStorageDevices(context.Background(), []string{"nvme-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(detected[0].id, readID) {
+		t.Error("failed to detect ID")
 	}
 }
 
