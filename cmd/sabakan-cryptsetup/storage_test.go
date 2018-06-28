@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -10,10 +11,12 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/cybozu-go/cmd"
 )
 
-const (
-	backingFileSize = 3 * 1024 * 1024 // >2MiB (metadata size)
+var (
+	backingFileSize = int64((offset + 1) * 512)
 )
 
 func createPseudoDevice(t *testing.T, dir, backing, device string, deviceMap map[string]*storageDevice) {
@@ -229,7 +232,84 @@ func testEncrypt(t *testing.T) {
 	}
 }
 
+type testCommander struct {
+	input []byte
+}
+
+func (c *testCommander) CommandContext(ctx context.Context, name string, args ...string) *cmd.LogCmd {
+	// cf. https://npf.io/2015/06/testing-exec-command/
+	testArgs := []string{"-test.run=TestHelperProcess", "--"}
+	testArgs = append(testArgs, args...)
+	command := cmd.CommandContext(ctx, os.Args[0], testArgs...)
+	command.Env = []string{"GO_EXPECTED_INPUT=" + hex.EncodeToString(c.input)}
+	return command
+}
+
+func TestHelperProcess(t *testing.T) {
+	expectedStr, found := os.LookupEnv("GO_EXPECTED_INPUT")
+	if !found {
+		return
+	}
+
+	expected, err := hex.DecodeString(expectedStr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	input := make([]byte, len(expected)+1)
+	n, err := io.ReadFull(os.Stdin, input)
+	if err != nil && err != io.ErrUnexpectedEOF {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(input[:n], expected) {
+		t.Error("wrong input")
+	}
+}
+
+func testDecrypt(t *testing.T) {
+	t.Parallel()
+
+	d, err := ioutil.TempDir("", "sabakan-cryptsetup-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(d)
+
+	deviceMap, _ := setupTestStorage(t, d)
+
+	device := deviceMap["nvme-1"]
+	err = device.encrypt(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	f, err := os.Open(device.byPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	opad := make([]byte, keyBytes)
+	_, err = f.Seek(int64(len(magic)), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.ReadFull(f, opad)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	commander := &testCommander{input: xorBytes(opad, device.key)}
+	device.CommandContext = commander.CommandContext
+
+	err = device.decrypt(context.Background())
+	if err != nil {
+		t.Error("decrypt failed, perhaps because of invalid key:", err)
+	}
+}
+
 func TestStorage(t *testing.T) {
 	t.Run("Detect", testDetectStorageDevices)
 	t.Run("Encrypt", testEncrypt)
+	t.Run("Decrypt", testDecrypt)
 }

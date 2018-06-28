@@ -18,10 +18,11 @@ import (
 )
 
 type storageDevice struct {
-	id       []byte
-	byPath   string
-	realPath string
-	key      []byte
+	id             []byte
+	byPath         string
+	realPath       string
+	key            []byte
+	CommandContext func(context.Context, string, ...string) *cmd.LogCmd
 }
 
 const (
@@ -214,8 +215,12 @@ func (s *storageDevice) decrypt(ctx context.Context) error {
 		xorKey[i] = opad[i] ^ s.key[i]
 	}
 
+	if s.CommandContext == nil {
+		s.CommandContext = cmd.CommandContext
+	}
+
 	cryptName := fmt.Sprintf("%s-%s-%s", prefix, filepath.Base(s.realPath), s.idString())
-	c := cmd.CommandContext(ctx, cryptSetup, "--hash=plain", "--key-file=-",
+	c := s.CommandContext(ctx, cryptSetup, "--hash=plain", "--key-file=-",
 		"--cipher="+cipher, "--key-size="+strconv.Itoa(keySize), "--offset="+strconv.Itoa(offset),
 		"--allow-discards", "open", s.byPath, "--type=plain", cryptName)
 	pipe, err := c.StdinPipe()
