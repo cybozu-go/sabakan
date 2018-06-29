@@ -18,10 +18,11 @@ import (
 )
 
 type storageDevice struct {
-	id       []byte
-	byPath   string
-	realPath string
-	key      []byte
+	id             []byte
+	byPath         string
+	realPath       string
+	key            []byte
+	CommandContext func(context.Context, string, ...string) *cmd.LogCmd
 }
 
 const (
@@ -42,10 +43,16 @@ var (
 	idOffset = int64(len(magic) + keyBytes)
 )
 
-func detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDevice, error) {
+type devfsType struct {
+	path string
+}
+
+var devfs = &devfsType{path: "/dev/disk/by-path"}
+
+func (d devfsType) detectStorageDevices(ctx context.Context, patterns []string) ([]*storageDevice, error) {
 	devices := make(map[string]*storageDevice)
 	for _, pattern := range patterns {
-		matches, err := filepath.Glob(filepath.Join("/dev/disk/by-path", pattern))
+		matches, err := filepath.Glob(filepath.Join(d.path, pattern))
 		if err != nil {
 			return nil, err
 		}
@@ -208,8 +215,12 @@ func (s *storageDevice) decrypt(ctx context.Context) error {
 		xorKey[i] = opad[i] ^ s.key[i]
 	}
 
+	if s.CommandContext == nil {
+		s.CommandContext = cmd.CommandContext
+	}
+
 	cryptName := fmt.Sprintf("%s-%s-%s", prefix, filepath.Base(s.realPath), s.idString())
-	c := cmd.CommandContext(ctx, cryptSetup, "--hash=plain", "--key-file=-",
+	c := s.CommandContext(ctx, cryptSetup, "--hash=plain", "--key-file=-",
 		"--cipher="+cipher, "--key-size="+strconv.Itoa(keySize), "--offset="+strconv.Itoa(offset),
 		"--allow-discards", "open", s.byPath, "--type=plain", cryptName)
 	pipe, err := c.StdinPipe()
