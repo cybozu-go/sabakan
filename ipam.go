@@ -11,11 +11,13 @@ import (
 type IPAMConfig struct {
 	MaxNodesInRack  uint   `json:"max-nodes-in-rack"`
 	NodeIPv4Pool    string `json:"node-ipv4-pool"`
+	NodeIPv4Offset  string `json:"node-ipv4-offset,omitempty"`
 	NodeRangeSize   uint   `json:"node-ipv4-range-size"`
 	NodeRangeMask   uint   `json:"node-ipv4-range-mask"`
 	NodeIPPerNode   uint   `json:"node-ip-per-node"`
 	NodeIndexOffset uint   `json:"node-index-offset"`
 	BMCIPv4Pool     string `json:"bmc-ipv4-pool"`
+	BMCIPv4Offset   string `json:"bmc-ipv4-offset,omitempty"`
 	BMCRangeSize    uint   `json:"bmc-ipv4-range-size"`
 	BMCRangeMask    uint   `json:"bmc-ipv4-range-mask"`
 }
@@ -32,6 +34,9 @@ func (c *IPAMConfig) Validate() error {
 	}
 	if !ip.Equal(ipNet.IP) {
 		return errors.New("host part of node-ipv4-pool must be cleared")
+	}
+	if len(c.NodeIPv4Offset) > 0 && net.ParseIP(c.NodeIPv4Offset) == nil {
+		return errors.New("invalid node-ipv4-offset")
 	}
 	if c.NodeRangeSize == 0 {
 		return errors.New("node-ipv4-range-size must not be zero")
@@ -53,6 +58,9 @@ func (c *IPAMConfig) Validate() error {
 	if !ip.Equal(ipNet.IP) {
 		return errors.New("host part of bmc-ipv4-pool must be cleared")
 	}
+	if len(c.BMCIPv4Offset) > 0 && net.ParseIP(c.BMCIPv4Offset) == nil {
+		return errors.New("invalid bmc-ipv4-offset")
+	}
 	if c.BMCRangeSize == 0 {
 		return errors.New("bmc-ipv4-range-size must not be zero")
 	}
@@ -67,16 +75,20 @@ func (c *IPAMConfig) Validate() error {
 // Generated IP addresses are stored in mc.
 func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	// IP addresses are calculated as following (LRN=Logical Rack Number):
-	// node0: INET_NTOA(INET_ATON(NodeIPv4Pool) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack)
-	// node1: INET_NTOA(INET_ATON(NodeIPv4Pool) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRangeSize)
-	// node2: INET_NTOA(INET_ATON(NodeIPv4Pool) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRangeSize * 2)
-	// BMC: INET_NTOA(INET_ATON(BMCIPv4Pool) + (2^BMCRangeSize * LRN) + index-in-rack)
+	// node0: INET_NTOA(INET_ATON(NodeIPv4Pool) + INET_ATON(NodeIPv4Offset) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack)
+	// node1: INET_NTOA(INET_ATON(NodeIPv4Pool) + INET_ATON(NodeIPv4Offset) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRangeSize)
+	// node2: INET_NTOA(INET_ATON(NodeIPv4Pool) + INET_ATON(NodeIPv4Offset) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRangeSize * 2)
+	// BMC: INET_NTOA(INET_ATON(BMCIPv4Pool) + INET_ATON(BMCIPv4Offset) + (2^BMCRangeSize * LRN) + index-in-rack)
 
-	calc := func(cidr string, shift, numip, lrn, idx uint) []net.IP {
+	calc := func(pool, offset string, shift, numip, lrn, idx uint) []net.IP {
 		result := make([]net.IP, numip)
 
-		offset, _, _ := net.ParseCIDR(cidr)
-		a := netutil.IP4ToInt(offset)
+		poolIP, _, _ := net.ParseCIDR(pool)
+		noffset := uint32(0)
+		if len(offset) > 0 {
+			noffset = netutil.IP4ToInt(net.ParseIP(offset))
+		}
+		a := netutil.IP4ToInt(poolIP) + noffset
 		su := uint(1) << shift
 		for i := uint(0); i < numip; i++ {
 			ip := netutil.IntToIP4(a + uint32(su*numip*lrn+idx+i*su))
@@ -88,14 +100,14 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	lrn := mc.Spec.Rack
 	idx := mc.Spec.IndexInRack
 
-	ips := calc(c.NodeIPv4Pool, c.NodeRangeSize, c.NodeIPPerNode, lrn, idx)
+	ips := calc(c.NodeIPv4Pool, c.NodeIPv4Offset, c.NodeRangeSize, c.NodeIPPerNode, lrn, idx)
 	strIPs := make([]string, len(ips))
 	for i, p := range ips {
 		strIPs[i] = p.String()
 	}
 	mc.Spec.IPv4 = strIPs
 
-	bmcIPs := calc(c.BMCIPv4Pool, c.BMCRangeSize, 1, lrn, idx)
+	bmcIPs := calc(c.BMCIPv4Pool, c.BMCIPv4Offset, c.BMCRangeSize, 1, lrn, idx)
 	mc.Spec.BMC.IPv4 = bmcIPs[0].String()
 }
 
@@ -124,7 +136,11 @@ func (l *LeaseRange) Key() string {
 // If no range can be assigned, this returns nil.
 func (c *IPAMConfig) LeaseRange(ifaddr net.IP) *LeaseRange {
 	ip1, _, _ := net.ParseCIDR(c.NodeIPv4Pool)
-	nip1 := netutil.IP4ToInt(ip1)
+	noffset1 := uint32(0)
+	if len(c.NodeIPv4Offset) > 0 {
+		noffset1 = netutil.IP4ToInt(net.ParseIP(c.NodeIPv4Offset))
+	}
+	nip1 := netutil.IP4ToInt(ip1) + noffset1
 	nip2 := netutil.IP4ToInt(ifaddr)
 	if nip2 <= nip1 {
 		return nil

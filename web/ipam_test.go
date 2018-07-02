@@ -22,11 +22,13 @@ func testConfigIPAMGet(t *testing.T) {
 	config := &sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
 		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeIPv4Offset:  "",
 		NodeRangeSize:   6,
 		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
 		NodeIPPerNode:   3,
 		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCIPv4Offset:   "0.0.1.0",
 		BMCRangeSize:    5,
 		BMCRangeMask:    20,
 	}
@@ -66,11 +68,13 @@ func testConfigIPAMPut(t *testing.T) {
 {
    "max-nodes-in-rack": 28,
    "node-ipv4-pool": "10.69.0.0/20",
+   "node-ipv4-offset": "0.0.0.0",
    "node-ipv4-range-size": 6,
    "node-ipv4-range-mask": 26,
    "node-index-offset": 3,
    "node-ip-per-node": 3,
    "bmc-ipv4-pool": "10.72.16.0/20",
+   "bmc-ipv4-offset": "0.0.1.0",
    "bmc-ipv4-range-size": 5,
    "bmc-ipv4-range-mask": 20
 }
@@ -101,11 +105,13 @@ func testConfigIPAMPut(t *testing.T) {
 	expected := &sabakan.IPAMConfig{
 		MaxNodesInRack:  28,
 		NodeIPv4Pool:    "10.69.0.0/20",
+		NodeIPv4Offset:  "0.0.0.0",
 		NodeRangeSize:   6,
 		NodeRangeMask:   26,
 		NodeIndexOffset: 3,
 		NodeIPPerNode:   3,
 		BMCIPv4Pool:     "10.72.16.0/20",
+		BMCIPv4Offset:   "0.0.1.0",
 		BMCRangeSize:    5,
 		BMCRangeMask:    20,
 	}
