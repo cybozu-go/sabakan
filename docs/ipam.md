@@ -18,13 +18,13 @@ Field                  | Type   | Description
 ---------------------- | ------ | -----------
 `max-nodes-in-rack`    | int    | The maximum number of nodes in a rack, excluding "boot" node.
 `node-ipv4-pool`       | string | CIDR IPv4 network for node IP pool.
-`node-ipv4-offset`     | string | Offset for dividing the pool into subnets, expressed in IPv4 notation.  Default is "", equivalent to "0.0.0.0".
+`node-ipv4-offset`     | string | Node IPs will be started by adding this to `node-ipv4-pool`.  Default is "", equivalent to `0.0.0.0`.
 `node-ipv4-range-size` | int    | Size of the address range to divide the pool (bit counts).
 `node-ipv4-range-mask` | int    | The subnet mask for a divided range.
 `node-ip-per-node`     | int    | The number of IP addresses for each node.
 `node-index-offset`    | int    | Offset for assigning IP address to a node in a divided range.
 `bmc-ipv4-pool`        | string | CIDR IPv4 network for BMC IP pool.
-`bmc-ipv4-offset`      | string | Offset for dividing the pool into subnets, expressed in IPv4 notation.  Default is "", equivalent to "0.0.0.0".
+`bmc-ipv4-offset`      | string | BMC IPs will be started by adding this to `bmc-ipv4-pool`.  Default is "", equivalent to `0.0.0.0`.
 `bmc-ipv4-range-size`  | int    | Size of the address range to divide the pool (bit counts).
 `bmc-ipv4-range-mask`  | int    | The subnet mask for a divided range.
 

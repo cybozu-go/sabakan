@@ -84,8 +84,11 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 		result := make([]net.IP, numip)
 
 		poolIP, _, _ := net.ParseCIDR(pool)
-		offsetIP := net.ParseIP(offset)
-		a := netutil.IP4ToInt(poolIP) + netutil.IP4ToInt(offsetIP)
+		noffset := uint32(0)
+		if len(offset) > 0 {
+			noffset = netutil.IP4ToInt(net.ParseIP(offset))
+		}
+		a := netutil.IP4ToInt(poolIP) + noffset
 		su := uint(1) << shift
 		for i := uint(0); i < numip; i++ {
 			ip := netutil.IntToIP4(a + uint32(su*numip*lrn+idx+i*su))
@@ -132,9 +135,12 @@ func (l *LeaseRange) Key() string {
 // LeaseRange returns a LeaseRange for the interface that receives DHCP requests.
 // If no range can be assigned, this returns nil.
 func (c *IPAMConfig) LeaseRange(ifaddr net.IP) *LeaseRange {
-	ip1Pool, _, _ := net.ParseCIDR(c.NodeIPv4Pool)
-	ip1Offset := net.ParseIP(c.NodeIPv4Offset)
-	nip1 := netutil.IP4ToInt(ip1Pool) + netutil.IP4ToInt(ip1Offset)
+	ip1, _, _ := net.ParseCIDR(c.NodeIPv4Pool)
+	noffset1 := uint32(0)
+	if len(c.NodeIPv4Offset) > 0 {
+		noffset1 = netutil.IP4ToInt(net.ParseIP(c.NodeIPv4Offset))
+	}
+	nip1 := netutil.IP4ToInt(ip1) + noffset1
 	nip2 := netutil.IP4ToInt(ifaddr)
 	if nip2 <= nip1 {
 		return nil
