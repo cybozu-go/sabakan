@@ -54,6 +54,7 @@ First of all, prepare JSON files
    "node-index-offset": 3,
    "node-ip-per-node": 3,
    "bmc-ipv4-pool": "10.72.16.0/20",
+   "bmc-ipv4-offset": "0.0.1.0",
    "bmc-ipv4-range-size": 5,
    "bmc-ipv4-range-mask": 20
 }

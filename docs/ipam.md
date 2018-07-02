@@ -18,11 +18,13 @@ Field                  | Type   | Description
 ---------------------- | ------ | -----------
 `max-nodes-in-rack`    | int    | The maximum number of nodes in a rack, excluding "boot" node.
 `node-ipv4-pool`       | string | CIDR IPv4 network for node IP pool.
+`node-ipv4-offset`     | string | Offset for dividing the pool into subnets, expressed in IPv4 notation.  Default is "", equivalent to "0.0.0.0".
 `node-ipv4-range-size` | int    | Size of the address range to divide the pool (bit counts).
 `node-ipv4-range-mask` | int    | The subnet mask for a divided range.
 `node-ip-per-node`     | int    | The number of IP addresses for each node.
 `node-index-offset`    | int    | Offset for assigning IP address to a node in a divided range.
 `bmc-ipv4-pool`        | string | CIDR IPv4 network for BMC IP pool.
+`bmc-ipv4-offset`      | string | Offset for dividing the pool into subnets, expressed in IPv4 notation.  Default is "", equivalent to "0.0.0.0".
 `bmc-ipv4-range-size`  | int    | Size of the address range to divide the pool (bit counts).
 `bmc-ipv4-range-mask`  | int    | The subnet mask for a divided range.
 
@@ -44,7 +46,7 @@ rack := node.RackNumber
 idx  := node.IndexInRack
 
 range_size := 1 << node-ipv4-range-size
-base := INET_ATON(node-ipv4-pool)
+base := INET_ATON(node-ipv4-pool) + INET_ATON(node-ipv4-offset)
 addr0 := base + range_size * node-ip-per-node * rack + idx
 
 addresses := []net.IP
@@ -63,7 +65,7 @@ rack := node.RackNumber
 idx  := node.IndexInRack
 
 range_size := 1 << bmc-ipv4-range-size
-base := INET_ATON(bmc-ipv4-pool)
+base := INET_ATON(bmc-ipv4-pool) + INET_ATON(bmc-ipv4-offset)
 
 bmc_addr := INET_NTOA(base + range_size * rack + idx)
 ```
@@ -92,11 +94,13 @@ Field                  | Value
 ---------------------- | -----:
 `max-nodes-in-rack`    | 28
 `node-ipv4-pool`       | 10.69.0.0/16
+`node-ipv4-offset`     | 0.0.0.0
 `node-ipv4-range-size` | 6
 `node-ipv4-range-mask` | 26
 `node-ip-per-node`     | 3
 `node-index-offset`    | 3
 `bmc-ipv4-pool`        | 10.72.16.0/20
+`bmc-ipv4-offset`      | 0.0.1.0
 `bmc-ipv4-range-size`  | 5
 `bmc-ipv4-range-mask`  | 20
 

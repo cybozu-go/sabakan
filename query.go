@@ -8,7 +8,6 @@ type Query map[string]string
 // Match returns true if all non-empty fields matches Machine
 func (q Query) Match(m *Machine) bool {
 	if serial := q["serial"]; len(serial) > 0 && serial != m.Spec.Serial {
-		fmt.Println("def")
 		return false
 	}
 	if ipv4 := q["ipv4"]; len(ipv4) > 0 {
