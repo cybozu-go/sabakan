@@ -8,27 +8,27 @@ REST API
 * [POST /api/v1/machines](#postmachines)
 * [GET /api/v1/machines](#getmachines)
 * [DELETE /api/v1/machines](#deletemachines)
-* [PUT /api/v1/state/<serial>](#putstate)
-* [GET /api/v1/state/<serial>](#getstate)
+* [PUT /api/v1/state/\<serial\>](#putstate)
+* [GET /api/v1/state/\<serial\>](#getstate)
 * [GET /api/v1/images/coreos](#getimageindex)
-* [PUT /api/v1/images/coreos/ID](#putimages)
-* [GET /api/v1/images/coreos/ID](#getimages)
-* [DELETE /api/v1/images/coreos/ID](#deleteimages)
+* [PUT /api/v1/images/coreos/\<id\>](#putimages)
+* [GET /api/v1/images/coreos/\<id\>](#getimages)
+* [DELETE /api/v1/images/coreos/\<id\>](#deleteimages)
 * [GET /api/v1/assets](#getassetsindex)
-* [PUT /api/v1/assets/NAME](#putassets)
-* [GET|HEAD /api/v1/assets/NAME](#getassets)
-* [GET /api/v1/assets/NAME/meta](#getassetsmeta)
-* [DELETE /api/v1/assets/NAME](#deleteassets)
+* [PUT /api/v1/assets/\<name\>](#putassets)
+* [GET|HEAD /api/v1/assets/\<name\>](#getassets)
+* [GET /api/v1/assets/\<name\>/meta](#getassetsmeta)
+* [DELETE /api/v1/assets/\<name\>](#deleteassets)
 * [GET /api/v1/boot/ipxe.efi](#getipxe)
 * [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
-* [GET /api/v1/boot/coreos/ipxe/SERIAL](#getcoreosipxeserial)
+* [GET /api/v1/boot/coreos/ipxe/\<serial\>](#getcoreosipxeserial)
 * [GET|HEAD /api/v1/boot/coreos/kernel](#getcoreoskernel)
 * [GET|HEAD /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
-* [GET /api/v1/boot/ignitions/SERIAL/ID](#getigitionsid)
-* [GET /api/v1/ignitions/ROLE](#getignitions)
-* [GET /api/v1/ignitions/ROLE/ID](#getignitionsid)
-* [POST /api/v1/ignitions/ROLE](#postignitions)
-* [DELETE /api/v1/ignitions/ROLE/ID](#deleteignitions)
+* [GET /api/v1/boot/ignitions/\<serial\>/\<id\>](#getigitionsid)
+* [GET /api/v1/ignitions/\<role\>](#getignitions)
+* [GET /api/v1/ignitions/\<role\>/\<id\>](#getignitionsid)
+* [POST /api/v1/ignitions/\<role\>](#postignitions)
+* [DELETE /api/v1/ignitions/\<role\>/\<id\>](#deleteignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
@@ -64,7 +64,7 @@ Create or update IPAM configurations.  If one or more nodes have been registered
   HTTP status code: 500 Internal Server Error
 
 ```console
-$ curl -XPUT localhost:10080/api/v1/config/ipam -d '
+$ curl -XPUT 'localhost:10080/api/v1/config/ipam' -d '
 {
    "max-nodes-in-rack": 28,
    "node-ipv4-pool": "10.69.0.0/16",
@@ -98,7 +98,7 @@ The body must be JSON representation of [IPAMConfig](ipam.md#ipamconfig).
   HTTP status code: 404 Not Found
 
 ```console
-$ curl -XGET localhost:10080/api/v1/config/ipam
+$ curl -XGET 'localhost:10080/api/v1/config/ipam'
 {
    "max-nodes-in-rack": 28,
    "node-ipv4-pool": "10.69.0.0/16",
@@ -128,7 +128,7 @@ The body must be JSON representation of [DHCPConfig](dhcp.md#dhcpconfig).
 - HTTP status codes other than 200.
 
 ```console
-$ curl -XPUT localhost:10080/api/v1/config/dhcp -d '
+$ curl -XPUT 'localhost:10080/api/v1/config/dhcp' -d '
 {
     "gateway-offset": 1
 }'
@@ -151,7 +151,7 @@ Get DHCP configurations.
   HTTP status code: 404 Not Found
 
 ```console
-$ curl -XGET localhost:10080/api/v1/config/dhcp
+$ curl -XGET 'localhost:10080/api/v1/config/dhcp'
 {
     "gateway-offset": 254
 }
@@ -194,18 +194,15 @@ Field                        | Description
   HTTP status code: 400 Bad Request
 
 ```console
-$ curl -i -X POST \
-   -H "Content-Type:application/json" \
-   -d \
-'[{
+$ curl -X POST -H "Content-Type:application/json" 'localhost:10080/api/v1/machines' -d '
+[{
   "serial": "1234abcd",
   "product": "R630",
   "datacenter": "ty3",
   "rack": 1,
   "role": "boot",
   "bmc": {"type": "iDRAC-9"},
-}]' \
- 'http://localhost:10080/api/v1/machines'
+}]'
 ```
 
 ## <a name="getmachines" />`GET /api/v1/machines`
@@ -256,7 +253,7 @@ Delete registered machine of the `<serial>`.
   HTTP status code: 404 Not Found
 
 ```console
-$ curl -i -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
+$ curl -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 (No output in stdout)
 ```
 
@@ -663,8 +660,7 @@ Register disk encryption key. The request body is raw binary format of the key.
   HTTP status code: 400 Bad Request
 
 ```console
-$ echo "binary key data" | curl -i -X PUT -d - \
-   'http://localhost:10080/api/v1/crypts/1/aaaaa'
+$ head -c256 /dev/urandom | curl -i -X PUT -d - 'localhost:10080/api/v1/crypts/1/aaaaa'
 HTTP/1.1 201 Created
 Content-Type: application/json
 Date: Tue, 10 Apr 2018 09:12:12 GMT
@@ -690,8 +686,7 @@ Get an encryption key of the particular disk.
   HTTP status code: 404 Not Found
 
 ```console
-$ curl -i -X GET \
-   'http://localhost:10080/api/v1/crypts/1/aaaaa'
+$ curl -i -X GET 'localhost:10080/api/v1/crypts/1/aaaaa'
 HTTP/1.1 200 OK
 Content-Type: application/octet-stream
 Date: Tue, 10 Apr 2018 09:15:59 GMT
@@ -711,8 +706,7 @@ Delete all disk encryption keys of the specified machine. This request does not 
 - HTTP response body: Array of the `<path>` which are deleted successfully.
 
 ```console
-$ curl -i -X DELETE \
-   'http://localhost:10080/api/v1/crypts/1'
+$ curl -i -X DELETE 'localhost:10080/api/v1/crypts/1'
 HTTP/1.1 200 OK
 Content-Type: application/json
 Date: Tue, 10 Apr 2018 09:19:01 GMT
