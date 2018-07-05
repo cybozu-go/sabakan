@@ -8,27 +8,27 @@ REST API
 * [POST /api/v1/machines](#postmachines)
 * [GET /api/v1/machines](#getmachines)
 * [DELETE /api/v1/machines](#deletemachines)
-* [PUT /api/v1/state/<serial>](#putstate)
-* [GET /api/v1/state/<serial>](#getstate)
+* [PUT /api/v1/state/\<serial\>](#putstate)
+* [GET /api/v1/state/\<serial\>](#getstate)
 * [GET /api/v1/images/coreos](#getimageindex)
-* [PUT /api/v1/images/coreos/ID](#putimages)
-* [GET /api/v1/images/coreos/ID](#getimages)
-* [DELETE /api/v1/images/coreos/ID](#deleteimages)
+* [PUT /api/v1/images/coreos/\<id\>](#putimages)
+* [GET /api/v1/images/coreos/\<id\>](#getimages)
+* [DELETE /api/v1/images/coreos/\<id\>](#deleteimages)
 * [GET /api/v1/assets](#getassetsindex)
-* [PUT /api/v1/assets/NAME](#putassets)
-* [GET|HEAD /api/v1/assets/NAME](#getassets)
-* [GET /api/v1/assets/NAME/meta](#getassetsmeta)
-* [DELETE /api/v1/assets/NAME](#deleteassets)
+* [PUT /api/v1/assets/\<name\>](#putassets)
+* [GET|HEAD /api/v1/assets/\<name\>](#getassets)
+* [GET /api/v1/assets/\<name\>/meta](#getassetsmeta)
+* [DELETE /api/v1/assets/\<name\>](#deleteassets)
 * [GET /api/v1/boot/ipxe.efi](#getipxe)
 * [GET /api/v1/boot/coreos/ipxe](#getcoreosipxe)
-* [GET /api/v1/boot/coreos/ipxe/SERIAL](#getcoreosipxeserial)
+* [GET /api/v1/boot/coreos/ipxe/\<serial\>](#getcoreosipxeserial)
 * [GET|HEAD /api/v1/boot/coreos/kernel](#getcoreoskernel)
 * [GET|HEAD /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
-* [GET /api/v1/boot/ignitions/SERIAL/ID](#getigitionsid)
-* [GET /api/v1/ignitions/ROLE](#getignitions)
-* [GET /api/v1/ignitions/ROLE/ID](#getignitionsid)
-* [POST /api/v1/ignitions/ROLE](#postignitions)
-* [DELETE /api/v1/ignitions/ROLE/ID](#deleteignitions)
+* [GET /api/v1/boot/ignitions/\<serial\>/\<id\>](#getigitionsid)
+* [GET /api/v1/ignitions/\<role\>](#getignitions)
+* [GET /api/v1/ignitions/\<role\>/\<id\>](#getignitionsid)
+* [POST /api/v1/ignitions/\<role\>](#postignitions)
+* [DELETE /api/v1/ignitions/\<role\>/\<id\>](#deleteignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
@@ -63,8 +63,10 @@ Create or update IPAM configurations.  If one or more nodes have been registered
 
   HTTP status code: 500 Internal Server Error
 
+**Example**
+
 ```console
-$ curl -XPUT localhost:10080/api/v1/config/ipam -d '
+$ curl -s -XPUT 'localhost:10080/api/v1/config/ipam' -d '
 {
    "max-nodes-in-rack": 28,
    "node-ipv4-pool": "10.69.0.0/16",
@@ -88,8 +90,8 @@ The body must be JSON representation of [IPAMConfig](ipam.md#ipamconfig).
 **Successful response**
 
 - HTTP status code: 200 OK
-- HTTP response header: `application/json`
-- HTTP response body: JSON
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Current IPAM configurations in JSON
 
 **Failure responses**
 
@@ -97,8 +99,10 @@ The body must be JSON representation of [IPAMConfig](ipam.md#ipamconfig).
 
   HTTP status code: 404 Not Found
 
+**Example**
+
 ```console
-$ curl -XGET localhost:10080/api/v1/config/ipam
+$ curl -s -XGET 'localhost:10080/api/v1/config/ipam'
 {
    "max-nodes-in-rack": 28,
    "node-ipv4-pool": "10.69.0.0/16",
@@ -127,8 +131,10 @@ The body must be JSON representation of [DHCPConfig](dhcp.md#dhcpconfig).
 
 - HTTP status codes other than 200.
 
+**Example**
+
 ```console
-$ curl -XPUT localhost:10080/api/v1/config/dhcp -d '
+$ curl -s -XPUT 'localhost:10080/api/v1/config/dhcp' -d '
 {
     "gateway-offset": 1
 }'
@@ -141,8 +147,8 @@ Get DHCP configurations.
 **Successful response**
 
 - HTTP status code: 200 OK
-- HTTP response header: `application/json`
-- HTTP response body: JSON
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Current DHCP configurations in JSON
 
 **Failure responses**
 
@@ -150,8 +156,10 @@ Get DHCP configurations.
 
   HTTP status code: 404 Not Found
 
+**Example**
+
 ```console
-$ curl -XGET localhost:10080/api/v1/config/dhcp
+$ curl -s -XGET 'localhost:10080/api/v1/config/dhcp'
 {
     "gateway-offset": 254
 }
@@ -193,19 +201,14 @@ Field                        | Description
 
   HTTP status code: 400 Bad Request
 
+**Example**
+
 ```console
-$ curl -i -X POST \
-   -H "Content-Type:application/json" \
-   -d \
-'[{
-  "serial": "1234abcd",
-  "product": "R630",
-  "datacenter": "ty3",
-  "rack": 1,
-  "role": "boot",
-  "bmc": {"type": "iDRAC-9"},
-}]' \
- 'http://localhost:10080/api/v1/machines'
+$ curl -s -X POST 'localhost:10080/api/v1/machines' -d '
+[
+  { "serial": "1234abcd", "product": "R630", "datacenter": "ty3", "rack": 1, "role": "boot", "bmc": {"type": "iDRAC-9"} },
+  { "serial": "2345bcde", "product": "R630", "datacenter": "ty3", "rack": 1, "role": "worker", "bmc": {"type": "iDRAC-9"} }
+]'
 ```
 
 ## <a name="getmachines" />`GET /api/v1/machines`
@@ -227,7 +230,7 @@ Query                      | Description
 **Successful response**
 
 - HTTP status code: 200 OK
-- HTTP response header: `application/json`
+- HTTP response header: `Content-Type: application/json`
 - HTTP response body: Machines of an array of the JSON
 
 **Failure responses**
@@ -255,8 +258,10 @@ Delete registered machine of the `<serial>`.
 
   HTTP status code: 404 Not Found
 
+**Example**
+
 ```console
-$ curl -i -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
+$ curl -s -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 (No output in stdout)
 ```
 
@@ -264,10 +269,11 @@ $ curl -i -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 
 Put the state of a machine.
 The new state is given by contents of request body and should be one of:
-* healthy
-* unhealthy
-* dead
-* retiring
+
+* `healthy`
+* `unhealthy`
+* `dead`
+* `retiring`
 
 **Successful response**
 
@@ -282,6 +288,17 @@ The new state is given by contents of request body and should be one of:
 - No specified machine found.
 
   HTTP status code: 404 Not Found
+
+- Invalid state transition
+
+  HTTP status code: 500 Internal Server Error
+
+**Example**
+
+```console
+$ curl -s -XPUT -d'retiring' localhost:10080/api/v1/state/1234abcd
+(No output in stdout)
+```
 
 ## <a name="getstate" />`GET /api/v1/state/<serial>`
 
@@ -301,9 +318,41 @@ The state will be returned by response body and should be one of:
 
   HTTP status code: 404 Not Found
 
+**Example**
+
+```console
+$ curl -s localhost:10080/api/v1/state/1234abcd
+retiring
+```
+
 ## <a name="getimageindex" />`GET /api/v1/images/coreos`
 
-Get the [image index](image_management.md).
+Get the [image index](image_management.md) for coreos.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Index of the registered images in JSON
+
+**Example**
+
+```console
+$ curl -s localhost:10080/api/v1/images/coreos
+[
+  {
+    "id": "1745.5.0",
+    "date": "2018-07-04T23:26:01.392249742Z",
+    "urls": [
+      "http://10.69.0.3:10080/api/v1/images/coreos/1745.5.0",
+      "http://10.69.0.195:10080/api/v1/images/coreos/1745.5.0",
+      "http://10.69.1.131:10080/api/v1/images/coreos/1745.5.0"
+    ],
+    "exists": true
+  }
+]
+```
+
 
 ## <a name="putimages" />`PUT /api/v1/images/coreos/<id>`
 
@@ -316,8 +365,7 @@ The tar file must consist of these two files:
 **Successful response**
 
 - HTTP status code: 201 Created
-- HTTP response header: `application/json`
-- HTTP response body: JSON
+- HTTP response body: empty
 
 **Failure responses**
 
@@ -329,6 +377,13 @@ The tar file must consist of these two files:
 
   HTTP status code: 400 Bad Request
 
+**Example**
+
+```console
+$ curl -s -XPUT --data-binary '@./path/to/coreos-image.tar' 'localhost:10080/api/v1/images/coreos/1745.7.0'
+(No output in stdout)
+```
+
 ## <a name="getimages" />`GET /api/v1/images/coreos/<id>`
 
 Download the image archive specified by `<id>`.
@@ -337,13 +392,24 @@ The archive format is the same as PUT; i.e. a tar consists of `kernel` and `init
 **Successful response**
 
 - HTTP status code: 200 OK
-- HTTP response header: `application/tar`
+- HTTP response header: `Content-Type: application/tar`
+- HTTP response body: image archive in tar binary
 
 **Failure responses**
 
 - No image has the ID.
 
   HTTP status code: 404 Not found
+
+```console
+$ curl -s -i 'localhost:10080/api/v1/images/coreos/1745.7.0'
+HTTP/1.1 200 OK
+Content-Type: application/tar
+Date: Wed, 04 Jul 2018 23:58:36 GMT
+Transfer-Encoding: chunked
+
+.....
+```
 
 ## <a name="deleteimages" />`DELETE /api/v1/images/coreos/<id>`
 
@@ -360,9 +426,34 @@ Remove the image specified by `<id>` from the index.
 
   HTTP status code: 404 Not found
 
+**Example**
+
+```console
+$ curl -s -XDELETE 'localhost:10080/api/v1/images/coreos/1688.5.3'
+(No output in stdout)
+```
+
 ## <a name="getassetsindex" />`GET /api/v1/assets`
 
 Get the list of asset names as JSON array.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Index of the registered assets in JSON
+
+**Example**
+
+```console
+$ curl -s 'localhost:10080/api/v1/assets'
+[
+  "cybozu-bird-2.0.aci",
+  "cybozu-chrony-3.3.aci",
+  "cybozu-ubuntu-debug-18.04.aci",
+  "sabakan-cryptsetup"
+]
+```
 
 ## <a name="putassets" />`PUT /api/v1/assets/<NAME>`
 
@@ -377,24 +468,8 @@ Upload a file as an asset.
 **Successful response**
 
 - HTTP status code: 201 Created, or 200 OK
-- HTTP response header: `application/json`
-- HTTP response body: JSON
-
-The response for a newly created asset looks like:
-```json
-{
-    "status": 201,
-    "id": "15"
-}
-```
-
-The response for an updated asset looks like:
-```json
-{
-    "status": 200,
-    "id": "19"
-}
-```
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Asset's ID in JSON
 
 **Failure responses**
 
@@ -414,19 +489,38 @@ The response for an updated asset looks like:
 
     HTTP status code: 413 Payload Too Large
 
+**Example**
+
+The response for a newly created asset looks like:
+
+```console
+$ curl -s -XPUT --data-binary '@./sabakan-cryuptsetup' 'localhost:10080/api/v1/assets/sabakan-cryptsetup'
+{
+    "status": 201,
+    "id": "15"
+}
+```
+
+The response for an updated asset looks like:
+
+```console
+$ curl -s -XPUT --data-binary '@./sabakan-cryuptsetup' 'localhost:10080/api/v1/assets/sabakan-cryptsetup'
+{
+    "status": 200,
+    "id": "19"
+}
+```
+
 ## <a name="getassets" />`GET /api/v1/assets/<NAME>`
 
 Download the named asset.
 
 **Successful response**
 
-HTTP status code:
-- 200 OK
-
-Response headers:
-
-- `X-Sabakan-Asset-ID`: ID of the asset
-- `X-Sabakan-Asset-SHA256`: SHA256 checksum of the asset
+- HTTP status code: 200 OK
+- HTTP Response headers:
+    - `X-Sabakan-Asset-ID`: ID of the asset
+    - `X-Sabakan-Asset-SHA256`: SHA256 checksum of the asset
 
 **Failure responses**
 
@@ -440,11 +534,8 @@ Fetch the meta data of the named asset.
 
 **Successful response**
 
-HTTP status code:
-- 200 OK
-
-HTTP response header:
-- `Content-Type`: `application/json`
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: application/json`
 
 The response JSON is described in [asset management](assets.md).
 
@@ -513,8 +604,10 @@ Get CoreOS ignition for a certain serial.
 
   HTTP status code: 404 Not found
 
+**Example**
+
 ```console
-$ curl -XGET localhost:10080/api/v1/boot/ignitions/1234abcd/1527731687
+$ curl -s -XGET localhost:10080/api/v1/boot/ignitions/1234abcd/1527731687
 {
   "systemd": [
     ......
@@ -540,8 +633,10 @@ Get CoreOS ignition ids for a certain role.
 
   HTTP status code: 400 Bad Request
 
+**Example**
+
 ```console
-$ curl -XGET localhost:10080/api/v1/boot/ignitions/cs
+$ curl -s -XGET localhost:10080/api/v1/boot/ignitions/worker
 [ "1427731487", "1507731659", "1527731687"]
 ```
 
@@ -563,8 +658,10 @@ Get CoreOS ignition template for a certain role.
 
   HTTP status code: 400 Bad Request
 
+**Example**
+
 ```console
-$ curl -XGET localhost:10080/api/v1/ignitions/cs/1527731687
+$ curl -s -XGET localhost:10080/api/v1/ignitions/worker/1527731687
 {
   "systemd": [
     ......
@@ -580,12 +677,8 @@ It returns a new assigned ID for the ignition.
 **Successful response**
 
 - HTTP status code: 201 Created
-- HTTP response header: `application/json`
-- HTTP response body: JSON
-
-```json
-{"status": 201, "role": "<role>", "id": "<id>"}
-```
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: The target role of the ignition and ignition's ID in JSON
 
 **Failure responses**
 
@@ -597,10 +690,11 @@ It returns a new assigned ID for the ignition.
 
   HTTP status code: 400 Bad Request
 
--
+**Example**
+
 ```console
-$ curl -XPOST -d $'ignition:\n version: "2.2.0' localhost:10080/api/v1/ignitions/cs
-{"status": 201, "role": "cs", "id": "1507731659"}
+$ echo $'ignition:\n version: "2.2.0"' | curl -s -XPOST -d - localhost:10080/api/v1/ignitions/worker
+{"status": 201, "role": "worker", "id": "1507731659"}
 ```
 
 ## <a name="deleteignitions" />`DELETE /api/v1/ignitions/<role>/<id>`
@@ -626,8 +720,10 @@ Delete CoreOS ignition by role and id.
 
   HTTP status code: 400 Bad Request
 
+**Example**
+
 ```console
-$ curl -XDELETE localhost:10080/api/v1/boot/ignitions/cs/1527731687
+$ curl -s -XDELETE localhost:10080/api/v1/boot/ignitions/worker/1527731687
 ```
 
 ## <a name="putcrypts" />`PUT /api/v1/crypts/<serial>/<path>`
@@ -637,12 +733,8 @@ Register disk encryption key. The request body is raw binary format of the key.
 **Successful response**
 
 - HTTP status code: 201 Created
-- HTTP response header: `application/json`
-- HTTP response body: JSON
-
-```json
-{"status": 201, "path": "<path>"}
-```
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Registered path of the disk in JSON.
 
 **Failure responses**
 
@@ -654,7 +746,7 @@ Register disk encryption key. The request body is raw binary format of the key.
 
     HTTP status code: 500 Internal Server Error
 
-- `/<prefix>/crypts/<serial>/<path>` already exists.
+- `/<prefix>/crypts/<serial>/<path>` already exists in etcd.
 
     HTTP status code: 409 Conflict
 
@@ -662,15 +754,16 @@ Register disk encryption key. The request body is raw binary format of the key.
 
   HTTP status code: 400 Bad Request
 
+**Example**
+
 ```console
-$ echo "binary key data" | curl -i -X PUT -d - \
-   'http://localhost:10080/api/v1/crypts/1/aaaaa'
+$ head -c256 /dev/urandom | curl -s -i -X PUT -d - 'localhost:10080/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
 HTTP/1.1 201 Created
 Content-Type: application/json
 Date: Tue, 10 Apr 2018 09:12:12 GMT
 Content-Length: 31
 
-{"status": 201, "path":"aaaaa"}
+{"status": 201, "path":"pci-0000:00:17.0-ata-1"}
 ```
 
 ## <a name="getcrypts" />`GET /api/v1/crypts/<serial>/<path>`
@@ -680,18 +773,19 @@ Get an encryption key of the particular disk.
 **Successful response**
 
 - HTTP status code: 200 OK
-- HTTP response header: `application/octet-stream`
+- HTTP response header: `Content-Type: application/octet-stream`
 - HTTP response body: A raw key data
 
 **Failure responses**
 
-- No specified `/<prefix>/crypts/<serial>/<path>` found in etcd.
+- No specified `/<prefix>/crypts/<serial>/<path>` found in etcd in etcd.
 
   HTTP status code: 404 Not Found
 
+**Example**
+
 ```console
-$ curl -i -X GET \
-   'http://localhost:10080/api/v1/crypts/1/aaaaa'
+$ curl -s -i 'localhost:10080/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
 HTTP/1.1 200 OK
 Content-Type: application/octet-stream
 Date: Tue, 10 Apr 2018 09:15:59 GMT
@@ -707,17 +801,13 @@ Delete all disk encryption keys of the specified machine. This request does not 
 **Successful response**
 
 - HTTP status code: 200 OK
-- HTTP response header: `application/json`
-- HTTP response body: Array of the `<path>` which are deleted successfully.
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Array of the `<path>` which are deleted successfully in JSON.
+
+**Example**
 
 ```console
-$ curl -i -X DELETE \
-   'http://localhost:10080/api/v1/crypts/1'
-HTTP/1.1 200 OK
-Content-Type: application/json
-Date: Tue, 10 Apr 2018 09:19:01 GMT
-Content-Length: 18
-
+$ curl -s -X DELETE 'localhost:10080/api/v1/crypts/1'
 ["abdef", "aaaaa"]
 ```
 
@@ -744,8 +834,21 @@ Following parameters can be specified to limit the response:
 
 The dates are interpreted in UTC timezone.
 
-### Example:
+For example, `GET /api/v1/logs?since=20180404&until=20180407` retrieves logs
+generated on 2018-04-04, 2018-04-05, and 2018-04-06.  Note that the date
+specified for `until` is not included.
 
-`GET /api/v1/logs?since=20180404&until=20180407` retrieves logs generated on
-2018-04-04, 2018-04-05, and 2018-04-06.  Note that the date specified for
-`until` is not included.
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Audit logs in JSONLines
+
+**Example**
+
+```console
+$ curl -s 'localhost:10080/api/v1/logs?since=20180404&until=20180707'
+{"ts":"2018-07-05T00:21:02.486519609Z","rev":"2","user":"root","ip":"127.0.0.1","host":"rkt-9ac1f230-64c4-40b1-a67c-52c297435d8b","category":"ipam","instance":"config","action":"put","detail":"{\"max-nodes-in-rack\":28,\"node-ipv4-pool\":\"10.69.0.0/20\",\"node-ipv4-range-size\":6,\"node-ipv4-range-mask\":26,\"node-ip-per-node\":3,\"node-index-offset\":3,\"bmc-ipv4-pool\":\"10.72.16.0/20\",\"bmc-ipv4-offset\":\"0.0.1.0\",\"bmc-ipv4-range-size\":5,\"bmc-ipv4-range-mask\":20}"}
+{"ts":"2018-07-05T00:21:02.56064736Z","rev":"4","user":"root","ip":"127.0.0.1","host":"rkt-9ac1f230-64c4-40b1-a67c-52c297435d8b","category":"dhcp","instance":"config","action":"put","detail":"{\"gateway-offset\":1,\"lease-minutes\":60}"}
+......
+```
