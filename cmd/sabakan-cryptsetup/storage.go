@@ -20,7 +20,6 @@ import (
 type storageDevice struct {
 	id             []byte
 	byPath         string
-	realPath       string
 	key            []byte
 	CommandContext func(context.Context, string, ...string) *cmd.LogCmd
 }
@@ -78,7 +77,7 @@ func (d devfsType) detectStorageDevices(ctx context.Context, patterns []string) 
 				continue
 			}
 
-			sd := &storageDevice{byPath: device, realPath: rp}
+			sd := &storageDevice{byPath: device}
 			err = sd.findID()
 			if err != nil {
 				return nil, err
@@ -219,7 +218,7 @@ func (s *storageDevice) decrypt(ctx context.Context) error {
 		s.CommandContext = cmd.CommandContext
 	}
 
-	cryptName := fmt.Sprintf("%s-%s-%s", prefix, filepath.Base(s.realPath), s.idString())
+	cryptName := fmt.Sprintf("%s-%s", prefix, filepath.Base(s.byPath))
 	c := s.CommandContext(ctx, cryptSetup, "--hash=plain", "--key-file=-",
 		"--cipher="+cipher, "--key-size="+strconv.Itoa(keySize), "--offset="+strconv.Itoa(offset),
 		"--allow-discards", "open", s.byPath, "--type=plain", cryptName)
