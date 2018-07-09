@@ -38,11 +38,11 @@ In order to mount encrypted disk, Sabakan provides `sabakan-cryptsetup` as follo
 ## Procedure of the disk encryption and decryption
 
 1. `sabakan-cryptsetup` detect storage devices on the `/dev/disk/by-path` using a glob which is specified as an argument.
-2. Read `one-time pad` and `ID`, and send HTTP request to `sabakan` whether an `encryption key` and `ID` of its disk are registered. If not, `sabakan-cryptsetup` re-ecnrypts the disk.
+2. Read `one-time pad` and `ID`, and send HTTP request to `sabakan` whether an `encryption key` and `ID` of its disk are registered. If not, `sabakan-cryptsetup` re-encrypts the disk.
     1. Generate `one-time pad`, a pair of `key` and `ID`.
     2. Write `magic`, `one-time pad` and `ID` to metadata partition.
     3. Register XOR value between `one-time pad` as an `encryption key` to `sabakan` with `ID`.
-3. Execute `cryptsetup` to create `/dev/mapper/crypt-REALPATH-ID` of each disk as decryption. `REALPATH` is something like `sda`, `vda`.
+3. Execute `cryptsetup` to create `/dev/mapper/crypt-BYPATH` of each disk as decryption. `BYPATH` is the name of the device, shown in `/dev/disk/by-path`.
 4. Setup md device and/or initialize filesystem.
 5. Mount filesystem.
 6. Ready for apps!
