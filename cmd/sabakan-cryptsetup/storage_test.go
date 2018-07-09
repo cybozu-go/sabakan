@@ -44,8 +44,7 @@ func createPseudoDevice(t *testing.T, dir, backing, device string, deviceMap map
 	}
 
 	deviceMap[device] = &storageDevice{
-		byPath:   devPath,
-		realPath: f.Name(),
+		byPath: devPath,
 	}
 }
 
@@ -67,12 +66,12 @@ func setupTestStorage(t *testing.T, dir string) (map[string]*storageDevice, *dev
 func sameDevices(x, y []*storageDevice) bool {
 	xMap := make(map[string]*storageDevice)
 	for _, d := range x {
-		xMap[d.realPath] = d
+		xMap[d.byPath] = d
 	}
 
 	yMap := make(map[string]*storageDevice)
 	for _, d := range y {
-		yMap[d.realPath] = d
+		yMap[d.byPath] = d
 	}
 
 	return reflect.DeepEqual(xMap, yMap)
