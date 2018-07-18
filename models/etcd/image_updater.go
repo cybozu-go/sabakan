@@ -133,11 +133,7 @@ func (d *driver) updateImage(ctx context.Context) error {
 				return err
 			}
 
-			if data, ok := dataMap[os]; ok {
-				data.index = index
-			} else {
-				dataMap[os] = updateData{index, nil}
-			}
+			dataMap[os] = updateData{index, dataMap[os].deleted}
 			continue
 		}
 
@@ -147,12 +143,7 @@ func (d *driver) updateImage(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-
-			if data, ok := dataMap[os]; ok {
-				data.deleted = deleted
-			} else {
-				dataMap[os] = updateData{nil, deleted}
-			}
+			dataMap[os] = updateData{dataMap[os].index, deleted}
 		}
 	}
 
