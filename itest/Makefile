@@ -1,0 +1,126 @@
+# Makefile for integration testing using ginkgo
+
+# configuration variables
+BRIDGE_ADDRESS = 10.0.0.1
+BMC_ADDRESS = 10.0.1.1
+HOST1 = 10.0.0.101
+HOST2 = 10.0.0.102
+HOST3 = 10.0.0.103
+PLACEMAT = $(GOPATH)/bin/placemat
+GINKGO = $(GOPATH)/bin/ginkgo
+ETCD_VERSION = 3.3.8
+PLACEMAT_DATADIR = /var/scratch/placemat
+
+COREOS_VERSION := 1745.5.0
+COREOS_URL := http://stable.release.core-os.net/amd64-usr
+COREOS_KERNEL := coreos_production_pxe.vmlinuz
+COREOS_INITRD := coreos_production_pxe_image.cpio.gz
+
+export BRIDGE_ADDRESS HOST1 HOST2 HOST3 PLACEMAT GINKGO
+
+# non-configuration variables
+ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
+SSH_PRIVKEY := ./itest_key
+OUTPUT := ./output
+UBUNTU_IMAGE := ubuntu-18.04-server-cloudimg-amd64.img
+
+export SSH_PRIVKEY
+
+
+GENERATED_FILES = $(OUTPUT)/etcd  $(OUTPUT)/etcdctl \
+	$(OUTPUT)/sabakan $(OUTPUT)/sabactl \
+	$(OUTPUT)/cluster.yml \
+	$(OUTPUT)/user-data.yml \
+	$(OUTPUT)/network1.yml \
+	$(OUTPUT)/network2.yml \
+	$(OUTPUT)/network3.yml \
+	$(OUTPUT)/$(COREOS_KERNEL) \
+	$(OUTPUT)/$(COREOS_INITRD) \
+	$(OUTPUT)/dhcp.json \
+	$(OUTPUT)/ipam.json \
+	$(OUTPUT)/machines.json \
+	$(OUTPUT)/ignitions \
+	$(UBUNTU_IMAGE)
+
+all: test
+
+$(ETCD_ARCHIVE):
+	curl -sSLf -o $@ https://github.com/coreos/etcd/releases/download/v$(ETCD_VERSION)/etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
+
+$(UBUNTU_IMAGE):
+	curl -sSLf -o $@ https://cloud-images.ubuntu.com/releases/18.04/release/$@
+
+$(COREOS_KERNEL) $(COREOS_INITRD):
+	curl -fSL -o $@ $(COREOS_URL)/$(COREOS_VERSION)/$@
+
+$(OUTPUT)/$(COREOS_KERNEL) $(OUTPUT)/$(COREOS_INITRD): $(COREOS_KERNEL) $(COREOS_INITRD)
+	ln -f $< $@
+
+$(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
+	mkdir -p $(OUTPUT)
+	tar -C $(OUTPUT) -x -z --wildcards --strip-components 1 -f $< '*/$(notdir $@)'
+	touch $@
+
+$(OUTPUT)/sabakan $(OUTPUT)/sabactl:
+	mkdir -p $(OUTPUT)
+	cd ..; GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
+
+$(OUTPUT)/ignitions:
+	cp -a ../testdata $(OUTPUT)/ignitions
+
+$(OUTPUT)/cluster.yml: cluster.yml
+	mkdir -p $(OUTPUT)
+	sed -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
+		-e 's/@BMC_ADDRESS@/$(BMC_ADDRESS)/' \
+		-e 's/@COREOS_KERNEL@/$(COREOS_KERNEL)/' \
+		-e 's/@COREOS_INITRD@/$(COREOS_INITRD)/' $< > $@
+
+$(OUTPUT)/user-data.yml: user-data.yml
+	mkdir -p $(OUTPUT)
+	sed 's/@HOST1@/$(HOST1)/' $< > $@
+
+$(OUTPUT)/network1.yml: network.yml
+	mkdir -p $(OUTPUT)
+	sed -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
+            -e 's/@HOST@/$(HOST1)/' $< > $@
+
+$(OUTPUT)/network2.yml: network.yml
+	mkdir -p $(OUTPUT)
+	sed -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
+            -e 's/@HOST@/$(HOST2)/' $< > $@
+
+$(OUTPUT)/network3.yml: network.yml
+	mkdir -p $(OUTPUT)
+	sed -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
+            -e 's/@HOST@/$(HOST3)/' $< > $@
+
+$(OUTPUT)/dhcp.json $(OUTPUT)/ipam.json $(OUTPUT)/machines.json:
+	ln -f $$(echo "$@" | sed  -E "s|.*\/(.*)$$|\1|") $@
+
+test: $(GENERATED_FILES)
+	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host1
+	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host2
+	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host3
+	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/worker
+	./test.sh
+
+placemat: $(GENERATED_FILES)
+	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host1
+	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host2
+	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host3
+	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/worker
+	sudo -b $(PLACEMAT) output/cluster.yml
+	@echo 'Placemat is running.  To kill it, do "sudo pkill placemat".'
+
+test-light:
+	$(GINKGO)
+
+clean:
+	rm -rf $(OUTPUT)
+
+setup:
+	go get -u github.com/onsi/ginkgo/ginkgo
+	go get -u github.com/onsi/gomega/...
+	go get -u github.com/cybozu-go/placemat
+
+.PHONY:	all clean setup test

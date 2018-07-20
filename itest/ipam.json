@@ -1,0 +1,11 @@
+{
+  "max-nodes-in-rack": 28,
+  "node-ipv4-pool": "10.0.0.104/24",
+  "node-ipv4-range-size": 6,
+  "node-ipv4-range-mask": 24,
+  "node-index-offset": 1,
+  "node-ip-per-node": 1,
+  "bmc-ipv4-pool": "10.0.1.0/24",
+  "bmc-ipv4-range-size": 6,
+  "bmc-ipv4-range-mask": 24
+}
