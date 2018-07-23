@@ -30,7 +30,9 @@ export SSH_PRIVKEY
 GENERATED_FILES = $(OUTPUT)/etcd  $(OUTPUT)/etcdctl \
 	$(OUTPUT)/sabakan $(OUTPUT)/sabactl \
 	$(OUTPUT)/cluster.yml \
-	$(OUTPUT)/user-data.yml \
+	$(OUTPUT)/user-data1.yml \
+	$(OUTPUT)/user-data2.yml \
+	$(OUTPUT)/user-data3.yml \
 	$(OUTPUT)/network1.yml \
 	$(OUTPUT)/network2.yml \
 	$(OUTPUT)/network3.yml \
@@ -75,9 +77,20 @@ $(OUTPUT)/cluster.yml: cluster.yml
 		-e 's/@COREOS_KERNEL@/$(COREOS_KERNEL)/' \
 		-e 's/@COREOS_INITRD@/$(COREOS_INITRD)/' $< > $@
 
-$(OUTPUT)/user-data.yml: user-data.yml
+$(OUTPUT)/user-data1.yml: user-data.yml
 	mkdir -p $(OUTPUT)
-	sed 's/@HOST1@/$(HOST1)/' $< > $@
+	sed -e 's/@HOST1@/$(HOST1)/' \
+			-e 's/@HOST@/$(HOST1)/' $< > $@
+
+$(OUTPUT)/user-data2.yml: user-data.yml
+	mkdir -p $(OUTPUT)
+	sed -e 's/@HOST1@/$(HOST1)/' \
+			-e 's/@HOST@/$(HOST2)/' $< > $@
+
+$(OUTPUT)/user-data3.yml: user-data.yml
+	mkdir -p $(OUTPUT)
+	sed -e 's/@HOST1@/$(HOST1)/' \
+			-e 's/@HOST@/$(HOST3)/' $< > $@
 
 $(OUTPUT)/network1.yml: network.yml
 	mkdir -p $(OUTPUT)

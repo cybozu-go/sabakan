@@ -3,7 +3,6 @@ package itest
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -79,17 +78,8 @@ func stopEtcd(client *ssh.Client) error {
 	return nil
 }
 
-func runEtcd(client []*ssh.Client) error {
-	command := "systemd-run --unit=my-etcd.service" +
-		"--user /data/etcd" +
-		"--listen-client-urls=http://0.0.0.0:2379" +
-		"--advertise-client-urls=http://localhost:2379" +
-		"--name=''" +
-		"--listen-peer-urls http://0.0.0.0:2380" +
-		fmt.Sprintf("--initial-advertise-peer-urls http://%s:2380,http://%s:2380,http://%s:2380", host1, host2, host3) +
-		fmt.Sprintf("--initial-cluster default=%s:2380,%s:2380,%s:2380", host1, host2, host3) +
-		"--initial-cluster-token: 'boot-cluster'"
-
+func runEtcd(client *ssh.Client) error {
+	command := "systemd-run --unit=my-etcd.service --user /data/etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://localhost:2379"
 	sess, err := client.NewSession()
 	if err != nil {
 		return err
@@ -99,27 +89,27 @@ func runEtcd(client []*ssh.Client) error {
 	return sess.Run(command)
 }
 
-func stopEPAgent() error {
+func stopSabakan() error {
 	for _, c := range sshClients {
 		sess, err := c.NewSession()
 		if err != nil {
 			return err
 		}
 
-		sess.Run("sudo systemctl reset-failed ep-agent.service; sudo systemctl stop ep-agent.service")
+		sess.Run("sudo systemctl reset-failed sabakan.service; sudo systemctl stop sabakan.service")
 		sess.Close()
 	}
 	return nil
 }
 
-func runEPAgent() error {
+func runSabakan() error {
 	for _, c := range sshClients {
 		sess, err := c.NewSession()
 		if err != nil {
 			return err
 		}
 
-		err = sess.Run("sudo systemd-run --unit=ep-agent.service /data/ep-agent")
+		err = sess.Run("sudo systemd-run --unit=sabakan.service /data/sabakan -config-file /etc/sabakan.yml")
 		sess.Close()
 		if err != nil {
 			return err

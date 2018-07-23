@@ -54,7 +54,7 @@ volumes:
     copy-on-write: true
   - kind: localds
     name: seed
-    user-data: user-data.yml
+    user-data: user-data1.yml
     network-config: network1.yml
   - kind: vvfat
     name: data
@@ -78,7 +78,7 @@ volumes:
     copy-on-write: true
   - kind: localds
     name: seed
-    user-data: user-data.yml
+    user-data: user-data2.yml
     network-config: network2.yml
   - kind: vvfat
     name: data
@@ -102,7 +102,7 @@ volumes:
     copy-on-write: true
   - kind: localds
     name: seed
-    user-data: user-data.yml
+    user-data: user-data3.yml
     network-config: network3.yml
   - kind: vvfat
     name: data

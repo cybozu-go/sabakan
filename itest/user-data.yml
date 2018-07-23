@@ -13,3 +13,13 @@ users:
 mounts:
   - [ /dev/vdc1, /data, "vfat", "ro" ]
   - [ /dev/vdd1, /ignitions, "vfat", "ro" ]
+write_files:
+  - content: |
+      advertise-url: http://@HOST@:10080
+      dhcp-bind: 0.0.0.0:67
+      etcd-servers: [http://@HOST1@:2379]
+      ipxe-efi-path: /boot/ipxe.efi
+    path: /etc/sabakan.yml
+    permissions: '0644'
+packages:
+  - grub-ipxe
