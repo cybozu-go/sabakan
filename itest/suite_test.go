@@ -10,6 +10,9 @@ import (
 )
 
 func TestItest(t *testing.T) {
+	if len(sshKeyFile) == 0 {
+		t.Skip("no SSH_PRIVKEY envvar")
+	}
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Integration test for sabakan")
 }
@@ -31,7 +34,7 @@ var _ = BeforeSuite(func() {
 			}
 		}
 		return nil
-	}).Should(Succeed(), 3*time.Minute)
+	}, 3*time.Minute).Should(Succeed())
 
 	// sync VM root filesystem to store newly generated SSH host keys.
 	for h := range sshClients {
@@ -49,6 +52,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	err = runSabakan()
 	Expect(err).NotTo(HaveOccurred())
+
+	// register ipam.json, dhcp.json, machines.json, and ignitions
 
 	time.Sleep(time.Second)
 	fmt.Println("Begin tests...")

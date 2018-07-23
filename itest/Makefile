@@ -2,10 +2,10 @@
 
 # configuration variables
 BRIDGE_ADDRESS = 10.0.0.1
-BMC_ADDRESS = 10.0.1.1
 HOST1 = 10.0.0.101
 HOST2 = 10.0.0.102
 HOST3 = 10.0.0.103
+WORKER = 10.0.0.104
 PLACEMAT = $(GOPATH)/bin/placemat
 GINKGO = $(GOPATH)/bin/ginkgo
 ETCD_VERSION = 3.3.8
@@ -16,15 +16,17 @@ COREOS_URL := http://stable.release.core-os.net/amd64-usr
 COREOS_KERNEL := coreos_production_pxe.vmlinuz
 COREOS_INITRD := coreos_production_pxe_image.cpio.gz
 
-export BRIDGE_ADDRESS HOST1 HOST2 HOST3 PLACEMAT GINKGO
+export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER PLACEMAT GINKGO
+export COREOS_VERSION COREOS_KERNEL COREOS_INITRD
 
 # non-configuration variables
 ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
 SSH_PRIVKEY := ./itest_key
 OUTPUT := ./output
 UBUNTU_IMAGE := ubuntu-18.04-server-cloudimg-amd64.img
+SABACTL := $(OUTPUT)/sabactl
 
-export SSH_PRIVKEY
+export SSH_PRIVKEY SABACTL
 
 
 GENERATED_FILES = $(OUTPUT)/etcd  $(OUTPUT)/etcdctl \
@@ -36,8 +38,6 @@ GENERATED_FILES = $(OUTPUT)/etcd  $(OUTPUT)/etcdctl \
 	$(OUTPUT)/network1.yml \
 	$(OUTPUT)/network2.yml \
 	$(OUTPUT)/network3.yml \
-	$(OUTPUT)/$(COREOS_KERNEL) \
-	$(OUTPUT)/$(COREOS_INITRD) \
 	$(OUTPUT)/dhcp.json \
 	$(OUTPUT)/ipam.json \
 	$(OUTPUT)/machines.json \
@@ -54,9 +54,6 @@ $(UBUNTU_IMAGE):
 
 $(COREOS_KERNEL) $(COREOS_INITRD):
 	curl -fSL -o $@ $(COREOS_URL)/$(COREOS_VERSION)/$@
-
-$(OUTPUT)/$(COREOS_KERNEL) $(OUTPUT)/$(COREOS_INITRD): $(COREOS_KERNEL) $(COREOS_INITRD)
-	ln -f $< $@
 
 $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	mkdir -p $(OUTPUT)

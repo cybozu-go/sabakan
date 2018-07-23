@@ -22,16 +22,6 @@ files:
     file: etcd
   - name: etcdctl
     file: etcdctl
-  - name: dhcp.json
-    file: dhcp.json
-  - name: ipam.json
-    file: ipam.json
-  - name: machines.json
-    file: machines.json
-  - name: @COREOS_INITRD@
-    file: @COREOS_INITRD@
-  - name: @COREOS_KERNEL@
-    file: @COREOS_KERNEL@
 ---
 kind: DataFolder
 name: ignitions

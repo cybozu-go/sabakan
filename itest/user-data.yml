@@ -16,6 +16,7 @@ mounts:
 write_files:
   - content: |
       advertise-url: http://@HOST@:10080
+      allow-ips: [0.0.0.0/0]
       dhcp-bind: 0.0.0.0:67
       etcd-servers: [http://@HOST1@:2379]
       ipxe-efi-path: /boot/ipxe.efi

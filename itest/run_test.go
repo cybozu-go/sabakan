@@ -5,10 +5,13 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -138,4 +141,22 @@ func execSafeAt(host string, args ...string) string {
 	stdout, _, err := execAt(host, args...)
 	ExpectWithOffset(1, err).To(Succeed())
 	return string(stdout)
+}
+
+func localTempFile(body string) *os.File {
+	f, err := ioutil.TempFile("", "sabakan-itest")
+	Expect(err).ShouldNot(HaveOccurred())
+	f.WriteString(body)
+	f.Close()
+	return f
+}
+
+func sabactl(args ...string) []byte {
+	args = append([]string{"-server", "http://" + host1 + ":10080"}, args...)
+	command := exec.Command(sabactlPath, args...)
+	stdout := new(bytes.Buffer)
+	session, err := gexec.Start(command, stdout, GinkgoWriter)
+	Ω(err).ShouldNot(HaveOccurred())
+	Eventually(session).Should(gexec.Exit())
+	return stdout.Bytes()
 }
