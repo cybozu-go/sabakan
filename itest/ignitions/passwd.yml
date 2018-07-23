@@ -1,0 +1,8 @@
+users:
+  - name: ubuntu
+    sshAuthorizedKeys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfQ2R2DS2LgjTxs+Z27hfWF4eGH2/ymeXvvUWmc5hRgC//RVnk9b2Tcix/pALNvzUqK9nTbk2F3Gn/PziBWFDSHbhYeHBRlkctu9gInLbL+VVNWmhhPDstgrUE9I+EDAB9hm958xRBBFzzpABLB7oXxeYz8RIuuDWY8I0or9q8Z/v4ZvR+hSsQI64A45obnIdp3ak/0WgyZQYtvnLGpTowDtlxz2wpIHZy9AZa/h5WC6q032o6/SzHZva0hDnQ3q2++icT8Ugm1shRaxIz9eu25z2yItEkV3FoTODRNAwzKtrrt+MwdmCabzAzObRQREXtFghZ2TqTi1FTbkPPT/7d itest
+
+groups:
+  - name: cybozu
+    gid: 10000

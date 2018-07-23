@@ -1,0 +1,5 @@
+/output
+*.img
+/coreos_*.vmlinuz
+/coreos_*.cpio.gz
+/etcd-*.tar.gz

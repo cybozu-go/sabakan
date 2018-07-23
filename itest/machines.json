@@ -1,0 +1,14 @@
+[
+  {
+    "serial": "00000004",
+    "product": "vm",
+    "datacenter": "dc1",
+    "rack": 0,
+    "role": "worker",
+    "bmc": {
+      "ipv4": "",
+      "ipv6": "",
+      "type": "IPMI-2.0"
+    }
+  }
+]
