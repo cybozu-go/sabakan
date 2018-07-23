@@ -1,41 +1,5 @@
 [
   {
-    "serial": "00000001",
-    "product": "vm",
-    "datacenter": "dc1",
-    "rack": 0,
-    "role": "boot",
-    "bmc": {
-      "ipv4": "",
-      "ipv6": "",
-      "type": "IPMI-2.0"
-    }
-  },
-  {
-    "serial": "00000002",
-    "product": "vm",
-    "datacenter": "dc1",
-    "rack": 1,
-    "role": "boot",
-    "bmc": {
-      "ipv4": "",
-      "ipv6": "",
-      "type": "IPMI-2.0"
-    }
-  },
-  {
-    "serial": "00000003",
-    "product": "vm",
-    "datacenter": "dc1",
-    "rack": 2,
-    "role": "boot",
-    "bmc": {
-      "ipv4": "",
-      "ipv6": "",
-      "type": "IPMI-2.0"
-    }
-  },
-  {
     "serial": "00000004",
     "product": "vm",
     "datacenter": "dc1",

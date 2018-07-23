@@ -1,6 +1,11 @@
 package itest
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
 
 var _ = Describe("worker", func() {
 
@@ -9,8 +14,8 @@ var _ = Describe("worker", func() {
 		By("Waiting CoreOS images to be uploaded")
 		Eventually(func() bool {
 			var index []struct {
-				Id   string   `json:"id"`
-				Urls []string `json:"urls"`
+				ID   string   `json:"id"`
+				URLs []string `json:"urls"`
 			}
 
 			stdout := sabactl("images", "index")
@@ -19,10 +24,10 @@ var _ = Describe("worker", func() {
 				return false
 			}
 			for _, img := range index {
-				if img.Id != "id" {
+				if img.ID != coreosVersion {
 					continue
 				}
-				if len(img.Urls) == 3 {
+				if len(img.URLs) == 3 {
 					return true
 				}
 			}
@@ -30,5 +35,12 @@ var _ = Describe("worker", func() {
 		}).Should(BeTrue())
 
 		By("Waiting worker to boot")
+		sshKey, err := parsePrivateKey()
+		Expect(err).NotTo(HaveOccurred())
+
+		Eventually(func() error {
+			_, err := sshTo(worker, sshKey)
+			return err
+		}).Should(Succeed())
 	})
 })

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"path/filepath"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -54,6 +56,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	// register ipam.json, dhcp.json, machines.json, and ignitions
+	sabactl("ipam", "set", "-f", ipamJSONPath)
+	sabactl("dhcp", "set", "-f", dhcpJSONPath)
+	sabactl("machines", "create", "-f", machinesJSONPath)
+	ignitionSource := filepath.Join(ignitionsPath, "worker.yml")
+	sabactl("ignitions", "set", "-f", ignitionSource, "worker")
 
 	time.Sleep(time.Second)
 	fmt.Println("Begin tests...")

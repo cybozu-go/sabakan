@@ -5,12 +5,6 @@ type: external
 use-nat: true
 address: @BRIDGE_ADDRESS@/24
 ---
-kind: Network
-name: bmc
-type: bmc
-use-nat: false
-address: @BMC_ADDRESS@/24
----
 kind: DataFolder
 name: data
 files:

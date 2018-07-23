@@ -33,19 +33,23 @@ func sshTo(address string, sshKey ssh.Signer) (*ssh.Client, error) {
 	return ssh.Dial("tcp", address+":22", config)
 }
 
-func prepareSSHClients(addresses ...string) error {
+func parsePrivateKey() (ssh.Signer, error) {
 	f, err := os.Open(os.Getenv("SSH_PRIVKEY"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer f.Close()
 
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	sshKey, err := ssh.ParsePrivateKey(data)
+	return ssh.ParsePrivateKey(data)
+}
+
+func prepareSSHClients(addresses ...string) error {
+	sshKey, err := parsePrivateKey()
 	if err != nil {
 		return err
 	}
@@ -99,7 +103,7 @@ func stopSabakan() error {
 			return err
 		}
 
-		sess.Run("sudo systemctl reset-failed sabakan.service; sudo systemctl stop sabakan.service")
+		sess.Run("sudo systemctl reset-failed sabakan.service; sudo systemctl stop sabakan.service; sudo rm -rf /var/lib/sabakan")
 		sess.Close()
 	}
 	return nil

@@ -14,8 +14,8 @@ var _ = Describe("images", func() {
 
 		Eventually(func() bool {
 			var index []struct {
-				Id   string   `json:"id"`
-				Urls []string `json:"urls"`
+				ID   string   `json:"id"`
+				URLs []string `json:"urls"`
 			}
 
 			stdout := sabactl("images", "index")
@@ -24,16 +24,14 @@ var _ = Describe("images", func() {
 				return false
 			}
 			for _, img := range index {
-				if img.Id != "id" {
+				if img.ID != coreosVersion {
 					continue
 				}
-				if len(img.Urls) == 3 {
+				if len(img.URLs) == 3 {
 					return true
 				}
 			}
 			return false
 		}).Should(BeTrue())
-
-		sabactl("images", "delete", "id")
 	})
 })

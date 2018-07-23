@@ -1,0 +1,7 @@
+[Match]
+Name=eth0
+
+[Network]
+Address=@WORKER@/24
+Gateway=@BRIDGE_ADDRESS@
+DNS=8.8.8.8

@@ -25,8 +25,12 @@ SSH_PRIVKEY := ./itest_key
 OUTPUT := ./output
 UBUNTU_IMAGE := ubuntu-18.04-server-cloudimg-amd64.img
 SABACTL := $(OUTPUT)/sabactl
+MACHINES_JSON := $(OUTPUT)/machines.json
+IPAM_JSON := $(OUTPUT)/ipam.json
+DHCP_JSON := $(OUTPUT)/dhcp.json
+IGNITIONS := $(OUTPUT)/ignitions
 
-export SSH_PRIVKEY SABACTL
+export SSH_PRIVKEY SABACTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
 
 
 GENERATED_FILES = $(OUTPUT)/etcd  $(OUTPUT)/etcdctl \
@@ -63,9 +67,6 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 $(OUTPUT)/sabakan $(OUTPUT)/sabactl:
 	mkdir -p $(OUTPUT)
 	cd ..; GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
-
-$(OUTPUT)/ignitions:
-	cp -a ../testdata $(OUTPUT)/ignitions
 
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)
@@ -105,16 +106,21 @@ $(OUTPUT)/network3.yml: network.yml
             -e 's/@HOST@/$(HOST3)/' $< > $@
 
 $(OUTPUT)/dhcp.json $(OUTPUT)/ipam.json $(OUTPUT)/machines.json:
-	ln -f $$(echo "$@" | sed  -E "s|.*\/(.*)$$|\1|") $@
+	ln -f $(notdir $@) $@
 
-test: $(GENERATED_FILES)
+$(OUTPUT)/ignitions:
+	cp -r ignitions $@
+	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
+            -e 's/@WORKER@/$(WORKER)/' $@/networkd/10-eth0.network
+
+test: $(GENERATED_FILES) $(COREOS_KERNEL) $(COREOS_INITRD)
 	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host1
 	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host2
 	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host3
 	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/worker
 	./test.sh
 
-placemat: $(GENERATED_FILES)
+placemat: $(GENERATED_FILES) $(COREOS_KERNEL) $(COREOS_INITRD)
 	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host1
 	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host2
 	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host3
