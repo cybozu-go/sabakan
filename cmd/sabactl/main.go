@@ -17,9 +17,9 @@ var (
 )
 
 func main() {
-	subcommands.Register(subcommands.HelpCommand(), "")
-	subcommands.Register(subcommands.FlagsCommand(), "")
-	subcommands.Register(subcommands.CommandsCommand(), "")
+	subcommands.Register(subcommands.HelpCommand(), "misc")
+	subcommands.Register(subcommands.FlagsCommand(), "misc")
+	subcommands.Register(subcommands.CommandsCommand(), "misc")
 	subcommands.Register(dhcpCommand(), "")
 	subcommands.Register(ipamCommand(), "")
 	subcommands.Register(machinesCommand(), "")

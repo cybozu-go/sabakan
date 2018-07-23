@@ -74,7 +74,7 @@ func prepareSSHClients(addresses ...string) error {
 }
 
 func stopEtcd(client *ssh.Client) error {
-	command := "systemctl --user stop my-etcd.service; rm -rf default.etcd"
+	command := "sudo systemctl stop my-etcd.service; sudo rm -rf /home/ubuntu/default.etcd"
 	sess, err := client.NewSession()
 	if err != nil {
 		return err
@@ -86,7 +86,7 @@ func stopEtcd(client *ssh.Client) error {
 }
 
 func runEtcd(client *ssh.Client) error {
-	command := "systemd-run --unit=my-etcd.service --user /data/etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://localhost:2379"
+	command := "sudo systemd-run --unit=my-etcd.service /data/etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://localhost:2379 --data-dir /home/ubuntu/default.etcd"
 	sess, err := client.NewSession()
 	if err != nil {
 		return err
@@ -161,6 +161,6 @@ func sabactl(args ...string) []byte {
 	stdout := new(bytes.Buffer)
 	session, err := gexec.Start(command, stdout, GinkgoWriter)
 	Ω(err).ShouldNot(HaveOccurred())
-	Eventually(session).Should(gexec.Exit())
+	Eventually(session).Should(gexec.Exit(0))
 	return stdout.Bytes()
 }

@@ -1,3 +1,3 @@
 passwd: passwd.yml
 networkd:
-        - 10-eth0.netdev
+        - 10-eth0.network

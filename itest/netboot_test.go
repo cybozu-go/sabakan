@@ -7,11 +7,13 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("worker", func() {
+var _ = Describe("netboot", func() {
 
-	It("should successfully boots via HTTP/iPXE", func() {
+	It("is achieved", func() {
+		By("Uploading an image")
+		sabactl("images", "upload", coreosVersion, coreosKernel, coreosInitrd)
 
-		By("Waiting CoreOS images to be uploaded")
+		By("Waiting images to be distributed")
 		Eventually(func() bool {
 			var index []struct {
 				ID   string   `json:"id"`

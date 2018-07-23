@@ -23,7 +23,7 @@ var _ = BeforeSuite(func() {
 	fmt.Println("Preparing...")
 
 	SetDefaultEventuallyPollingInterval(time.Second)
-	SetDefaultEventuallyTimeout(time.Minute)
+	SetDefaultEventuallyTimeout(3 * time.Minute)
 
 	err := prepareSSHClients(host1, host2, host3)
 	Expect(err).NotTo(HaveOccurred())
@@ -36,7 +36,7 @@ var _ = BeforeSuite(func() {
 			}
 		}
 		return nil
-	}, 3*time.Minute).Should(Succeed())
+	}).Should(Succeed())
 
 	// sync VM root filesystem to store newly generated SSH host keys.
 	for h := range sshClients {
@@ -54,6 +54,12 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	err = runSabakan()
 	Expect(err).NotTo(HaveOccurred())
+
+	// wait sabakan
+	Eventually(func() error {
+		_, _, err := execAt(host1, "/data/sabactl", "logs")
+		return err
+	}).Should(Succeed())
 
 	// register ipam.json, dhcp.json, machines.json, and ignitions
 	sabactl("ipam", "set", "-f", ipamJSONPath)

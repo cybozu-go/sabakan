@@ -106,7 +106,7 @@ volumes:
   name: data
   size: 10G
 cpu: 1
-memory: 1G
+memory: 3G
 smbios:
   serial: 00000004
 ---
