@@ -154,9 +154,14 @@ Sabakan identifies physical servers by `serial`.
 Once machines are properly registered with sabakan, they can netboot
 CoreOS Container Linux using [UEFI HTTP Boot][HTTPBoot].
 
+CoreOS can be initialized at first boot by [ignition][].
+Sabakan can generate ignition configuration from templates.
+Read [ignition.md](ignition.md) for details.
+
 ## <a name="whatsnext" /> What's next
 
 Learn sabakan [concepts](concepts.md), then read other specifications.
 
 [etcd]: https://github.com/coreos/etcd
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
+[ignition]: https://coreos.com/ignition/docs/latest/
