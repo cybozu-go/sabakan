@@ -1,32 +1,32 @@
 Getting started
 ===============
 
-* [Setup sabakan](#setupsabakan)
-  * [Prepare etcd](#prepareetcd)
-  * [Install sabakan and sabactl](#installsabakan)
+This document quickly guides you to configure sabakan and netboot
+your servers with CoreOS Container Linux.
+
+* [Setup sabakan](#setup)
+  * [Prepare etcd](#etcd)
   * [Prepare data directory](#datadir)
-  * [Run sabakan](#runsabakan)
-  * [Configure sabakan](#configuresabakan)
+  * [Prepare sabakan.yml](#configure)
+  * [Run sabakan](#run)
 * [Netboot](#netboot)
-* [Test](#test)
+  * [Configure IPAM](#ipam)
+  * [Configure DHCP](#dhcp)
+  * [Upload CoreOS Container Linux](#upload)
+  * [Register machines](#register)
 * [What's next](#whatsnext)
 
-## <a name="setupsabakan" /> Setup sabakan
+## <a name="setup" />Setup sabakan
 
-### <a name="prepareetcd" /> Prepare etcd
+### <a name="etcd" />Prepare etcd
 
-Sabakan requires [etcd][].  Install and run it at somewhere.
+Sabakan requires [etcd][].  Install and run it at `localhsot`.
 
-### <a name="installsabakan" /> Install sabakan and sabactl
-
-Install `sabakan` and `sabactl`:
-
+You may use docker to run etcd as follows:
 ```console
-$ go get -u github.com/cybozu-go/sabakan/cmd/sabakan
-$ go get -u github.com/cybozu-go/sabakan/cmd/sabactl
+$ docker pull quay.io/cybozu/etcd:3.3
+$ docker run -d --rm --name etcd --network=host --uts=host quay.io/cybozu/etcd:3.3
 ```
-
-`sabakan` Docker image is so available at [quay.io/cybozu/sabakan](https://quay.io/cybozu/sabakan)
 
 ### <a name="datadir" />Prepare data directory
 
@@ -34,17 +34,42 @@ $ go get -u github.com/cybozu-go/sabakan/cmd/sabactl
 $ sudo mkdir -p /var/lib/sabakan
 ```
 
-### <a name="runsabakan" /> Run sabakan
+### <a name="configure" />Prepare sabakan.yml
 
-```console
-$ sabakan -etcd-servers http://etcd-host:2379
+Save the following contents as `/usr/local/etc/sabakan.yml`:
+
+```yaml
+etcd-servers:
+  - http://localhost:2379
+dhcp-bind: 0.0.0.0:67
 ```
 
-### <a name="configuresabakan" /> Configure sabakan
+For other options, read [sabakan.md](sabakan.md).
 
-First of all, prepare JSON files
+### <a name="run" />Run sabakan
 
-- ipam.json
+Compile and run sabakan as follows:
+
+```console
+$ GOPATH=$HOME/go
+$ mkdir -p $GOPATH/src
+$ export GOPATH
+$ go get -u github.com/cybozu-go/sabakan/...
+$ sudo $GOPATH/bin/sabakan -config-file /usr/local/etc/sabakan.yml
+```
+
+A sample systemd service file is available at
+[cmd/sabakan/sabakan.service](../cmd/sabakan/sabakan.service).
+
+Alternatively, you may use docker to run sabakan:
+* Repository: [quay.io/cybozu/sabakan](https://quay.io/cybozu/sabakan)
+* Usage: https://github.com/cybozu/neco-containers/blob/master/sabakan/README.md
+
+## <a name="netboot" />Netboot
+
+### <a name="ipam" />Configure IPAM
+
+Prepare `ipam.json` as follows:
 ```json
 {
    "max-nodes-in-rack": 28,
@@ -60,42 +85,78 @@ First of all, prepare JSON files
 }
 ```
 
-Read [ipam](ipam.md) if you want to know meaning of each parameter.
+Then put the JSON to sabakan:
+```console
+$ sabactl ipam set -f ipam.json
+```
 
-- dhcp.json
+Read [ipam.md](ipam.md) for details.
+
+### <a name="dhcp" />Configure DHCP
+
+Prepare `dhcp.json` as follows:
 ```json
 {
-   "gateway-offset": 100,
-   "lease-minutes": 120
+   "gateway-offset": 1,
 }
 ```
 
-Read [dhcp](dhcp.md) if you want to know meaning of each parameter.
-
-Use `sabactl` to configure `sabakan`.
-
+Then put the JSON to sabakan:
 ```console
-$ sabactl ipam set -f ipam.json
 $ sabactl dhcp set -f dhcp.json
 ```
 
-Make sure current configuration.
+Read [dhcp.md](dhcp.md) for details.
 
+### <a name="upload" />Upload CoreOS Container Linux
+
+Download CoreOS PXE boot images:
 ```console
-$ sabactl ipam get
-$ sabactl dhcp get
+$ curl -o kernel -Lf http://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz
+$ curl -o initrd.gz -Lf http://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz
 ```
 
-Each output will be the same as [above JSON](#configuresabakan)
+Upload them to sabakan as follows:
+```console
+$ sabactl images upload ID kernel initrd.gz
+```
 
-## <a name="netboot" /> Netboot
+### <a name="machines" />Register machines
 
-**ToDo**
+Prepare `machines.json` as follows:
+```json
+[
+  {
+    "serial": "1234abcd",
+    "product": "Dell R640",
+    "datacenter": "tokyo1",
+    "rack": 0,
+    "role": "boot",
+    "bmc": {
+      "type": "IPMI-2.0",
+      "ipv4": "10.72.17.37"
+    }
+  },
+  {
+    // another machine
+  }
+]
+```
 
-## <a name="test" /> Test
+Then put the JSON to sabakan:
+```console
+$ sabactl machines create -f machines.json
+```
 
-**ToDo**
+Each object in the array is [`MachineSpec`](machine.md#machinespec-struct).
+Sabakan identifies physical servers by `serial`.
+
+Once machines are properly registered with sabakan, they can netboot
+CoreOS Container Linux using [UEFI HTTP Boot][HTTPBoot].
 
 ## <a name="whatsnext" /> What's next
 
 Learn sabakan [concepts](concepts.md), then read other specifications.
+
+[etcd]: https://github.com/coreos/etcd
+[HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot

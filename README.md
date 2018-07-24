@@ -37,6 +37,12 @@ Features
 
     Sabakan serves OS images to machines via HTTP.
 
+* Distributed asset management
+
+    In order to help initialization of client servers, sabakan can work
+    as a file server from which clients can download assets via HTTP.
+    Assets are automatically synchronized between sabakan servers.
+
 * Encryption key store
 
     Sabakan provides REST API to store and retrieve encryption keys
@@ -44,13 +50,7 @@ Features
 
 * Life-cycle management
 
-    Sabakan provides API to change server status for life-cycle management.
-
-* Distributed asset management
-
-    In order to help initialization of client servers, sabakan can work
-    as a file server from which clients can download assets via HTTP.
-    Assets are automatically synchronized between sabakan servers.
+    Sabakan provides API to change server status for [life-cycle management](docs/lifecycle.md).
 
 * Audit logs
 
