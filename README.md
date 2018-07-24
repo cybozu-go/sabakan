@@ -37,6 +37,12 @@ Features
 
     Sabakan serves OS images to machines via HTTP.
 
+* Distributed asset management
+
+    In order to help initialization of client servers, sabakan can work
+    as a file server from which clients can download assets via HTTP.
+    Assets are automatically synchronized between sabakan servers.
+
 * Encryption key store
 
     Sabakan provides REST API to store and retrieve encryption keys
@@ -44,13 +50,7 @@ Features
 
 * Life-cycle management
 
-    Sabakan provides API to change server status for life-cycle management.
-
-* Distributed asset management
-
-    In order to help initialization of client servers, sabakan can work
-    as a file server from which clients can download assets via HTTP.
-    Assets are automatically synchronized between sabakan servers.
+    Sabakan provides API to change server status for [life-cycle management](docs/lifecycle.md).
 
 * Audit logs
 
@@ -60,10 +60,11 @@ Features
 Programs
 --------
 
-This repository contains two programs:
+This repository contains these programs:
 
 * `sabakan`: the network service to manage servers.
 * `sabactl`: CLI tool for `sabakan`.
+* `sabakan-cryptsetup`: a utility to encrypt a block device using [dm-crypt][].
 
 To see their usage, run them with `-h` option.
 
@@ -71,6 +72,8 @@ Documentation
 -------------
 
 [docs](docs/) directory contains tutorials and specifications.
+
+Read [getting started](docs/getting_started.md) first.
 
 License
 -------
@@ -82,3 +85,4 @@ Sabakan is licensed under MIT license.
 [etcd]: https://coreos.com/etcd/
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
 [iPXE]: https://ipxe.org/
+[dm-crypt]: https://gitlab.com/cryptsetup/cryptsetup/wikis/DMCrypt

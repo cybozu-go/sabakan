@@ -12,7 +12,7 @@ MachineSpec struct
 
 Field           | Type     | Description
 --------------- | -------- | -----------
-`serial`        | string   | Serial number of the machine.
+`serial`        | string   | SMBIOS serial number of the machine.
 `product`       | string   | Product name of the machine
 `datacenter`    | string   | Data center name where the machine exists.
 `rack`          | int      | Logical rack number (LRN) where the machine exists.
@@ -48,7 +48,6 @@ A JSON representation of `Machine` looks like:
     "role": "boot",
     "ipv4": ["10.69.0.69", "10.69.0.133"],
     "ipv6": [],
-    "state": "healthy",
     "bmc": {
       "type": "iDRAC-9",
       "ipv4": "10.72.17.37"
