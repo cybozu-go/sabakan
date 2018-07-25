@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.15] - 2018-07-25
+
 ### Added
 - Add integration tests using [placemat][] VMs.
 
@@ -14,5 +16,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix but in image deletion (#86).
 
 [placemat]: https://github.com/cybozu-go/placemat
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.14...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.15...HEAD
+[0.15]: https://github.com/cybozu-go/sabakan/compare/v0.14...v0.15
 [0.14]: https://github.com/cybozu-go/sabakan/compare/v0.13...v0.14
