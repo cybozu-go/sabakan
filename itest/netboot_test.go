@@ -1,7 +1,6 @@
 package itest
 
 import (
-	"bytes"
 	"encoding/json"
 
 	. "github.com/onsi/ginkgo"
@@ -47,12 +46,10 @@ var _ = Describe("netboot", func() {
 		}).Should(Succeed())
 
 		sabactl("images", "delete", coreosVersion)
-		stdout := sabactl("images", "index")
-		var images []string
-		err = json.NewDecoder(bytes.NewReader(stdout)).Decode(&images)
-		if err != nil {
-			Fail(err.Error())
+		for _, h := range []string{host1, host2, host3} {
+			Eventually(func() string {
+				return execSafeAt(h, "ls", "/var/lib/sabakan/images/coreos")
+			}).Should(BeEmpty())
 		}
-		Expect(images).NotTo(ContainElement(coreosVersion))
 	})
 })
