@@ -38,7 +38,7 @@ var _ = Describe("assets", func() {
 		Eventually(func() bool {
 			for _, h := range []string{host1, host2, host3} {
 				stdout, _, err := execAt(h, "ls", "/var/lib/sabakan/assets")
-				if err != nil || len(stdout) == 0 {
+				if err != nil || len(stdout) > 0 {
 					return false
 				}
 			}
