@@ -44,5 +44,19 @@ var _ = Describe("netboot", func() {
 			_, err := sshTo(worker, sshKey)
 			return err
 		}).Should(Succeed())
+
+		By("Removing the image from the index")
+		sabactl("images", "delete", coreosVersion)
+
+		By("Checking all servers remove the image")
+		Eventually(func() bool {
+			for _, h := range []string{host1, host2, host3} {
+				stdout, _, err := execAt(h, "ls", "/var/lib/sabakan/images/coreos")
+				if err != nil || len(stdout) > 0 {
+					return false
+				}
+			}
+			return true
+		}).Should(BeTrue())
 	})
 })

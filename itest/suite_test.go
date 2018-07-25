@@ -2,10 +2,9 @@ package itest
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 	"time"
-
-	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
