@@ -1,6 +1,7 @@
 package itest
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 
@@ -30,5 +31,12 @@ var _ = Describe("assets", func() {
 		}).Should(BeTrue())
 
 		sabactl("assets", "delete", "test")
+		stdout := sabactl("assets", "index")
+		var assets []string
+		err := json.NewDecoder(bytes.NewReader(stdout)).Decode(&assets)
+		if err != nil {
+			Fail(err.Error())
+		}
+		Expect(assets).NotTo(ContainElement("test"))
 	})
 })

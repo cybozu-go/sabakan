@@ -1,6 +1,7 @@
 package itest
 
 import (
+	"bytes"
 	"encoding/json"
 
 	. "github.com/onsi/ginkgo"
@@ -44,5 +45,14 @@ var _ = Describe("netboot", func() {
 			_, err := sshTo(worker, sshKey)
 			return err
 		}).Should(Succeed())
+
+		sabactl("images", "delete", coreosVersion)
+		stdout := sabactl("images", "index")
+		var images []string
+		err = json.NewDecoder(bytes.NewReader(stdout)).Decode(&images)
+		if err != nil {
+			Fail(err.Error())
+		}
+		Expect(images).NotTo(ContainElement(coreosVersion))
 	})
 })
