@@ -66,7 +66,7 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 
 $(OUTPUT)/sabakan $(OUTPUT)/sabactl:
 	mkdir -p $(OUTPUT)
-	cd ..; GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
+	cd ..; go get ./... && GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
 
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)
@@ -135,8 +135,9 @@ clean:
 	rm -rf $(OUTPUT)
 
 setup:
+	go get -u golang.org/x/crypto/ssh
 	go get -u github.com/onsi/ginkgo/ginkgo
 	go get -u github.com/onsi/gomega/...
-	go get -u github.com/cybozu-go/placemat
+	go get -u github.com/cybozu-go/placemat/...
 
 .PHONY:	all clean setup test
