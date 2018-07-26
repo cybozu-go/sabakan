@@ -1,4 +1,4 @@
-package itest
+package mtest
 
 import (
 	"bytes"
@@ -148,7 +148,7 @@ func execSafeAt(host string, args ...string) string {
 }
 
 func localTempFile(body string) *os.File {
-	f, err := ioutil.TempFile("", "sabakan-itest")
+	f, err := ioutil.TempFile("", "sabakan-mtest")
 	Expect(err).ShouldNot(HaveOccurred())
 	f.WriteString(body)
 	f.Close()

@@ -1,4 +1,4 @@
-package itest
+package mtest
 
 import (
 	"encoding/json"

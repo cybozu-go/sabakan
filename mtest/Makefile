@@ -21,7 +21,7 @@ export COREOS_VERSION COREOS_KERNEL COREOS_INITRD
 
 # non-configuration variables
 ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
-SSH_PRIVKEY := ./itest_key
+SSH_PRIVKEY := ./mtest_key
 OUTPUT := ./output
 UBUNTU_IMAGE := ubuntu-18.04-server-cloudimg-amd64.img
 SABACTL := $(OUTPUT)/sabactl
