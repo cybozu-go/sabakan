@@ -43,9 +43,6 @@ mkdir -p /var/scratch
 mount -t ext4 /dev/disk/by-id/google-local-ssd-0 /var/scratch
 chmod 1777 /var/scratch
 
-# Enable IPv4 forwarding
-sysctl -w net.ipv4.ip_forward=1
-
 # Run mtest
 GOPATH=\$HOME/go
 export GOPATH
