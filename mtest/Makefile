@@ -21,7 +21,7 @@ export COREOS_VERSION COREOS_KERNEL COREOS_INITRD
 
 # non-configuration variables
 ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
-SSH_PRIVKEY := ./itest_key
+SSH_PRIVKEY := ./mtest_key
 OUTPUT := ./output
 UBUNTU_IMAGE := ubuntu-18.04-server-cloudimg-amd64.img
 SABACTL := $(OUTPUT)/sabactl
@@ -66,7 +66,7 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 
 $(OUTPUT)/sabakan $(OUTPUT)/sabactl:
 	mkdir -p $(OUTPUT)
-	cd ..; GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
+	cd ..; go get ./... && GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
 
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)
@@ -135,8 +135,8 @@ clean:
 	rm -rf $(OUTPUT)
 
 setup:
+	go get -t -d ./...
 	go get -u github.com/onsi/ginkgo/ginkgo
-	go get -u github.com/onsi/gomega/...
-	go get -u github.com/cybozu-go/placemat
+	go get -u github.com/cybozu-go/placemat/...
 
 .PHONY:	all clean setup test
