@@ -24,7 +24,7 @@ $GCLOUD compute instances create ${INSTANCE_NAME} \
   --boot-disk-size ${BOOT_DISK_SIZE} \
   --local-ssd interface=scsi
 
-# trap delete_instance INT QUIT TERM 0
+trap delete_instance INT QUIT TERM 0
 
 # Run multi-host test
 for i in $(seq 300); do

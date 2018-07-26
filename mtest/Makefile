@@ -135,9 +135,8 @@ clean:
 	rm -rf $(OUTPUT)
 
 setup:
-	go get -u golang.org/x/crypto/ssh
+	go get -t -d ./...
 	go get -u github.com/onsi/ginkgo/ginkgo
-	go get -u github.com/onsi/gomega/...
 	go get -u github.com/cybozu-go/placemat/...
 
 .PHONY:	all clean setup test
