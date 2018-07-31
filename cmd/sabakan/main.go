@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -31,6 +34,10 @@ var (
 	flagEtcdTimeout  = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
 	flagEtcdUsername = flag.String("etcd-username", "", "username for etcd authentication")
 	flagEtcdPassword = flag.String("etcd-password", "", "password for etcd authentication")
+	flagEtcdTLS      = flag.Bool("etcd-tls", false, "enable TLS connection to etcd servers")
+	flagEtcdTLSCA    = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
+	flagEtcdTLSCert  = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
+	flagEtcdTLSKey   = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
 
 	flagDHCPBind     = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
 	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
@@ -56,6 +63,10 @@ func main() {
 		cfg.EtcdTimeout = *flagEtcdTimeout
 		cfg.EtcdUsername = *flagEtcdUsername
 		cfg.EtcdPassword = *flagEtcdPassword
+		cfg.EtcdTLS = *flagEtcdTLS
+		cfg.EtcdTLSCA = *flagEtcdTLSCA
+		cfg.EtcdTLSCert = *flagEtcdTLSCert
+		cfg.EtcdTLSKey = *flagEtcdTLSKey
 		cfg.DHCPBind = *flagDHCPBind
 		cfg.IPXEPath = *flagIPXEPath
 		cfg.DataDir = *flagDataDir
@@ -94,8 +105,30 @@ func main() {
 	etcdCfg := clientv3.Config{
 		Endpoints:   cfg.EtcdServers,
 		DialTimeout: timeout,
-		Username:    cfg.EtcdUsername,
-		Password:    cfg.EtcdPassword,
+	}
+	if cfg.EtcdTLS {
+		if len(cfg.EtcdTLSCA) == 0 || len(cfg.EtcdTLSCert) == 0 || len(cfg.EtcdTLSKey) == 0 {
+			fmt.Fprintln(os.Stderr, "PEM files for etcd must be specified")
+			os.Exit(1)
+		}
+		cert, err := tls.LoadX509KeyPair(cfg.EtcdTLSCert, cfg.EtcdTLSKey)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+		rootCACert, err := ioutil.ReadFile(cfg.EtcdTLSCA)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+		rootCAs := x509.NewCertPool()
+		rootCAs.AppendCertsFromPEM(rootCACert)
+		tlsCfg := &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      rootCAs,
+		}
+		etcdCfg.TLS = tlsCfg
+	} else {
+		etcdCfg.Username = cfg.EtcdUsername
+		etcdCfg.Password = cfg.EtcdPassword
 	}
 	c, err := clientv3.New(etcdCfg)
 	if err != nil {

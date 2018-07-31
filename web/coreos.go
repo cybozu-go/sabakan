@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	// iPXE script specs can be found at http://ipxe.org/cfg
+	// iPXE script specs can be found at http://ipxe.org/cmd
 	redirectiPXETemplate = `#!ipxe
 chain %s/${serial}%s
 `
