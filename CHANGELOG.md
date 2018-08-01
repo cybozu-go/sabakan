@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Fix infinite loop in asset updater after etcd compaction (#92).
+
 ## [0.15] - 2018-07-25
 
 ### Added
