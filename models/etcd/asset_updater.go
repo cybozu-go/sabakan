@@ -298,7 +298,10 @@ func (d *driver) startAssetUpdater(ctx context.Context, ch <-chan EventPool) err
 		}
 
 		// checkpoint
-		d.saveLastRev(ep.Rev)
+		err := d.saveLastRev(ep.Rev)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

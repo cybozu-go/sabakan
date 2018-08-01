@@ -47,7 +47,7 @@ func (d *driver) loadLastRev() int64 {
 
 func (d *driver) saveLastRev(rev int64) error {
 	p := filepath.Join(d.dataDir, LastRevFile)
-	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
+	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,10 @@ RETRY:
 			log.Warn("database has been compacted; re-initializing", map[string]interface{}{
 				"compactedrev": resp.CompactRevision,
 			})
-			d.saveLastRev(0)
+			err := d.saveLastRev(0)
+			if err != nil {
+				return err
+			}
 
 			// the watch will be canceled by the server as described in:
 			// https://godoc.org/github.com/coreos/etcd/clientv3#Watcher
