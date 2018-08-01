@@ -13,7 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.14] - 2018-07-18
 
 ### Changed
-- Fix but in image deletion (#86).
+- Fix a bug that leaves files of deleted OS images (#86).
 
 [placemat]: https://github.com/cybozu-go/placemat
 [Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.15...HEAD
