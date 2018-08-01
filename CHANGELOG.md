@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.16] - 2018-08-01
+
 ### Changed
 - Fix infinite loop in asset updater after etcd compaction (#92).
 
@@ -19,6 +21,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix a bug that leaves files of deleted OS images (#86).
 
 [placemat]: https://github.com/cybozu-go/placemat
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.15...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.16...HEAD
+[0.16]: https://github.com/cybozu-go/sabakan/compare/v0.15...v0.16
 [0.15]: https://github.com/cybozu-go/sabakan/compare/v0.14...v0.15
 [0.14]: https://github.com/cybozu-go/sabakan/compare/v0.13...v0.14
