@@ -25,12 +25,13 @@ SSH_PRIVKEY := ./mtest_key
 OUTPUT := ./output
 UBUNTU_IMAGE := ubuntu-18.04-server-cloudimg-amd64.img
 SABACTL := $(OUTPUT)/sabactl
+ETCDCTL := $(OUTPUT)/etcdctl
 MACHINES_JSON := $(OUTPUT)/machines.json
 IPAM_JSON := $(OUTPUT)/ipam.json
 DHCP_JSON := $(OUTPUT)/dhcp.json
 IGNITIONS := $(OUTPUT)/ignitions
 
-export SSH_PRIVKEY SABACTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
+export SSH_PRIVKEY SABACTL ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
 
 
 GENERATED_FILES = $(OUTPUT)/etcd  $(OUTPUT)/etcdctl \
