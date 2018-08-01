@@ -12,6 +12,7 @@ var (
 	worker           = os.Getenv("WORKER")
 	sshKeyFile       = os.Getenv("SSH_PRIVKEY")
 	sabactlPath      = os.Getenv("SABACTL")
+	etcdctlPath      = os.Getenv("ETCDCTL")
 	ipamJSONPath     = os.Getenv("IPAM_JSON")
 	dhcpJSONPath     = os.Getenv("DHCP_JSON")
 	machinesJSONPath = os.Getenv("MACHINES_JSON")

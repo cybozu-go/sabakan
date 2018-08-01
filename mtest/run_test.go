@@ -164,3 +164,14 @@ func sabactl(args ...string) []byte {
 	Eventually(session).Should(gexec.Exit(0))
 	return stdout.Bytes()
 }
+
+func etcdctl(args ...string) []byte {
+	args = append([]string{"--endpoints", "http://" + host1 + ":2379"}, args...)
+	command := exec.Command(etcdctlPath, args...)
+	command.Env = append(command.Env, "ETCDCTL_API=3")
+	stdout := new(bytes.Buffer)
+	session, err := gexec.Start(command, stdout, GinkgoWriter)
+	Ω(err).ShouldNot(HaveOccurred())
+	Eventually(session).Should(gexec.Exit(0))
+	return stdout.Bytes()
+}
