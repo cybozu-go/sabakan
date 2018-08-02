@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -31,6 +34,9 @@ var (
 	flagEtcdTimeout  = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
 	flagEtcdUsername = flag.String("etcd-username", "", "username for etcd authentication")
 	flagEtcdPassword = flag.String("etcd-password", "", "password for etcd authentication")
+	flagEtcdTLSCA    = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
+	flagEtcdTLSCert  = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
+	flagEtcdTLSKey   = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
 
 	flagDHCPBind     = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
 	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
@@ -56,6 +62,9 @@ func main() {
 		cfg.EtcdTimeout = *flagEtcdTimeout
 		cfg.EtcdUsername = *flagEtcdUsername
 		cfg.EtcdPassword = *flagEtcdPassword
+		cfg.EtcdTLSCA = *flagEtcdTLSCA
+		cfg.EtcdTLSCert = *flagEtcdTLSCert
+		cfg.EtcdTLSKey = *flagEtcdTLSKey
 		cfg.DHCPBind = *flagDHCPBind
 		cfg.IPXEPath = *flagIPXEPath
 		cfg.DataDir = *flagDataDir
@@ -97,6 +106,30 @@ func main() {
 		Username:    cfg.EtcdUsername,
 		Password:    cfg.EtcdPassword,
 	}
+
+	tlsCfg := &tls.Config{}
+	if len(cfg.EtcdTLSCA) != 0 {
+		rootCACert, err := ioutil.ReadFile(cfg.EtcdTLSCA)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+		rootCAs := x509.NewCertPool()
+		ok := rootCAs.AppendCertsFromPEM(rootCACert)
+		if !ok {
+			fmt.Fprintln(os.Stderr, "Failed to parse PEM file")
+			os.Exit(1)
+		}
+		tlsCfg.RootCAs = rootCAs
+	}
+	if len(cfg.EtcdTLSCert) != 0 && len(cfg.EtcdTLSKey) != 0 {
+		cert, err := tls.LoadX509KeyPair(cfg.EtcdTLSCert, cfg.EtcdTLSKey)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+		tlsCfg.Certificates = []tls.Certificate{cert}
+	}
+	etcdCfg.TLS = tlsCfg
+
 	c, err := clientv3.New(etcdCfg)
 	if err != nil {
 		log.ErrorExit(err)
