@@ -34,7 +34,6 @@ var (
 	flagEtcdTimeout  = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
 	flagEtcdUsername = flag.String("etcd-username", "", "username for etcd authentication")
 	flagEtcdPassword = flag.String("etcd-password", "", "password for etcd authentication")
-	flagEtcdTLS      = flag.Bool("etcd-tls", false, "enable TLS connection to etcd servers")
 	flagEtcdTLSCA    = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
 	flagEtcdTLSCert  = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
 	flagEtcdTLSKey   = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
@@ -63,7 +62,6 @@ func main() {
 		cfg.EtcdTimeout = *flagEtcdTimeout
 		cfg.EtcdUsername = *flagEtcdUsername
 		cfg.EtcdPassword = *flagEtcdPassword
-		cfg.EtcdTLS = *flagEtcdTLS
 		cfg.EtcdTLSCA = *flagEtcdTLSCA
 		cfg.EtcdTLSCert = *flagEtcdTLSCert
 		cfg.EtcdTLSKey = *flagEtcdTLSKey
@@ -105,12 +103,10 @@ func main() {
 	etcdCfg := clientv3.Config{
 		Endpoints:   cfg.EtcdServers,
 		DialTimeout: timeout,
+		Username:    cfg.EtcdUsername,
+		Password:    cfg.EtcdPassword,
 	}
-	if cfg.EtcdTLS {
-		if len(cfg.EtcdTLSCA) == 0 || len(cfg.EtcdTLSCert) == 0 || len(cfg.EtcdTLSKey) == 0 {
-			fmt.Fprintln(os.Stderr, "PEM files for etcd must be specified")
-			os.Exit(1)
-		}
+	if len(cfg.EtcdTLSCA) != 0 && len(cfg.EtcdTLSCert) != 0 && len(cfg.EtcdTLSKey) != 0 {
 		cert, err := tls.LoadX509KeyPair(cfg.EtcdTLSCert, cfg.EtcdTLSKey)
 		if err != nil {
 			log.ErrorExit(err)
@@ -130,9 +126,6 @@ func main() {
 			RootCAs:      rootCAs,
 		}
 		etcdCfg.TLS = tlsCfg
-	} else {
-		etcdCfg.Username = cfg.EtcdUsername
-		etcdCfg.Password = cfg.EtcdPassword
 	}
 	c, err := clientv3.New(etcdCfg)
 	if err != nil {

@@ -25,8 +25,6 @@ Usage of sabakan:
         comma-separated URLs of the backend etcd (default "http://localhost:2379")
   -etcd-timeout string
         dial timeout to etcd (default "2s")
-  -etcd-tls
-        enable TLS connection to etcd servers
   -etcd-tls-ca string
         path to CA bundle used to verify certificates of etcd servers
   -etcd-tls-cert string
@@ -58,7 +56,6 @@ Option          | Default value            | Description
 `etcd-prefix`   | `/sabakan`               | etcd prefix
 `etcd-servers`  | `http://localhost:2379`  | comma-separated URLs of the backend etcd
 `etcd-timeout`  | `2s`                     | dial timeout to etcd
-`etcd-tls`      | false                    | Enable TLS connection to etcd servers.
 `etcd-tls-ca`   | ""                       | Path to CA bundle used to verify certificates of etcd servers.
 `etcd-tls-cert` | ""                       | Path to my certificate used to identify myself to etcd servers.
 `etcd-tls-key`  | ""                       | Path to my key used to identify myself to etcd servers.

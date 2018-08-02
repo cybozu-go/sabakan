@@ -34,7 +34,6 @@ type config struct {
 	EtcdTimeout  string   `yaml:"etcd-timeout"`
 	EtcdUsername string   `yaml:"etcd-username"`
 	EtcdPassword string   `yaml:"etcd-password"`
-	EtcdTLS      bool     `yaml:"etcd-tls"`
 	EtcdTLSCA    string   `yaml:"etcd-tls-ca"`
 	EtcdTLSCert  string   `yaml:"etcd-tls-cert"`
 	EtcdTLSKey   string   `yaml:"etcd-tls-key"`
