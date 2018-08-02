@@ -108,13 +108,12 @@ func main() {
 	}
 
 	tlsCfg := &tls.Config{}
-	var rootCAs *x509.CertPool
 	if len(cfg.EtcdTLSCA) != 0 {
 		rootCACert, err := ioutil.ReadFile(cfg.EtcdTLSCA)
 		if err != nil {
 			log.ErrorExit(err)
 		}
-		rootCAs = x509.NewCertPool()
+		rootCAs := x509.NewCertPool()
 		ok := rootCAs.AppendCertsFromPEM(rootCACert)
 		if !ok {
 			fmt.Fprintln(os.Stderr, "Failed to parse PEM file")
