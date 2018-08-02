@@ -120,7 +120,11 @@ func main() {
 			log.ErrorExit(err)
 		}
 		rootCAs := x509.NewCertPool()
-		rootCAs.AppendCertsFromPEM(rootCACert)
+		ok := rootCAs.AppendCertsFromPEM(rootCACert)
+		if !ok {
+			fmt.Fprintln(os.Stderr, "Failed to parse PEM file")
+			os.Exit(1)
+		}
 		tlsCfg := &tls.Config{
 			Certificates: []tls.Certificate{cert},
 			RootCAs:      rootCAs,

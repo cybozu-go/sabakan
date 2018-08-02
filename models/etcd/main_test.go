@@ -2,6 +2,9 @@ package etcd
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,8 +21,11 @@ import (
 )
 
 const (
-	etcdClientURL = "http://localhost:12379"
-	etcdPeerURL   = "http://localhost:12380"
+	etcdClientURL = "https://localhost:12379"
+	etcdPeerURL   = "https://localhost:12380"
+	etcdCA        = "../../testdata/certs/ca.crt"
+	etcdCert      = "../../testdata/certs/server.crt"
+	etcdKey       = "../../testdata/certs/server.key.insecure"
 )
 
 func testMain(m *testing.M) int {
@@ -36,6 +42,13 @@ func testMain(m *testing.M) int {
 
 	cmd := exec.Command("etcd",
 		"--data-dir", etcdPath,
+		"--client-cert-auth",
+		"--trusted-ca-file", etcdCA,
+		"--cert-file", etcdCert,
+		"--key-file", etcdKey,
+		"--peer-trusted-ca-file", etcdCA,
+		"--peer-cert-file", etcdCert,
+		"--peer-key-file", etcdKey,
 		"--initial-cluster", "default="+etcdPeerURL,
 		"--listen-peer-urls", etcdPeerURL,
 		"--initial-advertise-peer-urls", etcdPeerURL,
@@ -64,13 +77,31 @@ func newEtcdClient(prefix string) (*clientv3.Client, error) {
 	var clientURL string
 	circleci := os.Getenv("CIRCLECI") == "true"
 	if circleci {
-		clientURL = "http://localhost:2379"
+		clientURL = "https://localhost:2379"
 	} else {
 		clientURL = etcdClientURL
+	}
+	cert, err := tls.LoadX509KeyPair(etcdCert, etcdKey)
+	if err != nil {
+		return nil, err
+	}
+	rootCACert, err := ioutil.ReadFile(etcdCA)
+	if err != nil {
+		return nil, err
+	}
+	rootCAs := x509.NewCertPool()
+	ok := rootCAs.AppendCertsFromPEM(rootCACert)
+	if !ok {
+		return nil, errors.New("Failed to parse PEM file")
+	}
+	tlsCfg := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      rootCAs,
 	}
 	c, err := clientv3.New(clientv3.Config{
 		Endpoints:   []string{clientURL},
 		DialTimeout: 2 * time.Second,
+		TLS:         tlsCfg,
 	})
 	if err != nil {
 		return nil, err

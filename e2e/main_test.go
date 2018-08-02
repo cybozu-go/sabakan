@@ -12,8 +12,11 @@ import (
 )
 
 const (
-	etcdClientURL = "http://localhost:12379"
-	etcdPeerURL   = "http://localhost:12380"
+	etcdClientURL = "https://localhost:12379"
+	etcdPeerURL   = "https://localhost:12380"
+	etcdCA        = "../testdata/certs/ca.crt"
+	etcdCert      = "../testdata/certs/server.crt"
+	etcdKey       = "../testdata/certs/server.key.insecure"
 )
 
 var circleci = false
@@ -46,6 +49,13 @@ func runEtcd() func() {
 	}
 	command := exec.Command("etcd",
 		"--data-dir", etcdPath,
+		"--client-cert-auth",
+		"--trusted-ca-file", etcdCA,
+		"--cert-file", etcdCert,
+		"--key-file", etcdKey,
+		"--peer-trusted-ca-file", etcdCA,
+		"--peer-cert-file", etcdCert,
+		"--peer-key-file", etcdKey,
 		"--initial-cluster", "default="+etcdPeerURL,
 		"--listen-peer-urls", etcdPeerURL,
 		"--initial-advertise-peer-urls", etcdPeerURL,
@@ -92,6 +102,10 @@ func runSabakan() (func(), error) {
 	command := exec.Command("../sabakan",
 		"-dhcp-bind", "0.0.0.0:10067",
 		"-etcd-servers", etcdClientURL,
+		"-etcd-tls",
+		"-etcd-tls-ca", etcdCA,
+		"-etcd-tls-cert", etcdCert,
+		"-etcd-tls-key", etcdKey,
 		"-advertise-url", "http://localhost:10080",
 		"-data-dir", dataDir,
 	)
