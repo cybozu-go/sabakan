@@ -15,7 +15,7 @@ jobs:
       - run:
           command: |
             ./sabakan -dhcp-bind 0.0.0.0:10067 \
-                      -etcd-servers http://localhost:2379 \
+                      -etcd-endpoints http://localhost:2379 \
                       -advertise-url http://localhost:10080
           background: true
       - run: go test -race -v ./...
