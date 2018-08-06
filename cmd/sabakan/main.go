@@ -92,7 +92,7 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	c, err := cfg.Etcd.Client()
+	c, err := etcdutil.NewClient(cfg.Etcd)
 	if err != nil {
 		log.ErrorExit(err)
 	}

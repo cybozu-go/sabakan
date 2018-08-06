@@ -71,7 +71,7 @@ func newEtcdClient(prefix string) (*clientv3.Client, error) {
 	cfg := etcdutil.NewConfig()
 	cfg.Prefix = prefix
 	cfg.Endpoints = []string{clientURL}
-	return cfg.Client()
+	return etcdutil.NewClient(cfg)
 }
 
 func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
