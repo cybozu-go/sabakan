@@ -5,8 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.17] - 2018-08-06
+
 ### Added
-- Support for TLS client authentication for etcd (#93).
+- Support for TLS client authentication for etcd (#93, #94).
 
 ## [0.16] - 2018-08-01
 
