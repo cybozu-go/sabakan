@@ -101,7 +101,7 @@ func runSabakan() (func(), error) {
 
 	command := exec.Command("../sabakan",
 		"-dhcp-bind", "0.0.0.0:10067",
-		"-etcd-servers", etcdClientURL,
+		"-etcd-endpoints", etcdClientURL,
 		"-etcd-tls-ca", etcdCA,
 		"-etcd-tls-cert", etcdCert,
 		"-etcd-tls-key", etcdKey,

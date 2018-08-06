@@ -18,8 +18,9 @@ write_files:
       advertise-url: http://@HOST@:10080
       allow-ips: [0.0.0.0/0]
       dhcp-bind: 0.0.0.0:67
-      etcd-servers: [http://@HOST1@:2379]
       ipxe-efi-path: /boot/ipxe.efi
+      etcd:
+        endpoints: [http://@HOST1@:2379]
     path: /etc/sabakan.yml
     permissions: '0644'
 packages:

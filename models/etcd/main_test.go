@@ -9,11 +9,10 @@ import (
 	"os"
 	"os/exec"
 	"testing"
-	"time"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/clientv3/namespace"
 	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/etcdutil"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -68,17 +67,10 @@ func newEtcdClient(prefix string) (*clientv3.Client, error) {
 	} else {
 		clientURL = etcdClientURL
 	}
-	c, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{clientURL},
-		DialTimeout: 2 * time.Second,
-	})
-	if err != nil {
-		return nil, err
-	}
-	c.KV = namespace.NewKV(c.KV, prefix)
-	c.Watcher = namespace.NewWatcher(c.Watcher, prefix)
-	c.Lease = namespace.NewLease(c.Lease, prefix)
-	return c, nil
+
+	cfg := etcdutil.NewConfig(prefix)
+	cfg.Endpoints = []string{clientURL}
+	return etcdutil.NewClient(cfg)
 }
 
 func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {

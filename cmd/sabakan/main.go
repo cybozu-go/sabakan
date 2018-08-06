@@ -2,11 +2,8 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -16,9 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/clientv3/namespace"
 	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/etcdutil"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/dhcpd"
 	"github.com/cybozu-go/sabakan/models/etcd"
@@ -29,20 +25,20 @@ import (
 
 var (
 	flagHTTP         = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
-	flagEtcdServers  = flag.String("etcd-servers", strings.Join(defaultEtcdServers, ","), "comma-separated URLs of the backend etcd")
-	flagEtcdPrefix   = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
-	flagEtcdTimeout  = flag.String("etcd-timeout", "2s", "dial timeout to etcd")
-	flagEtcdUsername = flag.String("etcd-username", "", "username for etcd authentication")
-	flagEtcdPassword = flag.String("etcd-password", "", "password for etcd authentication")
-	flagEtcdTLSCA    = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
-	flagEtcdTLSCert  = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
-	flagEtcdTLSKey   = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
-
 	flagDHCPBind     = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
 	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
 	flagDataDir      = flag.String("data-dir", defaultDataDir, "directory to store files")
 	flagAdvertiseURL = flag.String("advertise-url", "", "public URL of this server")
 	flagAllowIPs     = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
+
+	flagEtcdEndpoints = flag.String("etcd-endpoints", strings.Join(etcdutil.DefaultEndpoints, ","), "comma-separated URLs of the backend etcd endpoints")
+	flagEtcdPrefix    = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
+	flagEtcdTimeout   = flag.String("etcd-timeout", etcdutil.DefaultTimeout, "dial timeout to etcd")
+	flagEtcdUsername  = flag.String("etcd-username", "", "username for etcd authentication")
+	flagEtcdPassword  = flag.String("etcd-password", "", "password for etcd authentication")
+	flagEtcdTLSCA     = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
+	flagEtcdTLSCert   = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
+	flagEtcdTLSKey    = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
 
 	flagConfigFile = flag.String("config-file", "", "path to configuration file")
 )
@@ -56,20 +52,21 @@ func main() {
 
 	cfg := newConfig()
 	if *flagConfigFile == "" {
-		cfg.ListenHTTP = *flagHTTP
-		cfg.EtcdServers = strings.Split(*flagEtcdServers, ",")
-		cfg.EtcdPrefix = *flagEtcdPrefix
-		cfg.EtcdTimeout = *flagEtcdTimeout
-		cfg.EtcdUsername = *flagEtcdUsername
-		cfg.EtcdPassword = *flagEtcdPassword
-		cfg.EtcdTLSCA = *flagEtcdTLSCA
-		cfg.EtcdTLSCert = *flagEtcdTLSCert
-		cfg.EtcdTLSKey = *flagEtcdTLSKey
-		cfg.DHCPBind = *flagDHCPBind
-		cfg.IPXEPath = *flagIPXEPath
-		cfg.DataDir = *flagDataDir
 		cfg.AdvertiseURL = *flagAdvertiseURL
 		cfg.AllowIPs = strings.Split(*flagAllowIPs, ",")
+		cfg.DHCPBind = *flagDHCPBind
+		cfg.DataDir = *flagDataDir
+		cfg.IPXEPath = *flagIPXEPath
+		cfg.ListenHTTP = *flagHTTP
+
+		cfg.Etcd.Endpoints = strings.Split(*flagEtcdEndpoints, ",")
+		cfg.Etcd.Prefix = *flagEtcdPrefix
+		cfg.Etcd.Timeout = *flagEtcdTimeout
+		cfg.Etcd.Username = *flagEtcdUsername
+		cfg.Etcd.Password = *flagEtcdPassword
+		cfg.Etcd.TLSCA = *flagEtcdTLSCA
+		cfg.Etcd.TLSCert = *flagEtcdTLSCert
+		cfg.Etcd.TLSKey = *flagEtcdTLSKey
 	} else {
 		f, err := os.Open(*flagConfigFile)
 		if err != nil {
@@ -95,48 +92,10 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	timeout, err := time.ParseDuration(cfg.EtcdTimeout)
+	c, err := etcdutil.NewClient(cfg.Etcd)
 	if err != nil {
 		log.ErrorExit(err)
 	}
-
-	etcdCfg := clientv3.Config{
-		Endpoints:   cfg.EtcdServers,
-		DialTimeout: timeout,
-		Username:    cfg.EtcdUsername,
-		Password:    cfg.EtcdPassword,
-	}
-
-	tlsCfg := &tls.Config{}
-	if len(cfg.EtcdTLSCA) != 0 {
-		rootCACert, err := ioutil.ReadFile(cfg.EtcdTLSCA)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-		rootCAs := x509.NewCertPool()
-		ok := rootCAs.AppendCertsFromPEM(rootCACert)
-		if !ok {
-			fmt.Fprintln(os.Stderr, "Failed to parse PEM file")
-			os.Exit(1)
-		}
-		tlsCfg.RootCAs = rootCAs
-	}
-	if len(cfg.EtcdTLSCert) != 0 && len(cfg.EtcdTLSKey) != 0 {
-		cert, err := tls.LoadX509KeyPair(cfg.EtcdTLSCert, cfg.EtcdTLSKey)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-		tlsCfg.Certificates = []tls.Certificate{cert}
-	}
-	etcdCfg.TLS = tlsCfg
-
-	c, err := clientv3.New(etcdCfg)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-	c.KV = namespace.NewKV(c.KV, cfg.EtcdPrefix)
-	c.Watcher = namespace.NewWatcher(c.Watcher, cfg.EtcdPrefix)
-	c.Lease = namespace.NewLease(c.Lease, cfg.EtcdPrefix)
 	defer c.Close()
 
 	model := etcd.NewModel(c, cfg.DataDir, advertiseURL)

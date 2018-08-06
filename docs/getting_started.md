@@ -39,8 +39,9 @@ $ sudo mkdir -p /var/lib/sabakan
 Save the following contents as `/usr/local/etc/sabakan.yml`:
 
 ```yaml
-etcd-servers:
-  - http://localhost:2379
+etcd:
+  endpoints:
+    - http://localhost:2379
 dhcp-bind: 0.0.0.0:67
 ```
 
