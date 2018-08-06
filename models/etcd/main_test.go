@@ -68,8 +68,7 @@ func newEtcdClient(prefix string) (*clientv3.Client, error) {
 		clientURL = etcdClientURL
 	}
 
-	cfg := etcdutil.NewConfig()
-	cfg.Prefix = prefix
+	cfg := etcdutil.NewConfig(prefix)
 	cfg.Endpoints = []string{clientURL}
 	return etcdutil.NewClient(cfg)
 }

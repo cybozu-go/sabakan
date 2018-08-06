@@ -21,7 +21,7 @@ func newConfig() *config {
 		IPXEPath:   defaultIPXEPath,
 		DataDir:    defaultDataDir,
 		AllowIPs:   defaultAllowIPs,
-		Etcd:       etcdutil.NewConfig(),
+		Etcd:       etcdutil.NewConfig(defaultEtcdPrefix),
 	}
 }
 
