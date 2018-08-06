@@ -71,7 +71,7 @@ When `-config-file` is specified, command line options are ignored except for lo
 options.
 
 Properties in YAML are the same as the command-line option names without leading slashes.
-etcd config is defined by [cybozu-go/etcdutil](https://github.com/cybozu-go/etcdutil), and not shown below will use default values of the etcdutil.
+etcd config can be defined `etcd:`. The etcd parameters are defined by [cybozu-go/etcdutil](https://github.com/cybozu-go/etcdutil), and not shown below will use default values of the etcdutil.
 
 Name     | Type   | Required | Description
 -------- | ------ | -------- | -----------
