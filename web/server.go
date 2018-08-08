@@ -99,6 +99,8 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 		s.handleMachines(w, r)
 	case strings.HasPrefix(p, "state/"):
 		s.handleState(w, r)
+	case strings.HasPrefix(p, "kernel_params/"):
+		s.handleKernelParams(w, r)
 	default:
 		renderError(r.Context(), w, APIErrNotFound)
 	}
