@@ -2,7 +2,6 @@ package mock
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"github.com/cybozu-go/sabakan"
@@ -35,5 +34,5 @@ func (d *kernelParamsDriver) GetParams(ctx context.Context, os string) (sabakan.
 		return val, nil
 	}
 
-	return "", errors.New("KernelParams is not set")
+	return "", sabakan.ErrNotFound
 }

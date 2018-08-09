@@ -36,8 +36,12 @@ func (s Server) handleKernelParams(w http.ResponseWriter, r *http.Request) {
 func (s Server) handleKernelParamsGet(w http.ResponseWriter, r *http.Request, os string) {
 	ctx := r.Context()
 	kernelParams, err := s.Model.KernelParams.GetParams(ctx, os)
-	if err != nil {
+	if err == sabakan.ErrNotFound {
 		renderError(ctx, w, APIErrNotFound)
+		return
+	}
+	if err != nil {
+		renderError(ctx, w, InternalServerError(err))
 		return
 	}
 

@@ -77,7 +77,7 @@ func (c kernelParamsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 
 func kernelParamsSetCommand(os string) subcommands.Command {
 	return subcmd{
-		imagesUploadCmd{os: os},
+		kernelParamsSetCmd{os: os},
 		"set",
 		"set kernel parameters",
 		"set KERNEL_PARAMS",
