@@ -80,7 +80,7 @@ func testHandleiPXEWithSerial(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/kernel_params/coreos", strings.NewReader("test_param=test"))
+	r = httptest.NewRequest("PUT", "/api/v1/kernel_params/coreos", strings.NewReader("console=ttyS0 coreos.autologin=ttyS0"))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -100,7 +100,7 @@ func testHandleiPXEWithSerial(t *testing.T) {
 	if !strings.Contains(string(body), "kernel") {
 		t.Error("unexpected ipxe script:", string(body))
 	}
-	if !strings.Contains(string(body), "test_param=test") {
+	if !strings.Contains(string(body), "console=ttyS0 coreos.autologin=ttyS0") {
 		t.Error("kernel parameter is not contained", string(body))
 	}
 
