@@ -58,7 +58,6 @@ func testHandleiPXEWithSerial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// handler := Server{Model: m, MyURL: url}
 	handler := newTestServerWithURL(m, url)
 	err = m.Machine.Register(context.Background(), machines)
 	if err != nil {
