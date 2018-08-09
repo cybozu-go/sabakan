@@ -58,7 +58,8 @@ func testHandleiPXEWithSerial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	handler := Server{Model: m, MyURL: url}
+	// handler := Server{Model: m, MyURL: url}
+	handler := newTestServerWithURL(m, url)
 	err = m.Machine.Register(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
@@ -79,6 +80,15 @@ func testHandleiPXEWithSerial(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/kernel_params/coreos", strings.NewReader("test_param=test"))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Error("resp.StatusCode != http.StatusOK:", resp.StatusCode)
+	}
+
+	w = httptest.NewRecorder()
 	r = httptest.NewRequest("GET", "/api/v1/boot/coreos/ipxe/2222abcd", nil)
 	handler.ServeHTTP(w, r)
 
@@ -89,6 +99,9 @@ func testHandleiPXEWithSerial(t *testing.T) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	if !strings.Contains(string(body), "kernel") {
 		t.Error("unexpected ipxe script:", string(body))
+	}
+	if !strings.Contains(string(body), "test_param=test") {
+		t.Error("kernel parameter is not contained", string(body))
 	}
 
 	w = httptest.NewRecorder()

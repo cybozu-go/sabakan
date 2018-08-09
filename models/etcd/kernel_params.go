@@ -3,11 +3,17 @@ package etcd
 import (
 	"context"
 	"path"
+	"regexp"
 
 	"github.com/cybozu-go/sabakan"
 )
 
 func (d *driver) putParams(ctx context.Context, os string, params sabakan.KernelParams) error {
+	r := regexp.MustCompile(`^([[:print:]])+$`)
+	if r.MatchString(string(params)) {
+		return sabakan.ErrBadRequest
+	}
+
 	key := path.Join(KeyKernelParams, os)
 	_, err := d.client.Put(ctx, key, string(params))
 	if err != nil {

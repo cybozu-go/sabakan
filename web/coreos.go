@@ -66,11 +66,6 @@ func (s Server) handleCoreOSiPXE(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Request, serial string) {
-	console := ""
-	if r.URL.Query().Get("serial") == "1" {
-		console = "console=ttyS0"
-	}
-
 	m, err := s.Model.Machine.Get(r.Context(), serial)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
@@ -88,9 +83,15 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	params, err := s.Model.KernelParams.GetParams(r.Context(), "coreos")
+	if err != sabakan.ErrNotFound && err != nil {
+		renderError(r.Context(), w, InternalServerError(err))
+		return
+	}
+
 	u := *s.MyURL
 	u.Path = path.Join("/api/v1/boot")
-	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), ids[len(ids)-1], console)
+	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), ids[len(ids)-1], params)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))

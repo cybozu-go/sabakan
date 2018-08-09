@@ -68,6 +68,10 @@ func (s Server) handleKernelParamsPut(w http.ResponseWriter, r *http.Request, os
 	}
 
 	err = s.Model.KernelParams.PutParams(ctx, os, sabakan.KernelParams(data))
+	if err == sabakan.ErrBadRequest {
+		renderError(r.Context(), w, APIErrBadRequest)
+		return
+	}
 	if err != nil {
 		renderError(ctx, w, InternalServerError(err))
 		return
