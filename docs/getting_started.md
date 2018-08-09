@@ -14,6 +14,7 @@ your servers with CoreOS Container Linux.
   * [Configure DHCP](#dhcp)
   * [Upload CoreOS Container Linux](#upload)
   * [Register machines](#register)
+  * [Register kernel parameters](#kernelparams)
 * [What's next](#whatsnext)
 
 ## <a name="setup" />Setup sabakan
@@ -158,6 +159,15 @@ CoreOS Container Linux using [UEFI HTTP Boot][HTTPBoot].
 CoreOS can be initialized at first boot by [ignition][].
 Sabakan can generate ignition configuration from templates.
 Read [ignition.md](ignition.md) for details.
+
+### <a name="kernelparams" />Register kernel parameters
+
+Put the kernel parameteres to sabakan:
+```console
+$ sabactl dhcp set "console=ttyS0 coreos.autologin=ttyS0"
+```
+
+When iPXE script is acquired, this value is passed as the kernel parameter of iPXE script.
 
 ## <a name="whatsnext" /> What's next
 
