@@ -10,7 +10,7 @@ import (
 
 func (d *driver) putParams(ctx context.Context, os string, params sabakan.KernelParams) error {
 	r := regexp.MustCompile(`^([[:print:]])+$`)
-	if r.MatchString(string(params)) {
+	if !r.MatchString(string(params)) {
 		return sabakan.ErrBadRequest
 	}
 
