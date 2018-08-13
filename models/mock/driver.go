@@ -24,15 +24,16 @@ func NewModel() sabakan.Model {
 		storage:  make(map[string][]byte),
 	}
 	return sabakan.Model{
-		Runner:   d,
-		IPAM:     ipamDriver{d},
-		Machine:  machineDriver{d},
-		Storage:  d,
-		DHCP:     newDHCPDriver(d),
-		Image:    newImageDriver(),
-		Asset:    newAssetDriver(),
-		Ignition: newIgnitionDriver(),
-		Log:      logDriver{d},
+		Runner:       d,
+		IPAM:         ipamDriver{d},
+		Machine:      machineDriver{d},
+		Storage:      d,
+		DHCP:         newDHCPDriver(d),
+		Image:        newImageDriver(),
+		Asset:        newAssetDriver(),
+		Ignition:     newIgnitionDriver(),
+		Log:          logDriver{d},
+		KernelParams: newKernelParamsDriver(),
 	}
 }
 

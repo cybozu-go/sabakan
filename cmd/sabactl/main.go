@@ -28,6 +28,7 @@ func main() {
 	subcommands.Register(ignitionsCommand(), "")
 	subcommands.Register(cryptsCommand(), "")
 	subcommands.Register(logsCommand(), "")
+	subcommands.Register(kernelParamsCommand(), "")
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
 

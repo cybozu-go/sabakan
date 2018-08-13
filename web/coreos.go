@@ -14,14 +14,14 @@ import (
 const (
 	// iPXE script specs can be found at http://ipxe.org/cfg and http://ipxe.org/cmd
 	redirectiPXETemplate = `#!ipxe
-chain %s/${serial}%s
+chain %s/${serial}
 `
 
 	coreOSiPXETemplate = `#!ipxe
 
 set base-url %s
 set ignition-id %s
-kernel ${base-url}/coreos/kernel initrd=initrd.gz coreos.first_boot=1 coreos.config.url=${base-url}/ignitions/${serial}/${ignition-id} scsi_mod.use_blk_mq=Y %s
+kernel ${base-url}/coreos/kernel initrd=initrd.gz coreos.first_boot=1 coreos.config.url=${base-url}/ignitions/${serial}/${ignition-id} %s
 initrd ${base-url}/coreos/initrd.gz
 boot
 `
@@ -52,25 +52,15 @@ func (s Server) handleCoreOS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleCoreOSiPXE(w http.ResponseWriter, r *http.Request) {
-	serial := ""
-	if r.URL.Query().Get("serial") == "1" {
-		serial = "?serial=1"
-	}
-
 	u := *s.MyURL
 	u.Path = path.Join("/api/v1/boot/coreos/ipxe")
-	ipxe := fmt.Sprintf(redirectiPXETemplate, u.String(), serial)
+	ipxe := fmt.Sprintf(redirectiPXETemplate, u.String())
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))
 }
 
 func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Request, serial string) {
-	console := ""
-	if r.URL.Query().Get("serial") == "1" {
-		console = "console=ttyS0"
-	}
-
 	m, err := s.Model.Machine.Get(r.Context(), serial)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
@@ -88,9 +78,15 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	params, err := s.Model.KernelParams.GetParams(r.Context(), "coreos")
+	if err != sabakan.ErrNotFound && err != nil {
+		renderError(r.Context(), w, InternalServerError(err))
+		return
+	}
+
 	u := *s.MyURL
 	u.Path = path.Join("/api/v1/boot")
-	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), ids[len(ids)-1], console)
+	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), ids[len(ids)-1], params)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))

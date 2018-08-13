@@ -119,3 +119,8 @@ The value is JSON having fields defined in [audit log](audit.md).
 
 This key stores RFC3339-format timestamp to record the last compaction
 of audit logs.
+
+`<prefix>/kernel-params/coreos`
+----------------
+
+This type of key holds kernel parameters.

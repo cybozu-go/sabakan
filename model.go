@@ -94,6 +94,12 @@ type LogModel interface {
 	Dump(ctx context.Context, since, until time.Time, w io.Writer) error
 }
 
+// KernelParamsModel is an interface for kernel parameters.
+type KernelParamsModel interface {
+	PutParams(ctx context.Context, os string, params string) error
+	GetParams(ctx context.Context, os string) (string, error)
+}
+
 // Runner is an interface to run the underlying threads.
 //
 // The caller must pass a channel as follows.
@@ -112,12 +118,13 @@ type Runner interface {
 // Model is a struct that consists of sub-models.
 type Model struct {
 	Runner
-	Storage  StorageModel
-	Machine  MachineModel
-	IPAM     IPAMModel
-	DHCP     DHCPModel
-	Image    ImageModel
-	Asset    AssetModel
-	Ignition IgnitionModel
-	Log      LogModel
+	Storage      StorageModel
+	Machine      MachineModel
+	IPAM         IPAMModel
+	DHCP         DHCPModel
+	Image        ImageModel
+	Asset        AssetModel
+	Ignition     IgnitionModel
+	Log          LogModel
+	KernelParams KernelParamsModel
 }

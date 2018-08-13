@@ -33,6 +33,8 @@ REST API
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
 * [GET /api/v1/logs](#getlogs)
+* [PUT /api/v1/kernel_params/coreos](#putkernelparams)
+* [GET /api/v1/kernel_params/coreos](#getkernelparams)
 
 ## Access control
 
@@ -851,4 +853,49 @@ $ curl -s 'localhost:10080/api/v1/logs?since=20180404&until=20180707'
 {"ts":"2018-07-05T00:21:02.486519609Z","rev":"2","user":"root","ip":"127.0.0.1","host":"rkt-9ac1f230-64c4-40b1-a67c-52c297435d8b","category":"ipam","instance":"config","action":"put","detail":"{\"max-nodes-in-rack\":28,\"node-ipv4-pool\":\"10.69.0.0/20\",\"node-ipv4-range-size\":6,\"node-ipv4-range-mask\":26,\"node-ip-per-node\":3,\"node-index-offset\":3,\"bmc-ipv4-pool\":\"10.72.16.0/20\",\"bmc-ipv4-offset\":\"0.0.1.0\",\"bmc-ipv4-range-size\":5,\"bmc-ipv4-range-mask\":20}"}
 {"ts":"2018-07-05T00:21:02.56064736Z","rev":"4","user":"root","ip":"127.0.0.1","host":"rkt-9ac1f230-64c4-40b1-a67c-52c297435d8b","category":"dhcp","instance":"config","action":"put","detail":"{\"gateway-offset\":1,\"lease-minutes\":60}"}
 ......
+```
+
+## <a name="putkernelparams" />`PUT /api/v1/kernel_params/coreos`
+
+Create or update kernel parameters on iPXE booting.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- Kernel params string contains non ASCII character(s) or control sequence(s).
+
+  HTTP status code: 400 Bad Request
+
+**Example**
+
+```console
+$ curl -s -XPUT 'localhost:10080/api/v1/kernel_params/coreos' -d '
+console=ttyS0 coreos.autologin=ttyS0
+'
+```
+
+## <a name="getkernelparams" />`GET /api/v1/kernel_params/coreos`
+
+Get kernel parameters.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: text/plain`
+- HTTP response body: Current kernel parameters
+
+**Failure responses**
+
+- Kernel parameters have not been created
+
+  HTTP status code: 404 Not Found
+
+**Example**
+
+```console
+$ curl -s -XGET 'localhost:10080/api/v1/kernel_params/coreos'
+console=ttyS0 coreos.autologin=ttyS0
 ```
