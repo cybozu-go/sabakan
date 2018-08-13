@@ -229,7 +229,7 @@ of `START_DATE` are retrieved.
 If `START_DATE` and `END_DATE` is given, logs between them are
 retrieved.
 
-`sabactl kernelparams [-os OS] set`
+`sabactl kernel-params [-os OS] set`
 ------------------
 
 Set/update kernel parameters.
@@ -237,10 +237,10 @@ Set/update kernel parameters.
 * `-os`: specifies OS of the image.  Default is "coreos"
 
 ```console
-$ sabactl kernelparams set "<param0>=<value0> <param1>=<value1> ..."
+$ sabactl kernel-params set "<param0>=<value0> <param1>=<value1> ..."
 ```
 
-`sabactl kernelparams [-os OS] get`
+`sabactl kernel-params [-os OS] get`
 ------------------
 
 Get the current kernel parameters.
@@ -248,5 +248,5 @@ Get the current kernel parameters.
 * `-os`: specifies OS of the image.  Default is "coreos"
 
 ```console
-$ sabactl kernelparams get
+$ sabactl kernel-params get
 ```

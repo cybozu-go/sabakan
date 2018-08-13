@@ -162,7 +162,7 @@ Read [ignition.md](ignition.md) for details.
 
 ### <a name="kernelparams" />Register kernel parameters
 
-Put the kernel parameteres to sabakan:
+Put the kernel parameters to sabakan:
 ```console
 $ sabactl kernel-params set "console=ttyS0 coreos.autologin=ttyS0"
 ```

@@ -865,7 +865,7 @@ Create or update kernel parameters on iPXE booting.
 
 **Failure responses**
 
-- Kernel params string contains contains non ASCII character(s) or control sequence(s).
+- Kernel params string contains non ASCII character(s) or control sequence(s).
 
   HTTP status code: 400 Bad Request
 
