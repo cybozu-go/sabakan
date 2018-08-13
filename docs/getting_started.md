@@ -164,7 +164,7 @@ Read [ignition.md](ignition.md) for details.
 
 Put the kernel parameteres to sabakan:
 ```console
-$ sabactl dhcp set "console=ttyS0 coreos.autologin=ttyS0"
+$ sabactl kernel-params set "console=ttyS0 coreos.autologin=ttyS0"
 ```
 
 When iPXE script is acquired, this value is passed as the kernel parameter of iPXE script.

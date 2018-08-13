@@ -9,16 +9,16 @@ import (
 
 type kernelParamsDriver struct {
 	mu           sync.Mutex
-	kernelParams map[string]sabakan.KernelParams
+	kernelParams map[string]string
 }
 
 func newKernelParamsDriver() *kernelParamsDriver {
 	return &kernelParamsDriver{
-		kernelParams: make(map[string]sabakan.KernelParams),
+		kernelParams: make(map[string]string),
 	}
 }
 
-func (d *kernelParamsDriver) PutParams(ctx context.Context, os string, params sabakan.KernelParams) error {
+func (d *kernelParamsDriver) PutParams(ctx context.Context, os string, params string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -26,7 +26,7 @@ func (d *kernelParamsDriver) PutParams(ctx context.Context, os string, params sa
 	return nil
 }
 
-func (d *kernelParamsDriver) GetParams(ctx context.Context, os string) (sabakan.KernelParams, error) {
+func (d *kernelParamsDriver) GetParams(ctx context.Context, os string) (string, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 

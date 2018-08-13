@@ -19,18 +19,18 @@ func (c *kernelParamsCmd) SetFlags(f *flag.FlagSet) {
 }
 
 func (c *kernelParamsCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	newc := newCommander(f, "kernelparams")
+	newc := newCommander(f, "kernel-params")
 	newc.Register(kernelParamsGetCommand(c.os), "")
 	newc.Register(kernelParamsSetCommand(c.os), "")
 	return newc.Execute(ctx)
 }
 
-func kernelParamsComand() subcommands.Command {
+func kernelParamsCommand() subcommands.Command {
 	return subcmd{
 		&kernelParamsCmd{"coreos"},
-		"kernelparams",
+		"kernel-params",
 		"set/get kernel parameters",
-		"kernelparams ACTION ...",
+		"kernel-params ACTION ...",
 	}
 }
 

@@ -96,8 +96,8 @@ type LogModel interface {
 
 // KernelParamsModel is an interface for kernel parameters.
 type KernelParamsModel interface {
-	PutParams(ctx context.Context, os string, params KernelParams) error
-	GetParams(ctx context.Context, os string) (KernelParams, error)
+	PutParams(ctx context.Context, os string, params string) error
+	GetParams(ctx context.Context, os string) (string, error)
 }
 
 // Runner is an interface to run the underlying threads.

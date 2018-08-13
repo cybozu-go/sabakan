@@ -49,4 +49,13 @@ func TestKernelParams(t *testing.T) {
 	if string(data) != "test_param=test" {
 		t.Error("data != test_param=test:", string(data))
 	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/kernel_params/coreos", strings.NewReader("conosole=寿司"))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatal("resp.StatusCode != http.StatusBadRequest:", resp.StatusCode)
+	}
 }

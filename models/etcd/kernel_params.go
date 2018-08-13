@@ -3,17 +3,11 @@ package etcd
 import (
 	"context"
 	"path"
-	"regexp"
 
 	"github.com/cybozu-go/sabakan"
 )
 
-func (d *driver) putParams(ctx context.Context, os string, params sabakan.KernelParams) error {
-	r := regexp.MustCompile(`^([[:print:]])+$`)
-	if !r.MatchString(string(params)) {
-		return sabakan.ErrBadRequest
-	}
-
+func (d *driver) putParams(ctx context.Context, os string, params string) error {
 	key := path.Join(KeyKernelParams, os)
 	_, err := d.client.Put(ctx, key, string(params))
 	if err != nil {
@@ -23,7 +17,7 @@ func (d *driver) putParams(ctx context.Context, os string, params sabakan.Kernel
 	return nil
 }
 
-func (d *driver) getParams(ctx context.Context, os string) (sabakan.KernelParams, error) {
+func (d *driver) getParams(ctx context.Context, os string) (string, error) {
 	key := path.Join(KeyKernelParams, os)
 	resp, err := d.client.Get(ctx, key)
 	if err != nil {
@@ -35,17 +29,17 @@ func (d *driver) getParams(ctx context.Context, os string) (sabakan.KernelParams
 	}
 
 	v := resp.Kvs[0].Value
-	return sabakan.KernelParams(v), nil
+	return string(v), nil
 }
 
 type kernelParamsDriver struct {
 	*driver
 }
 
-func (d kernelParamsDriver) PutParams(ctx context.Context, os string, params sabakan.KernelParams) error {
+func (d kernelParamsDriver) PutParams(ctx context.Context, os string, params string) error {
 	return d.putParams(ctx, os, params)
 }
 
-func (d kernelParamsDriver) GetParams(ctx context.Context, os string) (sabakan.KernelParams, error) {
+func (d kernelParamsDriver) GetParams(ctx context.Context, os string) (string, error) {
 	return d.getParams(ctx, os)
 }

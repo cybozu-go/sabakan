@@ -57,21 +57,17 @@ func (s Server) handleKernelParamsGet(w http.ResponseWriter, r *http.Request, os
 func (s Server) handleKernelParamsPut(w http.ResponseWriter, r *http.Request, os string) {
 	ctx := r.Context()
 
-	data, err := ioutil.ReadAll(r.Body)
+	kp, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 4096))
 	if err != nil {
 		renderError(ctx, w, BadRequest(err.Error()))
 		return
 	}
-	if len(data) == 0 {
-		renderError(ctx, w, BadRequest("Kernel parameters is empty."))
+	if !sabakan.IsValidKernelParams(string(kp)) {
+		renderError(ctx, w, BadRequest("kernel params is not valid"))
 		return
 	}
 
-	err = s.Model.KernelParams.PutParams(ctx, os, sabakan.KernelParams(data))
-	if err == sabakan.ErrBadRequest {
-		renderError(r.Context(), w, APIErrBadRequest)
-		return
-	}
+	err = s.Model.KernelParams.PutParams(ctx, os, string(kp))
 	if err != nil {
 		renderError(ctx, w, InternalServerError(err))
 		return

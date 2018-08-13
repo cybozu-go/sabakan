@@ -857,7 +857,7 @@ $ curl -s 'localhost:10080/api/v1/logs?since=20180404&until=20180707'
 
 ## <a name="putkernelparams" />`PUT /api/v1/kernel_params/coreos`
 
-Create or update kernel parameters.  If one or more nodes have been registered in sabakan, kernel parameters cannot be updated.
+Create or update kernel parameters on iPXE booting.
 
 **Successful response**
 
@@ -865,7 +865,7 @@ Create or update kernel parameters.  If one or more nodes have been registered i
 
 **Failure responses**
 
-- Kernel parameters is empty.
+- Kernel params string contains contains non ASCII character(s) or control sequence(s).
 
   HTTP status code: 400 Bad Request
 

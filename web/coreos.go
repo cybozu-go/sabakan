@@ -21,7 +21,7 @@ chain %s/${serial}%s
 
 set base-url %s
 set ignition-id %s
-kernel ${base-url}/coreos/kernel initrd=initrd.gz coreos.first_boot=1 coreos.config.url=${base-url}/ignitions/${serial}/${ignition-id} scsi_mod.use_blk_mq=Y %s
+kernel ${base-url}/coreos/kernel initrd=initrd.gz coreos.first_boot=1 coreos.config.url=${base-url}/ignitions/${serial}/${ignition-id} %s
 initrd ${base-url}/coreos/initrd.gz
 boot
 `
