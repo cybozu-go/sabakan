@@ -11,6 +11,9 @@ import (
 var _ = Describe("netboot", func() {
 
 	It("is achieved", func() {
+		By("Set-up kernel params")
+		sabactl("kernel-params", "set", "coreos.autologin=ttyS0")
+
 		By("Uploading an image")
 		sabactl("images", "upload", coreosVersion, coreosKernel, coreosInitrd)
 
@@ -36,9 +39,6 @@ var _ = Describe("netboot", func() {
 			}
 			return false
 		}).Should(BeTrue())
-
-		By("Set-up kernel params")
-		sabactl("kernel-params", "set", "coreos.autologin=ttyS0")
 
 		By("Waiting worker to boot")
 		sshKey, err := parsePrivateKey()
