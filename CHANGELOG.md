@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.18] - 2018-08-14
+
+### Added
+- Support configurable kernel parameters on booting CoreOS (#95).
+
 ## [0.17] - 2018-08-06
 
 ### Added
@@ -26,7 +31,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix a bug that leaves files of deleted OS images (#86).
 
 [placemat]: https://github.com/cybozu-go/placemat
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.17...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.18...HEAD
+[0.18]: https://github.com/cybozu-go/sabakan/compare/v0.17...v0.18
 [0.17]: https://github.com/cybozu-go/sabakan/compare/v0.16...v0.17
 [0.16]: https://github.com/cybozu-go/sabakan/compare/v0.15...v0.16
 [0.15]: https://github.com/cybozu-go/sabakan/compare/v0.14...v0.15
