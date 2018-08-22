@@ -14,7 +14,7 @@ type versionCmd struct{}
 func (v versionCmd) SetFlags(f *flag.FlagSet) {}
 
 func (v versionCmd) Execute(_ context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	fmt.Printf("%v\n", sabakan.Version)
+	fmt.Println(sabakan.Version)
 	return subcommands.ExitSuccess
 }
 
