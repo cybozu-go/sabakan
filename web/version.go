@@ -1,12 +1,5 @@
 package web
 
-// intern yattakoto
-// server.go
-//   add switch case p == "version"
-
-// web/version.go
-// add method to Server struct
-
 import (
 	"net/http"
 

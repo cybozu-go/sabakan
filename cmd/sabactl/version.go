@@ -5,18 +5,16 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/cybozu-go/sabakan"
 	"github.com/google/subcommands"
 )
-
-// const version is sabactl version
-const version = "1.0.0"
 
 type versionCmd struct{}
 
 func (v versionCmd) SetFlags(f *flag.FlagSet) {}
 
 func (v versionCmd) Execute(_ context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	fmt.Printf("%v\n", version)
+	fmt.Printf("%v\n", sabakan.Version)
 	return subcommands.ExitSuccess
 }
 
@@ -25,6 +23,6 @@ func versionCommand() subcommands.Command {
 		versionCmd{},
 		"version",
 		"show sabactl version",
-		"version ACTION ...",
+		"",
 	}
 }

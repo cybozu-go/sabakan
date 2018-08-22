@@ -102,7 +102,7 @@ type KernelParamsModel interface {
 
 // HealthModel is an interface for etcd health status
 type HealthModel interface {
-	GetHealth(ctx context.Context) (HealthStatus, error)
+	GetHealth(ctx context.Context) error
 }
 
 // Runner is an interface to run the underlying threads.

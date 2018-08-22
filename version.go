@@ -1,4 +1,4 @@
 package sabakan
 
-// Version is sabactl version
+// Version is sabakan version
 const Version = "0.18"
