@@ -39,6 +39,16 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.URL.Path == "/version" {
+		s.handleVersion(w, r)
+		return
+	}
+
+	if r.URL.Path == "/health" {
+		s.handleHealth(w, r)
+		return
+	}
+
 	renderError(r.Context(), w, APIErrNotFound)
 }
 

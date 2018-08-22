@@ -45,6 +45,7 @@ func NewModel(client *clientv3.Client, dataDir string, advertiseURL *url.URL) sa
 		Log:          logDriver{d},
 		Ignition:     d,
 		KernelParams: kernelParamsDriver{d},
+		Health:       healthDriver{d},
 	}
 }
 

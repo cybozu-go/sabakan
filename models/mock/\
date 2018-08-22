@@ -1,0 +1,20 @@
+package mock
+
+import (
+	"github.com/cybozu-go/sabakan"
+)
+
+type healthDriver struct {
+	health sabakan.HealthStatus
+}
+
+func newHealthDriver() *healthDriver {
+	return &healthDriver{
+		health: sabakan.Health,
+	}
+
+}
+
+func (d *healthDriver) GetHealth(ctx context.Context) (sabakan.HealthStatus, error) {
+
+}
