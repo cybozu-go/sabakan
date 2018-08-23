@@ -181,10 +181,9 @@ In the HTTP request body, specify the following list of the machine information 
 Field                        | Description
 -----                        | -----------
 `serial=<serial>`            | The serial number of the machine
-`datacenter=<datacenter>`    | The data center name where the machine is in
+`labels={<key=value>, ...}`    | The labels of the machine
 `rack=<rack>`                | The rack number where the machine is in. If it is omitted, value set to `0`
 `role=<role>`                | The role of the machine (e.g. `boot` or `worker`)
-`product=<product>`          | The product name of the machine (e.g. `R630`)
 `bmc=<bmc>`                  | The BMC spec
 
 **Successful response**
@@ -210,8 +209,8 @@ Field                        | Description
 ```console
 $ curl -s -X POST 'localhost:10080/api/v1/machines' -d '
 [
-  { "serial": "1234abcd", "product": "R630", "datacenter": "ty3", "rack": 1, "role": "boot", "bmc": {"type": "iDRAC-9"} },
-  { "serial": "2345bcde", "product": "R630", "datacenter": "ty3", "rack": 1, "role": "worker", "bmc": {"type": "iDRAC-9"} }
+  { "serial": "1234abcd", "labels": {"product": "R630", "datacenter": "ty3"}, "rack": 1, "role": "boot", "bmc": {"type": "iDRAC-9"} },
+  { "serial": "2345bcde", "labels": {"product": "R630", "datacenter": "ty3"}, "rack": 1, "role": "worker", "bmc": {"type": "iDRAC-9"} }
 ]'
 ```
 
@@ -222,10 +221,9 @@ Search registered machines. A user can specify the following URL queries.
 Query                      | Description
 -----                      | -----------
 `serial=<serial>`          | The serial number of the machine
-`datacenter=<datacenter>`  | The data center name where the machine is in
+`labels=<key=value>,...`   | The labels of the machine.
 `rack=<rack>`              | The rack number where the machine is in
 `role=<role>`              | The role of the machine
-`product=<product>`        | The product name of the machine(e.g. `R630`)
 `ipv4=<ip address>`        | IPv4 address
 `ipv6=<ip address>`        | IPv6 address
 `bmc-type=<bmc-type>`      | BMC type

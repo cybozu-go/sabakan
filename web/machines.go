@@ -40,17 +40,17 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("serial is empty"))
 			return
 		}
-		if m.Product == "" {
-			renderError(r.Context(), w, BadRequest("product is empty"))
-			return
-		}
-		if m.Datacenter == "" {
-			renderError(r.Context(), w, BadRequest("datacenter is empty"))
-			return
-		}
 		if !sabakan.IsValidRole(m.Role) {
 			renderError(r.Context(), w, BadRequest("invalid role"))
 			return
+		}
+		if len(m.Labels) > 0 {
+			for k, v := range m.Labels {
+				if !sabakan.IsValidLabelName(k) || !sabakan.IsValidLabelValue(v) {
+					renderError(r.Context(), w, BadRequest("labels contain invalid character"))
+					return
+				}
+			}
 		}
 		if m.BMC.Type == "" {
 			renderError(r.Context(), w, BadRequest("BMC type is empty"))

@@ -179,19 +179,23 @@ func testSabactlMachines(t *testing.T) {
 
 	specs := []*sabakan.MachineSpec{
 		{
-			Serial:     "12345678",
-			Product:    "R730xd",
-			Datacenter: "ty3",
-			Role:       "worker",
+			Serial: "12345678",
+			Labels: map[string]string{
+				"product":    "R730xd",
+				"datacenter": "ty3",
+			},
+			Role: "worker",
 			BMC: sabakan.MachineBMC{
 				Type: sabakan.BmcIdrac9,
 			},
 		},
 		{
-			Serial:     "abcdefg",
-			Product:    "R730xd",
-			Datacenter: "ty3",
-			Role:       "boot",
+			Serial: "abcdefg",
+			Labels: map[string]string{
+				"product":    "R730xd",
+				"datacenter": "ty3",
+			},
+			Role: "boot",
 			BMC: sabakan.MachineBMC{
 				Type: sabakan.BmcIpmi2,
 			},

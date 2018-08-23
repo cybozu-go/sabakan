@@ -40,15 +40,14 @@ type machinesGetCmd struct {
 }
 
 var machinesGetQuery = map[string]string{
-	"serial":     "Serial name",
-	"datacenter": "Datacenter name",
-	"rack":       "Rack name",
-	"role":       "Role name",
-	"product":    "Product name (e.g. 'R630')",
-	"ipv4":       "IPv4 address",
-	"ipv6":       "IPv6 address",
-	"bmc-type":   "BMC type",
-	"state":      "State",
+	"serial":   "Serial name",
+	"rack":     "Rack name",
+	"role":     "Role name",
+	"labels":   "Label name and value (-labels key=val,...)",
+	"ipv4":     "IPv4 address",
+	"ipv6":     "IPv6 address",
+	"bmc-type": "BMC type",
+	"state":    "State",
 }
 
 func (r *machinesGetCmd) SetFlags(f *flag.FlagSet) {

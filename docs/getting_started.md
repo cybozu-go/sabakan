@@ -130,8 +130,10 @@ Prepare `machines.json` as follows:
 [
   {
     "serial": "1234abcd",
-    "product": "Dell R640",
-    "datacenter": "tokyo1",
+    "labels": {
+      "product": "Dell R640",
+      "datacenter": "tokyo1"
+    }
     "rack": 0,
     "role": "boot",
     "bmc": {
