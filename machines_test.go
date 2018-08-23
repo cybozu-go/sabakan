@@ -34,8 +34,8 @@ func TestIsValidBmcType(t *testing.T) {
 	for _, ty := range invalidTypes {
 		if IsValidBmcType(ty) {
 			t.Error("validator should return false:", ty)
-    }
-  }
+		}
+	}
 }
 
 func TestIsValidLabelName(t *testing.T) {
