@@ -250,3 +250,13 @@ Get the current kernel parameters.
 ```console
 $ sabactl kernel-params get
 ```
+
+`sabactl version`
+------------------
+
+Show sabactl version
+
+```console
+$ sabactl version
+```
+

@@ -29,6 +29,8 @@ func main() {
 	subcommands.Register(cryptsCommand(), "")
 	subcommands.Register(logsCommand(), "")
 	subcommands.Register(kernelParamsCommand(), "")
+	subcommands.Register(versionCommand(), "")
+
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
 

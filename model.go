@@ -100,6 +100,11 @@ type KernelParamsModel interface {
 	GetParams(ctx context.Context, os string) (string, error)
 }
 
+// HealthModel is an interface for etcd health status
+type HealthModel interface {
+	GetHealth(ctx context.Context) error
+}
+
 // Runner is an interface to run the underlying threads.
 //
 // The caller must pass a channel as follows.
@@ -127,4 +132,5 @@ type Model struct {
 	Ignition     IgnitionModel
 	Log          LogModel
 	KernelParams KernelParamsModel
+	Health       HealthModel
 }
