@@ -10,11 +10,16 @@ import (
 	"github.com/cybozu-go/sabakan"
 )
 
+const (
+	labelSep = "="
+)
+
 // machinesIndex is on-memory index of the etcd values
 type machinesIndex struct {
 	mux     sync.RWMutex
 	Rack    map[string][]string
 	Role    map[string][]string
+	Labels  map[string][]string
 	IPv4    map[string]string
 	IPv6    map[string]string
 	BMCType map[string][]string
@@ -25,6 +30,7 @@ func newMachinesIndex() *machinesIndex {
 	return &machinesIndex{
 		Rack:    make(map[string][]string),
 		Role:    make(map[string][]string),
+		Labels:  make(map[string][]string),
 		IPv4:    make(map[string]string),
 		IPv6:    make(map[string]string),
 		BMCType: make(map[string][]string),
@@ -84,6 +90,10 @@ func (mi *machinesIndex) addNoLock(m *sabakan.Machine) {
 		mi.IPv6[spec.BMC.IPv6] = spec.Serial
 	}
 	mi.State[m.Status.State] = append(mi.State[m.Status.State], spec.Serial)
+	for k, v := range spec.Labels {
+		labelKey := k + labelSep + v
+		mi.Labels[labelKey] = append(mi.Labels[labelKey], spec.Serial)
+	}
 }
 
 func indexOf(data []string, element string) int {
@@ -121,6 +131,11 @@ func (mi *machinesIndex) deleteNoLock(m *sabakan.Machine) {
 
 	i = indexOf(mi.State[m.Status.State], spec.Serial)
 	mi.State[m.Status.State] = append(mi.State[m.Status.State][:i], mi.State[m.Status.State][i+1:]...)
+	for k, v := range spec.Labels {
+		labelKey := k + labelSep + v
+		i = indexOf(mi.Labels[labelKey], spec.Serial)
+		mi.Labels[labelKey] = append(mi.Labels[labelKey][:i], mi.Labels[labelKey][i+1:]...)
+	}
 }
 
 // UpdateIndex updates target machine on the index
@@ -158,6 +173,11 @@ func (mi *machinesIndex) query(q sabakan.Query) []string {
 	}
 	for _, serial := range mi.State[sabakan.MachineState(q.State())] {
 		res[serial] = struct{}{}
+	}
+	for _, labelKey := range q.Labels() {
+		for _, serial := range mi.Labels[labelKey] {
+			res[serial] = struct{}{}
+		}
 	}
 
 	serials := make([]string, 0, len(res))

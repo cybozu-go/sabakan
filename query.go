@@ -75,12 +75,6 @@ func (q Query) Match(m *Machine) bool {
 // Serial returns value of serial in the query
 func (q Query) Serial() string { return q["serial"] }
 
-// Product returns value of product in the query
-func (q Query) Product() string { return q["product"] }
-
-// Datacenter returns value of datacenter in the query
-func (q Query) Datacenter() string { return q["datacenter"] }
-
 // Rack returns value of rack in the query
 func (q Query) Rack() string { return q["rack"] }
 
@@ -98,6 +92,15 @@ func (q Query) BMCType() string { return q["bmc-type"] }
 
 // State returns value of state the query
 func (q Query) State() string { return q["state"] }
+
+// Labels return label's key and value combined with '='
+func (q Query) Labels() []string {
+	queries := strings.Split(q["labels"], ",")
+	for idx, rawQuery := range queries {
+		queries[idx] = strings.TrimSpace(rawQuery)
+	}
+	return queries
+}
 
 // IsEmpty returns true if query is empty or no values are presented
 func (q Query) IsEmpty() bool {
