@@ -29,7 +29,7 @@ func TestMachine(t *testing.T) {
 		Serial: "abc",
 		Rack:   3,
 		Role:   "boot",
-		BMC:    MachineBMC{Type: BmcIpmi2},
+		BMC:    MachineBMC{Type: "IPMI-2.0"},
 	}
 
 	m := NewMachine(spec)

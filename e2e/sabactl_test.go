@@ -184,7 +184,7 @@ func testSabactlMachines(t *testing.T) {
 			Datacenter: "ty3",
 			Role:       "worker",
 			BMC: sabakan.MachineBMC{
-				Type: sabakan.BmcIdrac9,
+				Type: "iDRAC-9",
 			},
 		},
 		{
@@ -193,7 +193,7 @@ func testSabactlMachines(t *testing.T) {
 			Datacenter: "ty3",
 			Role:       "boot",
 			BMC: sabakan.MachineBMC{
-				Type: sabakan.BmcIpmi2,
+				Type: "IPMI-2.0",
 			},
 		},
 	}

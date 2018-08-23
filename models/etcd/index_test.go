@@ -13,9 +13,9 @@ func TestMachinesIndex(t *testing.T) {
 	mi := newMachinesIndex()
 
 	machines := []*sabakan.Machine{
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "1", Product: "R630", Datacenter: "ty3", Role: "boot", BMC: sabakan.MachineBMC{Type: sabakan.BmcIpmi2}}),
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "2", Product: "R630", Datacenter: "ty3", Role: "worker", BMC: sabakan.MachineBMC{Type: sabakan.BmcIpmi2}}),
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "3", Product: "R730xd", Datacenter: "ty3", Role: "worker", BMC: sabakan.MachineBMC{Type: sabakan.BmcIpmi2}}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "1", Product: "R630", Datacenter: "ty3", Role: "boot", BMC: sabakan.MachineBMC{Type: "IPMI-2.0"}}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "2", Product: "R630", Datacenter: "ty3", Role: "worker", BMC: sabakan.MachineBMC{Type: "IPMI-2.0"}}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "3", Product: "R730xd", Datacenter: "ty3", Role: "worker", BMC: sabakan.MachineBMC{Type: "IPMI-2.0"}}),
 	}
 
 	for _, m := range machines {
@@ -36,7 +36,7 @@ func TestMachinesIndex(t *testing.T) {
 			Product:    "R630",
 			Datacenter: "ty3",
 			Role:       "worker",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
+			BMC:        sabakan.MachineBMC{Type: "IPMI-2.0"},
 		})
 	current := sabakan.NewMachine(
 		sabakan.MachineSpec{
@@ -44,7 +44,7 @@ func TestMachinesIndex(t *testing.T) {
 			Product:    "R730xd",
 			Datacenter: "ty3",
 			Role:       "worker",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
+			BMC:        sabakan.MachineBMC{Type: "IPMI-2.0"},
 		})
 	current.Status.State = sabakan.StateRetiring
 
@@ -70,7 +70,7 @@ func TestMachinesIndex(t *testing.T) {
 			Product:    "R730xd",
 			Datacenter: "ty3",
 			Role:       "worker",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
+			BMC:        sabakan.MachineBMC{Type: "IPMI-2.0"},
 		}))
 
 	serials = mi.query(sabakan.Query{"product": "R730xd"})

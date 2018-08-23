@@ -6,13 +6,6 @@ import (
 	"time"
 )
 
-const (
-	// BmcIdrac9 is BMC type for iDRAC-9
-	BmcIdrac9 = "iDRAC-9"
-	// BmcIpmi2 is BMC type for IPMI-2.0
-	BmcIpmi2 = "IPMI-2.0"
-)
-
 // MachineState represents a machine's state.
 type MachineState string
 
