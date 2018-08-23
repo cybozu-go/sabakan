@@ -121,7 +121,7 @@ func testMachinesPost(t *testing.T) {
 		{`[{
   "serial": "2222abcd",
   "labels": {
-	  "~+ = ';": "invalidkey"
+	  "invalidKey~+ = ';": "invalidkey"
   },
   "rack": 1,
   "role": "invalid/Role",
@@ -130,7 +130,7 @@ func testMachinesPost(t *testing.T) {
 		{`[{
   "serial": "2222abcd",
   "labels": {
-	  "invalid_value": "\n\t"
+	  "invalid_value": "invalid\n\tvalue"
   },
   "rack": 1,
   "role": "invalid/Role",

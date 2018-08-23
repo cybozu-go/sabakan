@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	labelValueRegex = regexp.MustCompile(`[[:print:]]+`)
-	labelKeyRegex   = regexp.MustCompile(`[a-z0-9A-Z-_/.]+`)
+	labelValueRegex = regexp.MustCompile(`^[[:print:]]+$`)
+	labelKeyRegex   = regexp.MustCompile(`^[a-z0-9A-Z-_/.]+$`)
 )
 
 func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
