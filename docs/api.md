@@ -921,17 +921,17 @@ $ curl -s -XGET localhost:10080/version
 
 ## <a name="health" />`GET /health`
 
-get etcd health status
+get sabakan health status
 
 **Successful response**
 - HTTP status code: 200 OK
 - HTTP response header: `Content-Type: application/json`
-- HTTP response body: health status of etcd
+- HTTP response body: health status of sabakan
 
 **Failure response**
 - HTTP status code: 500 Internal Server Error
 - HTTP response header: `application/json`
-- HTTP response body: health status of etcd
+- HTTP response body: health status of sabakan
 
 **Example**
 
