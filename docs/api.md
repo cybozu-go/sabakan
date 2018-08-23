@@ -35,6 +35,8 @@ REST API
 * [GET /api/v1/logs](#getlogs)
 * [PUT /api/v1/kernel_params/coreos](#putkernelparams)
 * [GET /api/v1/kernel_params/coreos](#getkernelparams)
+* [GET /version](#version)
+* [GET /health](#health)
 
 ## Access control
 
@@ -899,3 +901,42 @@ Get kernel parameters.
 $ curl -s -XGET 'localhost:10080/api/v1/kernel_params/coreos'
 console=ttyS0 coreos.autologin=ttyS0
 ```
+
+## <a name="version" />`GET /version`
+
+show sabakan version
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: sabakan version
+
+**Example**
+
+```console
+$ curl -s -XGET localhost:10080/version
+{"version":"0.18"}
+```
+
+## <a name="health" />`GET /health`
+
+get etcd health status
+
+**Successful response**
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: health status of etcd
+
+**Failure response**
+- HTTP status code: 500 Internal Server Error
+- HTTP response header: `application/json`
+- HTTP response body: health status of etcd
+
+**Example**
+
+```console
+$ curl -s -XGET localhost:10080/health
+{"health":"healthy"}
+```
+
