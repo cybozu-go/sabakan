@@ -62,8 +62,8 @@ Detailed specification of the input JSON file is same as that of the [`POST /api
 
 ```json
 [
-  { "serial": "<serial1>", "datacenter": "<datacenter1>", "rack": "<rack1>", "product": "<product1>", "role": "<role1>", "bmc": { "type": "iDRAC-9" }},
-  { "serial": "<serial2>", "datacenter": "<datacenter2>", "rack": "<rack2>", "product": "<product2>", "role": "<role2>", "bmc": { "type": "iDRAC-9" }}
+  { "serial": "<serial1>", "labels": {"product": "<product1>", "datacenter": "<datacenter1>"}, "rack": "<rack1>", "role": "<role1>", "bmc": { "type": "iDRAC-9" }},
+  { "serial": "<serial2>", "labels": {"product": "<product2>", "datacenter": "<datacenter2>"}, "rack": "<rack2>", "role": "<role2>", "bmc": { "type": "iDRAC-9" }}
 ]
 ```
 
@@ -75,10 +75,9 @@ Show machines filtered by query parameters.
 ```console
 $ sabactl machines get \
     [--serial <serial>] \
-    [--datacenter <datacenter>] \
     [--rack <rack>] \
     [--role <role>] \
-    [--product <product>] \
+    [--labels <key=value>,...]
     [--ipv4 <ip address>] \
     [--ipv6 <ip address>] \
     [--bmc-type <BMC type>] \

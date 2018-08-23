@@ -10,16 +10,15 @@ MachineSpec struct
 
 `MachineSpec` can be represented as a JSON object having these fields:
 
-Field           | Type     | Description
---------------- | -------- | -----------
-`serial`        | string   | SMBIOS serial number of the machine.
-`product`       | string   | Product name of the machine
-`datacenter`    | string   | Data center name where the machine exists.
-`rack`          | int      | Logical rack number (LRN) where the machine exists.
-`index-in-rack` | int      | Logical position in a rack.
-`ipv4`          | []string | IPv4 addresses for OS.
-`ipv6`          | []string | IPv6 addresses for OS.
-`bmc`           | object   | BMC parameters; See below.
+Field           | Type              | Description
+--------------- | --------          | -----------
+`serial`        | string            | SMBIOS serial number of the machine.
+`labels`        | map[string]string | Labels of the machine such as `product` or `datacenter`
+`rack`          | int               | Logical rack number (LRN) where the machine exists.
+`index-in-rack` | int               | Logical position in a rack.
+`ipv4`          | []string          | IPv4 addresses for OS.
+`ipv6`          | []string          | IPv6 addresses for OS.
+`bmc`           | object            | BMC parameters; See below.
 
 Key in `bmc`    | Type   | Description
 --------------- | ------ | -----------
@@ -41,8 +40,10 @@ A JSON representation of `Machine` looks like:
 {
   "spec": {
     "serial": "1234abcd",
-    "product": "Dell R630",
-    "datacenter": "tokyo1",
+    "labels": {
+      "product": "Dell R630",
+      "datacenter": "tokyo1"
+    }
     "rack": 1,
     "index-in-rack": 1,
     "role": "boot",

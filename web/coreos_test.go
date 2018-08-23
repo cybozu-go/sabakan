@@ -42,12 +42,14 @@ func testHandleiPXEWithSerial(t *testing.T) {
 
 	machines := []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{
-			Serial:     "2222abcd",
-			Product:    "R630",
-			Datacenter: "ty3",
-			Rack:       1,
-			Role:       "cs",
-			BMC:        sabakan.MachineBMC{Type: "iDRAC-9"},
+			Serial: "2222abcd",
+			Labels: map[string]string{
+				"product":    "R630",
+				"datacenter": "ty3",
+			},
+			Rack: 1,
+			Role: "cs",
+			BMC:  sabakan.MachineBMC{Type: "iDRAC-9"},
 		}),
 	}
 
