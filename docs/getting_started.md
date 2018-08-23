@@ -132,7 +132,7 @@ Prepare `machines.json` as follows:
     "serial": "1234abcd",
     "labels": {
       "product": "Dell R640",
-      "datacenter": "tokyo1",
+      "datacenter": "tokyo1"
     }
     "rack": 0,
     "role": "boot",

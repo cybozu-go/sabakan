@@ -42,7 +42,7 @@ A JSON representation of `Machine` looks like:
     "serial": "1234abcd",
     "labels": {
       "product": "Dell R630",
-      "datacenter": "tokyo1",
+      "datacenter": "tokyo1"
     }
     "rack": 1,
     "index-in-rack": 1,
