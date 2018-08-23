@@ -130,7 +130,7 @@ func testQuery(t *testing.T) {
 		t.Errorf("unexpected responsed machine: %#v", resp[0])
 	}
 
-	q = sabakan.Query{"product": "R630"}
+	q = sabakan.Query{"labels": "product=R630"}
 	resp, err = d.machineQuery(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)

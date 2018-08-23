@@ -106,9 +106,9 @@ func initializeTestData(d *driver, ch <-chan struct{}) ([]*sabakan.Machine, erro
 	<-ch
 
 	machines := []*sabakan.Machine{
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345678", Product: "R630", Role: "worker"}),
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345679", Product: "R630", Role: "worker"}),
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "123456789", Product: "R730", Role: "worker"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345678", Labels: map[string]string{"product": "R630"}, Role: "worker"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "12345679", Labels: map[string]string{"product": "R630"}, Role: "worker"}),
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "123456789", Labels: map[string]string{"product": "R730"}, Role: "worker"}),
 	}
 	err = d.machineRegister(ctx, machines)
 	if err != nil {

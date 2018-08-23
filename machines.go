@@ -48,15 +48,14 @@ type MachineBMC struct {
 
 // MachineSpec is a set of attributes to define a machine.
 type MachineSpec struct {
-	Serial      string     `json:"serial"`
-	Product     string     `json:"product"`
-	Datacenter  string     `json:"datacenter"`
-	Rack        uint       `json:"rack"`
-	IndexInRack uint       `json:"index-in-rack"`
-	Role        string     `json:"role"`
-	IPv4        []string   `json:"ipv4"`
-	IPv6        []string   `json:"ipv6"`
-	BMC         MachineBMC `json:"bmc"`
+	Serial      string            `json:"serial"`
+	Labels      map[string]string `json:"labels"`
+	Rack        uint              `json:"rack"`
+	IndexInRack uint              `json:"index-in-rack"`
+	Role        string            `json:"role"`
+	IPv4        []string          `json:"ipv4"`
+	IPv6        []string          `json:"ipv6"`
+	BMC         MachineBMC        `json:"bmc"`
 }
 
 // Machine represents a server hardware.

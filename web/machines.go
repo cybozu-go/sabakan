@@ -3,9 +3,15 @@ package web
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/cybozu-go/sabakan"
+)
+
+var (
+	labelValueRegex = regexp.MustCompile(`[[:print:]]+`)
+	labelKeyRegex   = regexp.MustCompile(`[a-z0-9A-Z-_/.]+`)
 )
 
 func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
@@ -40,17 +46,17 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("serial is empty"))
 			return
 		}
-		if m.Product == "" {
-			renderError(r.Context(), w, BadRequest("product is empty"))
-			return
-		}
-		if m.Datacenter == "" {
-			renderError(r.Context(), w, BadRequest("datacenter is empty"))
-			return
-		}
 		if !sabakan.IsValidRole(m.Role) {
 			renderError(r.Context(), w, BadRequest("invalid role"))
 			return
+		}
+		if len(m.Labels) > 0 {
+			for k, v := range m.Labels {
+				if !labelKeyRegex.MatchString(k) || !labelValueRegex.MatchString(v) {
+					renderError(r.Context(), w, BadRequest("labels contain invalid character"))
+					return
+				}
+			}
 		}
 		if m.BMC.Type == "" {
 			renderError(r.Context(), w, BadRequest("BMC type is empty"))

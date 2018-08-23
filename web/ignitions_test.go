@@ -88,13 +88,15 @@ networkd:
 
 	machines := []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{
-			Serial:     "2222abcd",
-			Product:    "R630",
-			Datacenter: "ty3",
-			Rack:       1,
-			Role:       "cs",
-			IPv4:       []string{"10.69.0.4"},
-			BMC:        sabakan.MachineBMC{Type: "iDRAC-9"},
+			Serial: "2222abcd",
+			Labels: map[string]string{
+				"product":    "R630",
+				"datacenter": "ty3",
+			},
+			Rack: 1,
+			Role: "cs",
+			IPv4: []string{"10.69.0.4"},
+			BMC:  sabakan.MachineBMC{Type: "iDRAC-9"},
 		}),
 	}
 

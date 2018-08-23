@@ -12,27 +12,23 @@ import (
 
 // machinesIndex is on-memory index of the etcd values
 type machinesIndex struct {
-	mux        sync.RWMutex
-	Product    map[string][]string
-	Datacenter map[string][]string
-	Rack       map[string][]string
-	Role       map[string][]string
-	IPv4       map[string]string
-	IPv6       map[string]string
-	BMCType    map[string][]string
-	State      map[sabakan.MachineState][]string
+	mux     sync.RWMutex
+	Rack    map[string][]string
+	Role    map[string][]string
+	IPv4    map[string]string
+	IPv6    map[string]string
+	BMCType map[string][]string
+	State   map[sabakan.MachineState][]string
 }
 
 func newMachinesIndex() *machinesIndex {
 	return &machinesIndex{
-		Product:    make(map[string][]string),
-		Datacenter: make(map[string][]string),
-		Rack:       make(map[string][]string),
-		Role:       make(map[string][]string),
-		IPv4:       make(map[string]string),
-		IPv6:       make(map[string]string),
-		BMCType:    make(map[string][]string),
-		State:      make(map[sabakan.MachineState][]string),
+		Rack:    make(map[string][]string),
+		Role:    make(map[string][]string),
+		IPv4:    make(map[string]string),
+		IPv6:    make(map[string]string),
+		BMCType: make(map[string][]string),
+		State:   make(map[sabakan.MachineState][]string),
 	}
 }
 
@@ -71,8 +67,6 @@ func (mi *machinesIndex) AddIndex(m *sabakan.Machine) {
 
 func (mi *machinesIndex) addNoLock(m *sabakan.Machine) {
 	spec := &m.Spec
-	mi.Product[spec.Product] = append(mi.Product[spec.Product], spec.Serial)
-	mi.Datacenter[spec.Datacenter] = append(mi.Datacenter[spec.Datacenter], spec.Serial)
 	mcrack := fmt.Sprint(spec.Rack)
 	mi.Rack[mcrack] = append(mi.Rack[mcrack], spec.Serial)
 	mi.Role[spec.Role] = append(mi.Role[spec.Role], spec.Serial)
@@ -109,12 +103,8 @@ func (mi *machinesIndex) DeleteIndex(m *sabakan.Machine) {
 
 func (mi *machinesIndex) deleteNoLock(m *sabakan.Machine) {
 	spec := &m.Spec
-	i := indexOf(mi.Product[spec.Product], spec.Serial)
-	mi.Product[spec.Product] = append(mi.Product[spec.Product][:i], mi.Product[spec.Product][i+1:]...)
-	i = indexOf(mi.Datacenter[spec.Datacenter], spec.Serial)
-	mi.Datacenter[spec.Datacenter] = append(mi.Datacenter[spec.Datacenter][:i], mi.Datacenter[spec.Datacenter][i+1:]...)
 	mcrack := fmt.Sprint(spec.Rack)
-	i = indexOf(mi.Rack[mcrack], spec.Serial)
+	i := indexOf(mi.Rack[mcrack], spec.Serial)
 	mi.Rack[mcrack] = append(mi.Rack[mcrack][:i], mi.Rack[mcrack][i+1:]...)
 	i = indexOf(mi.Role[spec.Role], spec.Serial)
 	mi.Role[spec.Role] = append(mi.Role[spec.Role][:i], mi.Role[spec.Role][i+1:]...)
@@ -147,12 +137,6 @@ func (mi *machinesIndex) query(q sabakan.Query) []string {
 
 	res := make(map[string]struct{})
 
-	for _, serial := range mi.Product[q.Product()] {
-		res[serial] = struct{}{}
-	}
-	for _, serial := range mi.Datacenter[q.Datacenter()] {
-		res[serial] = struct{}{}
-	}
 	for _, serial := range mi.Rack[q.Rack()] {
 		res[serial] = struct{}{}
 	}

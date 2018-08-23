@@ -1,6 +1,8 @@
 package sabakan
 
 import "fmt"
+import "net/url"
+import "strings"
 
 // Query is an URL query
 type Query map[string]string
@@ -34,11 +36,25 @@ func (q Query) Match(m *Machine) bool {
 			return false
 		}
 	}
-	if product := q["product"]; len(product) > 0 && product != m.Spec.Product {
-		return false
-	}
-	if datacenter := q["datacenter"]; len(datacenter) > 0 && datacenter != m.Spec.Datacenter {
-		return false
+	if labels := q["labels"]; len(labels) > 0 {
+		// Split into each query
+		rawQueries := strings.Split(labels, ",")
+		for _, rawQuery := range rawQueries {
+			rawQuery = strings.TrimSpace(rawQuery)
+			query, err := url.ParseQuery(rawQuery)
+			if err != nil {
+				return false
+			}
+			for k, v := range query {
+				if label, exists := m.Spec.Labels[k]; exists {
+					if v[0] != label {
+						return false
+					}
+				} else {
+					return false
+				}
+			}
+		}
 	}
 	if rack := q["rack"]; len(rack) > 0 && rack != fmt.Sprint(m.Spec.Rack) {
 		return false

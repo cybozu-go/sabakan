@@ -26,71 +26,129 @@ func testMachinesPost(t *testing.T) {
 	}{
 		{`[{
   "serial": "1234abcd",
-  "product": "R630",
-  "datacenter": "ty3",
+  "labels": {
+	  "product": "R630",
+	  "datacenter": "ty3"
+  },
   "rack": 1,
   "role": "boot",
   "bmc": {"type": "iDRAC-9"}
 }]`, http.StatusCreated},
 		{`[{
   "serial": "1234abcd",
-  "product": "R630",
-  "datacenter": "ty3",
+  "labels": {
+	  "product": "R630",
+	  "datacenter": "ty3"
+  },
   "rack": 1,
   "role": "boot",
   "bmc": {"type": "iDRAC-9"}
 }]`, http.StatusConflict},
 		{`[{
-  "product": "R630",
-  "datacenter": "ty3",
+  "serial": "1234abcd",
+  "labels": {
+	  "product": "R630"
+  },
+  "rack": 1,
+  "role": "boot",
+  "bmc": {"type": "iDRAC-9"}
+}]`, http.StatusConflict},
+		{`[{
+  "labels": {
+	  "product": "R630",
+	  "datacenter": "ty3"
+  },
   "rack": 1,
   "role": "boot",
   "bmc": {"type": "iDRAC-9"}
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "5678abcd",
-  "datacenter": "ty3",
+  "labels": {
+	  "datacenter": "ty3"
+  },
   "rack": 1,
   "role": "boot",
   "bmc": {"type": "iDRAC-9"}
-}]`, http.StatusBadRequest},
+}]`, http.StatusCreated},
 		{`[{
   "serial": "0000abcd",
-  "product": "R630",
+  "labels": {
+  	  "product": "R630"
+  },
   "rack": 1,
   "role": "boot",
   "bmc": {"type": "iDRAC-9"}
-}]`, http.StatusBadRequest},
+}]`, http.StatusCreated},
 		{`[{
   "serial": "2222abcd",
-  "product": "R630",
-  "datacenter": "ty3",
+  "labels": {
+	  "product": "R630",
+	  "datacenter": "ty3"
+  },
   "rack": 1,
   "bmc": {"type": "iDRAC-9"}
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "2222abcd",
-  "product": "R630",
-  "datacenter": "ty3",
+  "labels": {
+	  "product": "R630",
+	  "datacenter": "ty3"
+  },
   "rack": 1,
   "role": "boot"
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "2222abcd",
-  "product": "R630",
-  "datacenter": "ty3",
+  "labels": {
+	  "product": "R630",
+	  "datacenter": "ty3"
+  },
   "rack": 1,
   "role": "boot",
   "bmc": {"type": "unknown-BMC"}
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "2222abcd",
-  "product": "R630",
-  "datacenter": "ty3",
+  "labels": {
+	  "product": "R630",
+	  "datacenter": "ty3"
+  },
   "rack": 1,
   "role": "invalid/Role",
   "bmc": {"type": "iDRAC-9"}
 }]`, http.StatusBadRequest},
+		{`[{
+  "serial": "2222abcd",
+  "labels": {
+	  "~+ = ';": "invalidkey"
+  },
+  "rack": 1,
+  "role": "invalid/Role",
+  "bmc": {"type": "iDRAC-9"}
+}]`, http.StatusBadRequest},
+		{`[{
+  "serial": "2222abcd",
+  "labels": {
+	  "invalid_value": "\n\t"
+  },
+  "rack": 1,
+  "role": "invalid/Role",
+  "bmc": {"type": "iDRAC-9"}
+}]`, http.StatusBadRequest},
+		{`[{
+  "serial": "3333abcd",
+  "labels": {},
+  "rack": 1,
+  "role": "boot",
+  "bmc": {"type": "iDRAC-9"}
+}]`, http.StatusCreated},
+		{`[{
+  "serial": "3333efgh",
+  "rack": 1,
+  "role": "boot",
+  "bmc": {"type": "iDRAC-9"}
+}]`, http.StatusCreated},
 	}
 
 	for _, c := range cases {
@@ -120,28 +178,34 @@ func testMachinesGet(t *testing.T) {
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{
-			Serial:     "1234abcd",
-			Product:    "R630",
-			Datacenter: "ty3",
-			Rack:       1,
-			Role:       "boot",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
+			Serial: "1234abcd",
+			Labels: map[string]string{
+				"product":    "R630",
+				"datacenter": "ty3",
+			},
+			Rack: 1,
+			Role: "boot",
+			BMC:  sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
 		}),
 		sabakan.NewMachine(sabakan.MachineSpec{
-			Serial:     "5678abcd",
-			Product:    "R740",
-			Datacenter: "ty3",
-			Rack:       1,
-			Role:       "worker",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
+			Serial: "5678abcd",
+			Labels: map[string]string{
+				"product":    "R740",
+				"datacenter": "ty3",
+			},
+			Rack: 1,
+			Role: "worker",
+			BMC:  sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
 		}),
 		sabakan.NewMachine(sabakan.MachineSpec{
-			Serial:     "1234efgh",
-			Product:    "R630",
-			Datacenter: "ty3",
-			Rack:       2,
-			Role:       "boot",
-			BMC:        sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
+			Serial: "1234efgh",
+			Labels: map[string]string{
+				"product":    "R630",
+				"datacenter": "ty3",
+			},
+			Rack: 2,
+			Role: "boot",
+			BMC:  sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
 		}),
 	})
 
@@ -156,12 +220,12 @@ func testMachinesGet(t *testing.T) {
 			expected: map[string]bool{"1234abcd": true},
 		},
 		{
-			query:    map[string][]string{"product": {"R630"}},
+			query:    map[string][]string{"labels": {"product=R630"}},
 			status:   http.StatusOK,
 			expected: map[string]bool{"1234abcd": true, "1234efgh": true},
 		},
 		{
-			query:    map[string][]string{"datacenter": {"ty3"}},
+			query:    map[string][]string{"labels": {"datacenter=ty3"}},
 			status:   http.StatusOK,
 			expected: map[string]bool{"1234abcd": true, "5678abcd": true, "1234efgh": true},
 		},
@@ -233,18 +297,22 @@ func testMachinesDelete(t *testing.T) {
 	handler := newTestServer(m)
 
 	m1 := sabakan.NewMachine(sabakan.MachineSpec{
-		Serial:     "1234abcd",
-		Product:    "R630",
-		Datacenter: "ty3",
-		Rack:       1,
-		Role:       "boot",
+		Serial: "1234abcd",
+		Labels: map[string]string{
+			"product":    "R630",
+			"datacenter": "ty3",
+		},
+		Rack: 1,
+		Role: "boot",
 	})
 	m2 := sabakan.NewMachine(sabakan.MachineSpec{
-		Serial:     "qqq",
-		Product:    "R630",
-		Datacenter: "ty3",
-		Rack:       2,
-		Role:       "cs",
+		Serial: "qqq",
+		Labels: map[string]string{
+			"product":    "R630",
+			"datacenter": "ty3",
+		},
+		Rack: 2,
+		Role: "cs",
 	})
 	m2.Status.State = sabakan.StateRetired
 
