@@ -31,12 +31,24 @@ const (
 )
 
 var (
-	reValidRole = regexp.MustCompile(`^[a-zA-Z][0-9a-zA-Z._-]*$`)
+	reValidRole      = regexp.MustCompile(`^[a-zA-Z][0-9a-zA-Z._-]*$`)
+	reValidLabelVal  = regexp.MustCompile(`^[[:print:]]+$`)
+	reValidLabelName = regexp.MustCompile(`^[a-z0-9A-Z-_/.]+$`)
 )
 
 // IsValidRole returns true if role is valid as machine role
 func IsValidRole(role string) bool {
 	return reValidRole.MatchString(role)
+}
+
+// IsValidLabelName returns true if label name is valid
+func IsValidLabelName(name string) bool {
+	return reValidLabelName.MatchString(name)
+}
+
+// IsValidLabelValue returns true if label value is valid
+func IsValidLabelValue(value string) bool {
+	return reValidLabelVal.MatchString(value)
 }
 
 // MachineBMC is a bmc interface struct for Machine

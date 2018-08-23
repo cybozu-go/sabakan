@@ -3,15 +3,9 @@ package web
 import (
 	"encoding/json"
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/cybozu-go/sabakan"
-)
-
-var (
-	labelValueRegex = regexp.MustCompile(`^[[:print:]]+$`)
-	labelKeyRegex   = regexp.MustCompile(`^[a-z0-9A-Z-_/.]+$`)
 )
 
 func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +46,7 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 		}
 		if len(m.Labels) > 0 {
 			for k, v := range m.Labels {
-				if !labelKeyRegex.MatchString(k) || !labelValueRegex.MatchString(v) {
+				if !sabakan.IsValidLabelName(k) || !sabakan.IsValidLabelValue(v) {
 					renderError(r.Context(), w, BadRequest("labels contain invalid character"))
 					return
 				}
