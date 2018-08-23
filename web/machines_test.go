@@ -81,8 +81,8 @@ func testMachinesPost(t *testing.T) {
   "datacenter": "ty3",
   "rack": 1,
   "role": "boot",
-  "bmc": {"type": "unknown-BMC"}
-}]`, http.StatusCreated},
+  "bmc": {"type": "&invalid$ bmc#type+"}
+}]`, http.StatusBadRequest},
 		{`[{
   "serial": "2222abcd",
   "product": "R630",

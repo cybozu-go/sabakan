@@ -3,14 +3,9 @@ package web
 import (
 	"encoding/json"
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/cybozu-go/sabakan"
-)
-
-var (
-	bmcTypeRegex = regexp.MustCompile(`^[a-z0-9A-Z-_/.]+$`)
 )
 
 func (s Server) handleMachines(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +56,7 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("BMC type is empty"))
 			return
 		}
-		if !bmcTypeRegex.MatchString(m.BMC.Type) {
+		if !sabakan.IsValidBmcType(m.BMC.Type) {
 			renderError(r.Context(), w, BadRequest("BMC type contains invalid character"))
 			return
 		}
