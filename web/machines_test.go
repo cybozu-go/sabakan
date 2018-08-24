@@ -106,7 +106,7 @@ func testMachinesPost(t *testing.T) {
   },
   "rack": 1,
   "role": "boot",
-  "bmc": {"type": "unknown-BMC"}
+  "bmc": {"type": "&invalid$ bmc#type+"}
 }]`, http.StatusBadRequest},
 		{`[{
   "serial": "2222abcd",
@@ -185,7 +185,7 @@ func testMachinesGet(t *testing.T) {
 			},
 			Rack: 1,
 			Role: "boot",
-			BMC:  sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
+			BMC:  sabakan.MachineBMC{Type: "iDRAC-9"},
 		}),
 		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial: "5678abcd",
@@ -195,7 +195,7 @@ func testMachinesGet(t *testing.T) {
 			},
 			Rack: 1,
 			Role: "worker",
-			BMC:  sabakan.MachineBMC{Type: sabakan.BmcIdrac9},
+			BMC:  sabakan.MachineBMC{Type: "iDRAC-9"},
 		}),
 		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial: "1234efgh",
@@ -205,7 +205,7 @@ func testMachinesGet(t *testing.T) {
 			},
 			Rack: 2,
 			Role: "boot",
-			BMC:  sabakan.MachineBMC{Type: sabakan.BmcIpmi2},
+			BMC:  sabakan.MachineBMC{Type: "IPMI-2.0"},
 		}),
 	})
 

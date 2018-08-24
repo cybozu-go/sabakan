@@ -56,8 +56,8 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 			renderError(r.Context(), w, BadRequest("BMC type is empty"))
 			return
 		}
-		if (m.BMC.Type != sabakan.BmcIpmi2) && (m.BMC.Type != sabakan.BmcIdrac9) {
-			renderError(r.Context(), w, BadRequest("unknown BMC type"))
+		if !sabakan.IsValidBmcType(m.BMC.Type) {
+			renderError(r.Context(), w, BadRequest("BMC type contains invalid character"))
 			return
 		}
 		m.IPv4 = nil

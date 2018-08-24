@@ -6,13 +6,6 @@ import (
 	"time"
 )
 
-const (
-	// BmcIdrac9 is BMC type for iDRAC-9
-	BmcIdrac9 = "iDRAC-9"
-	// BmcIpmi2 is BMC type for IPMI-2.0
-	BmcIpmi2 = "IPMI-2.0"
-)
-
 // MachineState represents a machine's state.
 type MachineState string
 
@@ -32,6 +25,7 @@ const (
 
 var (
 	reValidRole      = regexp.MustCompile(`^[a-zA-Z][0-9a-zA-Z._-]*$`)
+	reValidBmcType   = regexp.MustCompile(`^[a-z0-9A-Z-_/.]+$`)
 	reValidLabelVal  = regexp.MustCompile(`^[[:print:]]+$`)
 	reValidLabelName = regexp.MustCompile(`^[a-z0-9A-Z-_/.]+$`)
 )
@@ -39,6 +33,11 @@ var (
 // IsValidRole returns true if role is valid as machine role
 func IsValidRole(role string) bool {
 	return reValidRole.MatchString(role)
+}
+
+// IsValidBmcType returns true if role is valid as BMC type
+func IsValidBmcType(bmcType string) bool {
+	return reValidBmcType.MatchString(bmcType)
 }
 
 // IsValidLabelName returns true if label name is valid

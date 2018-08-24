@@ -22,6 +22,22 @@ func TestIsValidRole(t *testing.T) {
 	}
 }
 
+func TestIsValidBmcType(t *testing.T) {
+	t.Parallel()
+	validTypes := []string{"validtype1", "valid_type2", "valid/type-3"}
+	for _, ty := range validTypes {
+		if !IsValidBmcType(ty) {
+			t.Error("validator should return true:", ty)
+		}
+	}
+	invalidTypes := []string{"invalid\\type 1", "%invalid+type#2", "^invalid$type?"}
+	for _, ty := range invalidTypes {
+		if IsValidBmcType(ty) {
+			t.Error("validator should return false:", ty)
+		}
+	}
+}
+
 func TestIsValidLabelName(t *testing.T) {
 	t.Parallel()
 
@@ -63,7 +79,7 @@ func TestMachine(t *testing.T) {
 		Serial: "abc",
 		Rack:   3,
 		Role:   "boot",
-		BMC:    MachineBMC{Type: BmcIpmi2},
+		BMC:    MachineBMC{Type: "IPMI-2.0"},
 	}
 
 	m := NewMachine(spec)
