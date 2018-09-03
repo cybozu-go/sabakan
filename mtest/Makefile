@@ -67,7 +67,13 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 
 $(OUTPUT)/sabakan $(OUTPUT)/sabactl:
 	mkdir -p $(OUTPUT)
-	cd ..; go get -d ./... && GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
+	cd ..; \
+		go get -d ./... && \
+		cd $$GOPATH/src/github.com/coreos/etcd && \
+		git fetch origin && \
+		git checkout v3.3.9
+	cd ..; \
+		GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
 
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)
@@ -137,9 +143,6 @@ clean:
 
 setup:
 	go get -t -d ./...
-	cd $$GOPATH/src/github.com/coreos/etcd; \
-		git fetch origin && \
-		git checkout v3.3.9
 	go get -u github.com/onsi/ginkgo/ginkgo
 	go get -u github.com/cybozu-go/placemat/...
 
