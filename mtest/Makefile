@@ -73,6 +73,7 @@ $(OUTPUT)/sabakan $(OUTPUT)/sabactl:
 		git fetch origin && \
 		git checkout v3.3.9
 	cd ..; \
+		go get -d ./... && \
 		GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
 
 $(OUTPUT)/cluster.yml: cluster.yml
