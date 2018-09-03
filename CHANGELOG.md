@@ -5,12 +5,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.20] - 2018-09-03
+
+### Changed
+- Rebuild with latest etcdutil v1.0.0.
+
 ## [0.19] - 2018-08-24
 
 ### Added
 - Support healthcheck and version endpoint (#97).
 
-### Chenged
+### Changed
 - Support label on machines (#98).
 - Modify BMC Type validation (#99).
 
@@ -40,7 +45,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix a bug that leaves files of deleted OS images (#86).
 
 [placemat]: https://github.com/cybozu-go/placemat
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.19...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.20...HEAD
+[0.20]: https://github.com/cybozu-go/sabakan/compare/v0.19...v0.20
 [0.19]: https://github.com/cybozu-go/sabakan/compare/v0.18...v0.19
 [0.18]: https://github.com/cybozu-go/sabakan/compare/v0.17...v0.18
 [0.17]: https://github.com/cybozu-go/sabakan/compare/v0.16...v0.17
