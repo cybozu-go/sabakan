@@ -64,9 +64,9 @@ func main() {
 		cfg.Etcd.Timeout = *flagEtcdTimeout
 		cfg.Etcd.Username = *flagEtcdUsername
 		cfg.Etcd.Password = *flagEtcdPassword
-		cfg.Etcd.TLSCA = *flagEtcdTLSCA
-		cfg.Etcd.TLSCert = *flagEtcdTLSCert
-		cfg.Etcd.TLSKey = *flagEtcdTLSKey
+		cfg.Etcd.TLSCAFile = *flagEtcdTLSCA
+		cfg.Etcd.TLSCertFile = *flagEtcdTLSCert
+		cfg.Etcd.TLSKeyFile = *flagEtcdTLSKey
 	} else {
 		f, err := os.Open(*flagConfigFile)
 		if err != nil {
