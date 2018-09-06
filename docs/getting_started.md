@@ -21,7 +21,7 @@ your servers with CoreOS Container Linux.
 
 ### <a name="etcd" />Prepare etcd
 
-Sabakan requires [etcd][].  Install and run it at `localhsot`.
+Sabakan requires [etcd][].  Install and run it at `localhost`.
 
 You may use docker to run etcd as follows:
 ```console
@@ -133,7 +133,7 @@ Prepare `machines.json` as follows:
     "labels": {
       "product": "Dell R640",
       "datacenter": "tokyo1"
-    }
+    },
     "rack": 0,
     "role": "boot",
     "bmc": {

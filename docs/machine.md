@@ -16,6 +16,7 @@ Field           | Type              | Description
 `labels`        | map[string]string | Labels of the machine such as `product` or `datacenter`
 `rack`          | int               | Logical rack number (LRN) where the machine exists.
 `index-in-rack` | int               | Logical position in a rack.
+`role`          | string            | Role of the machine, e.g. `boot`.
 `ipv4`          | []string          | IPv4 addresses for OS.
 `ipv6`          | []string          | IPv6 addresses for OS.
 `bmc`           | object            | BMC parameters; See below.
@@ -43,7 +44,7 @@ A JSON representation of `Machine` looks like:
     "labels": {
       "product": "Dell R630",
       "datacenter": "tokyo1"
-    }
+    },
     "rack": 1,
     "index-in-rack": 1,
     "role": "boot",
