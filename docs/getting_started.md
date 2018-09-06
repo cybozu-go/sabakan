@@ -133,7 +133,7 @@ Prepare `machines.json` as follows:
     "labels": {
       "product": "Dell R640",
       "datacenter": "tokyo1"
-    }
+    },
     "rack": 0,
     "role": "boot",
     "bmc": {
