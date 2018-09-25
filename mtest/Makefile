@@ -69,11 +69,6 @@ $(OUTPUT)/sabakan $(OUTPUT)/sabactl:
 	mkdir -p $(OUTPUT)
 	cd ..; \
 		go get -d ./... && \
-		cd $$GOPATH/src/github.com/coreos/etcd && \
-		git fetch origin && \
-		git checkout v3.3.9
-	cd ..; \
-		go get -d ./... && \
 		GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
 
 $(OUTPUT)/cluster.yml: cluster.yml
