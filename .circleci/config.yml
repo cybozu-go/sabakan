@@ -4,7 +4,6 @@ jobs:
     docker:
       - image: quay.io/cybozu/golang:1.10-bionic
       - image: quay.io/coreos/etcd:v3.3
-    working_directory: /go/src/github.com/cybozu-go/sabakan
     steps:
       - checkout
       # TODO use go mod
@@ -21,6 +20,7 @@ jobs:
                       -etcd-endpoints http://localhost:2379 \
                       -advertise-url http://localhost:10080
           background: true
+      - run: go vet ./...
       - run: go test -race -v ./...
 
   mtest:
