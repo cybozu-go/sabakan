@@ -15,7 +15,7 @@ import (
 
 var (
 	imageMembers = map[string][]string{
-		"coreos": []string{
+		"coreos": {
 			sabakan.ImageKernelFilename,
 			sabakan.ImageInitrdFilename,
 		},
