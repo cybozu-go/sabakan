@@ -138,8 +138,8 @@ clean:
 	rm -rf $(OUTPUT)
 
 setup:
-	go get -t -d ./...
-	go get -u github.com/onsi/ginkgo/ginkgo
-	go get -u github.com/cybozu-go/placemat/...
+	GO111MODULE=off \
+		go get -u github.com/onsi/ginkgo/ginkgo \
+		go get -u github.com/cybozu-go/placemat/...
 
 .PHONY:	all clean setup test
