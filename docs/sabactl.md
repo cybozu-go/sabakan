@@ -250,6 +250,18 @@ Get the current kernel parameters.
 $ sabactl kernel-params get
 ```
 
+`sabactl crypts delete`
+------------------
+
+Deletes all keys of a machine, and make its status `retired`.
+The command fails when the target machine's status is not `retiring`.
+
+- `-focus`: explicitly required
+
+```console
+$ sabactl crypts delete -force <serial>
+```
+
 `sabactl version`
 ------------------
 
