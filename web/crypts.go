@@ -104,7 +104,10 @@ func (s Server) handleCryptsPut(w http.ResponseWriter, r *http.Request, params [
 
 func (s Server) handleCryptsDelete(w http.ResponseWriter, r *http.Request, serial string) {
 	keys, err := s.Model.Storage.DeleteEncryptionKeys(r.Context(), serial)
-	if err != nil {
+	if err == sabakan.ErrNotFound {
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	} else if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
