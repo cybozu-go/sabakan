@@ -36,12 +36,8 @@ func (c *cryptsDeleteCmd) SetFlags(f *flag.FlagSet) {
 }
 
 func (c *cryptsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	if len(f.Args()) != 1 {
+	if len(f.Args()) != 1 || !c.force {
 		f.Usage()
-		return client.ExitUsageError
-	}
-
-	if !c.force {
 		return client.ExitUsageError
 	}
 
