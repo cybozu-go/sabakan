@@ -256,7 +256,7 @@ $ sabactl kernel-params get
 Deletes all keys of a machine, and make its status `retired`.
 The command fails when the target machine's status is not `retiring`.
 
-- `-focus`: explicitly required
+- `-force`: explicitly required
 
 ```console
 $ sabactl crypts delete -force <serial>
