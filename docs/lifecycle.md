@@ -46,8 +46,9 @@ External controllers are expected to:
 ### Transition constraints
 
 * A **Retiring** machine can transition only to **Retired**.
-* A **Healthy** machine can transition to **Unhealthy**, **Dead**, **Retiring**, **Updating**.
+* A **Healthy** machine can transition to **Unhealthy**, **Dead**, **Retiring**, and **Updating**.
 * A **Unhealthy** machine can transition to **Dead**.
+* **Uneahlthy** and **Dead** machine can not return to **Healthy** directly.
 * Disk encryption keys of a machine can be deleted if the machine is in **Retiring** state.
 * A machine transitions to **Retired** when its disk encryption keys are deleted.
 * Only **Retired** machines can be removed from sabakan.
