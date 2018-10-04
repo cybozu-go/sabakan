@@ -384,28 +384,6 @@ $ curl -s -XDELETE 'localhost:10080/api/v1/labels/1234abcd/os-release'
 (No output in stdout)
 ```
 
-## <a name="getassetsindex" />`GET /api/v1/assets`
-
-Get the list of asset names as JSON array.
-
-**Successful response**
-
-- HTTP status code: 200 OK
-- HTTP response header: `Content-Type: application/json`
-- HTTP response body: Index of the registered assets in JSON
-
-**Example**
-
-```console
-$ curl -s 'localhost:10080/api/v1/assets'
-[
-  "cybozu-bird-2.0.aci",
-  "cybozu-chrony-3.3.aci",
-  "cybozu-ubuntu-debug-18.04.aci",
-  "sabakan-cryptsetup"
-]
-```
-
 ## <a name="getimageindex" />`GET /api/v1/images/coreos`
 
 Get the [image index](image_management.md) for coreos.
