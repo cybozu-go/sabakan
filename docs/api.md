@@ -380,7 +380,7 @@ Remove label from a machine.
 **Example**
 
 ```console
-$ curl -s -XDELETE 'localhost:10080/api/v1/labels/1234abcd/<label>'
+$ curl -s -XDELETE 'localhost:10080/api/v1/labels/1234abcd/os-release'
 (No output in stdout)
 ```
 
