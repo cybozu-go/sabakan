@@ -10,6 +10,8 @@ REST API
 * [DELETE /api/v1/machines](#deletemachines)
 * [PUT /api/v1/state/\<serial\>](#putstate)
 * [GET /api/v1/state/\<serial\>](#getstate)
+* [PUT /api/v1/labels/\<serial\>](#putlabels)
+* [DELETE /api/v1/labels/\<serial\>](#deletelabels)
 * [GET /api/v1/images/coreos](#getimageindex)
 * [PUT /api/v1/images/coreos/\<id\>](#putimages)
 * [GET /api/v1/images/coreos/\<id\>](#getimages)
@@ -272,9 +274,11 @@ $ curl -s -X DELETE 'localhost:10080/api/v1/machines/1234abcd'
 Put the state of a machine.
 The new state is given by contents of request body and should be one of:
 
+* `uninitialized`
 * `healthy`
 * `unhealthy`
 * `dead`
+* `updating`
 * `retiring`
 
 **Successful response**
@@ -306,9 +310,11 @@ $ curl -s -XPUT -d'retiring' localhost:10080/api/v1/state/1234abcd
 
 Get the state of a machine.
 The state will be returned by response body and should be one of:
+* uninitialized
 * healthy
 * unhealthy
 * dead
+* updating
 * retiring
 * retired
 
@@ -325,6 +331,79 @@ The state will be returned by response body and should be one of:
 ```console
 $ curl -s localhost:10080/api/v1/state/1234abcd
 retiring
+```
+
+## <a name="putlabels" />`PUT /api/v1/labels/<serial>`
+
+Add labels to a machine. A value is overwritten when the label already exists.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+
+**Failure responses**
+
+- Invalid label format.
+
+  HTTP status code: 400 Bad Request
+
+- No specified machine found.
+
+  HTTP status code: 404 Not Found
+
+**Example**
+
+```console
+$ curl -s -XPUT localhost:10080/api/v1/labels/1234abcd -d '
+{
+    "os-release": "1855.4.0"
+}
+'
+(No output in stdout)
+```
+
+## <a name="deletelabels" />`DELETE /api/v1/labels/<serial>/<label>`
+
+Remove label from a machine.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response body: empty
+
+**Failure responses**
+
+- No label has in the machine.
+
+  HTTP status code: 404 Not found
+
+**Example**
+
+```console
+$ curl -s -XDELETE 'localhost:10080/api/v1/labels/1234abcd/<label>'
+(No output in stdout)
+```
+
+## <a name="getassetsindex" />`GET /api/v1/assets`
+
+Get the list of asset names as JSON array.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Index of the registered assets in JSON
+
+**Example**
+
+```console
+$ curl -s 'localhost:10080/api/v1/assets'
+[
+  "cybozu-bird-2.0.aci",
+  "cybozu-chrony-3.3.aci",
+  "cybozu-ubuntu-debug-18.04.aci",
+  "sabakan-cryptsetup"
+]
 ```
 
 ## <a name="getimageindex" />`GET /api/v1/images/coreos`
