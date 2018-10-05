@@ -169,7 +169,7 @@ RETRY:
 
 	labelKeys := make([]string, len(labels))
 	i := 0
-	for k, _ := range labels {
+	for k := range labels {
 		labelKeys[i] = k
 		i++
 	}
