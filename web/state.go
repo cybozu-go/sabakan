@@ -52,7 +52,7 @@ func (s Server) handleStatePut(w http.ResponseWriter, r *http.Request, serial st
 
 	ms := sabakan.MachineState(state)
 	switch ms {
-	case sabakan.StateHealthy, sabakan.StateUnhealthy, sabakan.StateDead, sabakan.StateRetiring:
+	case sabakan.StateUninitialized, sabakan.StateHealthy, sabakan.StateUnhealthy, sabakan.StateDead, sabakan.StateUpdating, sabakan.StateRetiring:
 	default:
 		renderError(r.Context(), w, BadRequest("invalid state: "+string(state)))
 		return

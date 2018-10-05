@@ -83,8 +83,8 @@ func TestMachine(t *testing.T) {
 	}
 
 	m := NewMachine(spec)
-	if m.Status.State != StateHealthy {
-		t.Error(`m.Status.State != StateHealthy`)
+	if m.Status.State != StateUninitialized {
+		t.Error(`m.Status.State != StateUninitialized`)
 	}
 	if m.Status.Timestamp.IsZero() {
 		t.Error(`m.Status.Timestamp.IsZero()`)
@@ -100,7 +100,7 @@ func TestMachine(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if m2.Status.State != StateHealthy {
-		t.Error(`m.Status.State != StateHealthy`)
+	if m2.Status.State != StateUninitialized {
+		t.Error(`m.Status.State != StateUninitialized`)
 	}
 }

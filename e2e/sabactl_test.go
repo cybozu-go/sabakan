@@ -236,7 +236,7 @@ func testSabactlMachines(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if gotState != sabakan.StateHealthy {
+	if gotState != sabakan.StateUninitialized {
 		t.Fatal("unexpected machine state: ", gotState)
 	}
 
@@ -251,6 +251,14 @@ func testSabactlMachines(t *testing.T) {
 	stdout, stderr, err = runSabactl("machines", "set-state", "12345678", "retiring")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
+	stdout, stderr, err = runSabactl("machines", "set-state", "12345678", "retired")
+	code = exitCode(err)
+	if code == client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)

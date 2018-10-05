@@ -171,10 +171,12 @@ func machinesSetStateCommand() subcommands.Command {
 		`Usage: sabactl machines set-state SERIAL STATE
 
 STATE can be one of:
-    healthy      The machine has no problems.
-    unhealthy    The machine has some problems.
-    dead         The machine does not communicate with others.
-    retiring     The machine should soon be retired/repaired.
+    uninitialized  The machine is not yet initialized.
+    healthy        The machine has no problems.
+    unhealthy      The machine has some problems.
+    dead           The machine does not communicate with others.
+    updating       The machine is updating.
+    retiring       The machine should soon be retired/repaired.
 `,
 	}
 }

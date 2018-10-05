@@ -31,7 +31,7 @@ func testStateGet(t *testing.T) {
 		status int
 		state  string
 	}{
-		{"123", 200, "healthy"},
+		{"123", 200, "uninitialized"},
 		{"not-exist", 404, ""},
 	}
 
@@ -73,9 +73,16 @@ func testStatePut(t *testing.T) {
 		state  string
 		status int
 	}{
+		{"uninitialized", 200},
+		{"healthy", 200},
+		{"updating", 200},
+		{"unhealthy", 500},
+		{"uninitialized", 200},
 		{"healthy", 200},
 		{"unhealthy", 200},
+		{"healthy", 500},
 		{"dead", 200},
+		{"uninitialized", 200},
 		{"healthy", 200},
 		{"retired", 400},
 		{"retiring", 200},
@@ -89,7 +96,7 @@ func testStatePut(t *testing.T) {
 
 		resp := w.Result()
 		if resp.StatusCode != td.status {
-			t.Error("wrong status code, expects:", td.status, ", actual:", resp.StatusCode)
+			t.Error("wrong status code, state:", td.state, "expects:", td.status, ", actual:", resp.StatusCode)
 		}
 
 		stored, err := m.Machine.Get(ctx, "123")
