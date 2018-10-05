@@ -45,6 +45,29 @@ func (d *driver) machineSetState(ctx context.Context, serial string, state sabak
 	return m.SetState(state)
 }
 
+func (d *driver) machineAddLabels(ctx context.Context, serial string, labels map[string]string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	m, ok := d.machines[serial]
+	if !ok {
+		return sabakan.ErrNotFound
+	}
+	m.AddLabels(labels)
+	return nil
+}
+
+func (d *driver) machineDeleteLabel(ctx context.Context, serial string, label string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	m, ok := d.machines[serial]
+	if !ok {
+		return sabakan.ErrNotFound
+	}
+	return m.DeleteLabel(label)
+}
+
 func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.Machine, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -89,6 +112,14 @@ func (d machineDriver) Get(ctx context.Context, serial string) (*sabakan.Machine
 
 func (d machineDriver) SetState(ctx context.Context, serial string, state sabakan.MachineState) error {
 	return d.machineSetState(ctx, serial, state)
+}
+
+func (d machineDriver) AddLabels(ctx context.Context, serial string, labels map[string]string) error {
+	return d.machineAddLabels(ctx, serial, labels)
+}
+
+func (d machineDriver) DeleteLabel(ctx context.Context, serial string, label string) error {
+	return d.machineDeleteLabel(ctx, serial, label)
 }
 
 func (d machineDriver) Query(ctx context.Context, query sabakan.Query) ([]*sabakan.Machine, error) {
