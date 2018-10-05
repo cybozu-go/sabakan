@@ -16,11 +16,13 @@ func (ms MachineState) String() string {
 
 // Machine state definitions.
 const (
-	StateHealthy   = MachineState("healthy")
-	StateUnhealthy = MachineState("unhealthy")
-	StateDead      = MachineState("dead")
-	StateRetiring  = MachineState("retiring")
-	StateRetired   = MachineState("retired")
+	StateUninitialized = MachineState("uninitialized")
+	StateHealthy       = MachineState("healthy")
+	StateUnhealthy     = MachineState("unhealthy")
+	StateDead          = MachineState("dead")
+	StateUpdating      = MachineState("updating")
+	StateRetiring      = MachineState("retiring")
+	StateRetired       = MachineState("retired")
 )
 
 var (
@@ -88,31 +90,49 @@ func NewMachine(spec MachineSpec) *Machine {
 			State     MachineState `json:"state"`
 		}{
 			time.Now().UTC(),
-			StateHealthy,
+			StateUninitialized,
 		},
 	}
 }
 
 // SetState sets the state of the machine.
 func (m *Machine) SetState(ms MachineState) error {
+	if m.Status.State == ms {
+		return nil
+	}
+
 	switch m.Status.State {
-	case StateHealthy, StateUnhealthy, StateDead:
-		if ms == StateRetired {
-			return errors.New("transition to retired is forbidden")
+	case StateUninitialized:
+		if ms != StateHealthy && ms != StateRetiring {
+			return errors.New("transition to state other than healthy or retiring is forbidden")
+		}
+	case StateHealthy:
+		if ms == StateUninitialized || ms == StateRetired {
+			return errors.New("transition to " + ms.String() + " is forbidden")
+		}
+	case StateUnhealthy:
+		if ms == StateHealthy || ms == StateUpdating || ms == StateRetired {
+			return errors.New("transition to " + ms.String() + " is forbidden")
+		}
+	case StateDead:
+		if ms == StateHealthy || ms == StateUpdating || ms == StateRetired || ms == StateUnhealthy {
+			return errors.New("transition to " + ms.String() + " is forbidden")
+		}
+	case StateUpdating:
+		if ms != StateUninitialized {
+			return errors.New("transition to state other than uninitialized is forbidden")
 		}
 	case StateRetiring:
 		if ms != StateRetired {
 			return errors.New("transition to state other than retired is forbidden")
 		}
 	case StateRetired:
-		if ms != StateHealthy {
-			return errors.New("transition to state other than healthy is forbidden")
+		if ms != StateUninitialized {
+			return errors.New("transition to state other than uninitialized is forbidden")
 		}
 	}
 
-	if m.Status.State != ms {
-		m.Status.State = ms
-		m.Status.Timestamp = time.Now().UTC()
-	}
+	m.Status.State = ms
+	m.Status.Timestamp = time.Now().UTC()
 	return nil
 }

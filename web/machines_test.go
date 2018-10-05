@@ -245,7 +245,7 @@ func testMachinesGet(t *testing.T) {
 			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
 		},
 		{
-			query:    map[string][]string{"state": {"healthy"}},
+			query:    map[string][]string{"state": {"uninitialized"}},
 			status:   http.StatusOK,
 			expected: map[string]bool{"1234abcd": true, "5678abcd": true, "1234efgh": true},
 		},

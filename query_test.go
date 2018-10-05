@@ -18,7 +18,7 @@ func TestMatch(t *testing.T) {
 		{Query{"ipv4": "10.20.30.40"}, NewMachine(MachineSpec{IPv4: []string{"10.20.30.40", "10.21.30.40"}}), true},
 		{Query{"ipv6": "aa::ff"}, NewMachine(MachineSpec{IPv6: []string{"aa::ff", "bb::ff"}}), true},
 		{Query{"labels": "product=R630,datacenter=us"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630", "datacenter": "us"}}), true},
-		{Query{"state": "healthy"}, NewMachine(MachineSpec{}), true},
+		{Query{"state": "uninitialized"}, NewMachine(MachineSpec{}), true},
 		{Query{"labels": "product=R630"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630", "datacenter": "jp"}}), true},
 		{Query{"labels": "product=R630,datacenter=jp"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630"}}), false},
 		{Query{"labels": "product=R630,datacenter=jp"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630", "datacenter": "us"}}), false},

@@ -45,6 +45,7 @@ External controllers are expected to:
 
 ### Transition constraints
 
+* **Uninitialized**, ***Healthy**, **Unhealthy**, or **Dead** machine can transition to **Retiring**.
 * A **Retiring** machine can transition only to **Retired**.
 * A **Healthy** machine can transition to **Unhealthy**, **Dead**, **Retiring**, and **Updating**.
 * A **Unhealthy** machine can transition to **Dead**.
@@ -63,4 +64,4 @@ sabakan.
 
 ### Transition diagram
 
-![state transition diagram](http://www.plantuml.com/plantuml/png/ZP8nRxmm3CNtV0hFV-dqtncggtf3krJLIPsg3ZvYIaJY86Dwef--v0eKb0uiu9ZVUyzOENQAedtmvhTw-_SE1nklVBY3LtRirA5tNsJDvhGmZuHUwy5CxvMs_kaKS2AbKZj01XA9ah4dGbl0C-arIWCz2s5PuyLJHfv9dJZ-IAQbHo6GgPCFq5hKX2xL_pDTOamLQ4qGnX37PCpy_U__Bk2-KXAGctYakTuzL0Pdta_B0G9oZzuFQv6dIgS56PEUUq9NN9Rt8jGcUBC0CvjjtHD_fX0_gRlnrdKD49SojEeYGqF39AKnhs_tfSs2EMgyS0Ky88Eag0qBbSG07LwmGJP7Oji7_mq0)
+![state transition diagram](http://www.plantuml.com/plantuml/png/ZP91JuH038NlyojwDY7UEPWrxa4lncoo9-EXC5sPCDCXfRZ1No-3B3h4nBsGbdxlFMYwwnL5X-3DwyqR53QUkRY38pjswj2xJx8cww2Ove-4NflnZyc1r8dZznBsL7jqGY3BAsCMsGmUkVdk4gbKQm_8G29HCcvFQ4ju9Zr7QM5W8QmRh3nbr2RsT-gA3LsAxIng0jVgza1LZAa2RGZ2PE-OZBdCeTWkf8JxavA0pCA9vEQwJyd0hUVJsa107j3xSID8gp0cFVyBMfbDnejGby3iHyt5wCSriGSAyOFwcRMkRu6ubh5J5nbQ6XSPNPspuEkDJVTMmWCoI0hAM3X93D1ZXIsosH7R8VWl)

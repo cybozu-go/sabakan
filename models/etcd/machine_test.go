@@ -164,10 +164,10 @@ func testSetState(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if m.Status.State != sabakan.StateHealthy {
-		t.Error("m.Status.State == sabakan.StateHealthy:", m.Status.State)
+	if m.Status.State != sabakan.StateUninitialized {
+		t.Error("m.Status.State == sabakan.StateUninitialized:", m.Status.State)
 	}
-	err = d.machineSetState(ctx, "12345678", sabakan.StateDead)
+	err = d.machineSetState(ctx, "12345678", sabakan.StateHealthy)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,8 +176,8 @@ func testSetState(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if m.Status.State != sabakan.StateDead {
-		t.Error("m.Status.State == sabakan.StateDead:", m.Status.State)
+	if m.Status.State != sabakan.StateHealthy {
+		t.Error("m.Status.State == sabakan.StateHealthy:", m.Status.State)
 	}
 }
 
