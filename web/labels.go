@@ -33,7 +33,7 @@ func (s Server) handleLabelsPut(w http.ResponseWriter, r *http.Request, serial s
 	var labels map[string]string
 	err := json.NewDecoder(r.Body).Decode(&labels)
 	if err != nil {
-		renderError(r.Context(), w, InternalServerError(err))
+		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	}
 
