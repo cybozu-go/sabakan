@@ -2,6 +2,7 @@ package sabakan
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 )
 
@@ -102,5 +103,22 @@ func TestMachine(t *testing.T) {
 	}
 	if m2.Status.State != StateUninitialized {
 		t.Error(`m.Status.State != StateUninitialized`)
+	}
+
+	labels := map[string]string{"datacenter": "Los Alamos", "product": "Cray-1"}
+	m.AddLabels(labels)
+	if !reflect.DeepEqual(m.Spec.Labels, labels) {
+		t.Error("m.Spec.Labels was not set correctly:", m.Spec.Labels)
+	}
+	m.AddLabels(map[string]string{"datacenter": "Lawrence Livermore"})
+	if dc, ok := m.Spec.Labels["datacenter"]; !ok || dc != "Lawrence Livermore" {
+		t.Error("m.Spec.Labels was not updated correctly:", m.Spec.Labels)
+	}
+	err = m.DeleteLabel("datacenter")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := m.Spec.Labels["datacenter"]; ok {
+		t.Error("label in m.Spec.Labels was not deleted correctly:", m.Spec.Labels)
 	}
 }

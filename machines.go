@@ -136,3 +136,25 @@ func (m *Machine) SetState(ms MachineState) error {
 	m.Status.Timestamp = time.Now().UTC()
 	return nil
 }
+
+// AddLabels adds labels to Machine by merging maps.
+func (m *Machine) AddLabels(labels map[string]string) {
+	if m.Spec.Labels == nil {
+		m.Spec.Labels = make(map[string]string)
+	}
+
+	for k, v := range labels {
+		m.Spec.Labels[k] = v
+	}
+}
+
+// DeleteLabel deletes label from Machine.
+func (m *Machine) DeleteLabel(label string) error {
+	_, ok := m.Spec.Labels[label]
+	if !ok {
+		return ErrNotFound
+	}
+
+	delete(m.Spec.Labels, label)
+	return nil
+}

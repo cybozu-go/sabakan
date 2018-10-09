@@ -141,6 +141,78 @@ RETRY:
 	return nil
 }
 
+func (d *driver) machineAddLabels(ctx context.Context, serial string, labels map[string]string) error {
+	key := KeyMachines + serial
+
+RETRY:
+	m, rev, err := d.machineGetWithRev(ctx, serial)
+	if err != nil {
+		return err
+	}
+
+	m.AddLabels(labels)
+	data, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	tresp, err := d.client.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", rev)).
+		Then(clientv3.OpPut(key, string(data))).
+		Commit()
+	if err != nil {
+		return err
+	}
+	if !tresp.Succeeded {
+		goto RETRY
+	}
+
+	labelKeys := make([]string, len(labels))
+	i := 0
+	for k := range labels {
+		labelKeys[i] = k
+		i++
+	}
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditMachines, serial,
+		"add-labels", strings.Join(labelKeys, ","))
+	return nil
+}
+
+func (d *driver) machineDeleteLabel(ctx context.Context, serial string, label string) error {
+	key := KeyMachines + serial
+
+RETRY:
+	m, rev, err := d.machineGetWithRev(ctx, serial)
+	if err != nil {
+		return err
+	}
+
+	err = m.DeleteLabel(label)
+	if err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	tresp, err := d.client.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", rev)).
+		Then(clientv3.OpPut(key, string(data))).
+		Commit()
+	if err != nil {
+		return err
+	}
+	if !tresp.Succeeded {
+		goto RETRY
+	}
+
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditMachines, serial,
+		"delete-label", label)
+	return nil
+}
+
 func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
 
@@ -265,6 +337,16 @@ func (d machineDriver) Get(ctx context.Context, serial string) (*sabakan.Machine
 // SetState implements sabakan.MachineModel
 func (d machineDriver) SetState(ctx context.Context, serial string, state sabakan.MachineState) error {
 	return d.machineSetState(ctx, serial, state)
+}
+
+// AddLabels implements sabakan.MachineModel
+func (d machineDriver) AddLabels(ctx context.Context, serial string, labels map[string]string) error {
+	return d.machineAddLabels(ctx, serial, labels)
+}
+
+// DeleteLabel implements sabakan.MachineModel
+func (d machineDriver) DeleteLabel(ctx context.Context, serial string, label string) error {
+	return d.machineDeleteLabel(ctx, serial, label)
 }
 
 // Query implements sabakan.MachineModel

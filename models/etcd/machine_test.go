@@ -181,6 +181,76 @@ func testSetState(t *testing.T) {
 	}
 }
 
+func testAddLabels(t *testing.T) {
+	t.Parallel()
+
+	d, ch := testNewDriver(t)
+	_, err := initializeTestData(d, ch)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = d.machineAddLabels(context.Background(), "12345678", map[string]string{"datacenter": "heaven"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := d.machineGet(context.Background(), "12345678")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dc, ok := m.Spec.Labels["datacenter"]; !ok || dc != "heaven" {
+		t.Error("wrong labels:", m.Spec.Labels)
+	}
+
+	err = d.machineAddLabels(context.Background(), "1111", map[string]string{"datacenter": "heaven"})
+	if err != sabakan.ErrNotFound {
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Error("AddLabels succeeded for non-existing machine")
+	}
+}
+
+func testDeleteLabel(t *testing.T) {
+	t.Parallel()
+
+	d, ch := testNewDriver(t)
+	_, err := initializeTestData(d, ch)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = d.machineDeleteLabel(context.Background(), "12345678", "product")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := d.machineGet(context.Background(), "12345678")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := m.Spec.Labels["product"]; ok {
+		t.Error("label was not deleted correctly:", m.Spec.Labels)
+	}
+
+	err = d.machineDeleteLabel(context.Background(), "12345678", "datacenter")
+	if err != sabakan.ErrNotFound {
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Error("DeleteLabel succeeded for non-existing label")
+	}
+
+	err = d.machineDeleteLabel(context.Background(), "1111", "product")
+	if err != sabakan.ErrNotFound {
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Error("DeleteLabel succeeded for non-existing machine")
+	}
+}
+
 func testDelete(t *testing.T) {
 	t.Parallel()
 
@@ -301,6 +371,8 @@ func TestMachine(t *testing.T) {
 	t.Run("Get", testGet)
 	t.Run("Query", testQuery)
 	t.Run("SetState", testSetState)
+	t.Run("AddLabels", testAddLabels)
+	t.Run("DeleteLabel", testDeleteLabel)
 	t.Run("Delete", testDelete)
 	t.Run("DeleteRace", testDeleteRace)
 }
