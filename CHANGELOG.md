@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.21] - 2018-10-09
+
+### Changed
+- Update machines state (#106, #107).
+
+### Added
+- Add API `/api/v1/labels` (#108).
+
 ## [0.20] - 2018-09-03
 
 ### Changed
@@ -45,7 +53,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix a bug that leaves files of deleted OS images (#86).
 
 [placemat]: https://github.com/cybozu-go/placemat
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.20...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.21...HEAD
+[0.21]: https://github.com/cybozu-go/sabakan/compare/v0.20...v0.21
 [0.20]: https://github.com/cybozu-go/sabakan/compare/v0.19...v0.20
 [0.19]: https://github.com/cybozu-go/sabakan/compare/v0.18...v0.19
 [0.18]: https://github.com/cybozu-go/sabakan/compare/v0.17...v0.18
