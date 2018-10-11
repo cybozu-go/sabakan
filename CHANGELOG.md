@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.22] - 2018-10-11
+
+### Changed
+- Update machines lifecycle (#109).
+
 ## [0.21] - 2018-10-09
 
 ### Changed
@@ -53,7 +58,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix a bug that leaves files of deleted OS images (#86).
 
 [placemat]: https://github.com/cybozu-go/placemat
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.21...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.22...HEAD
+[0.22]: https://github.com/cybozu-go/sabakan/compare/v0.21...v0.22
 [0.21]: https://github.com/cybozu-go/sabakan/compare/v0.20...v0.21
 [0.20]: https://github.com/cybozu-go/sabakan/compare/v0.19...v0.20
 [0.19]: https://github.com/cybozu-go/sabakan/compare/v0.18...v0.19
