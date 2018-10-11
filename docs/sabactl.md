@@ -90,7 +90,7 @@ Detailed specification of the query parameters and the output JSON content is sa
 ----------------------------
 
 Set the state of a machine.
-State is one of `uninitialized`, `healthy`, `unhealthy`, `unreachbale`, `updating` or `retiring`.
+State is one of `uninitialized`, `healthy`, `unhealthy`, `unreachable`, `updating` or `retiring`.
 
 ```console
 $ sabactl machines set-state <serial> <state>
