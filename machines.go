@@ -107,7 +107,7 @@ func (m *Machine) SetState(ms MachineState) error {
 			return errors.New("transition to state other than healthy or retiring is forbidden")
 		}
 	case StateHealthy:
-		if ms == StateUninitialized || ms == StateRetired {
+		if ms == StateUnreachable || ms == StateUninitialized || ms == StateRetired {
 			return errors.New("transition to " + ms.String() + " is forbidden")
 		}
 	case StateUnhealthy:
@@ -115,7 +115,7 @@ func (m *Machine) SetState(ms MachineState) error {
 			return errors.New("transition to " + ms.String() + " is forbidden")
 		}
 	case StateUnreachable:
-		if ms == StateHealthy || ms == StateUpdating || ms == StateRetired || ms == StateUnhealthy {
+		if ms == StateUpdating || ms == StateRetired || ms == StateUnhealthy {
 			return errors.New("transition to " + ms.String() + " is forbidden")
 		}
 	case StateUpdating:
