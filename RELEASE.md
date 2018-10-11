@@ -40,6 +40,7 @@ Bump version
 5. Commit the change and add a git tag, then push them.
 
     ```console
+    $ VERSION=x.y.z
     $ git commit -a -m "Bump version to $VERSION"
     $ git tag v$VERSION
     $ git push origin master --tags
