@@ -28,7 +28,7 @@ Sabakan defines following machine states:
 * **Uninitialized**: Machines to not be initialized.
 * **Healthy**: Machines that can run applications
 * **Unhealthy**: Machines having problems to be repaired
-* **Dead**: Machines that cannot be accessed
+* **Unreachable**: Machines that cannot be accessed
 * **Updating**: Machines to be updating 
 * **Retiring**: Machines to be retired/repaired
 * **Retired**: Machines whose disk encryption keys were deleted
@@ -40,16 +40,16 @@ External controllers are expected to:
 * Prepare **Uninitialized** machines to (re)join to application clusters.
 * Allocate **Healthy** machines to applications like Kubernetes or Ceph.
 * Reboot the **Updating** machines, Machines will be **Uninitialized** after reboot.
-* Drain **Unhealthy**, **Dead** and **Retiring** machines from applications.
+* Drain **Unhealthy**, **Unreachable** and **Retiring** machines from applications.
 * Remove disk encryption keys of **Retiring** machines after drain.
 
 ### Transition constraints
 
-* **Uninitialized**, ***Healthy**, **Unhealthy**, or **Dead** machine can transition to **Retiring**.
+* **Uninitialized**, ***Healthy**, **Unhealthy**, or **Unreachable** machine can transition to **Retiring**.
 * A **Retiring** machine can transition only to **Retired**.
-* A **Healthy** machine can transition to **Unhealthy**, **Dead**, **Retiring**, and **Updating**.
-* A **Unhealthy** machine can transition to **Dead**.
-* **Uneahlthy** and **Dead** machine can not return to **Healthy** directly.
+* A **Healthy** machine can transition to **Unhealthy**, **Unreachable**, **Retiring**, and **Updating**.
+* A **Unreachable** machine can transition to **Healthy**.
+* **Uneahlthy** machine cannot return to **Healthy** directly.
 * Disk encryption keys of a machine can be deleted if the machine is in **Retiring** state.
 * A machine transitions to **Retired** when its disk encryption keys are deleted.
 * Only **Retired** machines can be removed from sabakan.
@@ -64,4 +64,4 @@ sabakan.
 
 ### Transition diagram
 
-![state transition diagram](http://www.plantuml.com/plantuml/png/ZP91JuH038NlyojwDY7UEPWrxa4lncoo9-EXC5sPCDCXfRZ1No-3B3h4nBsGbdxlFMYwwnL5X-3DwyqR53QUkRY38pjswj2xJx8cww2Ove-4NflnZyc1r8dZznBsL7jqGY3BAsCMsGmUkVdk4gbKQm_8G29HCcvFQ4ju9Zr7QM5W8QmRh3nbr2RsT-gA3LsAxIng0jVgza1LZAa2RGZ2PE-OZBdCeTWkf8JxavA0pCA9vEQwJyd0hUVJsa107j3xSID8gp0cFVyBMfbDnejGby3iHyt5wCSriGSAyOFwcRMkRu6ubh5J5nbQ6XSPNPspuEkDJVTMmWCoI0hAM3X93D1ZXIsosH7R8VWl)
+![state transition diagram](http://www.plantuml.com/plantuml/png/ZPB1JiCm38RlUGgVaIhkFQ0XTe0BGfKu8GvUuz6eYLEvBbDvUfgnXQL2QBVO_dv_RPJDg2Ww1M_URjwXil70rHsyicEd3htx8ckA2gfb_aZejPl_c3IaJXn_rB2brgCJ0ZcrZ3d55Z0fkfygaKgjZe0C91AbuBQ4jePdqaEK7YOMmhR3dQU2McalhHcRXgGTB6e2y-cseLsCwGJQ4OHblMCovZo7QdqXDTplbGJa65n8xgxxb19SxNpA1GJa2RsVZTaIbZUU6_zeChCol0WD2RpupGkLEM_yNPz23ONuIUCnPDtO0t4hyw0kClGqds9qhJ3ZvwUsFBiQ7f11agXWOIynm8Wxx97DXjXEmNy3)

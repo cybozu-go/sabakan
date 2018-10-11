@@ -81,7 +81,7 @@ func testStatePut(t *testing.T) {
 		{"healthy", 200},
 		{"unhealthy", 200},
 		{"healthy", 500},
-		{"dead", 200},
+		{"unreachable", 200},
 		{"uninitialized", 200},
 		{"healthy", 200},
 		{"retired", 400},

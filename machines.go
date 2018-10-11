@@ -19,7 +19,7 @@ const (
 	StateUninitialized = MachineState("uninitialized")
 	StateHealthy       = MachineState("healthy")
 	StateUnhealthy     = MachineState("unhealthy")
-	StateDead          = MachineState("dead")
+	StateUnreachable   = MachineState("unreachable")
 	StateUpdating      = MachineState("updating")
 	StateRetiring      = MachineState("retiring")
 	StateRetired       = MachineState("retired")
@@ -114,7 +114,7 @@ func (m *Machine) SetState(ms MachineState) error {
 		if ms == StateHealthy || ms == StateUpdating || ms == StateRetired {
 			return errors.New("transition to " + ms.String() + " is forbidden")
 		}
-	case StateDead:
+	case StateUnreachable:
 		if ms == StateHealthy || ms == StateUpdating || ms == StateRetired || ms == StateUnhealthy {
 			return errors.New("transition to " + ms.String() + " is forbidden")
 		}
