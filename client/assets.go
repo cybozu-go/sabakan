@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime"
 	"net/http"
@@ -53,7 +54,7 @@ func detectContentTypeFromFile(file *os.File) (string, error) {
 }
 
 // AssetsUpload stores a file as an asset
-func AssetsUpload(ctx context.Context, name, filename string) (*sabakan.AssetStatus, *Status) {
+func AssetsUpload(ctx context.Context, name, filename string, meta map[string]string) (*sabakan.AssetStatus, *Status) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, ErrorStatus(err)
@@ -75,6 +76,9 @@ func AssetsUpload(ctx context.Context, name, filename string) (*sabakan.AssetSta
 	req.ContentLength = size
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Expect", "100-continue")
+	for k, v := range meta {
+		req.Header.Set(fmt.Sprintf("X-Sabakan-Asset-Options-%s", k), v)
+	}
 
 	resp, status := client.Do(req)
 	if status != nil {

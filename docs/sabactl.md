@@ -160,7 +160,7 @@ Get the index of assets as a JSON array of asset names.
 
 Get the meta data of the named asset.
 
-`sabactl assets upload [-meta KEY=VALUE] NAME FILE`
+`sabactl assets upload [-meta KEY=VALUE]... NAME FILE`
 ---------------------------------------------------
 
 ```console
