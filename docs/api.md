@@ -277,7 +277,7 @@ The new state is given by contents of request body and should be one of:
 * `uninitialized`
 * `healthy`
 * `unhealthy`
-* `dead`
+* `unreachable`
 * `updating`
 * `retiring`
 
@@ -313,7 +313,7 @@ The state will be returned by response body and should be one of:
 * uninitialized
 * healthy
 * unhealthy
-* dead
+* unreachable
 * updating
 * retiring
 * retired

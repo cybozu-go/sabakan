@@ -256,7 +256,7 @@ func testMachinesGet(t *testing.T) {
 			expected: nil,
 		},
 		{
-			query:    map[string][]string{"state": {"dead"}},
+			query:    map[string][]string{"state": {"unreachable"}},
 			status:   http.StatusNotFound,
 			expected: nil,
 		},

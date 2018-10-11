@@ -27,7 +27,7 @@ func TestMatch(t *testing.T) {
 		{Query{"ipv6": "aa::ff"}, NewMachine(MachineSpec{IPv6: []string{"bb::ff", "cc::ff"}}), false},
 		{Query{"ipv4": "10.20.30.40"}, NewMachine(MachineSpec{}), false},
 		{Query{"ipv6": "aa::ff"}, NewMachine(MachineSpec{}), false},
-		{Query{"state": "dead"}, NewMachine(MachineSpec{}), false},
+		{Query{"state": "unreachable"}, NewMachine(MachineSpec{}), false},
 	}
 
 	for _, c := range cases {
