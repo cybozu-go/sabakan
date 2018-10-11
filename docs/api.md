@@ -523,6 +523,7 @@ Upload a file as an asset.
 - `Content-Type`: required
 - `Content-Length`: required
 - `X-Sabakan-Asset-SHA256`: if given, the uploaded data will be verified by SHA256.
+- `X-Sabakan-Asset-Options-<KEY>`: if given, the uploaded data will have meta data of `"<KEY>": "<VALUE>"`.
 
 **Successful response**
 
@@ -676,7 +677,7 @@ $ curl -s -XGET localhost:10080/api/v1/boot/ignitions/1234abcd/1527731687
 
 ## <a name="getignitions" />`GET /api/v1/ignitions/<role>`
 
-Get CoreOS ignition ids for a certain role.
+Get CoreOS ignition templates meta data for a certain role.
 
 **Successful response**
 
@@ -696,7 +697,7 @@ Get CoreOS ignition ids for a certain role.
 
 ```console
 $ curl -s -XGET localhost:10080/api/v1/boot/ignitions/worker
-[ "1427731487", "1507731659", "1527731687"]
+[ {"id": "1427731487", "version": "1.1.1"}, {"id": "1507731659", "version": "1.1.2"}, {"id": "1527731687", "version": "1.2.1"} ]
 ```
 
 ## <a name="getignitionsid" />`GET /api/v1/ignitions/<role>/<id>`
@@ -733,6 +734,10 @@ $ curl -s -XGET localhost:10080/api/v1/ignitions/worker/1527731687
 Create CoreOS ignition for a certain role from ignition-like YAML format (see [Ignition Controls](ignition.md)).
 It returns a new assigned ID for the ignition.
 
+**Request headers**
+
+- `X-Sabakan-Ignition-<KEY>`: if given, the ignition will have meta data of `"<KEY>": "<VALUE>"`.
+
 **Successful response**
 
 - HTTP status code: 201 Created
@@ -740,6 +745,10 @@ It returns a new assigned ID for the ignition.
 - HTTP response body: The target role of the ignition and ignition's ID in JSON
 
 **Failure responses**
+
+- Invalid request header (e.g. KEY == "id").
+
+  HTTP status code: 400 Bad Request
 
 - Invalid ignition format.
 

@@ -65,6 +65,12 @@ The value is described in [asset management](assets.md).
 
 This type of key holds an ignition template. Ignitions are distinguished by `<role>`.
 
+`<prefix>/ignitions/<role>/<id>/meta`
+-------------------------------------
+
+This type of key holds the meta data of an ignition template.
+The value is `map[string]string` formatted in JSON.
+
 `<prefix>/ipam`
 ---------------
 
