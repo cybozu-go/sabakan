@@ -81,7 +81,7 @@ networkd:
 	m := mock.NewModel()
 	handler := Server{Model: m}
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", ign, nil)
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", ign, map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +215,7 @@ func testIgnitionTemplatesGet(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hoge", nil)
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hoge", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -316,7 +316,7 @@ func testIgnitionTemplatesDelete(t *testing.T) {
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hello", nil)
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hello", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}

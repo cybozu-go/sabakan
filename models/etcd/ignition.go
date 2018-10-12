@@ -11,10 +11,14 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/sabakan"
+	"github.com/pkg/errors"
 )
 
 // PutTemplate implements sabakan.IgnitionModel
 func (d *driver) PutTemplate(ctx context.Context, role string, template string, metadata map[string]string) (string, error) {
+	if metadata == nil {
+		return "", errors.New("metadata should not be nil")
+	}
 RETRY:
 	now := time.Now()
 	id := strconv.FormatInt(now.UnixNano(), 10)
@@ -97,14 +101,12 @@ func (d *driver) GetTemplateMetadataList(ctx context.Context, role string) ([]ma
 
 	metadata := make([]map[string]string, len(resp.Kvs))
 	for i, v := range resp.Kvs {
-		id := string(v.Key[len(target):])
-		meta := map[string]string{
-			"id": id,
-		}
+		meta := make(map[string]string)
 		err = json.Unmarshal(v.Value, &meta)
 		if err != nil {
 			return nil, err
 		}
+		meta["id"] = string(v.Key[len(target):])
 		metadata[i] = meta
 	}
 

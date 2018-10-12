@@ -18,7 +18,7 @@ func testTemplate(t *testing.T) {
 		t.Fatal("unexpected error: ", err)
 	}
 
-	id, err := d.PutTemplate(context.Background(), "cs", "data", nil)
+	id, err := d.PutTemplate(context.Background(), "cs", "data", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func testTemplate(t *testing.T) {
 	}
 }
 
-func testTemplateIDs(t *testing.T) {
+func testTemplateMetadata(t *testing.T) {
 	t.Parallel()
 
 	d, _ := testNewDriver(t)
@@ -73,7 +73,7 @@ func testTemplateIDs(t *testing.T) {
 	}
 
 	for i := 0; i < sabakan.MaxIgnitions+10; i++ {
-		_, err = d.PutTemplate(context.Background(), "cs", "data", nil)
+		_, err = d.PutTemplate(context.Background(), "cs", "data", map[string]string{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -85,10 +85,15 @@ func testTemplateIDs(t *testing.T) {
 	if len(metadata) != sabakan.MaxIgnitions {
 		t.Error("wrong number of templates", len(metadata))
 	}
+	for _, m := range metadata {
+		if len(m["id"]) == 0 {
+			t.Error("id is empty")
+		}
+	}
 
 }
 
 func TestIgnitionTemplate(t *testing.T) {
 	t.Run("Template", testTemplate)
-	t.Run("TemplateIDs", testTemplateIDs)
+	t.Run("TemplateIDs", testTemplateMetadata)
 }

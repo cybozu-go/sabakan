@@ -75,7 +75,7 @@ func testHandleiPXEWithSerial(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err = m.Ignition.PutTemplate(context.Background(), "cs", ign, nil)
+	_, err = m.Ignition.PutTemplate(context.Background(), "cs", ign, map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
