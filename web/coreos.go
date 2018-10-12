@@ -86,7 +86,7 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 
 	u := *s.MyURL
 	u.Path = path.Join("/api/v1/boot")
-	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), metadata[len(metadata)-1], params)
+	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), metadata[len(metadata)-1]["id"], params)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))
