@@ -25,7 +25,10 @@ Meta data of assets are stored in etcd as follows:
         "http://10.1.2.3:10080/api/v1/assets/hoge.tar.gz",
         "http://10.98.76.54:10080/api/v1/assets/hoge.tar.gz"
     ],
-    "exists": true
+    "exists": true,
+    "options": {
+        "version": "3.2.1"
+    }
 }
 ```
 
@@ -37,6 +40,9 @@ Details are described in the next section.
 
 `exists` is only meaningful when this JSON is returned from a REST API.
 It becomes `true` if the server has a local copy of the asset.
+
+`options` is optional metadata.  Sabakan just stores and shows these data
+as given.
 
 ### Assets directory
 

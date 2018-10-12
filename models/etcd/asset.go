@@ -105,7 +105,8 @@ func (d *driver) assetGetInfo(ctx context.Context, name string) (*sabakan.Asset,
 	return a, err
 }
 
-func (d *driver) assetPut(ctx context.Context, name, contentType string, csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
+func (d *driver) assetPut(ctx context.Context, name, contentType string,
+	csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
 	id, err := d.assetNewID(ctx)
 	if err != nil {
 		return nil, err
@@ -124,6 +125,7 @@ func (d *driver) assetPut(ctx context.Context, name, contentType string, csum []
 		ContentType: contentType,
 		Date:        time.Now().UTC(),
 		Sha256:      hsumString,
+		Options:     options,
 		URLs:        []string{d.myURL("/api/v1/assets", name)},
 	}
 	data, err := json.Marshal(a)
@@ -231,8 +233,9 @@ func (d assetDriver) GetInfo(ctx context.Context, name string) (*sabakan.Asset, 
 	return d.assetGetInfo(ctx, name)
 }
 
-func (d assetDriver) Put(ctx context.Context, name, contentType string, csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
-	return d.assetPut(ctx, name, contentType, csum, r)
+func (d assetDriver) Put(ctx context.Context, name, contentType string,
+	csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
+	return d.assetPut(ctx, name, contentType, csum, options, r)
 }
 
 func (d assetDriver) Get(ctx context.Context, name string, h sabakan.AssetHandler) error {

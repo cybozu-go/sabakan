@@ -160,8 +160,8 @@ Get the index of assets as a JSON array of asset names.
 
 Get the meta data of the named asset.
 
-`sabactl assets upload NAME FILE`
----------------------------------
+`sabactl assets upload [-meta KEY=VALUE]... NAME FILE`
+---------------------------------------------------
 
 ```console
 $ sabactl assets upload data.tar.gz /path/to/data.tar.gz
@@ -169,6 +169,8 @@ $ sabactl assets upload data.tar.gz /path/to/data.tar.gz
 
 Upload an asset.  NAME is the asset filename.
 The data is read from FILE.
+
+* `-meta`: adds meta data.
 
 `sabactl assets delete NAME`
 ----------------------------
@@ -182,7 +184,8 @@ Delete an asset.
 `sabactl ignitions get ROLE`
 ----------------------------
 
-Get a registered ignition template ID list of the role.
+Get a registered ignition template meta data list of the role.
+Each meta data contains template ID with key of `id` as well as explicitly registered ones.
 
 ```console
 $ sabactl ignitions get <role>
@@ -197,14 +200,16 @@ Get a registered ignition template of ID in the role.
 $ sabactl ignitions cat <role> <id>
 ```
 
-`sabactl ignitions set ROLE`
-----------------------------
+`sabactl ignitions set -f FILE [-meta KEY=VALUE] ROLE`
+------------------------------------------------------
 
 Register a new ignition template for a certain role.  The format ignitions are described in [Ignition Controls](ignition.md).
 
 ```console
 $ sabactl ignitions set -f <ignition.yml> <role>
 ```
+
+* `-meta`: adds meta data.
 
 `sabactl ignitions delete ROLE ID`
 ----------------------------------

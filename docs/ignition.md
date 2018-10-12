@@ -21,6 +21,8 @@ In order to distribute CoreOS ignitions, sabakan provides an ignition management
 
     Sabakan deletes oldeh ignitions when operators upload a new ignition template.
 
+Sabakan also keeps metadata of each ignition other than `id` for external programs.
+
 How it works
 ------------
 

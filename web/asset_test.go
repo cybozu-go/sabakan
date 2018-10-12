@@ -40,15 +40,15 @@ func testHandleAssetsGetIndex(t *testing.T) {
 		t.Error("len(data) != 0:", len(data))
 	}
 
-	_, err = m.Asset.Put(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
+	_, err = m.Asset.Put(context.Background(), "foo", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = m.Asset.Put(context.Background(), "abc", "text/plain", nil, strings.NewReader("bar"))
+	_, err = m.Asset.Put(context.Background(), "abc", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = m.Asset.Put(context.Background(), "xyz", "text/plain", nil, strings.NewReader("bar"))
+	_, err = m.Asset.Put(context.Background(), "xyz", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,9 @@ func testHandleAssetsGetInfo(t *testing.T) {
 		t.Fatal("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
+	options := map[string]string{"version": "1.0.0"}
+
+	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", nil, options, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,6 +116,9 @@ func testHandleAssetsGetInfo(t *testing.T) {
 	if data.Sha256 != "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9" {
 		t.Error("data.Sha256 is not valid:", data.Sha256)
 	}
+	if data.Options["version"] != "1.0.0" {
+		t.Error("invalid version:", data.Options)
+	}
 }
 
 func testHandleAssetsGet(t *testing.T) {
@@ -131,7 +136,7 @@ func testHandleAssetsGet(t *testing.T) {
 		t.Fatal("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
+	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -272,6 +277,20 @@ func testHandleAssetsPut(t *testing.T) {
 	if resp.StatusCode == http.StatusOK {
 		t.Error("resp.StatusCode == http.StatusOK")
 	}
+
+	// invalid option key
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/assets/foo", strings.NewReader("bar"))
+	r.Header.Set("content-length", "3")
+	r.Header.Set("content-type", "text/plain")
+	r.Header.Set("X-Sabakan-Asset-SHA256", "FCDE2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9")
+	r.Header.Set("X-Sabakan-Asset-Options-Version?", "1.0.0")
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode == http.StatusOK {
+		t.Error("resp.StatusCode == http.StatusOK")
+	}
 }
 
 func testHandleAssetsDelete(t *testing.T) {
@@ -289,7 +308,7 @@ func testHandleAssetsDelete(t *testing.T) {
 		t.Fatal("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
+	_, err := m.Asset.Put(context.Background(), "foo", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -35,15 +35,15 @@ func testAssetGetIndex(t *testing.T) {
 		t.Error("initial asset index should be empty")
 	}
 
-	_, err = d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "foo", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.assetPut(context.Background(), "abc", "text/plain", nil, strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "abc", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.assetPut(context.Background(), "xyz", "text/plain", nil, strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "xyz", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,12 @@ func testAssetGetInfo(t *testing.T) {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
 
-	_, err = d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
+	options := map[string]string{
+		"version": "1.0.0",
+	}
+
+	_, err = d.assetPut(context.Background(), "foo", "text/plain",
+		nil, options, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,6 +100,9 @@ func testAssetGetInfo(t *testing.T) {
 	}
 	if asset.Sha256 != "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9" {
 		t.Error("wrong Sha256:", asset.Sha256)
+	}
+	if asset.Options["version"] != "1.0.0" {
+		t.Error("wrong version:", asset.Options)
 	}
 	u := *d.advertiseURL
 	u.Path = "/api/v1/assets/foo"
@@ -131,8 +139,12 @@ func testAssetPut(t *testing.T) {
 	d.dataDir = tempdir
 	defer os.RemoveAll(tempdir)
 
+	options := map[string]string{
+		"version": "1.0.0",
+	}
 	// case 1. creation
-	status, err := d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
+	status, err := d.assetPut(context.Background(), "foo", "text/plain",
+		nil, options, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,6 +181,9 @@ func testAssetPut(t *testing.T) {
 	if asset.Sha256 != "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9" {
 		t.Error("wrong Sha256:", asset.Sha256)
 	}
+	if asset.Options["version"] != "1.0.0" {
+		t.Error("wrong version:", asset.Options)
+	}
 	u := *d.advertiseURL
 	u.Path = "/api/v1/assets/foo"
 	if !reflect.DeepEqual(asset.URLs, []string{u.String()}) {
@@ -191,7 +206,8 @@ func testAssetPut(t *testing.T) {
 	}
 
 	// case 2. update
-	status, err = d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("baz"))
+	options2 := map[string]string{"version": "1.1.0"}
+	status, err = d.assetPut(context.Background(), "foo", "text/plain", nil, options2, strings.NewReader("baz"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -227,6 +243,9 @@ func testAssetPut(t *testing.T) {
 	if asset.Sha256 != "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096" {
 		t.Error("wrong Sha256:", asset.Sha256)
 	}
+	if asset.Options["version"] != "1.1.0" {
+		t.Error("wrong version:", asset.Options)
+	}
 	if !reflect.DeepEqual(asset.URLs, []string{u.String()}) {
 		t.Error("wrong URLs", asset.URLs)
 	}
@@ -250,13 +269,13 @@ func testAssetPut(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	status, err = d.assetPut(context.Background(), "foo", "text/plain", csum, strings.NewReader("baz"))
+	status, err = d.assetPut(context.Background(), "foo", "text/plain", csum, nil, strings.NewReader("baz"))
 	if err != nil {
 		t.Error(err)
 	}
 
 	// case 4. checksum mismatch
-	status, err = d.assetPut(context.Background(), "foo", "text/plain", csum, strings.NewReader("zot"))
+	status, err = d.assetPut(context.Background(), "foo", "text/plain", csum, nil, strings.NewReader("zot"))
 	if err == nil {
 		t.Error("checksum mismatch should have been detected")
 	}
@@ -305,7 +324,7 @@ func testAssetGet(t *testing.T) {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
 
-	status, err := d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
+	status, err := d.assetPut(context.Background(), "foo", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -370,7 +389,7 @@ func testAssetDelete(t *testing.T) {
 		t.Error("err != sabakan.ErrNotFound:", err)
 	}
 
-	_, err = d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("bar"))
+	_, err = d.assetPut(context.Background(), "foo", "text/plain", nil, nil, strings.NewReader("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -394,7 +413,7 @@ func testAssetDelete(t *testing.T) {
 		t.Error("asset not deleted from etcd; len(resp.Kvs) != 0:", len(resp.Kvs))
 	}
 
-	status, err := d.assetPut(context.Background(), "foo", "text/plain", nil, strings.NewReader("baz"))
+	status, err := d.assetPut(context.Background(), "foo", "text/plain", nil, nil, strings.NewReader("baz"))
 	if err != nil {
 		t.Fatal(err)
 	}

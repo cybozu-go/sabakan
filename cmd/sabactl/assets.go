@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
+	"github.com/pkg/errors"
 )
 
 type assetsCmd struct{}
@@ -92,17 +95,36 @@ func assetsInfoCommand() subcommands.Command {
 	}
 }
 
-type assetsUploadCmd struct{}
+type mapFlags map[string]string
 
-func (c assetsUploadCmd) SetFlags(f *flag.FlagSet) {}
+func (i *mapFlags) String() string {
+	return fmt.Sprint(*i)
+}
 
-func (c assetsUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+func (i *mapFlags) Set(value string) error {
+	kv := strings.SplitN(value, "=", 2)
+	if len(kv) != 2 {
+		return errors.New("invalid options value: " + value)
+	}
+	(*i)[kv[0]] = kv[1]
+	return nil
+}
+
+type assetsUploadCmd struct {
+	meta mapFlags
+}
+
+func (c *assetsUploadCmd) SetFlags(f *flag.FlagSet) {
+	f.Var(&c.meta, "meta", "optional metadata <KEY>=<VALUE>")
+}
+
+func (c *assetsUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
 		f.Usage()
 		return client.ExitUsageError
 	}
 
-	status, errStatus := client.AssetsUpload(ctx, f.Arg(0), f.Arg(1))
+	status, errStatus := client.AssetsUpload(ctx, f.Arg(0), f.Arg(1), c.meta)
 	if errStatus != nil {
 		return handleError(errStatus)
 	}
@@ -115,7 +137,7 @@ func (c assetsUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 
 func assetsUploadCommand() subcommands.Command {
 	return subcmd{
-		assetsUploadCmd{},
+		&assetsUploadCmd{mapFlags{}},
 		"upload",
 		"upload asset",
 		"upload NAME FILE",
@@ -124,7 +146,8 @@ func assetsUploadCommand() subcommands.Command {
 
 type assetsDeleteCmd struct{}
 
-func (c assetsDeleteCmd) SetFlags(f *flag.FlagSet) {}
+func (c assetsDeleteCmd) SetFlags(f *flag.FlagSet) {
+}
 
 func (c assetsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
