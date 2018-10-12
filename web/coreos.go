@@ -68,7 +68,7 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 	}
 
 	role := m.Spec.Role
-	ids, err := s.Model.Ignition.GetTemplateIDs(r.Context(), role)
+	metadata, err := s.Model.Ignition.GetTemplateMetadataList(r.Context(), role)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
@@ -86,7 +86,7 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 
 	u := *s.MyURL
 	u.Path = path.Join("/api/v1/boot")
-	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), ids[len(ids)-1], params)
+	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), metadata[len(metadata)-1]["id"], params)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))

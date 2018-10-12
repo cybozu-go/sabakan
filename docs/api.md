@@ -736,7 +736,7 @@ It returns a new assigned ID for the ignition.
 
 **Request headers**
 
-- `X-Sabakan-Ignition-<KEY>`: if given, the ignition will have meta data of `"<KEY>": "<VALUE>"`.
+- `X-Sabakan-Ignition-<KEY>`: if given, the ignition will have meta data of `"<Lowercased KEY>": "<VALUE>"`.
 
 **Successful response**
 

@@ -41,12 +41,12 @@ func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		f.Usage()
 		return client.ExitUsageError
 	}
-	ids, status := client.IgnitionsGet(ctx, f.Arg(0))
+	metadata, status := client.IgnitionsGet(ctx, f.Arg(0))
 	if status != nil {
 		return handleError(status)
 	}
 
-	err := json.NewEncoder(os.Stdout).Encode(ids)
+	err := json.NewEncoder(os.Stdout).Encode(metadata)
 	return handleError(err)
 }
 
@@ -83,10 +83,12 @@ func ignitionsCatCommand() subcommands.Command {
 
 type ignitionsSetCmd struct {
 	file string
+	meta mapFlags
 }
 
 func (c *ignitionsSetCmd) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&c.file, "f", "", "ignition template file")
+	f.Var(&c.meta, "meta", "optional metadata <KEY>=<VALUE>")
 }
 
 func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
@@ -95,13 +97,13 @@ func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomma
 		return client.ExitUsageError
 	}
 
-	err := client.IgnitionsSet(ctx, f.Arg(0), c.file)
+	err := client.IgnitionsSet(ctx, f.Arg(0), c.file, c.meta)
 	return handleError(err)
 }
 
 func ignitionsSetCommand() subcommands.Command {
 	return subcmd{
-		&ignitionsSetCmd{},
+		&ignitionsSetCmd{meta: mapFlags{}},
 		"set",
 		"create ignition template",
 		"set -f FILE ROLE ",

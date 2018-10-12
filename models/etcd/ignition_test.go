@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/cybozu-go/sabakan"
@@ -17,7 +18,7 @@ func testTemplate(t *testing.T) {
 		t.Fatal("unexpected error: ", err)
 	}
 
-	id, err := d.PutTemplate(context.Background(), "cs", "data")
+	id, err := d.PutTemplate(context.Background(), "cs", "data", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,46 +42,58 @@ func testTemplate(t *testing.T) {
 	}
 }
 
-func testTemplateIDs(t *testing.T) {
+func testTemplateMetadata(t *testing.T) {
 	t.Parallel()
 
 	d, _ := testNewDriver(t)
 
-	_, err := d.GetTemplateIDs(context.Background(), "cs")
+	_, err := d.GetTemplateMetadataList(context.Background(), "cs")
 	if err != sabakan.ErrNotFound {
 		t.Fatal("unexpected error: ", err)
 	}
 
-	_, err = d.PutTemplate(context.Background(), "cs", "data")
+	_, err = d.PutTemplate(context.Background(), "cs", "data", map[string]string{"version": "20181010"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ids, err := d.GetTemplateIDs(context.Background(), "cs")
+	metadata, err := d.GetTemplateMetadataList(context.Background(), "cs")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ids) != 1 {
-		t.Error("wrong number of templates", len(ids))
+	if len(metadata) != 1 {
+		t.Error("wrong number of templates", len(metadata))
+		fmt.Println(metadata)
+	}
+	if len(metadata[0]["id"]) == 0 {
+		t.Error("id is empty")
+	}
+	if metadata[0]["version"] != "20181010" {
+		t.Error("wrong version", metadata[0])
 	}
 
 	for i := 0; i < sabakan.MaxIgnitions+10; i++ {
-		_, err = d.PutTemplate(context.Background(), "cs", "data")
+		_, err = d.PutTemplate(context.Background(), "cs", "data", map[string]string{})
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
-	ids, err = d.GetTemplateIDs(context.Background(), "cs")
+	metadata, err = d.GetTemplateMetadataList(context.Background(), "cs")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ids) != sabakan.MaxIgnitions {
-		t.Error("wrong number of templates", len(ids))
+	if len(metadata) != sabakan.MaxIgnitions {
+		t.Error("wrong number of templates", len(metadata))
+	}
+	for _, m := range metadata {
+		if len(m["id"]) == 0 {
+			t.Error("id is empty")
+		}
 	}
 
 }
 
 func TestIgnitionTemplate(t *testing.T) {
 	t.Run("Template", testTemplate)
-	t.Run("TemplateIDs", testTemplateIDs)
+	t.Run("TemplateIDs", testTemplateMetadata)
 }

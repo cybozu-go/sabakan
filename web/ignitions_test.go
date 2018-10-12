@@ -81,7 +81,7 @@ networkd:
 	m := mock.NewModel()
 	handler := Server{Model: m}
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", ign)
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", ign, map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,7 +149,7 @@ networkd:
 	}
 }
 
-func testIgnitionTemplateIDsGet(t *testing.T) {
+func testIgnitionTemplateMetadataGet(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
@@ -164,11 +164,11 @@ func testIgnitionTemplateIDsGet(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hoge")
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hoge", map[string]string{"version": "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = m.Ignition.PutTemplate(context.Background(), "cs", "fuga")
+	_, err = m.Ignition.PutTemplate(context.Background(), "cs", "fuga", map[string]string{"version": "3.4.5"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,10 +181,22 @@ func testIgnitionTemplateIDsGet(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("resp.StatusCode != http.StatusOK:", resp.StatusCode)
 	}
-	var data []string
+	var data []map[string]string
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if len(data) != 2 {
 		t.Error("len(data) != 2:", len(data))
+	}
+	if len(data[0]["id"]) == 0 {
+		t.Error("id is empty")
+	}
+	if len(data[1]["id"]) == 0 {
+		t.Error("id is empty")
+	}
+	if data[0]["version"] != "1.2.3" {
+		t.Error("wrong version: ", data[0])
+	}
+	if data[1]["version"] != "3.4.5" {
+		t.Error("wrong version: ", data[1])
 	}
 }
 
@@ -203,7 +215,7 @@ func testIgnitionTemplatesGet(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hoge")
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hoge", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -304,7 +316,7 @@ func testIgnitionTemplatesDelete(t *testing.T) {
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hello")
+	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hello", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -338,7 +350,7 @@ func testIgnitionTemplatesDelete(t *testing.T) {
 }
 
 func TestIgnitionTemplates(t *testing.T) {
-	t.Run("TemplateIDsGet", testIgnitionTemplateIDsGet)
+	t.Run("TemplateMetadataGet", testIgnitionTemplateMetadataGet)
 	t.Run("TemplatesGet", testIgnitionTemplatesGet)
 	t.Run("TemplatePost", testIgnitionTemplatesPost)
 	t.Run("TemplateDelete", testIgnitionTemplatesDelete)
