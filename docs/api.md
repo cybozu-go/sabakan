@@ -523,7 +523,7 @@ Upload a file as an asset.
 - `Content-Type`: required
 - `Content-Length`: required
 - `X-Sabakan-Asset-SHA256`: if given, the uploaded data will be verified by SHA256.
-- `X-Sabakan-Asset-Options-<KEY>`: if given, the uploaded data will have meta data of `"<KEY>": "<VALUE>"`.
+- `X-Sabakan-Asset-Options-<KEY>`: if given, the uploaded data will have meta data of `"<Lowercased KEY>": "<VALUE>"`.
 
 **Successful response**
 

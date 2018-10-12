@@ -127,7 +127,7 @@ func (s Server) handleAssetsPut(w http.ResponseWriter, r *http.Request, name str
 	for k, v := range r.Header {
 		optionHeaderPrefix := "x-sabakan-asset-options-"
 		if strings.HasPrefix(strings.ToLower(k), optionHeaderPrefix) {
-			key := k[len(optionHeaderPrefix):]
+			key := strings.ToLower(k[len(optionHeaderPrefix):])
 			if len(key) == 0 {
 				continue
 			}

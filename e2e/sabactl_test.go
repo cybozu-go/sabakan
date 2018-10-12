@@ -380,7 +380,7 @@ func testSabactlAssets(t *testing.T) {
 	}
 	file.Close()
 
-	stdout, stderr, err := runSabactl("assets", "upload", "foo", file.Name())
+	stdout, stderr, err := runSabactl("assets", "upload", "-meta", "version=1.0.0", "foo", file.Name())
 	code := exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -431,6 +431,9 @@ func testSabactlAssets(t *testing.T) {
 	}
 	if asset.Sha256 != "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9" {
 		t.Error("wrong Sha256:", asset.Sha256)
+	}
+	if asset.Options["version"] != "1.0.0" {
+		t.Error("wrong version:", asset.Options)
 	}
 	if len(asset.URLs) != 1 {
 		t.Error("wrong number of URLs:", asset.URLs)
