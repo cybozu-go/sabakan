@@ -85,9 +85,10 @@ type AssetModel interface {
 
 // IgnitionModel is an interface for ignition template.
 type IgnitionModel interface {
-	PutTemplate(ctx context.Context, role string, template string) (string, error)
-	GetTemplateIDs(ctx context.Context, role string) ([]string, error)
+	PutTemplate(ctx context.Context, role string, template string, metadata map[string]string) (string, error)
+	GetTemplateMetadataList(ctx context.Context, role string) ([]map[string]string, error)
 	GetTemplate(ctx context.Context, role string, id string) (string, error)
+	GetTemplateMetadata(ctx context.Context, role string, id string) (map[string]string, error)
 	DeleteTemplate(ctx context.Context, role string, id string) error
 }
 

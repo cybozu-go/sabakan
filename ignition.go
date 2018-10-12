@@ -19,7 +19,7 @@ const MaxIgnitions = 10
 // ValidateIgnitionTemplate validates if the tmpl is a template for a valid ignition.
 // The method returns nil if valid template is given, otherwise returns an error.
 // The method returns template by tmpl nil value of Machine.
-func ValidateIgnitionTemplate(tmpl string, ipam *IPAMConfig) error {
+func ValidateIgnitionTemplate(tmpl string, metadata map[string]string, ipam *IPAMConfig) error {
 	mc := NewMachine(MachineSpec{
 		Serial: "1234abcd",
 		Rack:   1,
@@ -30,7 +30,7 @@ func ValidateIgnitionTemplate(tmpl string, ipam *IPAMConfig) error {
 	}
 
 	ipam.GenerateIP(mc)
-	ign, err := RenderIgnition(tmpl, mc, u)
+	ign, err := RenderIgnition(tmpl, metadata, mc, u)
 
 	if err != nil {
 		return err
@@ -46,12 +46,15 @@ func ValidateIgnitionTemplate(tmpl string, ipam *IPAMConfig) error {
 }
 
 // RenderIgnition returns the rendered ignition from the template and a machine
-func RenderIgnition(tmpl string, m *Machine, myURL *url.URL) (string, error) {
+func RenderIgnition(tmpl string, metadata map[string]string, m *Machine, myURL *url.URL) (string, error) {
 	getMyURL := func() string {
 		return myURL.String()
 	}
+	getMetadata := func(key string) string {
+		return metadata[key]
+	}
 	t, err := template.New("ignition").
-		Funcs(template.FuncMap{"MyURL": getMyURL}).
+		Funcs(template.FuncMap{"MyURL": getMyURL, "Metadata": getMetadata}).
 		Parse(tmpl)
 	if err != nil {
 		return "", err

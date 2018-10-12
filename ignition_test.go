@@ -36,7 +36,7 @@ storage:
       source: "{{.Serial}}"`,
 	}
 	for _, tmpl := range tmpls {
-		err := ValidateIgnitionTemplate(tmpl, testIPAMConfig)
+		err := ValidateIgnitionTemplate(tmpl, nil, testIPAMConfig)
 		if err != nil {
 			t.Error("err != nil:", err)
 		}
@@ -57,7 +57,7 @@ storage:
 	}
 
 	for _, tmpl := range tmpls {
-		err := ValidateIgnitionTemplate(tmpl, testIPAMConfig)
+		err := ValidateIgnitionTemplate(tmpl, nil, testIPAMConfig)
 		if err == nil {
 			t.Error("err == nil:", err)
 		}
@@ -84,17 +84,23 @@ storage:
       user:
         id: 500
       group:
-        id: 501`,
+        id: 501
+    - path: /etc/ignitions/version
+      contents:
+        source: '{{Metadata "version"}}'`,
 			NewMachine(MachineSpec{Serial: "abcd, 1234"}),
-			`{"ignition":{"version":"2.2.0"},"storage":{"files":[{"filesystem":"root","group":{"id":501},"path":"/opt/file1","user":{"id":500},"contents":{"source":"data:,abcd%2C%201234"},"mode":420}]}}`},
+			`{"ignition":{"version":"2.2.0"},"storage":{"files":[{"filesystem":"root","group":{"id":501},"path":"/opt/file1","user":{"id":500},"contents":{"source":"data:,abcd%2C%201234"},"mode":420},{"contents":{"source":"data:,20181010"},"path":"/etc/ignitions/version"}]}}`},
 	}
 	u, err := url.Parse("http://localhost:10080")
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	metadata := map[string]string{
+		"version": "20181010",
+	}
 	for _, c := range cases {
-		ign, err := RenderIgnition(c.tmpl, c.mc, u)
+		ign, err := RenderIgnition(c.tmpl, metadata, c.mc, u)
 		if err != nil {
 			t.Fatal(err)
 		}

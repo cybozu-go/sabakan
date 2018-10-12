@@ -2,18 +2,19 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"path"
 )
 
 // IgnitionsGet gets ignition template ID list of the specified role
-func IgnitionsGet(ctx context.Context, role string) ([]string, *Status) {
-	var ids []string
-	err := client.getJSON(ctx, "ignitions/"+role, nil, &ids)
+func IgnitionsGet(ctx context.Context, role string) ([]map[string]string, *Status) {
+	var metadata []map[string]string
+	err := client.getJSON(ctx, "ignitions/"+role, nil, &metadata)
 	if err != nil {
 		return nil, err
 	}
-	return ids, nil
+	return metadata, nil
 }
 
 // IgnitionsCat gets an ignition template for the role an id
@@ -33,12 +34,22 @@ func IgnitionsCat(ctx context.Context, role, id string, w io.Writer) *Status {
 }
 
 // IgnitionsSet posts an ignition template file
-func IgnitionsSet(ctx context.Context, role string, fname string) *Status {
+func IgnitionsSet(ctx context.Context, role string, fname string, meta map[string]string) *Status {
 	tmpl, err := generateIgnitionYAML(fname)
 	if err != nil {
 		return ErrorStatus(err)
 	}
-	return client.sendRequest(ctx, "POST", "ignitions/"+role, tmpl)
+	req := client.NewRequest(ctx, "POST", "ignitions/"+role, tmpl)
+	for k, v := range meta {
+		req.Header.Set(fmt.Sprintf("X-Sabakan-Ignitions-%s", k), v)
+	}
+	resp, status := client.Do(req)
+	if status != nil {
+		return status
+	}
+	resp.Body.Close()
+
+	return nil
 }
 
 // IgnitionsDelete deletes an ignition template specified by role and id

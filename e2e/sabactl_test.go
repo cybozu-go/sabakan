@@ -473,14 +473,14 @@ func testSabactlIgnitions(t *testing.T) {
 	saved := `ignition:
   version: 2.2.0
 `
-	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "cs")
+	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "-meta", "version=20181010", "cs")
 	code := exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to set ignition template", code)
 	}
-	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "cs")
+	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "-meta", "version=20181012", "cs")
 	code = exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -495,16 +495,22 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get ignition template IDs of cs", code)
 	}
-	var ids []string
-	err = json.NewDecoder(stdout).Decode(&ids)
+	var metadata []map[string]string
+	err = json.NewDecoder(stdout).Decode(&metadata)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ids) != 2 {
-		t.Error("expected:1, actual:", len(ids))
+	if len(metadata) != 2 {
+		t.Error("expected:1, actual:", len(metadata))
+	}
+	if metadata[0]["version"] != "20181010" {
+		t.Error("invalid metadata", metadata[0])
+	}
+	if metadata[1]["version"] != "20181012" {
+		t.Error("invalid metadata", metadata[1])
 	}
 
-	stdout, stderr, err = runSabactl("ignitions", "cat", "cs", ids[0])
+	stdout, stderr, err = runSabactl("ignitions", "cat", "cs", metadata[0]["id"])
 	code = exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -515,7 +521,7 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Error("stdout.String() != saved", stdout.String())
 	}
 
-	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", ids[0])
+	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", metadata[0]["id"])
 	code = exitCode(err)
 	if code != client.ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -530,13 +536,13 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get ignition template IDs of cs", code)
 	}
-	ids = []string{}
-	err = json.NewDecoder(stdout).Decode(&ids)
+	metadata = []map[string]string{}
+	err = json.NewDecoder(stdout).Decode(&metadata)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ids) != 1 {
-		t.Error("expected:1, actual:", len(ids))
+	if len(metadata) != 1 {
+		t.Error("expected:1, actual:", len(metadata))
 	}
 }
 

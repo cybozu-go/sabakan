@@ -71,7 +71,7 @@ func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s Server) handleIgnitionTemplateIndexGet(w http.ResponseWriter, r *http.Request, role string) {
-	ids, err := s.Model.Ignition.GetTemplateIDs(r.Context(), role)
+	metadata, err := s.Model.Ignition.GetTemplateMetadataList(r.Context(), role)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
@@ -80,7 +80,7 @@ func (s Server) handleIgnitionTemplateIndexGet(w http.ResponseWriter, r *http.Re
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
-	renderJSON(w, ids, http.StatusOK)
+	renderJSON(w, metadata, http.StatusOK)
 }
 
 func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Request, role string, id string) {
@@ -114,12 +114,30 @@ func (s Server) handleIgnitionTemplatesPost(w http.ResponseWriter, r *http.Reque
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
-	err = sabakan.ValidateIgnitionTemplate(string(body), ipam)
+	metadata := make(map[string]string)
+	for k, v := range r.Header {
+		optionHeaderPrefix := "x-sabakan-ignitions-"
+		if strings.HasPrefix(strings.ToLower(k), optionHeaderPrefix) {
+			key := strings.ToLower(k[len(optionHeaderPrefix):])
+			if len(key) == 0 {
+				continue
+			}
+			if !sabakan.IsValidLabelName(key) || key == "id" {
+				renderError(r.Context(), w, BadRequest("invalid option key"+key))
+			}
+			if !sabakan.IsValidLabelValue(v[0]) {
+				renderError(r.Context(), w, BadRequest("invalid option value"+v[0]))
+			}
+			metadata[key] = v[0]
+		}
+	}
+	err = sabakan.ValidateIgnitionTemplate(string(body), metadata, ipam)
 	if err != nil {
 		renderError(r.Context(), w, BadRequest(err.Error()))
 		return
 	}
-	id, err := s.Model.Ignition.PutTemplate(r.Context(), role, string(body))
+
+	id, err := s.Model.Ignition.PutTemplate(r.Context(), role, string(body), metadata)
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return
@@ -153,7 +171,12 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, id, serial
 		renderError(r.Context(), w, APIErrNotFound)
 		return
 	}
-	ign, err := sabakan.RenderIgnition(tmpl, m, s.MyURL)
+	meta, err := s.Model.Ignition.GetTemplateMetadata(r.Context(), m.Spec.Role, id)
+	if err == sabakan.ErrNotFound {
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	}
+	ign, err := sabakan.RenderIgnition(tmpl, meta, m, s.MyURL)
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return

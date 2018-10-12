@@ -60,12 +60,12 @@ or updated, the value will be incremented by one.
 This type of key holds the meta data of an asset.
 The value is described in [asset management](assets.md).
 
-`<prefix>/ignitions/<role>/<id>`
+`<prefix>/ignitions/template/<role>/<id>`
 -------------------------
 
 This type of key holds an ignition template. Ignitions are distinguished by `<role>`.
 
-`<prefix>/ignitions/<role>/<id>/meta`
+`<prefix>/ignitions/meta/<role>/<id>`
 -------------------------------------
 
 This type of key holds the meta data of an ignition template.

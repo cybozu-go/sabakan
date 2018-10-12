@@ -19,7 +19,7 @@ In order to distribute CoreOS ignitions, sabakan provides an ignition management
 
 * Sabakan saves configured number of ignitions.
 
-    Sabakan deletes oldeh ignitions when operators upload a new ignition template.
+    Sabakan deletes older ignitions when operators upload a new ignition template.
 
 Sabakan also keeps metadata of each ignition other than `id` for external programs.
 
@@ -54,7 +54,9 @@ storage:
 The variables `sabakan` used in YAML are defined in [Machine](https://github.com/cybozu-go/sabakan/blob/d1a01d79307d3b3e188ff7a909204d71b5c2b9bb/machines.go#L12-L22) struct.
 The context of the template is the instance of the struct.
 For example, the YAML can refers serial number of the machine by `.Serial`.
-And the `MyURL` function can be used in YAML. The function will return the url of this sabakan server itself.
+And the `MyURL` and `Metadata` function can be used in YAML.
+`MyURL` function will return the url of this sabakan server itself.
+`Metadata` function will return the metadata of the key passed as an argument.
 
 User can set YAML files to sabakan via REST API `POST /api/v1/ignitions/ROLE` for each roles.
 The iPXE booted machine loads rendered ignitions in JSON via REST API `GET /api/v1/boot/coreos/ipxe/SERIAL`.
@@ -71,6 +73,8 @@ It is generated from YAML and source files as the following directory layout:
 |- files
 |   `- etc
 |       `- hostname
+|       `- ignitions
+|          `- version
 |- networkd
 |   `- 10-eno1.network
 `- passwd.yml
@@ -84,6 +88,7 @@ include: base.yml
 passwd: passwd.yml
 files:
   - /etc/hostname
+  - /etc/ignitions/version
 systemd:
   - enabled: false
     source: amyapp.service
@@ -107,6 +112,11 @@ The path must be *absolute path* and user need to put the source file in the `fi
 ```conf
 # files/etc/hostname
 {{ .Serial }}
+```
+
+```conf
+# files/etc/ignitions/version
+{{ Metadata "version" }}
 ```
 
 ```ini
