@@ -20,7 +20,7 @@ RETRY:
 	id := strconv.FormatInt(now.UnixNano(), 10)
 	target := path.Join(KeyIgnitionsTemplate, role, id)
 	meta := path.Join(KeyIgnitionsMetadata, role, id)
-	metaJson, err := json.Marshal(metadata)
+	metaJSON, err := json.Marshal(metadata)
 	if err != nil {
 		return "", err
 	}
@@ -28,7 +28,7 @@ RETRY:
 	tresp, err := d.client.Txn(ctx).
 		// Prohibit overwriting
 		If(clientv3util.KeyMissing(target), clientv3util.KeyMissing(meta)).
-		Then(clientv3.OpPut(target, template), clientv3.OpPut(meta, string(metaJson))).
+		Then(clientv3.OpPut(target, template), clientv3.OpPut(meta, string(metaJSON))).
 		Else().
 		Commit()
 	if err != nil {

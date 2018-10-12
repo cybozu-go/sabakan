@@ -7,7 +7,7 @@ import (
 	"path"
 )
 
-// IgnitionsGet gets ignition template ID list of the specified role
+// IgnitionsGet gets ignition template metadata list of the specified role
 func IgnitionsGet(ctx context.Context, role string) ([]map[string]string, *Status) {
 	var metadata []map[string]string
 	err := client.getJSON(ctx, "ignitions/"+role, nil, &metadata)
