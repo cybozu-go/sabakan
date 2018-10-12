@@ -122,7 +122,26 @@ func (s Server) handleAssetsPut(w http.ResponseWriter, r *http.Request, name str
 		}
 		csum = c
 	}
-	status, err := s.Model.Asset.Put(r.Context(), name, contentType, csum, r.Body)
+
+	options := make(map[string]string)
+	for k, v := range r.Header {
+		optionHeaderPrefix := "x-sabakan-asset-options-"
+		if strings.HasPrefix(strings.ToLower(k), optionHeaderPrefix) {
+			key := k[len(optionHeaderPrefix):]
+			if len(key) == 0 {
+				continue
+			}
+			if !sabakan.IsValidLabelName(key) {
+				renderError(r.Context(), w, BadRequest("invalid option key"+key))
+			}
+			if !sabakan.IsValidLabelValue(v[0]) {
+				renderError(r.Context(), w, BadRequest("invalid option value"+v[0]))
+			}
+			options[key] = v[0]
+		}
+	}
+
+	status, err := s.Model.Asset.Put(r.Context(), name, contentType, csum, options, r.Body)
 	if err == sabakan.ErrConflicted {
 		renderError(r.Context(), w, APIErrConflict)
 		return

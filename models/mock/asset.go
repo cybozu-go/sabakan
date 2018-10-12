@@ -55,16 +55,16 @@ func (d *assetDriver) GetInfo(ctx context.Context, name string) (*sabakan.Asset,
 }
 
 func (d *assetDriver) Put(ctx context.Context, name, contentType string,
-	csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
+	csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	asset, ok := d.assets[name]
 	if ok {
-		return d.updateAsset(ctx, asset, contentType, csum, r)
+		return d.updateAsset(ctx, asset, contentType, csum, options, r)
 	}
 
-	return d.newAsset(ctx, name, contentType, csum, r)
+	return d.newAsset(ctx, name, contentType, csum, options, r)
 }
 
 func (d *assetDriver) Get(ctx context.Context, name string, h sabakan.AssetHandler) error {
@@ -97,7 +97,7 @@ func (d *assetDriver) Delete(ctx context.Context, name string) error {
 }
 
 func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
-	csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
+	csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
 
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -120,6 +120,7 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
 		ContentType: contentType,
 		Date:        time.Now().UTC(),
 		Sha256:      hex.EncodeToString(hsum),
+		Options:     options,
 		URLs:        nil,
 		Exists:      true,
 	}
@@ -136,7 +137,7 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
 }
 
 func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
-	contentType string, csum []byte, r io.Reader) (*sabakan.AssetStatus, error) {
+	contentType string, csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
 
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -157,6 +158,7 @@ func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
 	asset.ContentType = contentType
 	asset.Date = time.Now().UTC()
 	asset.Sha256 = hex.EncodeToString(hsum)
+	asset.Options = options
 
 	d.data[asset.Name] = data
 
