@@ -42,7 +42,7 @@ Details are described in the next section.
 It becomes `true` if the server has a local copy of the asset.
 
 `options` is optional metadata.  Sabakan just stores and shows these data
-as given.
+as given. Option keys are converted to lowercase implicitly.
 
 ### Assets directory
 
