@@ -51,6 +51,7 @@ func (s Server) handleCryptsGet(w http.ResponseWriter, r *http.Request, params [
 
 	if key == nil {
 		renderError(r.Context(), w, APIErrNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/octet-stream")

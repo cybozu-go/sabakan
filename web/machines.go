@@ -72,9 +72,11 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case sabakan.ErrConflicted:
 		renderError(r.Context(), w, APIErrConflict)
+		return
 	case nil:
 	default:
 		renderError(r.Context(), w, InternalServerError(err))
+		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
@@ -114,10 +116,12 @@ func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
 func (s Server) handleMachinesDelete(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasPrefix(r.URL.Path, "/api/v1/machines/") {
 		renderError(r.Context(), w, APIErrBadRequest)
+		return
 	}
 	serial := r.URL.Path[len("/api/v1/machines/"):]
 	if len(serial) == 0 {
 		renderError(r.Context(), w, APIErrBadRequest)
+		return
 	}
 
 	err := s.Model.Machine.Delete(r.Context(), serial)
