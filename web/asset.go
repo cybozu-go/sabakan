@@ -133,9 +133,11 @@ func (s Server) handleAssetsPut(w http.ResponseWriter, r *http.Request, name str
 			}
 			if !sabakan.IsValidLabelName(key) {
 				renderError(r.Context(), w, BadRequest("invalid option key"+key))
+				return
 			}
 			if !sabakan.IsValidLabelValue(v[0]) {
 				renderError(r.Context(), w, BadRequest("invalid option value"+v[0]))
+				return
 			}
 			options[key] = v[0]
 		}

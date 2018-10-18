@@ -124,9 +124,11 @@ func (s Server) handleIgnitionTemplatesPost(w http.ResponseWriter, r *http.Reque
 			}
 			if !sabakan.IsValidLabelName(key) || key == "id" {
 				renderError(r.Context(), w, BadRequest("invalid option key"+key))
+				return
 			}
 			if !sabakan.IsValidLabelValue(v[0]) {
 				renderError(r.Context(), w, BadRequest("invalid option value"+v[0]))
+				return
 			}
 			metadata[key] = v[0]
 		}
