@@ -3,8 +3,8 @@ package dhcpd
 import (
 	"context"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 	"go.universe.tf/netboot/dhcp4"
 )
 
@@ -18,7 +18,7 @@ type Server struct {
 //
 // Once ctx is canceled, s.Conn will be closed.
 func (s Server) Serve(ctx context.Context) error {
-	env := cmd.NewEnvironment(ctx)
+	env := well.NewEnvironment(ctx)
 	env.Go(func(ctx context.Context) error {
 		<-ctx.Done()
 		return s.Conn.Close()

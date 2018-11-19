@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/well"
 )
 
 func (s Server) handleIgnitions(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Content-Type", "text/plain")
 	_, err = w.Write([]byte(ign))
 	if err != nil {
-		fields := cmd.FieldsFromContext(r.Context())
+		fields := well.FieldsFromContext(r.Context())
 		fields[log.FnError] = err.Error()
 		log.Error("failed to write response for GET /ignitions", fields)
 	}
@@ -187,7 +187,7 @@ func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, id, serial
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write([]byte(ign))
 	if err != nil {
-		fields := cmd.FieldsFromContext(r.Context())
+		fields := well.FieldsFromContext(r.Context())
 		fields[log.FnError] = err.Error()
 		log.Error("failed to write response for GET /boot/ignitions", fields)
 	}

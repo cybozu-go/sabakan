@@ -7,7 +7,7 @@ After=network-online.target
 Type=simple
 Restart=on-failure
 # RestartForceExitStatus=SIGPIPE is critically important for Go programs w/
-# journald logging.  See https://github.com/cybozu-go/cmd/issues/13
+# journald logging.  See https://github.com/cybozu-go/well/issues/13
 RestartForceExitStatus=SIGPIPE
 ExecStart=/usr/local/sbin/sabakan -config-file /usr/local/etc/sabakan.yml
 

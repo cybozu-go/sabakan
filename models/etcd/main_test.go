@@ -11,9 +11,9 @@ import (
 	"testing"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/etcdutil"
 	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/well"
 )
 
 const (
@@ -84,7 +84,7 @@ func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 	}
 	d := &driver{
 		client: client,
-		httpclient: &cmd.HTTPClient{
+		httpclient: &well.HTTPClient{
 			Client: &http.Client{},
 		},
 		mi:           newMachinesIndex(),

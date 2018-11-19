@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/etcdutil"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/dhcpd"
 	"github.com/cybozu-go/sabakan/models/etcd"
 	"github.com/cybozu-go/sabakan/web"
+	"github.com/cybozu-go/well"
 	"go.universe.tf/netboot/dhcp4"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -45,7 +45,7 @@ var (
 
 func main() {
 	flag.Parse()
-	cmd.LogConfig{}.Apply()
+	well.LogConfig{}.Apply()
 
 	// seed math/random
 	rand.Seed(time.Now().UnixNano())
@@ -100,7 +100,7 @@ func main() {
 
 	model := etcd.NewModel(c, cfg.DataDir, advertiseURL)
 	ch := make(chan struct{})
-	cmd.Go(func(ctx context.Context) error {
+	well.Go(func(ctx context.Context) error {
 		return model.Run(ctx, ch)
 	})
 
@@ -115,7 +115,7 @@ func main() {
 		Handler: dhcpd.DHCPHandler{Model: model, MyURL: advertiseURL},
 		Conn:    conn,
 	}
-	cmd.Go(dhcpServer.Serve)
+	well.Go(dhcpServer.Serve)
 
 	allowedIPs, err := parseAllowIPs(cfg.AllowIPs)
 	if err != nil {
@@ -127,7 +127,7 @@ func main() {
 		MyURL:          advertiseURL,
 		AllowedRemotes: allowedIPs,
 	}
-	s := &cmd.HTTPServer{
+	s := &well.HTTPServer{
 		Server: &http.Server{
 			Addr:    cfg.ListenHTTP,
 			Handler: webServer,
@@ -136,9 +136,9 @@ func main() {
 	}
 	s.ListenAndServe()
 
-	cmd.Stop()
-	err = cmd.Wait()
-	if !cmd.IsSignaled(err) && err != nil {
+	well.Stop()
+	err = well.Wait()
+	if !well.IsSignaled(err) && err != nil {
 		log.ErrorExit(err)
 	}
 }

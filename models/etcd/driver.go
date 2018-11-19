@@ -9,13 +9,13 @@ import (
 	"sync/atomic"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/well"
 )
 
 type driver struct {
 	client       *clientv3.Client
-	httpclient   *cmd.HTTPClient
+	httpclient   *well.HTTPClient
 	dataDir      string
 	advertiseURL *url.URL
 	mi           *machinesIndex
@@ -27,7 +27,7 @@ type driver struct {
 func NewModel(client *clientv3.Client, dataDir string, advertiseURL *url.URL) sabakan.Model {
 	d := &driver{
 		client: client,
-		httpclient: &cmd.HTTPClient{
+		httpclient: &well.HTTPClient{
 			Client: &http.Client{},
 		},
 		dataDir:      dataDir,
@@ -83,7 +83,7 @@ func (d *driver) Run(ctx context.Context, ch chan<- struct{}) error {
 	imageIndexCh := make(chan struct{}, 1)
 	epCh := make(chan EventPool)
 
-	env := cmd.NewEnvironment(ctx)
+	env := well.NewEnvironment(ctx)
 
 	// stateless watcher and its consumer
 	env.Go(func(ctx context.Context) error {

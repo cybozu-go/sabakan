@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 )
 
 func (d *driver) loadLastRev() int64 {
@@ -132,7 +132,7 @@ RETRY:
 
 	// a helper goroutine to pool events
 	poolCh := make(chan EventPool)
-	env := cmd.NewEnvironment(ctx)
+	env := well.NewEnvironment(ctx)
 	env.Go(func(ctx context.Context) error {
 		return poolEvents(ctx, ch, poolCh)
 	})

@@ -6,19 +6,15 @@ jobs:
       - image: quay.io/coreos/etcd:v3.3
     steps:
       - checkout
-      - run: go get -v -t -d ./...
-      - run: test -z "$(gofmt -s -d . | tee /dev/stderr)"
-      - run: golint -set_exit_status ./...
-      - run: go build ./cmd/sabakan
-      - run: go build ./cmd/sabactl
+      - run: make build
       - run:
           command: |
             ./sabakan -dhcp-bind 0.0.0.0:10067 \
                       -etcd-endpoints http://localhost:2379 \
                       -advertise-url http://localhost:10080
           background: true
-      - run: go vet ./...
-      - run: go test -race -v ./...
+      # make test on CircleCI runs e2e test at once.
+      - run: make test
 
   mtest:
     docker:

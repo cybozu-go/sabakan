@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/client"
+	"github.com/cybozu-go/well"
 	"github.com/google/subcommands"
 )
 
@@ -32,9 +32,9 @@ func main() {
 	subcommands.Register(versionCommand(), "")
 
 	flag.Parse()
-	cmd.LogConfig{}.Apply()
+	well.LogConfig{}.Apply()
 
-	err := client.Setup(*flagServer, &cmd.HTTPClient{
+	err := client.Setup(*flagServer, &well.HTTPClient{
 		Severity: log.LvDebug,
 		Client:   &http.Client{},
 	})
@@ -43,11 +43,11 @@ func main() {
 	}
 
 	exitStatus := subcommands.ExitSuccess
-	cmd.Go(func(ctx context.Context) error {
+	well.Go(func(ctx context.Context) error {
 		exitStatus = subcommands.Execute(ctx)
 		return nil
 	})
-	cmd.Stop()
-	cmd.Wait()
+	well.Stop()
+	well.Wait()
 	os.Exit(int(exitStatus))
 }
