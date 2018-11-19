@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/well"
 )
 
 var (
@@ -235,11 +235,11 @@ type testCommander struct {
 	input []byte
 }
 
-func (c *testCommander) CommandContext(ctx context.Context, name string, args ...string) *cmd.LogCmd {
+func (c *testCommander) CommandContext(ctx context.Context, name string, args ...string) *well.LogCmd {
 	// cf. https://npf.io/2015/06/testing-exec-command/
 	testArgs := []string{"-test.run=TestHelperProcess", "--"}
 	testArgs = append(testArgs, args...)
-	command := cmd.CommandContext(ctx, os.Args[0], testArgs...)
+	command := well.CommandContext(ctx, os.Args[0], testArgs...)
 	command.Env = []string{"GO_EXPECTED_INPUT=" + hex.EncodeToString(c.input)}
 	return command
 }

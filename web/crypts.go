@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/well"
 )
 
 func (s Server) handleCrypts(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +58,7 @@ func (s Server) handleCryptsGet(w http.ResponseWriter, r *http.Request, params [
 	w.Header().Set("Content-Length", strconv.Itoa(len(key)))
 	_, err = w.Write(key)
 	if err != nil {
-		fields := cmd.FieldsFromContext(r.Context())
+		fields := well.FieldsFromContext(r.Context())
 		fields[log.FnError] = err.Error()
 		log.Error("failed to write response for GET /crypts", fields)
 	}

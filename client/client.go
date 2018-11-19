@@ -11,13 +11,13 @@ import (
 	"os/user"
 	"path"
 
-	"github.com/cybozu-go/cmd"
+	"github.com/cybozu-go/well"
 )
 
 // Client is a sabakan client
 type Client struct {
 	url  *url.URL
-	http *cmd.HTTPClient
+	http *well.HTTPClient
 }
 
 var (
@@ -26,7 +26,7 @@ var (
 )
 
 // Setup initializes client package.
-func Setup(endpoint string, http *cmd.HTTPClient) error {
+func Setup(endpoint string, http *well.HTTPClient) error {
 	u, err := url.Parse(endpoint)
 	if err != nil {
 		return err

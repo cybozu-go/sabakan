@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/client"
+	"github.com/cybozu-go/well"
 )
 
 const (
@@ -31,20 +31,20 @@ func main() {
 	flagServer = flag.String("server", serverDefault, "http://<Listen IP>:<Port number>")
 
 	flag.Parse()
-	cmd.LogConfig{}.Apply()
+	well.LogConfig{}.Apply()
 
-	client.Setup(*flagServer, &cmd.HTTPClient{
+	client.Setup(*flagServer, &well.HTTPClient{
 		Severity: log.LvDebug,
 		Client:   &http.Client{},
 	})
 
 	var err error
-	cmd.Go(func(ctx context.Context) error {
+	well.Go(func(ctx context.Context) error {
 		err = execute(ctx)
 		return nil
 	})
-	cmd.Stop()
-	cmd.Wait()
+	well.Stop()
+	well.Wait()
 	if err != nil {
 		log.ErrorExit(err)
 	}
@@ -66,9 +66,9 @@ func getSerial() (string, error) {
 }
 
 func execute(ctx context.Context) error {
-	err := cmd.CommandContext(ctx, modProbe, "aesni-intel").Run()
+	err := well.CommandContext(ctx, modProbe, "aesni-intel").Run()
 	if err != nil {
-		err := cmd.CommandContext(ctx, modProbe, "aes-x86_64").Run()
+		err := well.CommandContext(ctx, modProbe, "aes-x86_64").Run()
 		if err != nil {
 			return err
 		}

@@ -13,15 +13,15 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/sabakan/client"
+	"github.com/cybozu-go/well"
 )
 
 type storageDevice struct {
 	id             []byte
 	byPath         string
 	key            []byte
-	CommandContext func(context.Context, string, ...string) *cmd.LogCmd
+	CommandContext func(context.Context, string, ...string) *well.LogCmd
 }
 
 const (
@@ -215,7 +215,7 @@ func (s *storageDevice) decrypt(ctx context.Context) error {
 	}
 
 	if s.CommandContext == nil {
-		s.CommandContext = cmd.CommandContext
+		s.CommandContext = well.CommandContext
 	}
 
 	cryptName := fmt.Sprintf("%s-%s", prefix, filepath.Base(s.byPath))
