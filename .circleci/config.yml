@@ -6,14 +6,15 @@ jobs:
       - image: quay.io/coreos/etcd:v3.3
     steps:
       - checkout
-      - run: make test
+      - run: make build
       - run:
           command: |
             ./sabakan -dhcp-bind 0.0.0.0:10067 \
                       -etcd-endpoints http://localhost:2379 \
                       -advertise-url http://localhost:10080
           background: true
-      - run: make e2e
+      # make test on CircleCI runs e2e test at once.
+      - run: make test
 
   mtest:
     docker:

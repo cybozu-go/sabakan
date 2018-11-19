@@ -18,10 +18,13 @@ start-etcd:
 stop-etcd:
 	systemctl --user stop neco-etcd.service
 
-test:
+test: build
+	test -z "$$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
+	golint -set_exit_status $$(go list ./... | grep -v /vendor/)
 	go test -v -race -count=1 ./...
+	go vet ./...
 
-e2e: $(BUILT_TARGET)
+e2e: build
 	RUN_E2E=1 go test -v -count=1 ./e2e
 
 clean:
