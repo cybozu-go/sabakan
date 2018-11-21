@@ -86,6 +86,15 @@ $ sabactl machines get \
 
 Detailed specification of the query parameters and the output JSON content is same as those of the [`GET /api/v1/machines` API](api.md#getmachines).
 
+`sabactl machines set-retire-date`
+--------------------------------------------------
+
+Set the retire date of a machine.
+
+```console
+$ sabactl machines set-retire-date <serial> 20231121
+```
+
 `sabactl machines set-state`
 ----------------------------
 

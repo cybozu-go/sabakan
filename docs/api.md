@@ -12,6 +12,7 @@ REST API
 * [GET /api/v1/state/\<serial\>](#getstate)
 * [PUT /api/v1/labels/\<serial\>](#putlabels)
 * [DELETE /api/v1/labels/\<serial\>](#deletelabels)
+* [PUT /api/v1/retire-date/\<serial\>](#putretiredate)
 * [GET /api/v1/images/coreos](#getimageindex)
 * [PUT /api/v1/images/coreos/\<id\>](#putimages)
 * [GET /api/v1/images/coreos/\<id\>](#getimages)
@@ -381,6 +382,22 @@ Remove label from a machine.
 
 ```console
 $ curl -s -XDELETE 'localhost:10080/api/v1/labels/1234abcd/os-release'
+(No output in stdout)
+```
+
+## <a name="putretiredate" />`PUT /api/v1/retire-date/<serial>`
+
+Update the retire date of the machine.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response body: empty
+
+**Example**
+
+```console
+$ curl -s -XPUT localhost:10080/api/v1/retire-date/1234abcd -d 2018-11-21T01:23:45Z
 (No output in stdout)
 ```
 
