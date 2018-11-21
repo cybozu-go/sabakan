@@ -67,4 +67,5 @@ A JSON representation of `Machine` looks like:
 }
 ```
 
+`status.duration` is the duration between the current time and `status.timestamp`.
 The unit of `status.duration` is seconds.
