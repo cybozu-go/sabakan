@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/cybozu-go/sabakan"
 )
@@ -64,7 +65,12 @@ func (s Server) handleMachinesPost(w http.ResponseWriter, r *http.Request) {
 		m.IPv6 = nil
 	}
 	machines := make([]*sabakan.Machine, len(specs))
+	now := time.Now().UTC()
 	for i, spec := range specs {
+		spec.RegisterDate = now
+		if spec.RetireDate.IsZero() {
+			spec.RetireDate = now
+		}
 		machines[i] = sabakan.NewMachine(*spec)
 	}
 

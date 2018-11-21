@@ -61,36 +61,38 @@ type MachineBMC struct {
 
 // MachineSpec is a set of attributes to define a machine.
 type MachineSpec struct {
-	Serial      string            `json:"serial"`
-	Labels      map[string]string `json:"labels"`
-	Rack        uint              `json:"rack"`
-	IndexInRack uint              `json:"index-in-rack"`
-	Role        string            `json:"role"`
-	IPv4        []string          `json:"ipv4"`
-	IPv6        []string          `json:"ipv6"`
-	BMC         MachineBMC        `json:"bmc"`
+	Serial       string            `json:"serial"`
+	Labels       map[string]string `json:"labels"`
+	Rack         uint              `json:"rack"`
+	IndexInRack  uint              `json:"index-in-rack"`
+	Role         string            `json:"role"`
+	IPv4         []string          `json:"ipv4"`
+	IPv6         []string          `json:"ipv6"`
+	RegisterDate time.Time         `json:"register-date"`
+	RetireDate   time.Time         `json:"retire-date"`
+	BMC          MachineBMC        `json:"bmc"`
+}
+
+// MachineStatus represents the status of a machine.
+type MachineStatus struct {
+	Timestamp time.Time    `json:"timestamp"`
+	Duration  float64      `json:"duration"`
+	State     MachineState `json:"state"`
 }
 
 // Machine represents a server hardware.
 type Machine struct {
-	Spec MachineSpec `json:"spec"`
-
-	Status struct {
-		Timestamp time.Time    `json:"timestamp"`
-		State     MachineState `json:"state"`
-	} `json:"status"`
+	Spec   MachineSpec   `json:"spec"`
+	Status MachineStatus `json:"status"`
 }
 
 // NewMachine creates a new machine instance.
 func NewMachine(spec MachineSpec) *Machine {
 	return &Machine{
 		Spec: spec,
-		Status: struct {
-			Timestamp time.Time    `json:"timestamp"`
-			State     MachineState `json:"state"`
-		}{
-			time.Now().UTC(),
-			StateUninitialized,
+		Status: MachineStatus{
+			Timestamp: time.Now().UTC(),
+			State:     StateUninitialized,
 		},
 	}
 }

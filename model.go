@@ -34,6 +34,7 @@ type MachineModel interface {
 	SetState(ctx context.Context, serial string, state MachineState) error
 	AddLabels(ctx context.Context, serial string, labels map[string]string) error
 	DeleteLabel(ctx context.Context, serial string, label string) error
+	SetRetireDate(ctx context.Context, serial string, date time.Time) error
 	Query(ctx context.Context, query Query) ([]*Machine, error)
 	Delete(ctx context.Context, serial string) error
 }
@@ -108,14 +109,14 @@ type HealthModel interface {
 	GetHealth(ctx context.Context) error
 }
 
-// Runner is an interface to run the underlying threads.
+// Runner is an interface to run the underlying goroutines.
 //
 // The caller must pass a channel as follows.
 // Receiving a value from the channel effectively guarantees that
 // the driver gets ready.
 //
 //    ch := make(chan struct{})
-//    cmd.Go(func(ctx context.Context) error {
+//    well.Go(func(ctx context.Context) error {
 //        driver.Run(ctx, ch)
 //    })
 //    <-ch

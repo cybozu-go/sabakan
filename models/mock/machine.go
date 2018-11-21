@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"time"
 
 	"github.com/cybozu-go/sabakan"
 	"github.com/pkg/errors"
@@ -68,6 +69,18 @@ func (d *driver) machineDeleteLabel(ctx context.Context, serial string, label st
 	return m.DeleteLabel(label)
 }
 
+func (d *driver) machineSetRetireDate(ctx context.Context, serial string, date time.Time) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	m, ok := d.machines[serial]
+	if !ok {
+		return sabakan.ErrNotFound
+	}
+	m.Spec.RetireDate = date
+	return nil
+}
+
 func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.Machine, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -120,6 +133,10 @@ func (d machineDriver) AddLabels(ctx context.Context, serial string, labels map[
 
 func (d machineDriver) DeleteLabel(ctx context.Context, serial string, label string) error {
 	return d.machineDeleteLabel(ctx, serial, label)
+}
+
+func (d machineDriver) SetRetireDate(ctx context.Context, serial string, date time.Time) error {
+	return d.machineSetRetireDate(ctx, serial, date)
 }
 
 func (d machineDriver) Query(ctx context.Context, query sabakan.Query) ([]*sabakan.Machine, error) {
