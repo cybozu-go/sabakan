@@ -112,7 +112,9 @@ func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	j := make([]*sabakan.Machine, len(machines))
+	now := time.Now()
 	for i, m := range machines {
+		m.Status.Duration = now.Sub(m.Status.Timestamp).Seconds()
 		j[i] = m
 	}
 
