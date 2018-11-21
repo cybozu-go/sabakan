@@ -92,7 +92,7 @@ Detailed specification of the query parameters and the output JSON content is sa
 Set the retire date of a machine.
 
 ```console
-$ sabactl machines set-retire-date <serial> 20231121
+$ sabactl machines set-retire-date <serial> 2023-11-21
 ```
 
 `sabactl machines set-state`
