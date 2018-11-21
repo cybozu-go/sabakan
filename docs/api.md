@@ -388,6 +388,7 @@ $ curl -s -XDELETE 'localhost:10080/api/v1/labels/1234abcd/os-release'
 ## <a name="putretiredate" />`PUT /api/v1/retire-date/<serial>`
 
 Update the retire date of the machine.
+The request body must be a RFC3339-format date string.
 
 **Successful response**
 
@@ -397,7 +398,7 @@ Update the retire date of the machine.
 **Example**
 
 ```console
-$ curl -s -XPUT localhost:10080/api/v1/retire-date/1234abcd -d 2018-11-21T01:23:45Z
+$ curl -s -XPUT localhost:10080/api/v1/retire-date/1234abcd -d '2018-11-21T01:23:45Z'
 (No output in stdout)
 ```
 
