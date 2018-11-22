@@ -6,6 +6,7 @@ import (
 	"flag"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/client"
@@ -23,6 +24,7 @@ func (r machinesCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.E
 	cmdr.Register(machinesRemoveCommand(), "")
 	cmdr.Register(machinesSetStateCommand(), "")
 	cmdr.Register(machinesGetStateCommand(), "")
+	cmdr.Register(machinesSetRetireDateCommand(), "")
 	return cmdr.Execute(ctx)
 }
 
@@ -205,5 +207,34 @@ func machinesGetStateCommand() subcommands.Command {
 		"get-state",
 		"get the state of the machine",
 		"get-state SERIAL",
+	}
+}
+
+type machinesSetRetireDateCmd struct{}
+
+func (r machinesSetRetireDateCmd) SetFlags(f *flag.FlagSet) {}
+
+func (r machinesSetRetireDateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
+	if f.NArg() != 2 {
+		f.Usage()
+		return client.ExitUsageError
+	}
+
+	serial := f.Arg(0)
+	date, err := time.Parse("2006-01-02", f.Arg(1))
+	if err != nil {
+		return handleError(err)
+	}
+
+	errorStatus := client.MachinesSetRetireDate(ctx, serial, date)
+	return handleError(errorStatus)
+}
+
+func machinesSetRetireDateCommand() subcommands.Command {
+	return subcmd{
+		machinesSetRetireDateCmd{},
+		"set-retire-date",
+		"set the retire date of the machine",
+		`Usage: sabactl machines set-retire-date SERIAL YYYY-MM-DD`,
 	}
 }

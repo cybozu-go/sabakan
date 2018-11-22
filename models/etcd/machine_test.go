@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/cybozu-go/sabakan"
 )
@@ -35,6 +36,9 @@ func testRegister(t *testing.T) {
 	}
 	if saved.Spec.IndexInRack != testIPAMConfig.NodeIndexOffset+2 {
 		t.Errorf("node index of 2nd worker should be %v but %v", testIPAMConfig.NodeIndexOffset+2, saved.Spec.IndexInRack)
+	}
+	if !saved.Spec.RetireDate.Equal(time.Date(2018, time.November, 22, 1, 2, 3, 0, time.UTC)) {
+		t.Error("retire-date is not saved:", saved.Spec.RetireDate)
 	}
 
 	err = d.machineRegister(context.Background(), machines)
@@ -251,6 +255,30 @@ func testDeleteLabel(t *testing.T) {
 	}
 }
 
+func testSetRetireDate(t *testing.T) {
+	t.Parallel()
+
+	d, ch := testNewDriver(t)
+	_, err := initializeTestData(d, ch)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	date := time.Date(2023, time.February, 28, 9, 9, 0, 0, time.UTC)
+	err = d.machineSetRetireDate(context.Background(), "12345678", date)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := d.machineGet(context.Background(), "12345678")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !m.Spec.RetireDate.Equal(date) {
+		t.Error("retire-date was not set:", m.Spec.RetireDate)
+	}
+}
+
 func testDelete(t *testing.T) {
 	t.Parallel()
 
@@ -373,6 +401,7 @@ func TestMachine(t *testing.T) {
 	t.Run("SetState", testSetState)
 	t.Run("AddLabels", testAddLabels)
 	t.Run("DeleteLabel", testDeleteLabel)
+	t.Run("SetRetireDate", testSetRetireDate)
 	t.Run("Delete", testDelete)
 	t.Run("DeleteRace", testDeleteRace)
 }

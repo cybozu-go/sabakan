@@ -111,6 +111,8 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 		s.handleState(w, r)
 	case strings.HasPrefix(p, "labels/"):
 		s.handleLabels(w, r)
+	case strings.HasPrefix(p, "retire-date/"):
+		s.handleRetireDate(w, r)
 	case strings.HasPrefix(p, "kernel_params/"):
 		s.handleKernelParams(w, r)
 	default:

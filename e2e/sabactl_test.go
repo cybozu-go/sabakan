@@ -272,6 +272,33 @@ func testSabactlMachines(t *testing.T) {
 		t.Fatal("exit code:", code)
 	}
 
+	_, stderr, err = runSabactl("machines", "set-retire-date", "12345678", "2023-03-31")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
+	stdout, stderr, err = runSabactl("machines", "get", "--serial", "12345678")
+	code = exitCode(err)
+	if code != client.ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+	gotMachines = nil
+	err = json.Unmarshal(stdout.Bytes(), &gotMachines)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(gotMachines) != 1 {
+		t.Fatal("machine not found")
+	}
+	m := gotMachines[0]
+	if !m.Spec.RetireDate.Equal(time.Date(2023, time.March, 31, 0, 0, 0, 0, time.UTC)) {
+		t.Error(`set-retire-date did not work correctly:`, m.Spec.RetireDate)
+	}
+
 	stdout, stderr, err = runSabactl("machines", "remove", "12345678")
 	code = exitCode(err)
 	if code != client.ExitSuccess {

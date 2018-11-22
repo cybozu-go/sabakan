@@ -213,6 +213,38 @@ RETRY:
 	return nil
 }
 
+func (d *driver) machineSetRetireDate(ctx context.Context, serial string, date time.Time) error {
+	key := KeyMachines + serial
+
+RETRY:
+	m, rev, err := d.machineGetWithRev(ctx, serial)
+	if err != nil {
+		return err
+	}
+
+	m.Spec.RetireDate = date
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	tresp, err := d.client.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", rev)).
+		Then(clientv3.OpPut(key, string(data))).
+		Commit()
+	if err != nil {
+		return err
+	}
+	if !tresp.Succeeded {
+		goto RETRY
+	}
+
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditMachines, serial,
+		"set-retire-date", date.String())
+	return nil
+}
+
 func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
 
@@ -347,6 +379,10 @@ func (d machineDriver) AddLabels(ctx context.Context, serial string, labels map[
 // DeleteLabel implements sabakan.MachineModel
 func (d machineDriver) DeleteLabel(ctx context.Context, serial string, label string) error {
 	return d.machineDeleteLabel(ctx, serial, label)
+}
+
+func (d machineDriver) SetRetireDate(ctx context.Context, serial string, date time.Time) error {
+	return d.machineSetRetireDate(ctx, serial, date)
 }
 
 // Query implements sabakan.MachineModel

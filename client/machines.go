@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/cybozu-go/sabakan"
 )
@@ -49,4 +50,10 @@ func MachinesGetState(ctx context.Context, serial string) (sabakan.MachineState,
 		return "", ErrorStatus(err)
 	}
 	return sabakan.MachineState(data), nil
+}
+
+// MachinesSetRetireDate set the retire date of the machine.
+func MachinesSetRetireDate(ctx context.Context, serial string, date time.Time) *Status {
+	input := strings.NewReader(date.Format(time.RFC3339))
+	return client.sendRequest(ctx, "PUT", "retire-date/"+serial, input)
 }

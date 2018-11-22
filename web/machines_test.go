@@ -284,6 +284,9 @@ func testMachinesGet(t *testing.T) {
 
 		serials := make(map[string]bool)
 		for _, m := range machines {
+			if m.Status.Duration == 0 {
+				t.Error("duration should not be zero")
+			}
 			serials[m.Spec.Serial] = true
 		}
 		if !reflect.DeepEqual(serials, c.expected) {
