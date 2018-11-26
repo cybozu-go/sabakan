@@ -9,9 +9,8 @@ import (
 	"strings"
 	"time"
 
-	log2 "github.com/cybozu-go/log"
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
-	"github.com/prometheus/common/log"
 )
 
 // Resolver implements ResolverRoot.
@@ -163,7 +162,7 @@ func isOlderThan(minDaysBeforeRetire int, currentDuration float64) bool {
 	dur, err := time.ParseDuration(fmt.Sprintf("%dh", 24*minDaysBeforeRetire))
 	if err != nil {
 		log.Error("failed to parse duration", map[string]interface{}{
-			log2.FnError: err.Error(),
+			log.FnError: err.Error(),
 		})
 		return false
 	}

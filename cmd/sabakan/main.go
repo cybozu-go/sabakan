@@ -20,7 +20,7 @@ import (
 	"github.com/cybozu-go/sabakan/web"
 	"github.com/cybozu-go/well"
 	"go.universe.tf/netboot/dhcp4"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var (
@@ -137,8 +137,6 @@ func main() {
 		log.ErrorExit(err)
 	}
 }
-
-
 
 func parseAllowIPs(ips []string) ([]*net.IPNet, error) {
 	nets := make([]*net.IPNet, len(ips))
