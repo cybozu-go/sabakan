@@ -10,6 +10,7 @@ import (
 
 	graphql "github.com/99designs/gqlgen/graphql"
 	introspection "github.com/99designs/gqlgen/graphql/introspection"
+	sabakan "github.com/cybozu-go/sabakan"
 	gqlparser "github.com/vektah/gqlparser"
 	ast "github.com/vektah/gqlparser/ast"
 )
@@ -30,6 +31,9 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	BMC() BMCResolver
+	Machine() MachineResolver
+	MachineStatus() MachineStatusResolver
 	Query() QueryResolver
 }
 
@@ -72,9 +76,28 @@ type ComplexityRoot struct {
 	}
 }
 
+type BMCResolver interface {
+	BmcType(ctx context.Context, obj *sabakan.MachineBMC) (string, error)
+	Ipv4(ctx context.Context, obj *sabakan.MachineBMC) (IPAddress, error)
+}
+type MachineResolver interface {
+	Serial(ctx context.Context, obj *sabakan.Machine) (string, error)
+	Labels(ctx context.Context, obj *sabakan.Machine) ([]Label, error)
+	Rack(ctx context.Context, obj *sabakan.Machine) (int, error)
+	IndexInRack(ctx context.Context, obj *sabakan.Machine) (int, error)
+	Role(ctx context.Context, obj *sabakan.Machine) (string, error)
+	Ipv4(ctx context.Context, obj *sabakan.Machine) ([]IPAddress, error)
+	RegisterDate(ctx context.Context, obj *sabakan.Machine) (DateTime, error)
+	RetireDate(ctx context.Context, obj *sabakan.Machine) (DateTime, error)
+	Bmc(ctx context.Context, obj *sabakan.Machine) (sabakan.MachineBMC, error)
+}
+type MachineStatusResolver interface {
+	State(ctx context.Context, obj *sabakan.MachineStatus) (MachineState, error)
+	Timestamp(ctx context.Context, obj *sabakan.MachineStatus) (DateTime, error)
+}
 type QueryResolver interface {
-	Machine(ctx context.Context, serial string) (Machine, error)
-	SearchMachines(ctx context.Context, having *MachineParams, notHaving *MachineParams) ([]Machine, error)
+	Machine(ctx context.Context, serial string) (sabakan.Machine, error)
+	SearchMachines(ctx context.Context, having *MachineParams, notHaving *MachineParams) ([]sabakan.Machine, error)
 }
 
 func field_Query_machine_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
@@ -363,9 +386,10 @@ type executionContext struct {
 var bMCImplementors = []string{"BMC"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _BMC(ctx context.Context, sel ast.SelectionSet, obj *BMC) graphql.Marshaler {
+func (ec *executionContext) _BMC(ctx context.Context, sel ast.SelectionSet, obj *sabakan.MachineBMC) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, bMCImplementors)
 
+	var wg sync.WaitGroup
 	out := graphql.NewOrderedMap(len(fields))
 	invalid := false
 	for i, field := range fields {
@@ -375,20 +399,28 @@ func (ec *executionContext) _BMC(ctx context.Context, sel ast.SelectionSet, obj 
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("BMC")
 		case "bmcType":
-			out.Values[i] = ec._BMC_bmcType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._BMC_bmcType(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "ipv4":
-			out.Values[i] = ec._BMC_ipv4(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._BMC_ipv4(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-
+	wg.Wait()
 	if invalid {
 		return graphql.Null
 	}
@@ -396,7 +428,7 @@ func (ec *executionContext) _BMC(ctx context.Context, sel ast.SelectionSet, obj 
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _BMC_bmcType(ctx context.Context, field graphql.CollectedField, obj *BMC) graphql.Marshaler {
+func (ec *executionContext) _BMC_bmcType(ctx context.Context, field graphql.CollectedField, obj *sabakan.MachineBMC) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "BMC",
 		Args:   nil,
@@ -405,7 +437,7 @@ func (ec *executionContext) _BMC_bmcType(ctx context.Context, field graphql.Coll
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.BmcType, nil
+		return ec.resolvers.BMC().BmcType(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -419,7 +451,7 @@ func (ec *executionContext) _BMC_bmcType(ctx context.Context, field graphql.Coll
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _BMC_ipv4(ctx context.Context, field graphql.CollectedField, obj *BMC) graphql.Marshaler {
+func (ec *executionContext) _BMC_ipv4(ctx context.Context, field graphql.CollectedField, obj *sabakan.MachineBMC) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "BMC",
 		Args:   nil,
@@ -428,7 +460,7 @@ func (ec *executionContext) _BMC_ipv4(ctx context.Context, field graphql.Collect
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Ipv4, nil
+		return ec.resolvers.BMC().Ipv4(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -436,9 +468,9 @@ func (ec *executionContext) _BMC_ipv4(ctx context.Context, field graphql.Collect
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(IPAddress)
 	rctx.Result = res
-	return graphql.MarshalString(res)
+	return res
 }
 
 var labelImplementors = []string{"Label"}
@@ -525,9 +557,10 @@ func (ec *executionContext) _Label_value(ctx context.Context, field graphql.Coll
 var machineImplementors = []string{"Machine"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _Machine(ctx context.Context, sel ast.SelectionSet, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine(ctx context.Context, sel ast.SelectionSet, obj *sabakan.Machine) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, machineImplementors)
 
+	var wg sync.WaitGroup
 	out := graphql.NewOrderedMap(len(fields))
 	invalid := false
 	for i, field := range fields {
@@ -537,47 +570,83 @@ func (ec *executionContext) _Machine(ctx context.Context, sel ast.SelectionSet, 
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Machine")
 		case "serial":
-			out.Values[i] = ec._Machine_serial(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Machine_serial(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "labels":
-			out.Values[i] = ec._Machine_labels(ctx, field, obj)
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Machine_labels(ctx, field, obj)
+				wg.Done()
+			}(i, field)
 		case "rack":
-			out.Values[i] = ec._Machine_rack(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Machine_rack(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "indexInRack":
-			out.Values[i] = ec._Machine_indexInRack(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Machine_indexInRack(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "role":
-			out.Values[i] = ec._Machine_role(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Machine_role(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "ipv4":
-			out.Values[i] = ec._Machine_ipv4(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Machine_ipv4(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "registerDate":
-			out.Values[i] = ec._Machine_registerDate(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Machine_registerDate(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "retireDate":
-			out.Values[i] = ec._Machine_retireDate(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Machine_retireDate(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "bmc":
-			out.Values[i] = ec._Machine_bmc(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Machine_bmc(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "status":
 			out.Values[i] = ec._Machine_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -587,7 +656,7 @@ func (ec *executionContext) _Machine(ctx context.Context, sel ast.SelectionSet, 
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-
+	wg.Wait()
 	if invalid {
 		return graphql.Null
 	}
@@ -595,7 +664,7 @@ func (ec *executionContext) _Machine(ctx context.Context, sel ast.SelectionSet, 
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_serial(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_serial(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -604,7 +673,7 @@ func (ec *executionContext) _Machine_serial(ctx context.Context, field graphql.C
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Serial, nil
+		return ec.resolvers.Machine().Serial(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -618,7 +687,7 @@ func (ec *executionContext) _Machine_serial(ctx context.Context, field graphql.C
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_labels(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_labels(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -627,7 +696,7 @@ func (ec *executionContext) _Machine_labels(ctx context.Context, field graphql.C
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Labels, nil
+		return ec.resolvers.Machine().Labels(rctx, obj)
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -671,7 +740,7 @@ func (ec *executionContext) _Machine_labels(ctx context.Context, field graphql.C
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_rack(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_rack(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -680,7 +749,7 @@ func (ec *executionContext) _Machine_rack(ctx context.Context, field graphql.Col
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Rack, nil
+		return ec.resolvers.Machine().Rack(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -694,7 +763,7 @@ func (ec *executionContext) _Machine_rack(ctx context.Context, field graphql.Col
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_indexInRack(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_indexInRack(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -703,7 +772,7 @@ func (ec *executionContext) _Machine_indexInRack(ctx context.Context, field grap
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.IndexInRack, nil
+		return ec.resolvers.Machine().IndexInRack(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -717,7 +786,7 @@ func (ec *executionContext) _Machine_indexInRack(ctx context.Context, field grap
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_role(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_role(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -726,7 +795,7 @@ func (ec *executionContext) _Machine_role(ctx context.Context, field graphql.Col
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Role, nil
+		return ec.resolvers.Machine().Role(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -740,7 +809,7 @@ func (ec *executionContext) _Machine_role(ctx context.Context, field graphql.Col
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_ipv4(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_ipv4(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -749,7 +818,7 @@ func (ec *executionContext) _Machine_ipv4(ctx context.Context, field graphql.Col
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Ipv4, nil
+		return ec.resolvers.Machine().Ipv4(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -757,14 +826,14 @@ func (ec *executionContext) _Machine_ipv4(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.([]IPAddress)
 	rctx.Result = res
 
 	arr1 := make(graphql.Array, len(res))
 
 	for idx1 := range res {
 		arr1[idx1] = func() graphql.Marshaler {
-			return graphql.MarshalString(res[idx1])
+			return res[idx1]
 		}()
 	}
 
@@ -772,7 +841,7 @@ func (ec *executionContext) _Machine_ipv4(ctx context.Context, field graphql.Col
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_registerDate(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_registerDate(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -781,7 +850,7 @@ func (ec *executionContext) _Machine_registerDate(ctx context.Context, field gra
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.RegisterDate, nil
+		return ec.resolvers.Machine().RegisterDate(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -789,13 +858,13 @@ func (ec *executionContext) _Machine_registerDate(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(DateTime)
 	rctx.Result = res
-	return graphql.MarshalString(res)
+	return res
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_retireDate(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_retireDate(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -804,7 +873,7 @@ func (ec *executionContext) _Machine_retireDate(ctx context.Context, field graph
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.RetireDate, nil
+		return ec.resolvers.Machine().RetireDate(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -812,13 +881,13 @@ func (ec *executionContext) _Machine_retireDate(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(DateTime)
 	rctx.Result = res
-	return graphql.MarshalString(res)
+	return res
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_bmc(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_bmc(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -827,7 +896,7 @@ func (ec *executionContext) _Machine_bmc(ctx context.Context, field graphql.Coll
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Bmc, nil
+		return ec.resolvers.Machine().Bmc(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -835,14 +904,14 @@ func (ec *executionContext) _Machine_bmc(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(BMC)
+	res := resTmp.(sabakan.MachineBMC)
 	rctx.Result = res
 
 	return ec._BMC(ctx, field.Selections, &res)
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Machine_status(ctx context.Context, field graphql.CollectedField, obj *Machine) graphql.Marshaler {
+func (ec *executionContext) _Machine_status(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Machine",
 		Args:   nil,
@@ -859,7 +928,7 @@ func (ec *executionContext) _Machine_status(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(MachineStatus)
+	res := resTmp.(sabakan.MachineStatus)
 	rctx.Result = res
 
 	return ec._MachineStatus(ctx, field.Selections, &res)
@@ -868,9 +937,10 @@ func (ec *executionContext) _Machine_status(ctx context.Context, field graphql.C
 var machineStatusImplementors = []string{"MachineStatus"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _MachineStatus(ctx context.Context, sel ast.SelectionSet, obj *MachineStatus) graphql.Marshaler {
+func (ec *executionContext) _MachineStatus(ctx context.Context, sel ast.SelectionSet, obj *sabakan.MachineStatus) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, machineStatusImplementors)
 
+	var wg sync.WaitGroup
 	out := graphql.NewOrderedMap(len(fields))
 	invalid := false
 	for i, field := range fields {
@@ -880,15 +950,23 @@ func (ec *executionContext) _MachineStatus(ctx context.Context, sel ast.Selectio
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MachineStatus")
 		case "state":
-			out.Values[i] = ec._MachineStatus_state(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._MachineStatus_state(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "timestamp":
-			out.Values[i] = ec._MachineStatus_timestamp(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._MachineStatus_timestamp(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "duration":
 			out.Values[i] = ec._MachineStatus_duration(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -898,7 +976,7 @@ func (ec *executionContext) _MachineStatus(ctx context.Context, sel ast.Selectio
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
-
+	wg.Wait()
 	if invalid {
 		return graphql.Null
 	}
@@ -906,7 +984,7 @@ func (ec *executionContext) _MachineStatus(ctx context.Context, sel ast.Selectio
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _MachineStatus_state(ctx context.Context, field graphql.CollectedField, obj *MachineStatus) graphql.Marshaler {
+func (ec *executionContext) _MachineStatus_state(ctx context.Context, field graphql.CollectedField, obj *sabakan.MachineStatus) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "MachineStatus",
 		Args:   nil,
@@ -915,7 +993,7 @@ func (ec *executionContext) _MachineStatus_state(ctx context.Context, field grap
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.State, nil
+		return ec.resolvers.MachineStatus().State(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -929,7 +1007,7 @@ func (ec *executionContext) _MachineStatus_state(ctx context.Context, field grap
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _MachineStatus_timestamp(ctx context.Context, field graphql.CollectedField, obj *MachineStatus) graphql.Marshaler {
+func (ec *executionContext) _MachineStatus_timestamp(ctx context.Context, field graphql.CollectedField, obj *sabakan.MachineStatus) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "MachineStatus",
 		Args:   nil,
@@ -938,7 +1016,7 @@ func (ec *executionContext) _MachineStatus_timestamp(ctx context.Context, field 
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Timestamp, nil
+		return ec.resolvers.MachineStatus().Timestamp(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -946,13 +1024,13 @@ func (ec *executionContext) _MachineStatus_timestamp(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(DateTime)
 	rctx.Result = res
-	return graphql.MarshalString(res)
+	return res
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _MachineStatus_duration(ctx context.Context, field graphql.CollectedField, obj *MachineStatus) graphql.Marshaler {
+func (ec *executionContext) _MachineStatus_duration(ctx context.Context, field graphql.CollectedField, obj *sabakan.MachineStatus) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "MachineStatus",
 		Args:   nil,
@@ -1050,7 +1128,7 @@ func (ec *executionContext) _Query_machine(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(Machine)
+	res := resTmp.(sabakan.Machine)
 	rctx.Result = res
 
 	return ec._Machine(ctx, field.Selections, &res)
@@ -1080,7 +1158,7 @@ func (ec *executionContext) _Query_searchMachines(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]Machine)
+	res := resTmp.([]sabakan.Machine)
 	rctx.Result = res
 
 	arr1 := make(graphql.Array, len(res))
