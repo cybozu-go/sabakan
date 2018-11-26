@@ -6,10 +6,9 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"strings"
+	"sort"
 	"time"
 
-	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
 )
 
@@ -53,9 +52,19 @@ func (r *machineResolver) Serial(ctx context.Context, obj *sabakan.Machine) (str
 	return obj.Spec.Serial, nil
 }
 func (r *machineResolver) Labels(ctx context.Context, obj *sabakan.Machine) ([]Label, error) {
+	if len(obj.Spec.Labels) == 0 {
+		return []Label{}, nil
+	}
+
+	keys := make([]string, 0, len(obj.Spec.Labels))
+	for k := range obj.Spec.Labels {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	labels := make([]Label, 0, len(obj.Spec.Labels))
-	for k, v := range obj.Spec.Labels {
-		labels = append(labels, Label{Name: k, Value: v})
+	for _, k := range keys {
+		labels = append(labels, Label{Name: k, Value: obj.Spec.Labels[k]})
 	}
 	return labels, nil
 }
@@ -131,85 +140,9 @@ func (r *queryResolver) SearchMachines(ctx context.Context, having, notHaving *M
 	var filtered []sabakan.Machine
 	for _, m := range machines {
 		m.Status.Duration = now.Sub(m.Status.Timestamp).Seconds()
-		if matchMachine(m, having) && !(matchMachine(m, notHaving)) {
+		if matchMachine(m, having, notHaving, now) {
 			filtered = append(filtered, *m)
 		}
 	}
 	return filtered, nil
-}
-
-func matchMachine(machine *sabakan.Machine, having *MachineParams) bool {
-	if !containsAllInputLabels(having.Labels, machine.Spec.Labels) {
-		return false
-	}
-	if !containsRack(having.Racks, int(machine.Spec.Rack)) {
-		return false
-	}
-	if !containsRole(having.Roles, machine.Spec.Role) {
-		return false
-	}
-	if !containsStates(having.States, machine.Status.State) {
-		return false
-	}
-	if isOlderThan(*having.MinDaysBeforeRetire, machine.Status.Duration) {
-		return false
-	}
-
-	return true
-}
-
-func isOlderThan(minDaysBeforeRetire int, currentDuration float64) bool {
-	dur, err := time.ParseDuration(fmt.Sprintf("%dh", 24*minDaysBeforeRetire))
-	if err != nil {
-		log.Error("failed to parse duration", map[string]interface{}{
-			log.FnError: err.Error(),
-		})
-		return false
-	}
-	return dur.Seconds() > currentDuration
-}
-
-func containsStates(states []MachineState, target sabakan.MachineState) bool {
-	for _, state := range states {
-		if state.String() == strings.ToUpper(target.String()) {
-			return true
-		}
-	}
-	return false
-}
-
-func containsRole(roles []string, target string) bool {
-	for _, role := range roles {
-		if role == target {
-			return true
-		}
-	}
-	return false
-}
-
-func containsRack(racks []int, target int) bool {
-	for _, rack := range racks {
-		if rack == target {
-			return true
-		}
-	}
-	return false
-}
-
-func containsAllInputLabels(labelInputs []LabelInput, labels map[string]string) bool {
-	for _, input := range labelInputs {
-		if !containsLabel(input, labels) {
-			return false
-		}
-	}
-	return true
-}
-
-func containsLabel(input LabelInput, labels map[string]string) bool {
-	for k, v := range labels {
-		if (input.Name == k) && (input.Value == v) {
-			return true
-		}
-	}
-	return false
 }

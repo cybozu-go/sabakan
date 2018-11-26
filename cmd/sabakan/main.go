@@ -30,6 +30,7 @@ var (
 	flagDataDir      = flag.String("data-dir", defaultDataDir, "directory to store files")
 	flagAdvertiseURL = flag.String("advertise-url", "", "public URL of this server")
 	flagAllowIPs     = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
+	flagPlayground   = flag.Bool("enable-playground", false, "enable GraphQL playground")
 
 	flagEtcdEndpoints = flag.String("etcd-endpoints", strings.Join(etcdutil.DefaultEndpoints, ","), "comma-separated URLs of the backend etcd endpoints")
 	flagEtcdPrefix    = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
@@ -58,6 +59,7 @@ func main() {
 		cfg.DataDir = *flagDataDir
 		cfg.IPXEPath = *flagIPXEPath
 		cfg.ListenHTTP = *flagHTTP
+		cfg.Playground = *flagPlayground
 
 		cfg.Etcd.Endpoints = strings.Split(*flagEtcdEndpoints, ",")
 		cfg.Etcd.Prefix = *flagEtcdPrefix
@@ -121,7 +123,7 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
-	webServer := web.NewServer(model, cfg.IPXEPath, advertiseURL, allowedIPs)
+	webServer := web.NewServer(model, cfg.IPXEPath, advertiseURL, allowedIPs, cfg.Playground)
 	s := &well.HTTPServer{
 		Server: &http.Server{
 			Addr:    cfg.ListenHTTP,

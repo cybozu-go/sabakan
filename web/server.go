@@ -38,20 +38,23 @@ type Server struct {
 }
 
 // NewServer constructs Server instance
-func NewServer(model sabakan.Model, ipxePath string, advertiseURL *url.URL, allowedIPs []*net.IPNet) *Server {
+func NewServer(model sabakan.Model, ipxePath string, advertiseURL *url.URL, allowedIPs []*net.IPNet, playground bool) *Server {
 	graphQL := handler.GraphQL(gql.NewExecutableSchema(
 		gql.Config{Resolvers: &gql.Resolver{
 			Model: model,
 		}}))
-	playground := handler.Playground("GraphQL playground", "/graphql")
-	return &Server{
+	s := &Server{
 		Model:          model,
 		IPXEFirmware:   ipxePath,
 		MyURL:          advertiseURL,
 		AllowedRemotes: allowedIPs,
 		graphQL:        graphQL,
-		playground:     playground,
 	}
+
+	if playground {
+		s.playground = handler.Playground("GraphQL playground", "/graphql")
+	}
+	return s
 }
 
 // Handler implements http.Handler
@@ -65,8 +68,8 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.graphQL.ServeHTTP(w, r)
 		return
 	}
-	// playground for GraphQL API
-	if r.URL.Path == "/playground" {
+
+	if r.URL.Path == "/playground" && s.playground != nil {
 		s.playground.ServeHTTP(w, r)
 		return
 	}
