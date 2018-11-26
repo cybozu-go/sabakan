@@ -6,7 +6,6 @@ import (
 	"flag"
 	"os"
 
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -42,7 +41,7 @@ type imagesIndexCmd struct {
 func (c imagesIndexCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c imagesIndexCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	index, err := client.ImagesIndex(ctx, c.os)
+	index, err := api.ImagesIndex(ctx, c.os)
 	if err != nil {
 		return handleError(err)
 	}
@@ -94,7 +93,7 @@ func (c imagesUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 	}
 	defer initrd.Close()
 
-	err = client.ImagesUpload(ctx, c.os, id, kernel, kernelInfo.Size(), initrd, initrdInfo.Size())
+	err = api.ImagesUpload(ctx, c.os, id, kernel, kernelInfo.Size(), initrd, initrdInfo.Size())
 	return handleError(err)
 }
 
@@ -119,7 +118,7 @@ func (c imagesDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		return ExitUsageError
 	}
 
-	err := client.ImagesDelete(ctx, c.os, f.Arg(0))
+	err := api.ImagesDelete(ctx, c.os, f.Arg(0))
 	return handleError(err)
 }
 

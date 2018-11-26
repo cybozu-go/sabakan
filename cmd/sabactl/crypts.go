@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -41,7 +40,7 @@ func (c *cryptsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomma
 		return ExitUsageError
 	}
 
-	err := client.CryptsDelete(ctx, f.Args()[0])
+	err := api.CryptsDelete(ctx, f.Args()[0])
 	return handleError(err)
 }
 

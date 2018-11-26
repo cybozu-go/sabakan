@@ -11,9 +11,9 @@ import (
 )
 
 // ImagesIndex get index of images.
-func ImagesIndex(ctx context.Context, os string) (sabakan.ImageIndex, error) {
+func (c *Client) ImagesIndex(ctx context.Context, os string) (sabakan.ImageIndex, error) {
 	var index sabakan.ImageIndex
-	err := client.getJSON(ctx, "images/"+os, nil, &index)
+	err := c.getJSON(ctx, "images/"+os, nil, &index)
 	if err != nil {
 		return nil, err
 	}
@@ -21,13 +21,13 @@ func ImagesIndex(ctx context.Context, os string) (sabakan.ImageIndex, error) {
 }
 
 // ImagesUpload upload image file.
-func ImagesUpload(ctx context.Context, os, id string, kernel io.Reader, kernelSize int64, initrd io.Reader, initrdSize int64) error {
+func (c *Client) ImagesUpload(ctx context.Context, os, id string, kernel io.Reader, kernelSize int64, initrd io.Reader, initrdSize int64) error {
 	reader, err := createImageArchive(kernel, kernelSize, initrd, initrdSize)
 	if err != nil {
 		return err
 	}
 
-	return client.sendRequest(ctx, "PUT", path.Join("images", os, id), reader)
+	return c.sendRequest(ctx, "PUT", path.Join("images", os, id), reader)
 }
 
 func addFileToTar(tw *tar.Writer, name string, src io.Reader, size int64) error {
@@ -65,6 +65,6 @@ func createImageArchive(kernel io.Reader, kernelSize int64, initrd io.Reader, in
 }
 
 // ImagesDelete deletes image file.
-func ImagesDelete(ctx context.Context, os, id string) error {
-	return client.sendRequest(ctx, "DELETE", path.Join("images", os, id), nil)
+func (c *Client) ImagesDelete(ctx context.Context, os, id string) error {
+	return c.sendRequest(ctx, "DELETE", path.Join("images", os, id), nil)
 }

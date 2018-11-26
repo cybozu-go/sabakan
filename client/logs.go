@@ -7,8 +7,8 @@ import (
 )
 
 // LogsGet retrieves audit logs.
-func LogsGet(ctx context.Context, since, until time.Time, w io.Writer) error {
-	req := client.NewRequest(ctx, "GET", "logs", nil)
+func (c *Client) LogsGet(ctx context.Context, since, until time.Time, w io.Writer) error {
+	req := c.NewRequest(ctx, "GET", "logs", nil)
 	q := req.URL.Query()
 	if !since.IsZero() {
 		q.Set("since", since.UTC().Format("20060102"))
@@ -18,7 +18,7 @@ func LogsGet(ctx context.Context, since, until time.Time, w io.Writer) error {
 	}
 	req.URL.RawQuery = q.Encode()
 
-	resp, status := client.Do(req)
+	resp, status := c.Do(req)
 	if status != nil {
 		return status
 	}

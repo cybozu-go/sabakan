@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -102,7 +101,7 @@ func (r *logsCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.Exit
 		w = &logPrinter{w: w}
 	}
 
-	err := client.LogsGet(ctx, since, until, w)
+	err := api.LogsGet(ctx, since, until, w)
 	return handleError(err)
 }
 

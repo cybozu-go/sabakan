@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -41,7 +40,7 @@ type kernelParamsGetCmd struct {
 func (c kernelParamsGetCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c kernelParamsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	kernelParams, err := client.KernelParamsGet(ctx, c.os)
+	kernelParams, err := api.KernelParamsGet(ctx, c.os)
 	if err != nil {
 		return handleError(err)
 	}
@@ -71,7 +70,7 @@ func (c kernelParamsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 		return ExitUsageError
 	}
 
-	err := client.KernelParamsSet(ctx, c.os, sabakan.KernelParams(f.Arg(0)))
+	err := api.KernelParamsSet(ctx, c.os, sabakan.KernelParams(f.Arg(0)))
 	return handleError(err)
 }
 

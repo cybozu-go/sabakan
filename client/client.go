@@ -18,33 +18,30 @@ import (
 
 // Client is a sabakan client
 type Client struct {
-	url  *url.URL
-	http *well.HTTPClient
+	url      *url.URL
+	http     *well.HTTPClient
+	username string
 }
 
-var (
-	client   *Client
-	username string
-)
-
-// Setup initializes client package.
-func Setup(endpoint string, http *well.HTTPClient) error {
+// NewClient returns new client
+func NewClient(endpoint string, http *well.HTTPClient) (*Client, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	user, err := user.Current()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	username = user.Username
+	username := user.Username
 
-	client = &Client{
-		url:  u,
-		http: http,
+	client := &Client{
+		url:      u,
+		http:     http,
+		username: username,
 	}
-	return nil
+	return client, nil
 }
 
 // NewRequest creates a new http.Request whose context is set to ctx.
@@ -53,7 +50,7 @@ func (c *Client) NewRequest(ctx context.Context, method, p string, body io.Reade
 	u := *c.url
 	u.Path = path.Join(u.Path, "/api/v1", p)
 	r, _ := http.NewRequest(method, u.String(), body)
-	r.Header.Set("X-Sabakan-User", username)
+	r.Header.Set("X-Sabakan-User", c.username)
 	return r.WithContext(ctx)
 }
 

@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -36,7 +35,7 @@ type ipamGetCmd struct{}
 func (r ipamGetCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r ipamGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	conf, err := client.IPAMConfigGet(ctx)
+	conf, err := api.IPAMConfigGet(ctx)
 	if err != nil {
 		return handleError(err)
 	}
@@ -80,7 +79,7 @@ func (r *ipamSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.E
 		return handleError(err)
 	}
 
-	errorStatus := client.IPAMConfigSet(ctx, &conf)
+	errorStatus := api.IPAMConfigSet(ctx, &conf)
 	return handleError(errorStatus)
 }
 

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -68,7 +67,7 @@ func (r *machinesGetCmd) getParams() map[string]string {
 }
 
 func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	machines, err := client.MachinesGet(ctx, r.getParams())
+	machines, err := api.MachinesGet(ctx, r.getParams())
 	if err != nil {
 		return handleError(err)
 	}
@@ -112,7 +111,7 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 		return handleError(err)
 	}
 
-	errorStatus := client.MachinesCreate(ctx, specs)
+	errorStatus := api.MachinesCreate(ctx, specs)
 	return handleError(errorStatus)
 }
 
@@ -135,7 +134,7 @@ func (r machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomm
 		return ExitUsageError
 	}
 
-	errorStatus := client.MachinesRemove(ctx, f.Arg(0))
+	errorStatus := api.MachinesRemove(ctx, f.Arg(0))
 	return handleError(errorStatus)
 }
 
@@ -161,7 +160,7 @@ func (r machinesSetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subco
 	serial := f.Arg(0)
 	state := strings.ToLower(f.Arg(1))
 
-	errorStatus := client.MachinesSetState(ctx, serial, state)
+	errorStatus := api.MachinesSetState(ctx, serial, state)
 	return handleError(errorStatus)
 }
 
@@ -193,7 +192,7 @@ func (r machinesGetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subco
 		return ExitUsageError
 	}
 
-	state, errorStatus := client.MachinesGetState(ctx, f.Arg(0))
+	state, errorStatus := api.MachinesGetState(ctx, f.Arg(0))
 	if errorStatus != nil {
 		return handleError(errorStatus)
 	}
@@ -226,7 +225,7 @@ func (r machinesSetRetireDateCmd) Execute(ctx context.Context, f *flag.FlagSet) 
 		return handleError(err)
 	}
 
-	errorStatus := client.MachinesSetRetireDate(ctx, serial, date)
+	errorStatus := api.MachinesSetRetireDate(ctx, serial, date)
 	return handleError(errorStatus)
 }
 

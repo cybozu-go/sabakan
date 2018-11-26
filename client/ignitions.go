@@ -8,9 +8,9 @@ import (
 )
 
 // IgnitionsGet gets ignition template metadata list of the specified role
-func IgnitionsGet(ctx context.Context, role string) ([]map[string]string, error) {
+func (c *Client) IgnitionsGet(ctx context.Context, role string) ([]map[string]string, error) {
 	var metadata []map[string]string
-	err := client.getJSON(ctx, "ignitions/"+role, nil, &metadata)
+	err := c.getJSON(ctx, "ignitions/"+role, nil, &metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -18,9 +18,9 @@ func IgnitionsGet(ctx context.Context, role string) ([]map[string]string, error)
 }
 
 // IgnitionsCat gets an ignition template for the role an id
-func IgnitionsCat(ctx context.Context, role, id string, w io.Writer) error {
-	req := client.NewRequest(ctx, "GET", path.Join("ignitions", role, id), nil)
-	resp, status := client.Do(req)
+func (c *Client) IgnitionsCat(ctx context.Context, role, id string, w io.Writer) error {
+	req := c.NewRequest(ctx, "GET", path.Join("ignitions", role, id), nil)
+	resp, status := c.Do(req)
 	if status != nil {
 		return status
 	}
@@ -34,16 +34,16 @@ func IgnitionsCat(ctx context.Context, role, id string, w io.Writer) error {
 }
 
 // IgnitionsSet posts an ignition template file
-func IgnitionsSet(ctx context.Context, role string, fname string, meta map[string]string) error {
+func (c *Client) IgnitionsSet(ctx context.Context, role string, fname string, meta map[string]string) error {
 	tmpl, err := generateIgnitionYAML(fname)
 	if err != nil {
 		return err
 	}
-	req := client.NewRequest(ctx, "POST", "ignitions/"+role, tmpl)
+	req := c.NewRequest(ctx, "POST", "ignitions/"+role, tmpl)
 	for k, v := range meta {
 		req.Header.Set(fmt.Sprintf("X-Sabakan-Ignitions-%s", k), v)
 	}
-	resp, status := client.Do(req)
+	resp, status := c.Do(req)
 	if status != nil {
 		return status
 	}
@@ -53,6 +53,6 @@ func IgnitionsSet(ctx context.Context, role string, fname string, meta map[strin
 }
 
 // IgnitionsDelete deletes an ignition template specified by role and id
-func IgnitionsDelete(ctx context.Context, role, id string) error {
-	return client.sendRequest(ctx, "DELETE", path.Join("ignitions", role, id), nil)
+func (c *Client) IgnitionsDelete(ctx context.Context, role, id string) error {
+	return c.sendRequest(ctx, "DELETE", path.Join("ignitions", role, id), nil)
 }

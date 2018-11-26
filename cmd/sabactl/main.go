@@ -14,6 +14,8 @@ import (
 
 var (
 	flagServer = flag.String("server", "http://localhost:10080", "<Listen IP>:<Port number>")
+
+	api *client.Client
 )
 
 func main() {
@@ -34,7 +36,8 @@ func main() {
 	flag.Parse()
 	well.LogConfig{}.Apply()
 
-	err := client.Setup(*flagServer, &well.HTTPClient{
+	var err error
+	api, err = client.NewClient(*flagServer, &well.HTTPClient{
 		Severity: log.LvDebug,
 		Client:   &http.Client{},
 	})

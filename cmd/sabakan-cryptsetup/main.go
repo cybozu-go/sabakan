@@ -21,6 +21,8 @@ const (
 
 var (
 	flagServer *string
+
+	api *client.Client
 )
 
 func main() {
@@ -33,12 +35,12 @@ func main() {
 	flag.Parse()
 	well.LogConfig{}.Apply()
 
-	client.Setup(*flagServer, &well.HTTPClient{
+	var err error
+	api, err = client.NewClient(*flagServer, &well.HTTPClient{
 		Severity: log.LvDebug,
 		Client:   &http.Client{},
 	})
 
-	var err error
 	well.Go(func(ctx context.Context) error {
 		err = execute(ctx)
 		return nil

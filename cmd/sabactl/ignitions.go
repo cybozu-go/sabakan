@@ -6,7 +6,6 @@ import (
 	"flag"
 	"os"
 
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -41,7 +40,7 @@ func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		f.Usage()
 		return ExitUsageError
 	}
-	metadata, status := client.IgnitionsGet(ctx, f.Arg(0))
+	metadata, status := api.IgnitionsGet(ctx, f.Arg(0))
 	if status != nil {
 		return handleError(status)
 	}
@@ -68,7 +67,7 @@ func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		f.Usage()
 		return ExitUsageError
 	}
-	status := client.IgnitionsCat(ctx, f.Arg(0), f.Arg(1), os.Stdout)
+	status := api.IgnitionsCat(ctx, f.Arg(0), f.Arg(1), os.Stdout)
 	return handleError(status)
 }
 
@@ -97,7 +96,7 @@ func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomma
 		return ExitUsageError
 	}
 
-	err := client.IgnitionsSet(ctx, f.Arg(0), c.file, c.meta)
+	err := api.IgnitionsSet(ctx, f.Arg(0), c.file, c.meta)
 	return handleError(err)
 }
 
@@ -119,7 +118,7 @@ func (c ignitionsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 		f.Usage()
 		return ExitUsageError
 	}
-	status := client.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))
+	status := api.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))
 	return handleError(status)
 }
 
