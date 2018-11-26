@@ -4,6 +4,8 @@ require (
 	github.com/99designs/gqlgen v0.6.0
 	github.com/agnivade/levenshtein v1.0.1 // indirect
 	github.com/ajeddeloh/go-json v0.0.0-20170920214419-6a2fe990e083 // indirect
+	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect
+	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883 // indirect
 	github.com/coreos/etcd v3.3.9+incompatible
 	github.com/coreos/ignition v0.28.0
@@ -16,11 +18,13 @@ require (
 	github.com/onsi/ginkgo v1.6.0
 	github.com/onsi/gomega v1.4.2
 	github.com/pkg/errors v0.8.0
+	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/vektah/gqlparser v0.0.0-20181126020459-8d495d2fd057
 	github.com/vincent-petithory/dataurl v0.0.0-20160330182126-9a301d65acbb
 	go.universe.tf/netboot v0.0.0-20180828210157-69eb97d03f40
 	go4.org v0.0.0-20180809161055-417644f6feb5 // indirect
 	golang.org/x/crypto v0.0.0-20181009213950-7c1a557ab941
+	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/yaml.v2 v2.2.1
 )

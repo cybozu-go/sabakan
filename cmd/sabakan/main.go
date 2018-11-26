@@ -20,7 +20,7 @@ import (
 	"github.com/cybozu-go/sabakan/web"
 	"github.com/cybozu-go/well"
 	"go.universe.tf/netboot/dhcp4"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -121,12 +121,7 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
-	webServer := web.Server{
-		Model:          model,
-		IPXEFirmware:   cfg.IPXEPath,
-		MyURL:          advertiseURL,
-		AllowedRemotes: allowedIPs,
-	}
+	webServer := web.NewServer(model, cfg.IPXEPath, advertiseURL, allowedIPs)
 	s := &well.HTTPServer{
 		Server: &http.Server{
 			Addr:    cfg.ListenHTTP,
@@ -142,6 +137,8 @@ func main() {
 		log.ErrorExit(err)
 	}
 }
+
+
 
 func parseAllowIPs(ips []string) ([]*net.IPNet, error) {
 	nets := make([]*net.IPNet, len(ips))

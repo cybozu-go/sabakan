@@ -20,14 +20,10 @@ const (
 
 var (
 	hostnameAtStartup string
-	graphQL           http.HandlerFunc
-	playground        http.HandlerFunc
 )
 
 func init() {
 	hostnameAtStartup, _ = os.Hostname()
-	graphQL = handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}}))
-	playground = handler.Playground("GraphQL playground", "/graphql")
 }
 
 // Server is the sabakan server.
@@ -36,6 +32,26 @@ type Server struct {
 	MyURL          *url.URL
 	IPXEFirmware   string
 	AllowedRemotes []*net.IPNet
+
+	graphQL    http.HandlerFunc
+	playground http.HandlerFunc
+}
+
+// NewServer constructs Server instance
+func NewServer(model sabakan.Model, ipxePath string, advertiseURL *url.URL, allowedIPs []*net.IPNet) *Server {
+	graphQL := handler.GraphQL(gql.NewExecutableSchema(
+		gql.Config{Resolvers: &gql.Resolver{
+			Model: model,
+		}}))
+	playground := handler.Playground("GraphQL playground", "/graphql")
+	return &Server{
+		Model:          model,
+		IPXEFirmware:   ipxePath,
+		MyURL:          advertiseURL,
+		AllowedRemotes: allowedIPs,
+		graphQL:        graphQL,
+		playground:     playground,
+	}
 }
 
 // Handler implements http.Handler
@@ -46,12 +62,12 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Path == "/graphql" {
-		graphQL.ServeHTTP(w, r)
+		s.graphQL.ServeHTTP(w, r)
 		return
 	}
 	// playground for GraphQL API
-	if false && r.URL.Path == "/playground" {
-		playground.ServeHTTP(w, r)
+	if r.URL.Path == "/playground" {
+		s.playground.ServeHTTP(w, r)
 		return
 	}
 
