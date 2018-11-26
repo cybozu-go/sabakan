@@ -9,11 +9,11 @@ import (
 )
 
 func matchMachine(m *sabakan.Machine, h, nh *MachineParams, now time.Time) bool {
-	if !containsAllLabels(h.Labels, m.Spec.Labels) {
+	if !containsAllLabels(h, m.Spec.Labels) {
 		fmt.Println("t1")
 		return false
 	}
-	if containsAnyLabel(nh.Labels, m.Spec.Labels) {
+	if containsAnyLabel(nh, m.Spec.Labels) {
 		fmt.Println("t2")
 		return false
 	}
@@ -62,8 +62,11 @@ func matchMachine(m *sabakan.Machine, h, nh *MachineParams, now time.Time) bool 
 	return true
 }
 
-func containsAllLabels(inputs []LabelInput, labels map[string]string) bool {
-	for _, l := range inputs {
+func containsAllLabels(h *MachineParams, labels map[string]string) bool {
+	if h == nil {
+		return true
+	}
+	for _, l := range h.Labels {
 		v, ok := labels[l.Name]
 		if !ok {
 			return false
@@ -75,8 +78,11 @@ func containsAllLabels(inputs []LabelInput, labels map[string]string) bool {
 	return true
 }
 
-func containsAnyLabel(inputs []LabelInput, labels map[string]string) bool {
-	for _, l := range inputs {
+func containsAnyLabel(h *MachineParams, labels map[string]string) bool {
+	if h == nil {
+		return false
+	}
+	for _, l := range h.Labels {
 		v, ok := labels[l.Name]
 		if !ok {
 			continue

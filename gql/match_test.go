@@ -302,6 +302,16 @@ func TestMatchMachine(t *testing.T) {
 			now:    now,
 			expect: false,
 		},
+		{
+			name: "nil-having",
+			machine: &sabakan.Machine{
+				Spec:   sabakan.MachineSpec{},
+				Status: sabakan.MachineStatus{},
+			},
+			notHaving: &MachineParams{},
+			now:       now,
+			expect:    true,
+		},
 	}
 
 	for _, c := range testCases {

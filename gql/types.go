@@ -1,10 +1,12 @@
 package gql
 
 import (
-	fmt "fmt"
-	io "io"
+	"fmt"
+	"io"
 	"net"
 	"time"
+
+	"github.com/99designs/gqlgen/graphql"
 )
 
 // IPAddress represents "IPAddress" GraphQL custom scalar.
@@ -12,14 +14,14 @@ type IPAddress net.IP
 
 // UnmarshalGQL implements graphql.Marshaler interface.
 func (a *IPAddress) UnmarshalGQL(v interface{}) error {
-	s, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("invalid IPAddress: %T, %v", v, v)
+	str, err := graphql.UnmarshalString(v)
+	if err != nil {
+		return fmt.Errorf("invalid IPAddress: %v, %v", v, err)
 	}
 
-	ip := net.ParseIP(s)
+	ip := net.ParseIP(str)
 	if ip == nil {
-		return fmt.Errorf("invalid IPAddress: %s", s)
+		return fmt.Errorf("invalid IPAddress: %s", str)
 	}
 
 	*a = IPAddress(ip)
@@ -28,7 +30,7 @@ func (a *IPAddress) UnmarshalGQL(v interface{}) error {
 
 // MarshalGQL implements graphql.Marshaler interface.
 func (a IPAddress) MarshalGQL(w io.Writer) {
-	io.WriteString(w, net.IP(a).String())
+	graphql.MarshalString(net.IP(a).String()).MarshalGQL(w)
 }
 
 // DateTime represents "DateTime" GraphQL custom scalar.
@@ -36,14 +38,9 @@ type DateTime time.Time
 
 // UnmarshalGQL implements graphql.Marshaler interface.
 func (dt *DateTime) UnmarshalGQL(v interface{}) error {
-	s, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("invalid DateTime: %T, %v", v, v)
-	}
-
-	t, err := time.Parse(time.RFC3339Nano, s)
+	t, err := graphql.UnmarshalTime(v)
 	if err != nil {
-		return fmt.Errorf("invalid DateTime: %s, %v", s, err)
+		return fmt.Errorf("invalid DateTime: %v, %v", v, err)
 	}
 
 	*dt = DateTime(t)
@@ -52,5 +49,5 @@ func (dt *DateTime) UnmarshalGQL(v interface{}) error {
 
 // MarshalGQL implements graphql.Marshaler interface.
 func (dt DateTime) MarshalGQL(w io.Writer) {
-	io.WriteString(w, time.Time(dt).Format(time.RFC3339Nano))
+	graphql.MarshalTime(time.Time(dt)).MarshalGQL(w)
 }
