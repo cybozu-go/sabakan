@@ -1,0 +1,24 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema: schema.graphql
+exec:
+  filename: generated.go
+model:
+  filename: models_gen.go
+resolver:
+  filename: resolver.go
+  type: Resolver
+models:
+  Machine:
+    model: github.com/cybozu-go/sabakan.Machine
+  BMC:
+    model: github.com/cybozu-go/sabakan.MachineBMC
+  MachineStatus:
+    model: github.com/cybozu-go/sabakan.MachineStatus
+  IPAddress:
+    model: github.com/cybozu-go/sabakan/gql.IPAddress
+  DateTime:
+    model: github.com/cybozu-go/sabakan/gql.DateTime

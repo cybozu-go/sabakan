@@ -32,5 +32,6 @@ type config struct {
 	DataDir      string           `yaml:"data-dir"`
 	AdvertiseURL string           `yaml:"advertise-url"`
 	AllowIPs     []string         `yaml:"allow-ips"`
+	Playground   bool             `yaml:"enable-playground"`
 	Etcd         *etcdutil.Config `yaml:"etcd"`
 }

@@ -8,7 +8,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/99designs/gqlgen/handler"
 	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/gql"
 )
 
 const (
@@ -30,12 +32,45 @@ type Server struct {
 	MyURL          *url.URL
 	IPXEFirmware   string
 	AllowedRemotes []*net.IPNet
+
+	graphQL    http.HandlerFunc
+	playground http.HandlerFunc
+}
+
+// NewServer constructs Server instance
+func NewServer(model sabakan.Model, ipxePath string, advertiseURL *url.URL, allowedIPs []*net.IPNet, playground bool) *Server {
+	graphQL := handler.GraphQL(gql.NewExecutableSchema(
+		gql.Config{Resolvers: &gql.Resolver{
+			Model: model,
+		}}))
+	s := &Server{
+		Model:          model,
+		IPXEFirmware:   ipxePath,
+		MyURL:          advertiseURL,
+		AllowedRemotes: allowedIPs,
+		graphQL:        graphQL,
+	}
+
+	if playground {
+		s.playground = handler.Playground("GraphQL playground", "/graphql")
+	}
+	return s
 }
 
 // Handler implements http.Handler
 func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/v1/") {
 		s.handleAPIV1(w, r)
+		return
+	}
+
+	if r.URL.Path == "/graphql" {
+		s.graphQL.ServeHTTP(w, r)
+		return
+	}
+
+	if r.URL.Path == "/playground" && s.playground != nil {
+		s.playground.ServeHTTP(w, r)
 		return
 	}
 

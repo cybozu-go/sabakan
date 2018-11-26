@@ -18,9 +18,5 @@ func newTestServerWithURL(m sabakan.Model, u *url.URL) *Server {
 	if err != nil {
 		panic(err)
 	}
-	return &Server{
-		Model:          m,
-		AllowedRemotes: []*net.IPNet{ipnet},
-		MyURL:          u,
-	}
+	return NewServer(m, "", u, []*net.IPNet{ipnet}, false)
 }
