@@ -29,19 +29,27 @@ Sabakan defines following machine states:
 * **Healthy**: Machines that can run applications
 * **Unhealthy**: Machines having problems to be repaired
 * **Unreachable**: Machines that cannot be accessed
-* **Updating**: Machines to be updating 
+* **Updating**: Machines to be updating
 * **Retiring**: Machines to be retired/repaired
 * **Retired**: Machines whose disk encryption keys were deleted
 
+### Role of administrators
+
+Transition to **Retiring** need to be done manually by admins.
+
+Similarly, admins are responsible for transition from **Retired** to **Uninitialized**.
+
 ### Role of external controllers
 
-External controllers are expected to:
+External controllers are responsible to:
 
-* Prepare **Uninitialized** machines to (re)join to application clusters.
+* Prepare **Uninitialized** machines to become **Healthy**.
 * Allocate **Healthy** machines to applications like Kubernetes or Ceph.
-* Reboot the **Updating** machines, Machines will be **Uninitialized** after reboot.
-* Drain **Unhealthy**, **Unreachable** and **Retiring** machines from applications.
-* Remove disk encryption keys of **Retiring** machines after drain.
+* Transition to **Updating** if some components in a machine need to be updated.
+* Reboot **Updating** machines; machines become **Uninitialized** after reboot.
+* Remove **Retiring** and **Retired** machines from applications.
+* Transition from **Retiring** to **Retired** after a certain period of time.
+* Turn off power of **Retired** machines.
 
 ### Transition constraints
 
