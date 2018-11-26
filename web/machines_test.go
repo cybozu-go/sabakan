@@ -355,8 +355,74 @@ func testMachinesDelete(t *testing.T) {
 	}
 }
 
+func testMachinesGraphQL(t *testing.T) {
+	m := mock.NewModel()
+	handler := NewServer(m, "", nil, nil, false)
+
+	m.Machine.Register(context.Background(), []*sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{
+			Serial: "1234abcd",
+			Labels: map[string]string{
+				"product":    "R630",
+				"datacenter": "ty3",
+			},
+			Rack: 1,
+			Role: "boot",
+			BMC:  sabakan.MachineBMC{Type: "iDRAC-9"},
+		}),
+		sabakan.NewMachine(sabakan.MachineSpec{
+			Serial: "5678abcd",
+			Labels: map[string]string{
+				"product":    "R740",
+				"datacenter": "ty3",
+			},
+			Rack: 1,
+			Role: "worker",
+			BMC:  sabakan.MachineBMC{Type: "iDRAC-9"},
+		}),
+		sabakan.NewMachine(sabakan.MachineSpec{
+			Serial: "1234efgh",
+			Labels: map[string]string{
+				"product":    "R630",
+				"datacenter": "ty3",
+			},
+			Rack: 2,
+			Role: "boot",
+			BMC:  sabakan.MachineBMC{Type: "IPMI-2.0"},
+		}),
+	})
+
+	v := url.Values{}
+	v.Set("query", `{searchMachines {serial}}`)
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/graphql?"+v.Encode(), nil)
+	handler.ServeHTTP(w, r)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Error("wrong status code:", resp.StatusCode)
+	}
+
+	var gqlResponse struct {
+		Errors []interface{} `json:"errors"`
+		Data   struct {
+			SearchMachines []interface{} `json:"searchMachines"`
+		} `json:"data"`
+	}
+	err := json.NewDecoder(resp.Body).Decode(&gqlResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+
+	if len(gqlResponse.Data.SearchMachines) != 3 {
+		t.Error(`len(gqlResponse.Data.SearchMachines) != 3`, gqlResponse)
+	}
+}
+
 func TestMachines(t *testing.T) {
 	t.Run("Get", testMachinesGet)
 	t.Run("Post", testMachinesPost)
 	t.Run("Delete", testMachinesDelete)
+	t.Run("GraphQL", testMachinesGraphQL)
 }

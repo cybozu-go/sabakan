@@ -1,7 +1,6 @@
 package gql
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -10,51 +9,41 @@ import (
 
 func matchMachine(m *sabakan.Machine, h, nh *MachineParams, now time.Time) bool {
 	if !containsAllLabels(h, m.Spec.Labels) {
-		fmt.Println("t1")
 		return false
 	}
 	if containsAnyLabel(nh, m.Spec.Labels) {
-		fmt.Println("t2")
 		return false
 	}
 
-	if len(h.Racks) > 0 && !containsRack(h.Racks, int(m.Spec.Rack)) {
-		fmt.Println("t3")
+	if !containsRack(h, int(m.Spec.Rack), true) {
 		return false
 	}
-	if containsRack(nh.Racks, int(m.Spec.Rack)) {
-		fmt.Println("t4")
-		return false
-	}
-
-	if len(h.Roles) > 0 && !containsRole(h.Roles, m.Spec.Role) {
-		fmt.Println("t5")
-		return false
-	}
-	if containsRole(nh.Roles, m.Spec.Role) {
-		fmt.Println("t6")
+	if containsRack(nh, int(m.Spec.Rack), false) {
 		return false
 	}
 
-	if len(h.States) > 0 && !containsState(h.States, m.Status.State) {
-		fmt.Println("t7")
+	if !containsRole(h, m.Spec.Role, true) {
 		return false
 	}
-	if containsState(nh.States, m.Status.State) {
-		fmt.Println("t8")
+	if containsRole(nh, m.Spec.Role, false) {
+		return false
+	}
+
+	if !containsState(h, m.Status.State, true) {
+		return false
+	}
+	if containsState(nh, m.Status.State, false) {
 		return false
 	}
 
 	days := int(m.Spec.RetireDate.Sub(now).Hours() / 24)
-	if h.MinDaysBeforeRetire != nil {
+	if h != nil && h.MinDaysBeforeRetire != nil {
 		if *h.MinDaysBeforeRetire > days {
-			fmt.Println("t9")
 			return false
 		}
 	}
-	if nh.MinDaysBeforeRetire != nil {
+	if nh != nil && nh.MinDaysBeforeRetire != nil {
 		if *nh.MinDaysBeforeRetire <= days {
-			fmt.Println("t10")
 			return false
 		}
 	}
@@ -94,8 +83,11 @@ func containsAnyLabel(h *MachineParams, labels map[string]string) bool {
 	return false
 }
 
-func containsRack(racks []int, target int) bool {
-	for _, rack := range racks {
+func containsRack(h *MachineParams, target int, base bool) bool {
+	if h == nil || len(h.Racks) == 0 {
+		return base
+	}
+	for _, rack := range h.Racks {
 		if rack == target {
 			return true
 		}
@@ -103,8 +95,11 @@ func containsRack(racks []int, target int) bool {
 	return false
 }
 
-func containsRole(roles []string, target string) bool {
-	for _, role := range roles {
+func containsRole(h *MachineParams, target string, base bool) bool {
+	if h == nil || len(h.Roles) == 0 {
+		return base
+	}
+	for _, role := range h.Roles {
 		if role == target {
 			return true
 		}
@@ -112,8 +107,12 @@ func containsRole(roles []string, target string) bool {
 	return false
 }
 
-func containsState(states []MachineState, target sabakan.MachineState) bool {
-	for _, state := range states {
+func containsState(h *MachineParams, target sabakan.MachineState, base bool) bool {
+	if h == nil || len(h.States) == 0 {
+		return base
+	}
+
+	for _, state := range h.States {
 		if state.String() == strings.ToUpper(target.String()) {
 			return true
 		}
