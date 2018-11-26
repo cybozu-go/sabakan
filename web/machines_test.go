@@ -393,7 +393,7 @@ func testMachinesGraphQL(t *testing.T) {
 	})
 
 	v := url.Values{}
-	v.Set("query", `{searchMachines {serial}}`)
+	v.Set("query", `{searchMachines { spec { serial } } }`)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/graphql?"+v.Encode(), nil)
 	handler.ServeHTTP(w, r)

@@ -26,6 +26,14 @@ input LabelInput {
 Machine represents a physical server in a datacenter rack.
 """
 type Machine {
+    spec: MachineSpec!
+    status: MachineStatus!
+}
+
+"""
+MachineSpec represents specifications of a machine.
+"""
+type MachineSpec {
     serial: ID!
     labels: [Label!]
     rack: Int!
@@ -35,7 +43,6 @@ type Machine {
     registerDate: DateTime!
     retireDate: DateTime!
     bmc: BMC!
-    status: MachineStatus!
 }
 
 """

@@ -1,7 +1,5 @@
-# .gqlgen.yml example
-#
 # Refer to https://gqlgen.com/config/
-# for detailed .gqlgen.yml documentation.
+# for detailed gqlgen.yml documentation.
 
 schema: schema.graphql
 exec:
@@ -14,10 +12,14 @@ resolver:
 models:
   Machine:
     model: github.com/cybozu-go/sabakan.Machine
+  MachineSpec:
+    model: github.com/cybozu-go/sabakan.MachineSpec
   BMC:
     model: github.com/cybozu-go/sabakan.MachineBMC
   MachineStatus:
     model: github.com/cybozu-go/sabakan.MachineStatus
+  MachineState:
+    model: github.com/cybozu-go/sabakan/gql.MachineState
   IPAddress:
     model: github.com/cybozu-go/sabakan/gql.IPAddress
   DateTime:

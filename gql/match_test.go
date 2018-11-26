@@ -221,7 +221,7 @@ func TestMatchMachine(t *testing.T) {
 				},
 			},
 			having: &MachineParams{
-				States: []MachineState{MachineStateUninitialized},
+				States: []sabakan.MachineState{sabakan.StateUninitialized},
 			},
 			notHaving: &MachineParams{},
 			now:       now,
@@ -236,7 +236,7 @@ func TestMatchMachine(t *testing.T) {
 				},
 			},
 			having: &MachineParams{
-				States: []MachineState{MachineStateUninitialized, MachineStateHealthy},
+				States: []sabakan.MachineState{sabakan.StateUninitialized, sabakan.StateHealthy},
 			},
 			notHaving: &MachineParams{},
 			now:       now,
@@ -252,7 +252,7 @@ func TestMatchMachine(t *testing.T) {
 			},
 			having: &MachineParams{},
 			notHaving: &MachineParams{
-				States: []MachineState{MachineStateHealthy},
+				States: []sabakan.MachineState{sabakan.StateHealthy},
 			},
 			now:    now,
 			expect: false,

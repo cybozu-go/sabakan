@@ -1,7 +1,6 @@
 package gql
 
 import (
-	"strings"
 	"time"
 
 	"github.com/cybozu-go/sabakan"
@@ -113,7 +112,7 @@ func containsState(h *MachineParams, target sabakan.MachineState, base bool) boo
 	}
 
 	for _, state := range h.States {
-		if state.String() == strings.ToUpper(target.String()) {
+		if state == target {
 			return true
 		}
 	}
