@@ -5,11 +5,9 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"os"
 	"path"
 
 	"github.com/cybozu-go/sabakan"
-	"github.com/pkg/errors"
 )
 
 // ImagesIndex get index of images.
@@ -23,8 +21,8 @@ func ImagesIndex(ctx context.Context, os string) (sabakan.ImageIndex, error) {
 }
 
 // ImagesUpload upload image file.
-func ImagesUpload(ctx context.Context, os, id, kernel, initrd string) error {
-	reader, err := createImageArchive(kernel, initrd)
+func ImagesUpload(ctx context.Context, os, id string, kernel io.Reader, kernelSize int64, initrd io.Reader, initrdSize int64) error {
+	reader, err := createImageArchive(kernel, kernelSize, initrd, initrdSize)
 	if err != nil {
 		return err
 	}
@@ -32,45 +30,33 @@ func ImagesUpload(ctx context.Context, os, id, kernel, initrd string) error {
 	return client.sendRequest(ctx, "PUT", path.Join("images", os, id), reader)
 }
 
-func addFileToTar(tw *tar.Writer, name, p string) error {
-	fi, err := os.Stat(p)
-	if err != nil {
-		return err
-	}
-	f, err := os.Open(p)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
+func addFileToTar(tw *tar.Writer, name string, src io.Reader, size int64) error {
 	hdr := &tar.Header{
 		Name: name,
 		Mode: 0644,
-		Size: fi.Size(),
+		Size: size,
 	}
-	err = tw.WriteHeader(hdr)
+	err := tw.WriteHeader(hdr)
 	if err != nil {
 		return err
 	}
-	n, err := io.Copy(tw, f)
+	_, err = io.CopyN(tw, src, size)
 	if err != nil {
 		return err
-	}
-	if n != fi.Size() {
-		return errors.New("written size mismatch")
 	}
 	return nil
 }
 
-func createImageArchive(kernelPath, initrdPath string) (io.Reader, error) {
+func createImageArchive(kernel io.Reader, kernelSize int64, initrd io.Reader, initrdSize int64) (io.Reader, error) {
 	buf := new(bytes.Buffer)
 	tw := tar.NewWriter(buf)
 	defer tw.Close()
 
-	err := addFileToTar(tw, sabakan.ImageKernelFilename, kernelPath)
+	err := addFileToTar(tw, sabakan.ImageKernelFilename, kernel, kernelSize)
 	if err != nil {
 		return nil, err
 	}
-	err = addFileToTar(tw, sabakan.ImageInitrdFilename, initrdPath)
+	err = addFileToTar(tw, sabakan.ImageInitrdFilename, initrd, initrdSize)
 	if err != nil {
 		return nil, err
 	}

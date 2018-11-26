@@ -74,7 +74,27 @@ func (c imagesUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		return ExitUsageError
 	}
 
-	err := client.ImagesUpload(ctx, c.os, f.Arg(0), f.Arg(1), f.Arg(2))
+	id := f.Arg(0)
+	kernelInfo, err := os.Stat(f.Arg(1))
+	if err != nil {
+		return handleError(err)
+	}
+	initrdInfo, err := os.Stat(f.Arg(2))
+	if err != nil {
+		return handleError(err)
+	}
+	kernel, err := os.Open(f.Arg(1))
+	if err != nil {
+		return handleError(err)
+	}
+	defer kernel.Close()
+	initrd, err := os.Open(f.Arg(2))
+	if err != nil {
+		return handleError(err)
+	}
+	defer initrd.Close()
+
+	err = client.ImagesUpload(ctx, c.os, id, kernel, kernelInfo.Size(), initrd, initrdInfo.Size())
 	return handleError(err)
 }
 
