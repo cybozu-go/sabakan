@@ -1,6 +1,8 @@
 REST API
 ========
 
+For GraphQL API, see [graphql.md](graphql.md).
+
 * [PUT /api/v1/config/ipam](#putipam)
 * [GET /api/v1/config/ipam](#getipam)
 * [PUT /api/v1/config/dhcp](#putdhcp)
