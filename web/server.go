@@ -8,7 +8,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/99designs/gqlgen/handler"
 	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/gql"
 )
 
 const (
@@ -18,10 +20,14 @@ const (
 
 var (
 	hostnameAtStartup string
+	graphQL           http.HandlerFunc
+	playground        http.HandlerFunc
 )
 
 func init() {
 	hostnameAtStartup, _ = os.Hostname()
+	graphQL = handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}}))
+	playground = handler.Playground("GraphQL playground", "/graphql")
 }
 
 // Server is the sabakan server.
@@ -36,6 +42,16 @@ type Server struct {
 func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/v1/") {
 		s.handleAPIV1(w, r)
+		return
+	}
+
+	if r.URL.Path == "/graphql" {
+		graphQL.ServeHTTP(w, r)
+		return
+	}
+	// playground for GraphQL API
+	if false && r.URL.Path == "/playground" {
+		playground.ServeHTTP(w, r)
 		return
 	}
 
