@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- GraphQL API and playground (#117)
+- `spec.register-date` and `spec.retire-date` fields to `Machine` (#116).
+- REST API to edit `retire-date` (#116).
+- `status.duration` field to `Machine` (#116).
+
+### Changed
+- Update etcdutil to 1.3.1.
+
 ## [0.24] - 2018-10-25
 
 ### Changed
