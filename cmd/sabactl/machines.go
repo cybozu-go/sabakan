@@ -75,7 +75,7 @@ func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	e.Encode(machines)
-	return client.ExitSuccess
+	return ExitSuccess
 }
 
 func machinesGetCommand() subcommands.Command {
@@ -98,7 +98,7 @@ func (r *machinesCreateCmd) SetFlags(f *flag.FlagSet) {
 func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if r.file == "" {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 	file, err := os.Open(r.file)
 	if err != nil {
@@ -132,7 +132,7 @@ func (r machinesRemoveCmd) SetFlags(f *flag.FlagSet) {}
 func (r machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	errorStatus := client.MachinesRemove(ctx, f.Arg(0))
@@ -155,7 +155,7 @@ func (r machinesSetStateCmd) SetFlags(f *flag.FlagSet) {}
 func (r machinesSetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	serial := f.Arg(0)
@@ -190,7 +190,7 @@ func (r machinesGetStateCmd) SetFlags(f *flag.FlagSet) {}
 func (r machinesGetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	state, errorStatus := client.MachinesGetState(ctx, f.Arg(0))
@@ -217,7 +217,7 @@ func (r machinesSetRetireDateCmd) SetFlags(f *flag.FlagSet) {}
 func (r machinesSetRetireDateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	serial := f.Arg(0)

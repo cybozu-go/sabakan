@@ -43,7 +43,7 @@ func (r ipamGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.Ex
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	e.Encode(conf)
-	return client.ExitSuccess
+	return ExitSuccess
 }
 
 func ipamGetCommand() subcommands.Command {
@@ -66,7 +66,7 @@ func (r *ipamSetCmd) SetFlags(f *flag.FlagSet) {
 func (r *ipamSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if r.file == "" {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 	file, err := os.Open(r.file)
 	if err != nil {

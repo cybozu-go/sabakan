@@ -11,6 +11,25 @@ import (
 	"github.com/google/subcommands"
 )
 
+const (
+	// ExitSuccess represents no error.
+	ExitSuccess subcommands.ExitStatus = subcommands.ExitSuccess
+	// ExitFailure represents general error.
+	ExitFailure = subcommands.ExitFailure
+	// ExitUsageError represents bad usage of command.
+	ExitUsageError = subcommands.ExitUsageError
+	// ExitInvalidParams represents invalid input parameters for command.
+	ExitInvalidParams = 3
+	// ExitResponse4xx represents HTTP status 4xx.
+	ExitResponse4xx = 4
+	// ExitResponse5xx represents HTTP status 5xx.
+	ExitResponse5xx = 5
+	// ExitNotFound represents HTTP status 404.
+	ExitNotFound = 14
+	// ExitConflicted represents HTTP status 409.
+	ExitConflicted = 19
+)
+
 // sub is the interface for newCommand
 type sub interface {
 	SetFlags(f *flag.FlagSet)
@@ -47,16 +66,22 @@ func handleError(err error) subcommands.ExitStatus {
 		return subcommands.ExitSuccess
 	}
 
-	ret := subcommands.ExitFailure
-
-	if status, ok := err.(*client.Status); ok {
-		if status == nil {
-			return subcommands.ExitSuccess
-		}
-		ret = status.Code()
+	var code subcommands.ExitStatus
+	switch {
+	case client.IsNotFound(err):
+		code = ExitNotFound
+	case client.IsConflict(err):
+		code = ExitConflicted
+	case client.Is4xx(err):
+		code = ExitResponse4xx
+	case client.Is5xx(err):
+		code = ExitResponse5xx
+	default:
+		code = subcommands.ExitFailure
 	}
+
 	fmt.Fprintf(os.Stderr, "\nError: %v\n", err)
-	return ret
+	return code
 }
 
 // newCommander creates a subcommands.Commander for nested sub commands.

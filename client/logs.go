@@ -7,7 +7,7 @@ import (
 )
 
 // LogsGet retrieves audit logs.
-func LogsGet(ctx context.Context, since, until time.Time, w io.Writer) *Status {
+func LogsGet(ctx context.Context, since, until time.Time, w io.Writer) error {
 	req := client.NewRequest(ctx, "GET", "logs", nil)
 	q := req.URL.Query()
 	if !since.IsZero() {
@@ -26,7 +26,7 @@ func LogsGet(ctx context.Context, since, until time.Time, w io.Writer) *Status {
 
 	_, err := io.Copy(w, resp.Body)
 	if err != nil {
-		return ErrorStatus(err)
+		return err
 	}
 	return nil
 }

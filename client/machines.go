@@ -11,7 +11,7 @@ import (
 )
 
 // MachinesGet get machine information from sabakan server
-func MachinesGet(ctx context.Context, params map[string]string) ([]sabakan.Machine, *Status) {
+func MachinesGet(ctx context.Context, params map[string]string) ([]sabakan.Machine, error) {
 	var machines []sabakan.Machine
 	err := client.getJSON(ctx, "machines", params, &machines)
 	if err != nil {
@@ -21,23 +21,23 @@ func MachinesGet(ctx context.Context, params map[string]string) ([]sabakan.Machi
 }
 
 // MachinesCreate create machines information to sabakan server
-func MachinesCreate(ctx context.Context, specs []*sabakan.MachineSpec) *Status {
+func MachinesCreate(ctx context.Context, specs []*sabakan.MachineSpec) error {
 	return client.sendRequestWithJSON(ctx, "POST", "machines", specs)
 }
 
 // MachinesRemove removes machine information from sabakan server
-func MachinesRemove(ctx context.Context, serial string) *Status {
+func MachinesRemove(ctx context.Context, serial string) error {
 	return client.sendRequest(ctx, "DELETE", path.Join("machines", serial), nil)
 }
 
 // MachinesSetState set the state of the machine on sabakan server
-func MachinesSetState(ctx context.Context, serial string, state string) *Status {
+func MachinesSetState(ctx context.Context, serial string, state string) error {
 	r := strings.NewReader(state)
 	return client.sendRequest(ctx, "PUT", "state/"+serial, r)
 }
 
 // MachinesGetState get the state of the machine from sabakan server
-func MachinesGetState(ctx context.Context, serial string) (sabakan.MachineState, *Status) {
+func MachinesGetState(ctx context.Context, serial string) (sabakan.MachineState, error) {
 	req := client.NewRequest(ctx, "GET", "state/"+serial, nil)
 	resp, status := client.Do(req)
 	if status != nil {
@@ -47,13 +47,13 @@ func MachinesGetState(ctx context.Context, serial string) (sabakan.MachineState,
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", ErrorStatus(err)
+		return "", err
 	}
 	return sabakan.MachineState(data), nil
 }
 
 // MachinesSetRetireDate set the retire date of the machine.
-func MachinesSetRetireDate(ctx context.Context, serial string, date time.Time) *Status {
+func MachinesSetRetireDate(ctx context.Context, serial string, date time.Time) error {
 	input := strings.NewReader(date.Format(time.RFC3339))
 	return client.sendRequest(ctx, "PUT", "retire-date/"+serial, input)
 }

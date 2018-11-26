@@ -47,14 +47,14 @@ func newIgnitionBuilder(baseDir string) *ignitionBuilder {
 func generateIgnitionYAML(fname string) (io.Reader, error) {
 	absPath, err := filepath.Abs(fname)
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 	baseDir := filepath.Dir(absPath)
 	builder := newIgnitionBuilder(baseDir)
 
 	source, err := loadSource(absPath)
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 
 	builder.ignition["ignition"] = map[string]interface{}{
@@ -62,12 +62,12 @@ func generateIgnitionYAML(fname string) (io.Reader, error) {
 	}
 	err = builder.constructIgnitionYAML(source)
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 
 	b, err := yaml.Marshal(builder.ignition)
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 
 	return bytes.NewReader(b), nil

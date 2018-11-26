@@ -39,7 +39,7 @@ func (c assetsIndexCmd) SetFlags(f *flag.FlagSet) {}
 func (c assetsIndexCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 0 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	index, errStatus := client.AssetsIndex(ctx)
@@ -69,7 +69,7 @@ func (c assetsInfoCmd) SetFlags(f *flag.FlagSet) {}
 func (c assetsInfoCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	asset, errStatus := client.AssetsInfo(ctx, f.Arg(0))
@@ -103,7 +103,7 @@ func (c *assetsUploadCmd) SetFlags(f *flag.FlagSet) {
 func (c *assetsUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	status, errStatus := client.AssetsUpload(ctx, f.Arg(0), f.Arg(1), c.meta)
@@ -134,7 +134,7 @@ func (c assetsDeleteCmd) SetFlags(f *flag.FlagSet) {
 func (c assetsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	errStatus := client.AssetsDelete(ctx, f.Arg(0))

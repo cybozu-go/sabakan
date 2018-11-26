@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"os/user"
 	"path"
 
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
 )
 
@@ -57,23 +59,34 @@ func (c *Client) NewRequest(ctx context.Context, method, p string, body io.Reade
 
 // Do calls http.Client.Do and processes errors.
 // This returns non-nil *http.Response only when the server returns 2xx status code.
-func (c *Client) Do(req *http.Request) (*http.Response, *Status) {
+func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 
-	errorStatus := ErrorHTTPStatus(resp)
-	if errorStatus != nil {
-		io.Copy(ioutil.Discard, resp.Body)
+	switch {
+	case 200 <= resp.StatusCode && resp.StatusCode < 400:
+	case 400 <= resp.StatusCode && resp.StatusCode < 600:
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
 		resp.Body.Close()
-		return nil, errorStatus
-	}
 
+		var msg map[string]interface{}
+		err = json.Unmarshal(body, &msg)
+		if err != nil {
+			return nil, &httpError{code: resp.StatusCode, reason: string(body)}
+		}
+		reason := fmt.Sprintf("%s", msg[log.FnError])
+		return nil, &httpError{code: resp.StatusCode, reason: reason}
+
+	}
 	return resp, nil
 }
 
-func (c *Client) getJSON(ctx context.Context, p string, params map[string]string, data interface{}) *Status {
+func (c *Client) getJSON(ctx context.Context, p string, params map[string]string, data interface{}) error {
 	req := c.NewRequest(ctx, "GET", p, nil)
 	q := req.URL.Query()
 	for k, v := range params {
@@ -81,57 +94,57 @@ func (c *Client) getJSON(ctx context.Context, p string, params map[string]string
 	}
 	req.URL.RawQuery = q.Encode()
 
-	resp, status := c.Do(req)
-	if status != nil {
-		return status
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
 	}
 	defer resp.Body.Close()
 
-	err := json.NewDecoder(resp.Body).Decode(data)
+	err = json.NewDecoder(resp.Body).Decode(data)
 	if err != nil {
-		return ErrorStatus(err)
+		return err
 	}
 
 	return nil
 }
 
-func (c *Client) getBytes(ctx context.Context, p string) ([]byte, *Status) {
+func (c *Client) getBytes(ctx context.Context, p string) ([]byte, error) {
 	req := c.NewRequest(ctx, "GET", p, nil)
-	resp, status := c.Do(req)
-	if status != nil {
-		return nil, status
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 	return body, nil
 }
 
-func (c *Client) sendRequestWithJSON(ctx context.Context, method, p string, data interface{}) *Status {
+func (c *Client) sendRequestWithJSON(ctx context.Context, method, p string, data interface{}) error {
 	b := new(bytes.Buffer)
 	err := json.NewEncoder(b).Encode(data)
 	if err != nil {
-		return ErrorStatus(err)
+		return err
 	}
 
 	req := c.NewRequest(ctx, method, p, b)
-	resp, status := c.Do(req)
-	if status != nil {
-		return status
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
 	}
 	resp.Body.Close()
 
 	return nil
 }
 
-func (c *Client) sendRequest(ctx context.Context, method, p string, r io.Reader) *Status {
+func (c *Client) sendRequest(ctx context.Context, method, p string, r io.Reader) error {
 	req := c.NewRequest(ctx, method, p, r)
-	resp, status := c.Do(req)
-	if status != nil {
-		return status
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
 	}
 	resp.Body.Close()
 

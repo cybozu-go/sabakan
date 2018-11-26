@@ -47,7 +47,7 @@ func (c kernelParamsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 	}
 	fmt.Println(kernelParams)
 
-	return client.ExitSuccess
+	return ExitSuccess
 }
 
 func kernelParamsGetCommand(os string) subcommands.Command {
@@ -68,7 +68,7 @@ func (c kernelParamsSetCmd) SetFlags(f *flag.FlagSet) {}
 func (c kernelParamsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	err := client.KernelParamsSet(ctx, c.os, sabakan.KernelParams(f.Arg(0)))

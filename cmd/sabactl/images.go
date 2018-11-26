@@ -50,7 +50,7 @@ func (c imagesIndexCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommand
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	e.Encode(index)
-	return client.ExitSuccess
+	return ExitSuccess
 }
 
 func imagesIndexCommand(os string) subcommands.Command {
@@ -71,7 +71,7 @@ func (c imagesUploadCmd) SetFlags(f *flag.FlagSet) {}
 func (c imagesUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if len(f.Args()) != 3 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	err := client.ImagesUpload(ctx, c.os, f.Arg(0), f.Arg(1), f.Arg(2))
@@ -96,7 +96,7 @@ func (c imagesDeleteCmd) SetFlags(f *flag.FlagSet) {}
 func (c imagesDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	err := client.ImagesDelete(ctx, c.os, f.Arg(0))
