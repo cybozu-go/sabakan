@@ -4,7 +4,6 @@ package gql
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"sort"
 	"time"
@@ -22,9 +21,9 @@ func (r *Resolver) BMC() BMCResolver {
 	return &bMCResolver{r}
 }
 
-// Machine implements ResolverRoot.
-func (r *Resolver) Machine() MachineResolver {
-	return &machineResolver{r}
+// MachineSpec implements ResolverRoot.
+func (r *Resolver) MachineSpec() MachineSpecResolver {
+	return &machineSpecResolver{r}
 }
 
 // MachineStatus implements ResolverRoot.
@@ -46,76 +45,47 @@ func (r *bMCResolver) Ipv4(ctx context.Context, obj *sabakan.MachineBMC) (IPAddr
 	return IPAddress(net.ParseIP(obj.IPv4)), nil
 }
 
-type machineResolver struct{ *Resolver }
+type machineSpecResolver struct{ *Resolver }
 
-func (r *machineResolver) Serial(ctx context.Context, obj *sabakan.Machine) (string, error) {
-	return obj.Spec.Serial, nil
-}
-func (r *machineResolver) Labels(ctx context.Context, obj *sabakan.Machine) ([]Label, error) {
-	if len(obj.Spec.Labels) == 0 {
+func (r *machineSpecResolver) Labels(ctx context.Context, obj *sabakan.MachineSpec) ([]Label, error) {
+	if len(obj.Labels) == 0 {
 		return []Label{}, nil
 	}
 
-	keys := make([]string, 0, len(obj.Spec.Labels))
-	for k := range obj.Spec.Labels {
+	keys := make([]string, 0, len(obj.Labels))
+	for k := range obj.Labels {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	labels := make([]Label, 0, len(obj.Spec.Labels))
+	labels := make([]Label, 0, len(obj.Labels))
 	for _, k := range keys {
-		labels = append(labels, Label{Name: k, Value: obj.Spec.Labels[k]})
+		labels = append(labels, Label{Name: k, Value: obj.Labels[k]})
 	}
 	return labels, nil
 }
-func (r *machineResolver) Rack(ctx context.Context, obj *sabakan.Machine) (int, error) {
-	return int(obj.Spec.Rack), nil
+func (r *machineSpecResolver) Rack(ctx context.Context, obj *sabakan.MachineSpec) (int, error) {
+	return int(obj.Rack), nil
 }
-func (r *machineResolver) IndexInRack(ctx context.Context, obj *sabakan.Machine) (int, error) {
-	return int(obj.Spec.IndexInRack), nil
+func (r *machineSpecResolver) IndexInRack(ctx context.Context, obj *sabakan.MachineSpec) (int, error) {
+	return int(obj.IndexInRack), nil
 }
-func (r *machineResolver) Role(ctx context.Context, obj *sabakan.Machine) (string, error) {
-	return obj.Spec.Role, nil
-}
-func (r *machineResolver) Ipv4(ctx context.Context, obj *sabakan.Machine) ([]IPAddress, error) {
-	addresses := make([]IPAddress, len(obj.Spec.IPv4))
-	for i, a := range obj.Spec.IPv4 {
+func (r *machineSpecResolver) Ipv4(ctx context.Context, obj *sabakan.MachineSpec) ([]IPAddress, error) {
+	addresses := make([]IPAddress, len(obj.IPv4))
+	for i, a := range obj.IPv4 {
 		addresses[i] = IPAddress(net.ParseIP(a))
 	}
 	return addresses, nil
 }
-func (r *machineResolver) RegisterDate(ctx context.Context, obj *sabakan.Machine) (DateTime, error) {
-	return DateTime(obj.Spec.RegisterDate), nil
+func (r *machineSpecResolver) RegisterDate(ctx context.Context, obj *sabakan.MachineSpec) (DateTime, error) {
+	return DateTime(obj.RegisterDate), nil
 }
-func (r *machineResolver) RetireDate(ctx context.Context, obj *sabakan.Machine) (DateTime, error) {
-	return DateTime(obj.Spec.RetireDate), nil
-}
-func (r *machineResolver) Bmc(ctx context.Context, obj *sabakan.Machine) (sabakan.MachineBMC, error) {
-	return obj.Spec.BMC, nil
+func (r *machineSpecResolver) RetireDate(ctx context.Context, obj *sabakan.MachineSpec) (DateTime, error) {
+	return DateTime(obj.RetireDate), nil
 }
 
 type machineStatusResolver struct{ *Resolver }
 
-func (r *machineStatusResolver) State(ctx context.Context, obj *sabakan.MachineStatus) (MachineState, error) {
-	switch obj.State {
-	case sabakan.StateUninitialized:
-		return MachineStateUninitialized, nil
-	case sabakan.StateHealthy:
-		return MachineStateHealthy, nil
-	case sabakan.StateUnhealthy:
-		return MachineStateUnhealthy, nil
-	case sabakan.StateUnreachable:
-		return MachineStateUnreachable, nil
-	case sabakan.StateUpdating:
-		return MachineStateUpdating, nil
-	case sabakan.StateRetiring:
-		return MachineStateRetiring, nil
-	case sabakan.StateRetired:
-		return MachineStateRetired, nil
-	default:
-		return "", fmt.Errorf("unknown state:%s", obj.State.String())
-	}
-}
 func (r *machineStatusResolver) Timestamp(ctx context.Context, obj *sabakan.MachineStatus) (DateTime, error) {
 	return DateTime(obj.Timestamp), nil
 }
