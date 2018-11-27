@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.27] - 2018-11-27
+
+### Changed
+- Improve GraphQL implementation (#118).
+- Improve client package (#119).
+
 ## [0.26] - 2018-11-27
 
 ### Changed
@@ -84,7 +90,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix a bug that leaves files of deleted OS images (#86).
 
 [placemat]: https://github.com/cybozu-go/placemat
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.26...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v0.27...HEAD
+[0.27]: https://github.com/cybozu-go/sabakan/compare/v0.26...v0.27
 [0.26]: https://github.com/cybozu-go/sabakan/compare/v0.25...v0.26
 [0.25]: https://github.com/cybozu-go/sabakan/compare/v0.24...v0.25
 [0.24]: https://github.com/cybozu-go/sabakan/compare/v0.23...v0.24
