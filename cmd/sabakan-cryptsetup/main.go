@@ -36,10 +36,7 @@ func main() {
 	well.LogConfig{}.Apply()
 
 	var err error
-	api, err = client.NewClient(*flagServer, &well.HTTPClient{
-		Severity: log.LvDebug,
-		Client:   &http.Client{},
-	})
+	api, err = client.NewClient(*flagServer, &http.Client{})
 
 	well.Go(func(ctx context.Context) error {
 		err = execute(ctx)

@@ -37,10 +37,7 @@ func main() {
 	well.LogConfig{}.Apply()
 
 	var err error
-	api, err = client.NewClient(*flagServer, &well.HTTPClient{
-		Severity: log.LvDebug,
-		Client:   &http.Client{},
-	})
+	api, err = client.NewClient(*flagServer, &http.Client{})
 	if err != nil {
 		log.ErrorExit(err)
 	}

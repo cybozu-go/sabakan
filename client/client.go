@@ -13,18 +13,17 @@ import (
 	"path"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/well"
 )
 
 // Client is a sabakan client
 type Client struct {
 	url      *url.URL
-	http     *well.HTTPClient
+	http     *http.Client
 	username string
 }
 
 // NewClient returns new client
-func NewClient(endpoint string, http *well.HTTPClient) (*Client, error) {
+func NewClient(endpoint string, http *http.Client) (*Client, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, err
