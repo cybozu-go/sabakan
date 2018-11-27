@@ -72,7 +72,7 @@ func (c *Client) AssetsUpload(ctx context.Context, name, filename string, meta m
 		return nil, err
 	}
 
-	req := c.NewRequest(ctx, "PUT", "assets/"+name, file)
+	req := c.newRequest(ctx, "PUT", "assets/"+name, file)
 	req.ContentLength = size
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Expect", "100-continue")
@@ -80,7 +80,7 @@ func (c *Client) AssetsUpload(ctx context.Context, name, filename string, meta m
 		req.Header.Set(fmt.Sprintf("X-Sabakan-Asset-Options-%s", k), v)
 	}
 
-	resp, status := c.Do(req)
+	resp, status := c.do(req)
 	if status != nil {
 		return nil, status
 	}

@@ -19,8 +19,8 @@ func (c *Client) IgnitionsGet(ctx context.Context, role string) ([]map[string]st
 
 // IgnitionsCat gets an ignition template for the role an id
 func (c *Client) IgnitionsCat(ctx context.Context, role, id string, w io.Writer) error {
-	req := c.NewRequest(ctx, "GET", path.Join("ignitions", role, id), nil)
-	resp, status := c.Do(req)
+	req := c.newRequest(ctx, "GET", path.Join("ignitions", role, id), nil)
+	resp, status := c.do(req)
 	if status != nil {
 		return status
 	}
@@ -39,11 +39,11 @@ func (c *Client) IgnitionsSet(ctx context.Context, role string, fname string, me
 	if err != nil {
 		return err
 	}
-	req := c.NewRequest(ctx, "POST", "ignitions/"+role, tmpl)
+	req := c.newRequest(ctx, "POST", "ignitions/"+role, tmpl)
 	for k, v := range meta {
 		req.Header.Set(fmt.Sprintf("X-Sabakan-Ignitions-%s", k), v)
 	}
-	resp, status := c.Do(req)
+	resp, status := c.do(req)
 	if status != nil {
 		return status
 	}

@@ -44,9 +44,9 @@ func NewClient(endpoint string, http *well.HTTPClient) (*Client, error) {
 	return client, nil
 }
 
-// NewRequest creates a new http.Request whose context is set to ctx.
+// newRequest creates a new http.Request whose context is set to ctx.
 // path will be prefixed by "/api/v1".
-func (c *Client) NewRequest(ctx context.Context, method, p string, body io.Reader) *http.Request {
+func (c *Client) newRequest(ctx context.Context, method, p string, body io.Reader) *http.Request {
 	u := *c.url
 	u.Path = path.Join(u.Path, "/api/v1", p)
 	r, _ := http.NewRequest(method, u.String(), body)
@@ -54,9 +54,9 @@ func (c *Client) NewRequest(ctx context.Context, method, p string, body io.Reade
 	return r.WithContext(ctx)
 }
 
-// Do calls http.Client.Do and processes errors.
+// do calls http.Client.Do and processes errors.
 // This returns non-nil *http.Response only when the server returns 2xx status code.
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
+func (c *Client) do(req *http.Request) (*http.Response, error) {
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return nil, err
@@ -84,14 +84,14 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (c *Client) getJSON(ctx context.Context, p string, params map[string]string, data interface{}) error {
-	req := c.NewRequest(ctx, "GET", p, nil)
+	req := c.newRequest(ctx, "GET", p, nil)
 	q := req.URL.Query()
 	for k, v := range params {
 		q.Add(k, v)
 	}
 	req.URL.RawQuery = q.Encode()
 
-	resp, err := c.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return err
 	}
@@ -106,8 +106,8 @@ func (c *Client) getJSON(ctx context.Context, p string, params map[string]string
 }
 
 func (c *Client) getBytes(ctx context.Context, p string) ([]byte, error) {
-	req := c.NewRequest(ctx, "GET", p, nil)
-	resp, err := c.Do(req)
+	req := c.newRequest(ctx, "GET", p, nil)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -127,8 +127,8 @@ func (c *Client) sendRequestWithJSON(ctx context.Context, method, p string, data
 		return err
 	}
 
-	req := c.NewRequest(ctx, method, p, b)
-	resp, err := c.Do(req)
+	req := c.newRequest(ctx, method, p, b)
+	resp, err := c.do(req)
 	if err != nil {
 		return err
 	}
@@ -138,8 +138,8 @@ func (c *Client) sendRequestWithJSON(ctx context.Context, method, p string, data
 }
 
 func (c *Client) sendRequest(ctx context.Context, method, p string, r io.Reader) error {
-	req := c.NewRequest(ctx, method, p, r)
-	resp, err := c.Do(req)
+	req := c.newRequest(ctx, method, p, r)
+	resp, err := c.do(req)
 	if err != nil {
 		return err
 	}

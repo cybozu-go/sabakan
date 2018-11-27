@@ -38,8 +38,8 @@ func (c *Client) MachinesSetState(ctx context.Context, serial string, state stri
 
 // MachinesGetState get the state of the machine from sabakan server
 func (c *Client) MachinesGetState(ctx context.Context, serial string) (sabakan.MachineState, error) {
-	req := c.NewRequest(ctx, "GET", "state/"+serial, nil)
-	resp, status := c.Do(req)
+	req := c.newRequest(ctx, "GET", "state/"+serial, nil)
+	resp, status := c.do(req)
 	if status != nil {
 		return "", status
 	}
