@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -68,14 +67,14 @@ func (r *machinesGetCmd) getParams() map[string]string {
 }
 
 func (r *machinesGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	machines, err := client.MachinesGet(ctx, r.getParams())
+	machines, err := api.MachinesGet(ctx, r.getParams())
 	if err != nil {
 		return handleError(err)
 	}
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	e.Encode(machines)
-	return client.ExitSuccess
+	return ExitSuccess
 }
 
 func machinesGetCommand() subcommands.Command {
@@ -98,7 +97,7 @@ func (r *machinesCreateCmd) SetFlags(f *flag.FlagSet) {
 func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if r.file == "" {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 	file, err := os.Open(r.file)
 	if err != nil {
@@ -112,7 +111,7 @@ func (r *machinesCreateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcom
 		return handleError(err)
 	}
 
-	errorStatus := client.MachinesCreate(ctx, specs)
+	errorStatus := api.MachinesCreate(ctx, specs)
 	return handleError(errorStatus)
 }
 
@@ -132,10 +131,10 @@ func (r machinesRemoveCmd) SetFlags(f *flag.FlagSet) {}
 func (r machinesRemoveCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
-	errorStatus := client.MachinesRemove(ctx, f.Arg(0))
+	errorStatus := api.MachinesRemove(ctx, f.Arg(0))
 	return handleError(errorStatus)
 }
 
@@ -155,13 +154,13 @@ func (r machinesSetStateCmd) SetFlags(f *flag.FlagSet) {}
 func (r machinesSetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	serial := f.Arg(0)
 	state := strings.ToLower(f.Arg(1))
 
-	errorStatus := client.MachinesSetState(ctx, serial, state)
+	errorStatus := api.MachinesSetState(ctx, serial, state)
 	return handleError(errorStatus)
 }
 
@@ -190,10 +189,10 @@ func (r machinesGetStateCmd) SetFlags(f *flag.FlagSet) {}
 func (r machinesGetStateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
-	state, errorStatus := client.MachinesGetState(ctx, f.Arg(0))
+	state, errorStatus := api.MachinesGetState(ctx, f.Arg(0))
 	if errorStatus != nil {
 		return handleError(errorStatus)
 	}
@@ -217,7 +216,7 @@ func (r machinesSetRetireDateCmd) SetFlags(f *flag.FlagSet) {}
 func (r machinesSetRetireDateCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
 	serial := f.Arg(0)
@@ -226,7 +225,7 @@ func (r machinesSetRetireDateCmd) Execute(ctx context.Context, f *flag.FlagSet) 
 		return handleError(err)
 	}
 
-	errorStatus := client.MachinesSetRetireDate(ctx, serial, date)
+	errorStatus := api.MachinesSetRetireDate(ctx, serial, date)
 	return handleError(errorStatus)
 }
 

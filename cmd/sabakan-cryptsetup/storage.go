@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/cybozu-go/well"
 )
 
@@ -129,20 +128,20 @@ func (s *storageDevice) idString() string {
 	return hex.EncodeToString(s.id)
 }
 
-func (s *storageDevice) fetchKey(ctx context.Context, serial string) *client.Status {
+func (s *storageDevice) fetchKey(ctx context.Context, serial string) error {
 	if s.id == nil {
-		return client.NewStatus(client.ExitNotFound, errors.New("ID not found"))
+		return errors.New("ID not found")
 	}
-	data, status := client.CryptsGet(ctx, serial, s.idString())
-	if status != nil {
-		return status
+	data, err := api.CryptsGet(ctx, serial, s.idString())
+	if err != nil {
+		return err
 	}
 	s.key = data
 	return nil
 }
 
-func (s *storageDevice) registerKey(ctx context.Context, serial string) *client.Status {
-	return client.CryptsPut(ctx, serial, s.idString(), s.key)
+func (s *storageDevice) registerKey(ctx context.Context, serial string) error {
+	return api.CryptsPut(ctx, serial, s.idString(), s.key)
 }
 
 // encrypt the disk, then set properties (d.key)

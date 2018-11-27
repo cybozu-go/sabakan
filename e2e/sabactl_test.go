@@ -12,8 +12,26 @@ import (
 	"time"
 
 	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
+)
+
+const (
+	// ExitSuccess represents no error.
+	ExitSuccess subcommands.ExitStatus = subcommands.ExitSuccess
+	// ExitFailure represents general error.
+	ExitFailure = subcommands.ExitFailure
+	// ExitUsageError represents bad usage of command.
+	ExitUsageError = subcommands.ExitUsageError
+	// ExitInvalidParams represents invalid input parameters for command.
+	ExitInvalidParams = 3
+	// ExitResponse4xx represents HTTP status 4xx.
+	ExitResponse4xx = 4
+	// ExitResponse5xx represents HTTP status 5xx.
+	ExitResponse5xx = 5
+	// ExitNotFound represents HTTP status 404.
+	ExitNotFound = 14
+	// ExitConflicted represents HTTP status 409.
+	ExitConflicted = 19
 )
 
 func exitCode(err error) subcommands.ExitStatus {
@@ -28,7 +46,7 @@ func exitCode(err error) subcommands.ExitStatus {
 		// exec itself failed, e.g. command not found
 		panic(err)
 	}
-	return client.ExitSuccess
+	return ExitSuccess
 }
 
 func runSabactlWithFile(t *testing.T, data interface{}, args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
@@ -55,7 +73,7 @@ func testSabactlDHCP(t *testing.T) {
 	}
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "dhcp", "set")
 	code := exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -65,7 +83,7 @@ func testSabactlDHCP(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("dhcp", "get")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -83,7 +101,7 @@ func testSabactlDHCP(t *testing.T) {
 	var badConf = sabakan.DHCPConfig{}
 	stdout, stderr, err = runSabactlWithFile(t, &badConf, "dhcp", "set")
 	code = exitCode(err)
-	if code != client.ExitResponse4xx {
+	if code != ExitResponse4xx {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -106,7 +124,7 @@ func testSabactlIPAM(t *testing.T) {
 	}
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "ipam", "set")
 	code := exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -116,7 +134,7 @@ func testSabactlIPAM(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("ipam", "get")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -146,7 +164,7 @@ func testSabactlIPAM(t *testing.T) {
 	}
 	stdout, stderr, err = runSabactlWithFile(t, &badConf, "ipam", "set")
 	code = exitCode(err)
-	if code != client.ExitResponse4xx {
+	if code != ExitResponse4xx {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -169,7 +187,7 @@ func testSabactlMachines(t *testing.T) {
 	}
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "ipam", "set")
 	code := exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -203,7 +221,7 @@ func testSabactlMachines(t *testing.T) {
 	}
 	stdout, stderr, err = runSabactlWithFile(t, specs, "machines", "create")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -211,7 +229,7 @@ func testSabactlMachines(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("machines", "get", "--serial", "12345678")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -227,7 +245,7 @@ func testSabactlMachines(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("machines", "get-state", "12345678")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -242,7 +260,7 @@ func testSabactlMachines(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("machines", "remove", "12345678")
 	code = exitCode(err)
-	if code != client.ExitResponse5xx {
+	if code != ExitResponse5xx {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -250,7 +268,7 @@ func testSabactlMachines(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("machines", "set-state", "12345678", "retiring")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -258,7 +276,7 @@ func testSabactlMachines(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("machines", "set-state", "12345678", "retired")
 	code = exitCode(err)
-	if code == client.ExitSuccess {
+	if code == ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -266,7 +284,7 @@ func testSabactlMachines(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("crypts", "delete", "-force", "12345678")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -274,14 +292,14 @@ func testSabactlMachines(t *testing.T) {
 
 	_, stderr, err = runSabactl("machines", "set-retire-date", "12345678", "2023-03-31")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
 
 	stdout, stderr, err = runSabactl("machines", "get", "--serial", "12345678")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -301,7 +319,7 @@ func testSabactlMachines(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("machines", "remove", "12345678")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -309,7 +327,7 @@ func testSabactlMachines(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("machines", "get", "--serial", "12345678")
 	code = exitCode(err)
-	if code != client.ExitNotFound {
+	if code != ExitNotFound {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("machine not removed", code)
@@ -334,7 +352,7 @@ func testSabactlImages(t *testing.T) {
 
 	stdout, stderr, err := runSabactl("images", "upload", "1234.1.0", kernelFile.Name(), initrdFile.Name())
 	code := exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to upload image", code)
@@ -343,7 +361,7 @@ func testSabactlImages(t *testing.T) {
 	// retrieve index
 	stdout, stderr, err = runSabactl("images", "index")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get index of images", code)
@@ -370,7 +388,7 @@ func testSabactlImages(t *testing.T) {
 	// delete image
 	stdout, stderr, err = runSabactl("images", "delete", "1234.1.0")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to delete image", code)
@@ -379,7 +397,7 @@ func testSabactlImages(t *testing.T) {
 	// retrieve (empty) index
 	stdout, stderr, err = runSabactl("images", "index")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get index of images", code)
@@ -409,7 +427,7 @@ func testSabactlAssets(t *testing.T) {
 
 	stdout, stderr, err := runSabactl("assets", "upload", "-meta", "version=1.0.0", "foo", file.Name())
 	code := exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to upload asset", code)
@@ -418,7 +436,7 @@ func testSabactlAssets(t *testing.T) {
 	// retrieve index
 	stdout, stderr, err = runSabactl("assets", "index")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get index of assets", code)
@@ -436,7 +454,7 @@ func testSabactlAssets(t *testing.T) {
 	// retrieve asset info
 	stdout, stderr, err = runSabactl("assets", "info", "foo")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get meta data of asset", code)
@@ -472,7 +490,7 @@ func testSabactlAssets(t *testing.T) {
 	// delete asset
 	stdout, stderr, err = runSabactl("assets", "delete", "foo")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to delete asset", code)
@@ -481,7 +499,7 @@ func testSabactlAssets(t *testing.T) {
 	// retrieve empty index
 	stdout, stderr, err = runSabactl("assets", "index")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get index of assets", code)
@@ -502,14 +520,14 @@ func testSabactlIgnitions(t *testing.T) {
 `
 	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "-meta", "version=20181010", "cs")
 	code := exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to set ignition template", code)
 	}
 	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "-meta", "version=20181012", "cs")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to set ignition template", code)
@@ -517,7 +535,7 @@ func testSabactlIgnitions(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("ignitions", "get", "cs")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get ignition template IDs of cs", code)
@@ -539,7 +557,7 @@ func testSabactlIgnitions(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("ignitions", "cat", "cs", metadata[0]["id"])
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to cat ignition template", code)
@@ -550,7 +568,7 @@ func testSabactlIgnitions(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", metadata[0]["id"])
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to delete an ignition template", code)
@@ -558,7 +576,7 @@ func testSabactlIgnitions(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("ignitions", "get", "cs")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get ignition template IDs of cs", code)
@@ -576,7 +594,7 @@ func testSabactlIgnitions(t *testing.T) {
 func testSabactlLogs(t *testing.T) {
 	stdout, stderr, err := runSabactl("logs")
 	code := exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -599,7 +617,7 @@ func testSabactlLogs(t *testing.T) {
 
 	stdout, stderr, err = runSabactl("logs", "-json")
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -627,7 +645,7 @@ func testSabactlLogs(t *testing.T) {
 	tommorow := now.Add(24 * time.Hour)
 	stdout, stderr, err = runSabactl("logs", tommorow.Format("20060102"))
 	code = exitCode(err)
-	if code != client.ExitSuccess {
+	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)

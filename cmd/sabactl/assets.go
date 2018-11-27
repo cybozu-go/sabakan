@@ -6,7 +6,6 @@ import (
 	"flag"
 	"os"
 
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -39,10 +38,10 @@ func (c assetsIndexCmd) SetFlags(f *flag.FlagSet) {}
 func (c assetsIndexCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 0 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
-	index, errStatus := client.AssetsIndex(ctx)
+	index, errStatus := api.AssetsIndex(ctx)
 	if errStatus != nil {
 		return handleError(errStatus)
 	}
@@ -69,10 +68,10 @@ func (c assetsInfoCmd) SetFlags(f *flag.FlagSet) {}
 func (c assetsInfoCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
-	asset, errStatus := client.AssetsInfo(ctx, f.Arg(0))
+	asset, errStatus := api.AssetsInfo(ctx, f.Arg(0))
 	if errStatus != nil {
 		return handleError(errStatus)
 	}
@@ -103,10 +102,10 @@ func (c *assetsUploadCmd) SetFlags(f *flag.FlagSet) {
 func (c *assetsUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
-	status, errStatus := client.AssetsUpload(ctx, f.Arg(0), f.Arg(1), c.meta)
+	status, errStatus := api.AssetsUpload(ctx, f.Arg(0), f.Arg(1), c.meta)
 	if errStatus != nil {
 		return handleError(errStatus)
 	}
@@ -134,10 +133,10 @@ func (c assetsDeleteCmd) SetFlags(f *flag.FlagSet) {
 func (c assetsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
-	errStatus := client.AssetsDelete(ctx, f.Arg(0))
+	errStatus := api.AssetsDelete(ctx, f.Arg(0))
 	return handleError(errStatus)
 }
 

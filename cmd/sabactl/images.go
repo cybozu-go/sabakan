@@ -6,7 +6,6 @@ import (
 	"flag"
 	"os"
 
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -42,7 +41,7 @@ type imagesIndexCmd struct {
 func (c imagesIndexCmd) SetFlags(f *flag.FlagSet) {}
 
 func (c imagesIndexCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	index, err := client.ImagesIndex(ctx, c.os)
+	index, err := api.ImagesIndex(ctx, c.os)
 	if err != nil {
 		return handleError(err)
 	}
@@ -50,7 +49,7 @@ func (c imagesIndexCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommand
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	e.Encode(index)
-	return client.ExitSuccess
+	return ExitSuccess
 }
 
 func imagesIndexCommand(os string) subcommands.Command {
@@ -71,10 +70,30 @@ func (c imagesUploadCmd) SetFlags(f *flag.FlagSet) {}
 func (c imagesUploadCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if len(f.Args()) != 3 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
-	err := client.ImagesUpload(ctx, c.os, f.Arg(0), f.Arg(1), f.Arg(2))
+	id := f.Arg(0)
+	kernelInfo, err := os.Stat(f.Arg(1))
+	if err != nil {
+		return handleError(err)
+	}
+	initrdInfo, err := os.Stat(f.Arg(2))
+	if err != nil {
+		return handleError(err)
+	}
+	kernel, err := os.Open(f.Arg(1))
+	if err != nil {
+		return handleError(err)
+	}
+	defer kernel.Close()
+	initrd, err := os.Open(f.Arg(2))
+	if err != nil {
+		return handleError(err)
+	}
+	defer initrd.Close()
+
+	err = api.ImagesUpload(ctx, c.os, id, kernel, kernelInfo.Size(), initrd, initrdInfo.Size())
 	return handleError(err)
 }
 
@@ -96,10 +115,10 @@ func (c imagesDeleteCmd) SetFlags(f *flag.FlagSet) {}
 func (c imagesDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
-	err := client.ImagesDelete(ctx, c.os, f.Arg(0))
+	err := api.ImagesDelete(ctx, c.os, f.Arg(0))
 	return handleError(err)
 }
 

@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -36,14 +35,14 @@ type dhcpGetCmd struct{}
 func (r dhcpGetCmd) SetFlags(f *flag.FlagSet) {}
 
 func (r dhcpGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	conf, err := client.DHCPConfigGet(ctx)
+	conf, err := api.DHCPConfigGet(ctx)
 	if err != nil {
 		return handleError(err)
 	}
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	e.Encode(conf)
-	return client.ExitSuccess
+	return ExitSuccess
 }
 
 func dhcpGetCommand() subcommands.Command {
@@ -66,7 +65,7 @@ func (r *dhcpSetCmd) SetFlags(f *flag.FlagSet) {
 func (r *dhcpSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if r.file == "" {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 	file, err := os.Open(r.file)
 	if err != nil {
@@ -80,7 +79,7 @@ func (r *dhcpSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.E
 		return handleError(err)
 	}
 
-	errorStatus := client.DHCPConfigSet(ctx, &conf)
+	errorStatus := api.DHCPConfigSet(ctx, &conf)
 	return handleError(errorStatus)
 }
 

@@ -6,7 +6,6 @@ import (
 	"flag"
 	"os"
 
-	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -39,9 +38,9 @@ func (c ignitionsGetCmd) SetFlags(f *flag.FlagSet) {}
 func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
-	metadata, status := client.IgnitionsGet(ctx, f.Arg(0))
+	metadata, status := api.IgnitionsGet(ctx, f.Arg(0))
 	if status != nil {
 		return handleError(status)
 	}
@@ -66,9 +65,9 @@ func (c ignitionsCatCmd) SetFlags(f *flag.FlagSet) {}
 func (c ignitionsCatCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
-	status := client.IgnitionsCat(ctx, f.Arg(0), f.Arg(1), os.Stdout)
+	status := api.IgnitionsCat(ctx, f.Arg(0), f.Arg(1), os.Stdout)
 	return handleError(status)
 }
 
@@ -94,10 +93,10 @@ func (c *ignitionsSetCmd) SetFlags(f *flag.FlagSet) {
 func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 1 || c.file == "" {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
 
-	err := client.IgnitionsSet(ctx, f.Arg(0), c.file, c.meta)
+	err := api.IgnitionsSet(ctx, f.Arg(0), c.file, c.meta)
 	return handleError(err)
 }
 
@@ -117,9 +116,9 @@ func (c ignitionsDeleteCmd) SetFlags(f *flag.FlagSet) {}
 func (c ignitionsDeleteCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
 	if f.NArg() != 2 {
 		f.Usage()
-		return client.ExitUsageError
+		return ExitUsageError
 	}
-	status := client.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))
+	status := api.IgnitionsDelete(ctx, f.Arg(0), f.Arg(1))
 	return handleError(status)
 }
 

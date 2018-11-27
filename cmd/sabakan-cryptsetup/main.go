@@ -21,6 +21,8 @@ const (
 
 var (
 	flagServer *string
+
+	api *client.Client
 )
 
 func main() {
@@ -33,12 +35,9 @@ func main() {
 	flag.Parse()
 	well.LogConfig{}.Apply()
 
-	client.Setup(*flagServer, &well.HTTPClient{
-		Severity: log.LvDebug,
-		Client:   &http.Client{},
-	})
-
 	var err error
+	api, err = client.NewClient(*flagServer, &http.Client{})
+
 	well.Go(func(ctx context.Context) error {
 		err = execute(ctx)
 		return nil
@@ -85,16 +84,16 @@ func execute(ctx context.Context) error {
 	}
 
 	for _, d := range devices {
-		status := d.fetchKey(ctx, serial)
+		err := d.fetchKey(ctx, serial)
 
 		// (1) if no problem, then do nothing
-		if status == nil {
+		if err == nil {
 			continue
 		}
 
 		// (2) if error is not NotFound, then return error
-		if status.Code() != client.ExitNotFound {
-			return status
+		if !client.IsNotFound(err) {
+			return err
 		}
 
 		// (3) if error is NotFound, then initialize the device
@@ -102,9 +101,9 @@ func execute(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		status = d.registerKey(ctx, serial)
-		if status != nil {
-			return status
+		err = d.registerKey(ctx, serial)
+		if err != nil {
+			return err
 		}
 	}
 

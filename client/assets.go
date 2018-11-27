@@ -14,9 +14,9 @@ import (
 )
 
 // AssetsIndex retrieves index of assets
-func AssetsIndex(ctx context.Context) ([]string, *Status) {
+func (c *Client) AssetsIndex(ctx context.Context) ([]string, error) {
 	var index []string
-	err := client.getJSON(ctx, "assets", nil, &index)
+	err := c.getJSON(ctx, "assets", nil, &index)
 	if err != nil {
 		return nil, err
 	}
@@ -24,9 +24,9 @@ func AssetsIndex(ctx context.Context) ([]string, *Status) {
 }
 
 // AssetsInfo retrieves meta data of an asset
-func AssetsInfo(ctx context.Context, name string) (*sabakan.Asset, *Status) {
+func (c *Client) AssetsInfo(ctx context.Context, name string) (*sabakan.Asset, error) {
 	var asset sabakan.Asset
-	err := client.getJSON(ctx, path.Join("assets", name, "meta"), nil, &asset)
+	err := c.getJSON(ctx, path.Join("assets", name, "meta"), nil, &asset)
 	if err != nil {
 		return nil, err
 	}
@@ -54,25 +54,25 @@ func detectContentTypeFromFile(file *os.File) (string, error) {
 }
 
 // AssetsUpload stores a file as an asset
-func AssetsUpload(ctx context.Context, name, filename string, meta map[string]string) (*sabakan.AssetStatus, *Status) {
+func (c *Client) AssetsUpload(ctx context.Context, name, filename string, meta map[string]string) (*sabakan.AssetStatus, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 	defer file.Close()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 	size := fileInfo.Size()
 
 	contentType, err := detectContentTypeFromFile(file)
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 
-	req := client.NewRequest(ctx, "PUT", "assets/"+name, file)
+	req := c.newRequest(ctx, "PUT", "assets/"+name, file)
 	req.ContentLength = size
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Expect", "100-continue")
@@ -80,7 +80,7 @@ func AssetsUpload(ctx context.Context, name, filename string, meta map[string]st
 		req.Header.Set(fmt.Sprintf("X-Sabakan-Asset-Options-%s", k), v)
 	}
 
-	resp, status := client.Do(req)
+	resp, status := c.do(req)
 	if status != nil {
 		return nil, status
 	}
@@ -89,13 +89,13 @@ func AssetsUpload(ctx context.Context, name, filename string, meta map[string]st
 	var result sabakan.AssetStatus
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
-		return nil, ErrorStatus(err)
+		return nil, err
 	}
 
 	return &result, nil
 }
 
 // AssetsDelete deletes an asset
-func AssetsDelete(ctx context.Context, name string) *Status {
-	return client.sendRequest(ctx, "DELETE", path.Join("assets", name), nil)
+func (c *Client) AssetsDelete(ctx context.Context, name string) error {
+	return c.sendRequest(ctx, "DELETE", path.Join("assets", name), nil)
 }

@@ -9,8 +9,8 @@ import (
 )
 
 // KernelParamsGet retrieves kernel parameters
-func KernelParamsGet(ctx context.Context, os string) (sabakan.KernelParams, *Status) {
-	body, status := client.getBytes(ctx, path.Join("kernel_params", os))
+func (c *Client) KernelParamsGet(ctx context.Context, os string) (sabakan.KernelParams, error) {
+	body, status := c.getBytes(ctx, path.Join("kernel_params", os))
 	if status != nil {
 		return "", status
 	}
@@ -19,7 +19,7 @@ func KernelParamsGet(ctx context.Context, os string) (sabakan.KernelParams, *Sta
 }
 
 // KernelParamsSet sets kernel parameters
-func KernelParamsSet(ctx context.Context, os string, params sabakan.KernelParams) *Status {
+func (c *Client) KernelParamsSet(ctx context.Context, os string, params sabakan.KernelParams) error {
 	r := strings.NewReader(string(params))
-	return client.sendRequest(ctx, "PUT", path.Join("kernel_params", os), r)
+	return c.sendRequest(ctx, "PUT", path.Join("kernel_params", os), r)
 }
