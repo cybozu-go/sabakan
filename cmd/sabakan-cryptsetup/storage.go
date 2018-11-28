@@ -39,6 +39,8 @@ var (
 		0x01, 0x02, 0x03, 0x04, 0xff, 0xfe, 0xfd, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34, 0x78, 0x90}
 	keySize  = keyBytes * 8
 	idOffset = int64(len(magic) + keyBytes)
+
+	errIDNotFound = errors.New("ID not found")
 )
 
 type devfsType struct {
@@ -130,7 +132,7 @@ func (s *storageDevice) idString() string {
 
 func (s *storageDevice) fetchKey(ctx context.Context, serial string) error {
 	if s.id == nil {
-		return errors.New("ID not found")
+		return errIDNotFound
 	}
 	data, err := api.CryptsGet(ctx, serial, s.idString())
 	if err != nil {

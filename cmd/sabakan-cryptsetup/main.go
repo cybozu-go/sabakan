@@ -92,7 +92,7 @@ func execute(ctx context.Context) error {
 		}
 
 		// (2) if error is not NotFound, then return error
-		if !client.IsNotFound(err) {
+		if !(client.IsNotFound(err) || err == errIDNotFound) {
 			return err
 		}
 
