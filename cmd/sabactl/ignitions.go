@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
 	"os"
 
+	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -96,7 +98,12 @@ func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomma
 		return ExitUsageError
 	}
 
-	err := api.IgnitionsSet(ctx, f.Arg(0), f.Arg(1), c.file, c.meta)
+	buf := new(bytes.Buffer)
+	err := client.AssembleIgnitionTemplate(c.file, buf)
+	if err != nil {
+		return handleError(err)
+	}
+	err = api.IgnitionsSet(ctx, f.Arg(0), f.Arg(1), buf, c.meta)
 	return handleError(err)
 }
 
