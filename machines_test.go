@@ -42,13 +42,13 @@ func TestIsValidBmcType(t *testing.T) {
 func TestIsValidLabelName(t *testing.T) {
 	t.Parallel()
 
-	validNames := []string{"valid_name1", "valid-name2", "valid/name3"}
+	validNames := []string{"valid_name1", "valid-n.ame2"}
 	for _, vn := range validNames {
 		if !IsValidLabelName(vn) {
 			t.Error("validator should return true:", vn)
 		}
 	}
-	invalidNames := []string{"^in;valid name\\1", "in$valid#name&2", "invalid@name=3"}
+	invalidNames := []string{"^in;valid name\\1", "in$valid#name&2", "invalid@name=3", "invalid/name3"}
 	for _, ivn := range invalidNames {
 		if IsValidLabelName(ivn) {
 			t.Error("validator should return false:", ivn)
@@ -59,7 +59,7 @@ func TestIsValidLabelName(t *testing.T) {
 func TestIsValidLabelValue(t *testing.T) {
 	t.Parallel()
 
-	validVals := []string{"^valid value@1", "valid$value-=2", "%valid':value;3"}
+	validVals := []string{"validvalue1", "valid.value-_2"}
 	for _, vv := range validVals {
 		if !IsValidLabelValue(vv) {
 			t.Error("validator should return true:", vv)
