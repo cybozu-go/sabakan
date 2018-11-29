@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
 	"os"
 
+	"github.com/cybozu-go/sabakan/client"
 	"github.com/google/subcommands"
 )
 
@@ -40,12 +42,12 @@ func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		f.Usage()
 		return ExitUsageError
 	}
-	metadata, status := api.IgnitionsGet(ctx, f.Arg(0))
+	index, status := api.IgnitionsGet(ctx, f.Arg(0))
 	if status != nil {
 		return handleError(status)
 	}
 
-	err := json.NewEncoder(os.Stdout).Encode(metadata)
+	err := json.NewEncoder(os.Stdout).Encode(index)
 	return handleError(err)
 }
 
@@ -91,12 +93,17 @@ func (c *ignitionsSetCmd) SetFlags(f *flag.FlagSet) {
 }
 
 func (c *ignitionsSetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcommands.ExitStatus {
-	if f.NArg() != 1 || c.file == "" {
+	if f.NArg() != 2 || c.file == "" {
 		f.Usage()
 		return ExitUsageError
 	}
 
-	err := api.IgnitionsSet(ctx, f.Arg(0), c.file, c.meta)
+	buf := new(bytes.Buffer)
+	err := client.AssembleIgnitionTemplate(c.file, buf)
+	if err != nil {
+		return handleError(err)
+	}
+	err = api.IgnitionsSet(ctx, f.Arg(0), f.Arg(1), buf, c.meta)
 	return handleError(err)
 }
 
@@ -105,7 +112,7 @@ func ignitionsSetCommand() subcommands.Command {
 		&ignitionsSetCmd{meta: mapFlags{}},
 		"set",
 		"create ignition template",
-		"set -f FILE ROLE ",
+		"set -f FILE ROLE ID",
 	}
 }
 

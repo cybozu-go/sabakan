@@ -3,10 +3,10 @@ package mock
 import (
 	"context"
 	"sort"
-	"strconv"
 	"sync"
 
 	"github.com/cybozu-go/sabakan"
+	version "github.com/hashicorp/go-version"
 )
 
 type ignitionData struct {
@@ -25,7 +25,7 @@ func newIgnitionDriver() *ignitionDriver {
 	}
 }
 
-func (d *ignitionDriver) PutTemplate(ctx context.Context, role string, template string, metadata map[string]string) (string, error) {
+func (d *ignitionDriver) PutTemplate(ctx context.Context, role, id string, template string, metadata map[string]string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	templateMap := d.ignitions[role]
@@ -33,35 +33,45 @@ func (d *ignitionDriver) PutTemplate(ctx context.Context, role string, template 
 		templateMap = make(map[string]ignitionData)
 		d.ignitions[role] = templateMap
 	}
-	id := strconv.Itoa(len(templateMap))
 	templateMap[id] = ignitionData{
 		template: template,
 		metadata: metadata,
 	}
-	return id, nil
+	return nil
 }
 
-func (d *ignitionDriver) GetTemplateMetadataList(ctx context.Context, role string) ([]map[string]string, error) {
+func (d *ignitionDriver) GetTemplateIndex(ctx context.Context, role string) ([]*sabakan.IgnitionInfo, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	templateMap, ok := d.ignitions[role]
 	if !ok {
 		return nil, sabakan.ErrNotFound
 	}
-	res := make([]map[string]string, 0)
-	for k, v := range templateMap {
-		meta := map[string]string{
-			"id": k,
+
+	versions := make([]*version.Version, len(templateMap))
+	i := 0
+	for k := range templateMap {
+		ver, err := version.NewVersion(k)
+		if err != nil {
+			return nil, err
 		}
-		for k2, v2 := range v.metadata {
-			meta[k2] = v2
-		}
-		res = append(res, meta)
+		versions[i] = ver
+		i++
 	}
-	sort.Slice(res, func(i, j int) bool {
-		return res[i]["id"] < res[j]["id"]
-	})
-	return res, nil
+
+	sort.Sort(version.Collection(versions))
+
+	result := make([]*sabakan.IgnitionInfo, len(versions))
+	for i, ver := range versions {
+		id := ver.Original()
+		info := &sabakan.IgnitionInfo{
+			ID:       id,
+			Metadata: templateMap[id].metadata,
+		}
+		result[i] = info
+	}
+
+	return result, nil
 }
 
 func (d *ignitionDriver) GetTemplate(ctx context.Context, role string, id string) (string, error) {

@@ -81,7 +81,7 @@ networkd:
 	m := mock.NewModel()
 	handler := Server{Model: m}
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", ign, map[string]string{})
+	err := m.Ignition.PutTemplate(context.Background(), "cs", "1.0.0", ign, map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +106,7 @@ networkd:
 	}
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("GET", "/api/v1/boot/ignitions/2222abcd/0", nil)
+	r := httptest.NewRequest("GET", "/api/v1/boot/ignitions/2222abcd/1.0.0", nil)
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -164,11 +164,11 @@ func testIgnitionTemplateMetadataGet(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hoge", map[string]string{"version": "1.2.3"})
+	err := m.Ignition.PutTemplate(context.Background(), "cs", "1.12.34", "hoge", map[string]string{"version": "1.12.34"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = m.Ignition.PutTemplate(context.Background(), "cs", "fuga", map[string]string{"version": "3.4.5"})
+	err = m.Ignition.PutTemplate(context.Background(), "cs", "1.2.3", "fuga", map[string]string{"version": "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,21 +181,21 @@ func testIgnitionTemplateMetadataGet(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("resp.StatusCode != http.StatusOK:", resp.StatusCode)
 	}
-	var data []map[string]string
+	var data []sabakan.IgnitionInfo
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if len(data) != 2 {
 		t.Error("len(data) != 2:", len(data))
 	}
-	if len(data[0]["id"]) == 0 {
-		t.Error("id is empty")
+	if data[0].ID != "1.2.3" {
+		t.Error("data[0].ID != 1.2.3")
 	}
-	if len(data[1]["id"]) == 0 {
-		t.Error("id is empty")
+	if data[1].ID != "1.12.34" {
+		t.Error("data[1].ID != 1.12.34")
 	}
-	if data[0]["version"] != "1.2.3" {
+	if data[0].Metadata["version"] != "1.2.3" {
 		t.Error("wrong version: ", data[0])
 	}
-	if data[1]["version"] != "3.4.5" {
+	if data[1].Metadata["version"] != "1.12.34" {
 		t.Error("wrong version: ", data[1])
 	}
 }
@@ -207,7 +207,7 @@ func testIgnitionTemplatesGet(t *testing.T) {
 	handler := Server{Model: m}
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("GET", "/api/v1/ignitions/cs/0", nil)
+	r := httptest.NewRequest("GET", "/api/v1/ignitions/cs/1.0.0", nil)
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -215,12 +215,12 @@ func testIgnitionTemplatesGet(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hoge", map[string]string{})
+	err := m.Ignition.PutTemplate(context.Background(), "cs", "1.0.0", "hoge", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("GET", "/api/v1/ignitions/cs/0", nil)
+	r = httptest.NewRequest("GET", "/api/v1/ignitions/cs/1.0.0", nil)
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -266,7 +266,7 @@ func testIgnitionTemplatesPost(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("POST", "/api/v1/ignitions/cs", bytes.NewBufferString(ign))
+	r := httptest.NewRequest("PUT", "/api/v1/ignitions/cs/1.0.0", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -274,7 +274,7 @@ func testIgnitionTemplatesPost(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusCreated:", resp.StatusCode)
 	}
 
-	tmpl, err := m.Ignition.GetTemplate(context.Background(), "cs", "0")
+	tmpl, err := m.Ignition.GetTemplate(context.Background(), "cs", "1.0.0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,7 +283,7 @@ func testIgnitionTemplatesPost(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("POST", "/api/v1/ignitions/", bytes.NewBufferString(ign))
+	r = httptest.NewRequest("PUT", "/api/v1/ignitions/", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -292,7 +292,7 @@ func testIgnitionTemplatesPost(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("POST", "/api/v1/ignitions/cs", bytes.NewBufferString(invalid))
+	r = httptest.NewRequest("PUT", "/api/v1/ignitions/cs", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -301,7 +301,25 @@ func testIgnitionTemplatesPost(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("POST", "/api/v1/ignitions/@invalidRole", bytes.NewBufferString(ign))
+	r = httptest.NewRequest("PUT", "/api/v1/ignitions/cs/1.0.0", bytes.NewBufferString(invalid))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Error("resp.StatusCode != http.StatusBadRequest:", resp.StatusCode)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/ignitions/@invalidRole/1.0.0", bytes.NewBufferString(ign))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Error("resp.StatusCode != http.StatusBadRequest:", resp.StatusCode)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/ignitions/cs/a-b.c-d", bytes.NewBufferString(ign))
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()
@@ -316,13 +334,13 @@ func testIgnitionTemplatesDelete(t *testing.T) {
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
-	_, err := m.Ignition.PutTemplate(context.Background(), "cs", "hello", map[string]string{})
+	err := m.Ignition.PutTemplate(context.Background(), "cs", "1.0.0", "hello", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("DELETE", "/api/v1/ignitions/cs/0", nil)
+	r := httptest.NewRequest("DELETE", "/api/v1/ignitions/cs/1.0.0", nil)
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -331,7 +349,7 @@ func testIgnitionTemplatesDelete(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("DELETE", "/api/v1/ignitions/cs/99", nil)
+	r = httptest.NewRequest("DELETE", "/api/v1/ignitions/cs/1.2.0", nil)
 	handler.ServeHTTP(w, r)
 
 	resp = w.Result()

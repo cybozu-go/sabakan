@@ -5,28 +5,28 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
-	"strconv"
+	"sort"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/sabakan"
+	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 )
 
 // PutTemplate implements sabakan.IgnitionModel
-func (d *driver) PutTemplate(ctx context.Context, role string, template string, metadata map[string]string) (string, error) {
+func (d *driver) PutTemplate(ctx context.Context, role, id string, template string, metadata map[string]string) error {
 	if metadata == nil {
-		return "", errors.New("metadata should not be nil")
+		return errors.New("metadata should not be nil")
 	}
 RETRY:
 	now := time.Now()
-	id := strconv.FormatInt(now.UnixNano(), 10)
 	target := path.Join(KeyIgnitionsTemplate, role, id)
 	meta := path.Join(KeyIgnitionsMetadata, role, id)
 	metaJSON, err := json.Marshal(metadata)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	tresp, err := d.client.Txn(ctx).
@@ -36,7 +36,7 @@ RETRY:
 		Else().
 		Commit()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	if !tresp.Succeeded {
@@ -48,48 +48,49 @@ RETRY:
 		fmt.Sprintf("id=%s\n%s", id, template))
 
 	tmplPrefix := path.Join(KeyIgnitionsTemplate, role) + "/"
+	metaPrefix := path.Join(KeyIgnitionsMetadata, role) + "/"
 	resp, err := d.client.Get(ctx, tmplPrefix,
 		clientv3.WithPrefix(),
-		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
+		clientv3.WithKeysOnly())
 	if err != nil {
-		return "", err
+		return err
 	}
 	if resp.Count <= sabakan.MaxIgnitions {
-		return id, nil
-	}
-	tmplEnd := string(resp.Kvs[resp.Count-sabakan.MaxIgnitions].Key)
-
-	metaPrefix := path.Join(KeyIgnitionsMetadata, role) + "/"
-	resp, err = d.client.Get(ctx, metaPrefix,
-		clientv3.WithPrefix(),
-		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
-	if err != nil {
-		return "", err
-	}
-	if resp.Count <= sabakan.MaxIgnitions {
-		return id, nil
-	}
-	metaEnd := string(resp.Kvs[resp.Count-sabakan.MaxIgnitions].Key)
-
-	tresp, err = d.client.Txn(ctx).
-		Then(
-			clientv3.OpDelete(tmplPrefix, clientv3.WithRange(tmplEnd)),
-			clientv3.OpDelete(metaPrefix, clientv3.WithRange(metaEnd)),
-		).
-		Commit()
-	if err != nil {
-		return "", err
+		return nil
 	}
 
-	return id, nil
+	versions := make([]*version.Version, resp.Count)
+	for i, kv := range resp.Kvs {
+		id := string(kv.Key[len(tmplPrefix):])
+		ver, err := version.NewVersion(id)
+		if err != nil {
+			return err
+		}
+		versions[i] = ver
+	}
+
+	sort.Sort(version.Collection(versions))
+
+	for _, ver := range versions[:len(versions)-sabakan.MaxIgnitions] {
+		_, err = d.client.Txn(ctx).
+			Then(
+				clientv3.OpDelete(tmplPrefix+ver.Original()),
+				clientv3.OpDelete(metaPrefix+ver.Original()),
+			).
+			Commit()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// GetTemplateMetadataList implements sabakan.IgnitionModel
-func (d *driver) GetTemplateMetadataList(ctx context.Context, role string) ([]map[string]string, error) {
+// GetTemplateIndex implements sabakan.IgnitionModel
+func (d *driver) GetTemplateIndex(ctx context.Context, role string) ([]*sabakan.IgnitionInfo, error) {
 	target := path.Join(KeyIgnitionsMetadata, role) + "/"
 	resp, err := d.client.Get(ctx, target,
 		clientv3.WithPrefix(),
-		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend),
 	)
 	if err != nil {
 		return nil, err
@@ -99,18 +100,32 @@ func (d *driver) GetTemplateMetadataList(ctx context.Context, role string) ([]ma
 		return nil, sabakan.ErrNotFound
 	}
 
-	metadata := make([]map[string]string, len(resp.Kvs))
-	for i, v := range resp.Kvs {
-		meta := make(map[string]string)
-		err = json.Unmarshal(v.Value, &meta)
+	index := make(map[string]*sabakan.IgnitionInfo)
+	versions := make([]*version.Version, len(resp.Kvs))
+	for i, kv := range resp.Kvs {
+		info := new(sabakan.IgnitionInfo)
+		err = json.Unmarshal(kv.Value, &info.Metadata)
 		if err != nil {
 			return nil, err
 		}
-		meta["id"] = string(v.Key[len(target):])
-		metadata[i] = meta
+		info.ID = string(kv.Key[len(target):])
+		index[info.ID] = info
+
+		ver, err := version.NewVersion(info.ID)
+		if err != nil {
+			return nil, err
+		}
+		versions[i] = ver
 	}
 
-	return metadata, nil
+	sort.Sort(version.Collection(versions))
+
+	result := make([]*sabakan.IgnitionInfo, len(versions))
+	for i, ver := range versions {
+		result[i] = index[ver.Original()]
+	}
+
+	return result, nil
 }
 
 // GetTemplate implements sabakan.IgnitionModel

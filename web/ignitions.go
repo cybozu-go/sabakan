@@ -50,13 +50,18 @@ func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		s.handleIgnitionTemplatesGet(w, r, role, id)
-	} else if r.Method == "POST" && len(params) == 1 {
+	} else if r.Method == "PUT" && len(params) == 2 {
 		role := params[0]
+		id := params[1]
 		if !sabakan.IsValidRole(role) {
 			renderError(r.Context(), w, APIErrBadRequest)
 			return
 		}
-		s.handleIgnitionTemplatesPost(w, r, role)
+		if !sabakan.IsValidIgnitionID(id) {
+			renderError(r.Context(), w, APIErrBadRequest)
+			return
+		}
+		s.handleIgnitionTemplatesPut(w, r, role, id)
 	} else if r.Method == "DELETE" && len(params) == 2 {
 		role := params[0]
 		id := params[1]
@@ -71,7 +76,7 @@ func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s Server) handleIgnitionTemplateIndexGet(w http.ResponseWriter, r *http.Request, role string) {
-	metadata, err := s.Model.Ignition.GetTemplateMetadataList(r.Context(), role)
+	index, err := s.Model.Ignition.GetTemplateIndex(r.Context(), role)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
@@ -80,7 +85,7 @@ func (s Server) handleIgnitionTemplateIndexGet(w http.ResponseWriter, r *http.Re
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
-	renderJSON(w, metadata, http.StatusOK)
+	renderJSON(w, index, http.StatusOK)
 }
 
 func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Request, role string, id string) {
@@ -102,7 +107,7 @@ func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (s Server) handleIgnitionTemplatesPost(w http.ResponseWriter, r *http.Request, role string) {
+func (s Server) handleIgnitionTemplatesPut(w http.ResponseWriter, r *http.Request, role, id string) {
 	// 1MB is maximum ignition template size
 	body, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 1073741824))
 	if err != nil {
@@ -139,17 +144,13 @@ func (s Server) handleIgnitionTemplatesPost(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	id, err := s.Model.Ignition.PutTemplate(r.Context(), role, string(body), metadata)
+	err = s.Model.Ignition.PutTemplate(r.Context(), role, id, string(body), metadata)
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
 
-	resp := make(map[string]interface{})
-	resp["status"] = http.StatusCreated
-	resp["role"] = role
-	resp["id"] = id
-	renderJSON(w, resp, http.StatusCreated)
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (s Server) handleIgnitionTemplatesDelete(w http.ResponseWriter, r *http.Request, role, id string) {

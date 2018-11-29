@@ -16,7 +16,7 @@ _sabactl_dhcp_complete() {
 
 _sabactl_ignitions_complete() {
   # sabactl ignitions get ROLE
-  # sabactl ignitions set -f FILE ROLE
+  # sabactl ignitions set -f FILE ROLE ID
   # sabactl ignitions cat ROLE ID
   # sabactl ignitions delete ROLE ID
   if [[ "$cword" == 1 || "$cword" == 2 ]]; then

@@ -1,4 +1,4 @@
-# github.com/99designs/gqlgen v0.6.0
+# github.com/99designs/gqlgen v0.7.1
 github.com/99designs/gqlgen/graphql
 github.com/99designs/gqlgen/graphql/introspection
 github.com/99designs/gqlgen/handler
@@ -7,7 +7,7 @@ github.com/99designs/gqlgen/complexity
 github.com/agnivade/levenshtein
 # github.com/ajeddeloh/go-json v0.0.0-20170920214419-6a2fe990e083
 github.com/ajeddeloh/go-json
-# github.com/coreos/etcd v3.3.9+incompatible
+# github.com/coreos/etcd v3.3.10+incompatible
 github.com/coreos/etcd/clientv3
 github.com/coreos/etcd/clientv3/clientv3util
 github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes
@@ -18,7 +18,7 @@ github.com/coreos/etcd/mvcc/mvccpb
 github.com/coreos/etcd/pkg/types
 # github.com/coreos/go-semver v0.2.0
 github.com/coreos/go-semver/semver
-# github.com/coreos/go-systemd v0.0.0-20181004131557-b14d3eb023cc
+# github.com/coreos/go-systemd v0.0.0-20181031085051-9002847aa142
 github.com/coreos/go-systemd/unit
 # github.com/coreos/ignition v0.28.0
 github.com/coreos/ignition/config/v2_2
@@ -57,10 +57,12 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
-# github.com/google/subcommands v0.0.0-20180618214453-5bae204cdfb2
+# github.com/google/subcommands v0.0.0-20181012225330-46f0354f6315
 github.com/google/subcommands
 # github.com/gorilla/websocket v1.4.0
 github.com/gorilla/websocket
+# github.com/hashicorp/go-version v1.0.0
+github.com/hashicorp/go-version
 # github.com/hashicorp/golang-lru v0.5.0
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
@@ -83,9 +85,9 @@ github.com/hpcloud/tail/watch
 github.com/hpcloud/tail/winfile
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
-# github.com/mitchellh/mapstructure v1.0.0
+# github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
-# github.com/onsi/ginkgo v1.6.0
+# github.com/onsi/ginkgo v1.7.0
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
 github.com/onsi/ginkgo/internal/codelocation
@@ -104,7 +106,7 @@ github.com/onsi/ginkgo/internal/leafnodes
 github.com/onsi/ginkgo/internal/spec
 github.com/onsi/ginkgo/internal/specrunner
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
-# github.com/onsi/gomega v1.4.2
+# github.com/onsi/gomega v1.4.3
 github.com/onsi/gomega
 github.com/onsi/gomega/gexec
 github.com/onsi/gomega/internal/assertion
@@ -126,7 +128,7 @@ github.com/pkg/errors
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
-# github.com/spf13/cast v1.2.0
+# github.com/spf13/cast v1.3.0
 github.com/spf13/cast
 # github.com/spf13/jwalterweatherman v1.0.0
 github.com/spf13/jwalterweatherman
@@ -134,7 +136,7 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.2.1
 github.com/spf13/viper
-# github.com/vektah/gqlparser v0.0.0-20181126020459-8d495d2fd057
+# github.com/vektah/gqlparser v1.0.0
 github.com/vektah/gqlparser
 github.com/vektah/gqlparser/ast
 github.com/vektah/gqlparser/gqlerror
@@ -144,11 +146,11 @@ github.com/vektah/gqlparser/validator/rules
 github.com/vektah/gqlparser/lexer
 # github.com/vincent-petithory/dataurl v0.0.0-20160330182126-9a301d65acbb
 github.com/vincent-petithory/dataurl
-# go.universe.tf/netboot v0.0.0-20180828210157-69eb97d03f40
+# go.universe.tf/netboot v0.0.0-20181010164912-24067fad46fd
 go.universe.tf/netboot/dhcp4
-# go4.org v0.0.0-20180809161055-417644f6feb5
+# go4.org v0.0.0-20181109185143-00e24f1b2599
 go4.org/errorutil
-# golang.org/x/crypto v0.0.0-20181009213950-7c1a557ab941
+# golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
 golang.org/x/crypto/ssh
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/ed25519
@@ -156,7 +158,7 @@ golang.org/x/crypto/internal/chacha20
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ed25519/internal/edwards25519
 golang.org/x/crypto/internal/subtle
-# golang.org/x/net v0.0.0-20181005035420-146acd28ed58
+# golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
 golang.org/x/net/netutil
 golang.org/x/net/bpf
 golang.org/x/net/ipv4
@@ -172,7 +174,7 @@ golang.org/x/net/http/httpguts
 golang.org/x/net/idna
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20181005133103-4497e2df6f9e
+# golang.org/x/sys v0.0.0-20181128092732-4ed8d59d0b35
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
@@ -193,9 +195,9 @@ golang.org/x/text/language
 golang.org/x/text/internal/utf8internal
 golang.org/x/text/runes
 golang.org/x/text/internal/tag
-# google.golang.org/genproto v0.0.0-20181004005441-af9cb2a35e7f
+# google.golang.org/genproto v0.0.0-20181127195345-31ac5d88444a
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.15.0
+# google.golang.org/grpc v1.16.0
 google.golang.org/grpc
 google.golang.org/grpc/codes
 google.golang.org/grpc/credentials

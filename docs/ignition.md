@@ -13,8 +13,8 @@ In order to distribute CoreOS ignitions, sabakan provides an ignition management
 
 * Sabakan keeps versions of ignitions by `<role>`.
 
-    In case of a new ignition fatal detects, the change can be rolled back by DELETE API. 
-    When operators put a new ignition template to the sabakan, `<id>` is automatically generated. `<id>` format is timestamp such as `1527731687`.
+    In case of a new ignition fatal detects, the change can be rolled back by DELETE API.
+    User must specify `<id>` to identify ignition version.
     Running CoreOS can refer a kernel parameter `coreos.config.url` to know which `<id>` of the ignition template applied.
 
 * Sabakan saves configured number of ignitions.
@@ -159,7 +159,7 @@ groups:
 From the above files, user can register an ignition by `sabactl` command:
 
 ```console
-# sabactl ignitions set -f <FILE> <ROLE>
-$ sabactl ignitions set -f worker.yml worker
+# sabactl ignitions set -f <FILE> <ROLE> <ID>
+$ sabactl ignitions set -f worker.yml worker 1.1.0-3
 ```
 

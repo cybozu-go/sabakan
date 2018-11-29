@@ -32,7 +32,7 @@ For GraphQL API, see [graphql.md](graphql.md).
 * [GET /api/v1/boot/ignitions/\<serial\>/\<id\>](#getigitionsid)
 * [GET /api/v1/ignitions/\<role\>](#getignitions)
 * [GET /api/v1/ignitions/\<role\>/\<id\>](#getignitionsid)
-* [POST /api/v1/ignitions/\<role\>](#postignitions)
+* [PUT /api/v1/ignitions/\<role\>/\<id\>](#putignitions)
 * [DELETE /api/v1/ignitions/\<role\>/\<id\>](#deleteignitions)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
@@ -697,7 +697,8 @@ $ curl -s -XGET localhost:10080/api/v1/boot/ignitions/1234abcd/1527731687
 
 ## <a name="getignitions" />`GET /api/v1/ignitions/<role>`
 
-Get CoreOS ignition templates meta data for a certain role.
+Get CoreOS ignition template specs with meta data for a certain role.
+Specs are sorted by their ID as a version number, in ascending order.
 
 **Successful response**
 
@@ -717,7 +718,7 @@ Get CoreOS ignition templates meta data for a certain role.
 
 ```console
 $ curl -s -XGET localhost:10080/api/v1/boot/ignitions/worker
-[ {"id": "1427731487", "version": "1.1.1"}, {"id": "1507731659", "version": "1.1.2"}, {"id": "1527731687", "version": "1.2.1"} ]
+[ {"id": "1.0.0", "meta": {"foo": "bar"}}, {"id": "1.0.1", "meta": {"foo": "baz"} ]
 ```
 
 ## <a name="getignitionsid" />`GET /api/v1/ignitions/<role>/<id>`
@@ -749,10 +750,9 @@ $ curl -s -XGET localhost:10080/api/v1/ignitions/worker/1527731687
 }
 ```
 
-## <a name="postignitions" />`POST /api/v1/ignitions/<role>`
+## <a name="putignitions" />`PUT /api/v1/ignitions/<role>/<id>`
 
 Create CoreOS ignition for a certain role from ignition-like YAML format (see [Ignition Controls](ignition.md)).
-It returns a new assigned ID for the ignition.
 
 **Request headers**
 
@@ -761,8 +761,7 @@ It returns a new assigned ID for the ignition.
 **Successful response**
 
 - HTTP status code: 201 Created
-- HTTP response header: `Content-Type: application/json`
-- HTTP response body: The target role of the ignition and ignition's ID in JSON
+- HTTP response body: empty
 
 **Failure responses**
 
@@ -774,15 +773,19 @@ It returns a new assigned ID for the ignition.
 
   HTTP status code: 400 Bad Request
 
-- Invalid `<role>`.
+- Invalid `<role>` or `<id>`.
 
   HTTP status code: 400 Bad Request
+
+- An Ignition having the same role and same ID has already been registered in the index.
+
+  HTTP status code: 409 Conflict
 
 **Example**
 
 ```console
-$ echo $'ignition:\n version: "2.2.0"' | curl -s -XPOST -d - localhost:10080/api/v1/ignitions/worker
-{"status": 201, "role": "worker", "id": "1507731659"}
+$ echo $'ignition:\n version: "2.2.0"' | curl -s -XPUT -d - localhost:10080/api/v1/ignitions/worker/1.0.1-2
+(No output in stdout)
 ```
 
 ## <a name="deleteignitions" />`DELETE /api/v1/ignitions/<role>/<id>`
