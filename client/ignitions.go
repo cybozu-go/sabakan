@@ -33,13 +33,13 @@ func (c *Client) IgnitionsCat(ctx context.Context, role, id string, w io.Writer)
 	return nil
 }
 
-// IgnitionsSet posts an ignition template file
-func (c *Client) IgnitionsSet(ctx context.Context, role string, fname string, meta map[string]string) error {
+// IgnitionsSet puts an ignition template file
+func (c *Client) IgnitionsSet(ctx context.Context, role, id, fname string, meta map[string]string) error {
 	tmpl, err := generateIgnitionYAML(fname)
 	if err != nil {
 		return err
 	}
-	req := c.newRequest(ctx, "POST", "ignitions/"+role, tmpl)
+	req := c.newRequest(ctx, "PUT", "ignitions/"+role+"/"+id, tmpl)
 	for k, v := range meta {
 		req.Header.Set(fmt.Sprintf("X-Sabakan-Ignitions-%s", k), v)
 	}

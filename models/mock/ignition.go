@@ -3,7 +3,6 @@ package mock
 import (
 	"context"
 	"sort"
-	"strconv"
 	"sync"
 
 	"github.com/cybozu-go/sabakan"
@@ -25,7 +24,7 @@ func newIgnitionDriver() *ignitionDriver {
 	}
 }
 
-func (d *ignitionDriver) PutTemplate(ctx context.Context, role string, template string, metadata map[string]string) (string, error) {
+func (d *ignitionDriver) PutTemplate(ctx context.Context, role, id string, template string, metadata map[string]string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	templateMap := d.ignitions[role]
@@ -33,12 +32,11 @@ func (d *ignitionDriver) PutTemplate(ctx context.Context, role string, template 
 		templateMap = make(map[string]ignitionData)
 		d.ignitions[role] = templateMap
 	}
-	id := strconv.Itoa(len(templateMap))
 	templateMap[id] = ignitionData{
 		template: template,
 		metadata: metadata,
 	}
-	return id, nil
+	return nil
 }
 
 func (d *ignitionDriver) GetTemplateMetadataList(ctx context.Context, role string) ([]map[string]string, error) {

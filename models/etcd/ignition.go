@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
-	"strconv"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
@@ -15,18 +14,17 @@ import (
 )
 
 // PutTemplate implements sabakan.IgnitionModel
-func (d *driver) PutTemplate(ctx context.Context, role string, template string, metadata map[string]string) (string, error) {
+func (d *driver) PutTemplate(ctx context.Context, role, id string, template string, metadata map[string]string) error {
 	if metadata == nil {
-		return "", errors.New("metadata should not be nil")
+		return errors.New("metadata should not be nil")
 	}
 RETRY:
 	now := time.Now()
-	id := strconv.FormatInt(now.UnixNano(), 10)
 	target := path.Join(KeyIgnitionsTemplate, role, id)
 	meta := path.Join(KeyIgnitionsMetadata, role, id)
 	metaJSON, err := json.Marshal(metadata)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	tresp, err := d.client.Txn(ctx).
@@ -36,7 +34,7 @@ RETRY:
 		Else().
 		Commit()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	if !tresp.Succeeded {
@@ -52,10 +50,10 @@ RETRY:
 		clientv3.WithPrefix(),
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 	if err != nil {
-		return "", err
+		return err
 	}
 	if resp.Count <= sabakan.MaxIgnitions {
-		return id, nil
+		return nil
 	}
 	tmplEnd := string(resp.Kvs[resp.Count-sabakan.MaxIgnitions].Key)
 
@@ -64,10 +62,10 @@ RETRY:
 		clientv3.WithPrefix(),
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 	if err != nil {
-		return "", err
+		return err
 	}
 	if resp.Count <= sabakan.MaxIgnitions {
-		return id, nil
+		return nil
 	}
 	metaEnd := string(resp.Kvs[resp.Count-sabakan.MaxIgnitions].Key)
 
@@ -78,10 +76,10 @@ RETRY:
 		).
 		Commit()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 // GetTemplateMetadataList implements sabakan.IgnitionModel

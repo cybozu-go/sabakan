@@ -13,12 +13,13 @@ func testTemplate(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	_, err := d.GetTemplate(context.Background(), "cs", "1111")
+	id := "1.0.0"
+	_, err := d.GetTemplate(context.Background(), "cs", id)
 	if err != sabakan.ErrNotFound {
 		t.Fatal("unexpected error: ", err)
 	}
 
-	id, err := d.PutTemplate(context.Background(), "cs", "data", map[string]string{})
+	err = d.PutTemplate(context.Background(), "cs", id, "data", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +53,7 @@ func testTemplateMetadata(t *testing.T) {
 		t.Fatal("unexpected error: ", err)
 	}
 
-	_, err = d.PutTemplate(context.Background(), "cs", "data", map[string]string{"version": "20181010"})
+	err = d.PutTemplate(context.Background(), "cs", "1.0.0", "data", map[string]string{"version": "20181010"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +74,8 @@ func testTemplateMetadata(t *testing.T) {
 	}
 
 	for i := 0; i < sabakan.MaxIgnitions+10; i++ {
-		_, err = d.PutTemplate(context.Background(), "cs", "data", map[string]string{})
+		id := fmt.Sprintf("1.1.%d", i)
+		err = d.PutTemplate(context.Background(), "cs", id, "data", map[string]string{})
 		if err != nil {
 			t.Fatal(err)
 		}

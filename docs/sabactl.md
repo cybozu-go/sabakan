@@ -209,13 +209,13 @@ Get a registered ignition template of ID in the role.
 $ sabactl ignitions cat <role> <id>
 ```
 
-`sabactl ignitions set -f FILE [-meta KEY=VALUE] ROLE`
-------------------------------------------------------
+`sabactl ignitions set -f FILE [-meta KEY=VALUE] ROLE ID`
+---------------------------------------------------------
 
 Register a new ignition template for a certain role.  The format ignitions are described in [Ignition Controls](ignition.md).
 
 ```console
-$ sabactl ignitions set -f <ignition.yml> <role>
+$ sabactl ignitions set -f <ignition.yml> <role> <id>
 ```
 
 * `-meta`: adds meta data.
