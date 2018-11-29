@@ -518,14 +518,14 @@ func testSabactlIgnitions(t *testing.T) {
 	saved := `ignition:
   version: 2.2.0
 `
-	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "-meta", "version=20181010", "cs")
+	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "-meta", "version=20181010", "cs", "1.0.0")
 	code := exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to set ignition template", code)
 	}
-	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "-meta", "version=20181012", "cs")
+	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "-meta", "version=20181012", "cs", "1.0.1")
 	code = exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -546,7 +546,7 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(metadata) != 2 {
-		t.Error("expected:1, actual:", len(metadata))
+		t.Error("expected: 2, actual:", len(metadata))
 	}
 	if metadata[0]["version"] != "20181010" {
 		t.Error("invalid metadata", metadata[0])
@@ -555,7 +555,7 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Error("invalid metadata", metadata[1])
 	}
 
-	stdout, stderr, err = runSabactl("ignitions", "cat", "cs", metadata[0]["id"])
+	stdout, stderr, err = runSabactl("ignitions", "cat", "cs", "1.0.0")
 	code = exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -566,7 +566,7 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Error("stdout.String() != saved", stdout.String())
 	}
 
-	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", metadata[0]["id"])
+	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", "1.0.0")
 	code = exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
