@@ -1,4 +1,4 @@
-//go:generate gorunpkg github.com/99designs/gqlgen
+//go:generate go run ./scripts/gqlgen.go
 
 package gql
 
