@@ -76,7 +76,7 @@ func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s Server) handleIgnitionTemplateIndexGet(w http.ResponseWriter, r *http.Request, role string) {
-	metadata, err := s.Model.Ignition.GetTemplateMetadataList(r.Context(), role)
+	index, err := s.Model.Ignition.GetTemplateIndex(r.Context(), role)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
@@ -85,7 +85,7 @@ func (s Server) handleIgnitionTemplateIndexGet(w http.ResponseWriter, r *http.Re
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
-	renderJSON(w, metadata, http.StatusOK)
+	renderJSON(w, index, http.StatusOK)
 }
 
 func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Request, role string, id string) {

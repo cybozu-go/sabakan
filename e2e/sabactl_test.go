@@ -540,19 +540,25 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get ignition template IDs of cs", code)
 	}
-	var metadata []map[string]string
-	err = json.NewDecoder(stdout).Decode(&metadata)
+	var index []*sabakan.IgnitionInfo
+	err = json.NewDecoder(stdout).Decode(&index)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(metadata) != 2 {
-		t.Error("expected: 2, actual:", len(metadata))
+	if len(index) != 2 {
+		t.Error("expected: 2, actual:", len(index))
 	}
-	if metadata[0]["version"] != "20181010" {
-		t.Error("invalid metadata", metadata[0])
+	if index[0].ID != "1.0.0" {
+		t.Error("wrong ID", index[0].ID)
 	}
-	if metadata[1]["version"] != "20181012" {
-		t.Error("invalid metadata", metadata[1])
+	if index[1].ID != "1.0.1" {
+		t.Error("wrong ID", index[1].ID)
+	}
+	if index[0].Metadata["version"] != "20181010" {
+		t.Error("wrong metadata", index[0].Metadata)
+	}
+	if index[1].Metadata["version"] != "20181012" {
+		t.Error("wrong metadata", index[1].Metadata)
 	}
 
 	stdout, stderr, err = runSabactl("ignitions", "cat", "cs", "1.0.0")
@@ -581,13 +587,13 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get ignition template IDs of cs", code)
 	}
-	metadata = []map[string]string{}
-	err = json.NewDecoder(stdout).Decode(&metadata)
+	index = []*sabakan.IgnitionInfo{}
+	err = json.NewDecoder(stdout).Decode(&index)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(metadata) != 1 {
-		t.Error("expected:1, actual:", len(metadata))
+	if len(index) != 1 {
+		t.Error("expected:1, actual:", len(index))
 	}
 }
 

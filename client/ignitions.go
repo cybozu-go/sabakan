@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"io"
 	"path"
+
+	"github.com/cybozu-go/sabakan"
 )
 
-// IgnitionsGet gets ignition template metadata list of the specified role
-func (c *Client) IgnitionsGet(ctx context.Context, role string) ([]map[string]string, error) {
-	var metadata []map[string]string
-	err := c.getJSON(ctx, "ignitions/"+role, nil, &metadata)
+// IgnitionsGet gets list of ignition template info of the specified role
+func (c *Client) IgnitionsGet(ctx context.Context, role string) ([]*sabakan.IgnitionInfo, error) {
+	var index []*sabakan.IgnitionInfo
+	err := c.getJSON(ctx, "ignitions/"+role, nil, &index)
 	if err != nil {
 		return nil, err
 	}
-	return metadata, nil
+	return index, nil
 }
 
 // IgnitionsCat gets an ignition template for the role an id

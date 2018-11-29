@@ -164,11 +164,11 @@ func testIgnitionTemplateMetadataGet(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	err := m.Ignition.PutTemplate(context.Background(), "cs", "1.2.3", "hoge", map[string]string{"version": "1.2.3"})
+	err := m.Ignition.PutTemplate(context.Background(), "cs", "1.12.34", "hoge", map[string]string{"version": "1.12.34"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = m.Ignition.PutTemplate(context.Background(), "cs", "3.4.5", "fuga", map[string]string{"version": "3.4.5"})
+	err = m.Ignition.PutTemplate(context.Background(), "cs", "1.2.3", "fuga", map[string]string{"version": "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,21 +181,21 @@ func testIgnitionTemplateMetadataGet(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("resp.StatusCode != http.StatusOK:", resp.StatusCode)
 	}
-	var data []map[string]string
+	var data []sabakan.IgnitionInfo
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if len(data) != 2 {
 		t.Error("len(data) != 2:", len(data))
 	}
-	if len(data[0]["id"]) == 0 {
-		t.Error("id is empty")
+	if data[0].ID != "1.2.3" {
+		t.Error("data[0].ID != 1.2.3")
 	}
-	if len(data[1]["id"]) == 0 {
-		t.Error("id is empty")
+	if data[1].ID != "1.12.34" {
+		t.Error("data[1].ID != 1.12.34")
 	}
-	if data[0]["version"] != "1.2.3" {
+	if data[0].Metadata["version"] != "1.2.3" {
 		t.Error("wrong version: ", data[0])
 	}
-	if data[1]["version"] != "3.4.5" {
+	if data[1].Metadata["version"] != "1.12.34" {
 		t.Error("wrong version: ", data[1])
 	}
 }

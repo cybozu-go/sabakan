@@ -40,12 +40,12 @@ func (c ignitionsGetCmd) Execute(ctx context.Context, f *flag.FlagSet) subcomman
 		f.Usage()
 		return ExitUsageError
 	}
-	metadata, status := api.IgnitionsGet(ctx, f.Arg(0))
+	index, status := api.IgnitionsGet(ctx, f.Arg(0))
 	if status != nil {
 		return handleError(status)
 	}
 
-	err := json.NewEncoder(os.Stdout).Encode(metadata)
+	err := json.NewEncoder(os.Stdout).Encode(index)
 	return handleError(err)
 }
 

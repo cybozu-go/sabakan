@@ -48,7 +48,7 @@ func testTemplateMetadata(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	_, err := d.GetTemplateMetadataList(context.Background(), "cs")
+	_, err := d.GetTemplateIndex(context.Background(), "cs")
 	if err != sabakan.ErrNotFound {
 		t.Fatal("unexpected error: ", err)
 	}
@@ -58,19 +58,18 @@ func testTemplateMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	metadata, err := d.GetTemplateMetadataList(context.Background(), "cs")
+	index, err := d.GetTemplateIndex(context.Background(), "cs")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(metadata) != 1 {
-		t.Error("wrong number of templates", len(metadata))
-		fmt.Println(metadata)
+	if len(index) != 1 {
+		t.Error("wrong number of templates", len(index))
 	}
-	if len(metadata[0]["id"]) == 0 {
-		t.Error("id is empty")
+	if index[0].ID != "1.0.0" {
+		t.Error("wrong id", index[0].ID)
 	}
-	if metadata[0]["version"] != "20181010" {
-		t.Error("wrong version", metadata[0])
+	if index[0].Metadata["version"] != "20181010" {
+		t.Error("wrong version", index[0].Metadata)
 	}
 
 	for i := 0; i < sabakan.MaxIgnitions+10; i++ {
@@ -80,19 +79,19 @@ func testTemplateMetadata(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	metadata, err = d.GetTemplateMetadataList(context.Background(), "cs")
+	index, err = d.GetTemplateIndex(context.Background(), "cs")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(metadata) != sabakan.MaxIgnitions {
-		t.Error("wrong number of templates", len(metadata))
+	if len(index) != sabakan.MaxIgnitions {
+		t.Error("wrong number of templates", len(index))
 	}
-	for _, m := range metadata {
-		if len(m["id"]) == 0 {
-			t.Error("id is empty")
-		}
+	if index[0].ID != fmt.Sprintf("1.1.%d", 10) {
+		t.Error("wrong oldest template", index[0])
 	}
-
+	if index[sabakan.MaxIgnitions-1].ID != fmt.Sprintf("1.1.%d", sabakan.MaxIgnitions+9) {
+		t.Error("wrong latest template", index[sabakan.MaxIgnitions-1])
+	}
 }
 
 func TestIgnitionTemplate(t *testing.T) {

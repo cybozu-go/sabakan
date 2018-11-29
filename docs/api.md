@@ -697,7 +697,8 @@ $ curl -s -XGET localhost:10080/api/v1/boot/ignitions/1234abcd/1527731687
 
 ## <a name="getignitions" />`GET /api/v1/ignitions/<role>`
 
-Get CoreOS ignition templates meta data for a certain role.
+Get CoreOS ignition template specs with meta data for a certain role.
+Specs are sorted by their ID as a version number, in ascending order.
 
 **Successful response**
 
@@ -717,7 +718,7 @@ Get CoreOS ignition templates meta data for a certain role.
 
 ```console
 $ curl -s -XGET localhost:10080/api/v1/boot/ignitions/worker
-[ {"id": "1427731487", "version": "1.1.1"}, {"id": "1507731659", "version": "1.1.2"}, {"id": "1527731687", "version": "1.2.1"} ]
+[ {"id": "1.0.0", "meta": {"foo": "bar"}}, {"id": "1.0.1", "meta": {"foo": "baz"} ]
 ```
 
 ## <a name="getignitionsid" />`GET /api/v1/ignitions/<role>/<id>`
@@ -783,7 +784,7 @@ Create CoreOS ignition for a certain role from ignition-like YAML format (see [I
 **Example**
 
 ```console
-$ echo $'ignition:\n version: "2.2.0"' | curl -s -XPOST -d - localhost:10080/api/v1/ignitions/worker/1.0.1-2
+$ echo $'ignition:\n version: "2.2.0"' | curl -s -XPUT -d - localhost:10080/api/v1/ignitions/worker/1.0.1-2
 (No output in stdout)
 ```
 
