@@ -6,7 +6,7 @@ HOST1 = 10.0.0.101
 HOST2 = 10.0.0.102
 HOST3 = 10.0.0.103
 WORKER = 10.0.0.104
-PLACEMAT = $(GOPATH)/bin/placemat
+PLACEMAT = /usr/bin/placemat
 GINKGO = $(GOPATH)/bin/ginkgo
 ETCD_VERSION = 3.3.8
 PLACEMAT_DATADIR = /var/scratch/placemat
@@ -139,6 +139,5 @@ clean:
 
 setup:
 	go install github.com/onsi/ginkgo/ginkgo
-	GO111MODULE=off go get -u github.com/cybozu-go/placemat/...
 
 .PHONY:	all clean setup test
