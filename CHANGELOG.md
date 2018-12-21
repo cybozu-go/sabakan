@@ -5,10 +5,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+* Update github.com/coreos/ignition to v0.30.0 and spec version v2.3.0 (#127).
+
 ## [0.30] - 2018-12-06
 
 ### Added
-* [client] aliases to type in `sabakan` package.
+* client: aliases to type in `sabakan` package.
 
 ## [0.29] - 2018-11-29
 
