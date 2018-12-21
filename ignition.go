@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"text/template"
 
-	ignition "github.com/coreos/ignition/config/v2_2"
+	ignition "github.com/coreos/ignition/config/v2_3"
 	"github.com/vincent-petithory/dataurl"
 	yaml "gopkg.in/yaml.v2"
 )
