@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -250,7 +251,7 @@ func testSabactlMachines(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
-	gotState := sabakan.MachineState(stdout.String())
+	gotState := sabakan.MachineState(strings.TrimSpace(stdout.String()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -282,7 +283,7 @@ func testSabactlMachines(t *testing.T) {
 		t.Fatal("exit code:", code)
 	}
 
-	stdout, stderr, err = runSabactl("crypts", "delete", "-force", "12345678")
+	stdout, stderr, err = runSabactl("crypts", "delete", "--force", "12345678")
 	code = exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -425,7 +426,7 @@ func testSabactlAssets(t *testing.T) {
 	}
 	file.Close()
 
-	stdout, stderr, err := runSabactl("assets", "upload", "-meta", "version=1.0.0", "foo", file.Name())
+	stdout, stderr, err := runSabactl("assets", "upload", "--meta", "version=1.0.0", "foo", file.Name())
 	code := exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -518,14 +519,14 @@ func testSabactlIgnitions(t *testing.T) {
 	saved := `ignition:
   version: 2.2.0
 `
-	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "-meta", "version=20181010", "cs", "1.0.0")
+	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "--meta", "version=20181010", "cs", "1.0.0")
 	code := exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to set ignition template", code)
 	}
-	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "-meta", "version=20181012", "cs", "1.0.1")
+	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "--meta", "version=20181012", "cs", "1.0.1")
 	code = exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -621,7 +622,7 @@ func testSabactlLogs(t *testing.T) {
 		t.Error("the response should not be JSON")
 	}
 
-	stdout, stderr, err = runSabactl("logs", "-json")
+	stdout, stderr, err = runSabactl("logs", "--json")
 	code = exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())

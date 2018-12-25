@@ -69,7 +69,7 @@ $(OUTPUT)/sabakan $(OUTPUT)/sabactl:
 	mkdir -p $(OUTPUT)
 	cd ..; \
 		go get -d ./... && \
-		GOBIN=$(realpath $(OUTPUT)) go install ./cmd/$(notdir $@)
+		GOBIN=$(realpath $(OUTPUT)) go install ./pkg/$(notdir $@)
 
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)

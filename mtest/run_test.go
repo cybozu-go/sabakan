@@ -156,7 +156,7 @@ func localTempFile(body string) *os.File {
 }
 
 func sabactl(args ...string) []byte {
-	args = append([]string{"-server", "http://" + host1 + ":10080"}, args...)
+	args = append([]string{"--server", "http://" + host1 + ":10080"}, args...)
 	command := exec.Command(sabactlPath, args...)
 	stdout := new(bytes.Buffer)
 	session, err := gexec.Start(command, stdout, GinkgoWriter)

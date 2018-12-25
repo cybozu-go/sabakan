@@ -135,7 +135,7 @@ $ sabactl machines remove <serial>
 
 Get the current index of the OS images as JSON.
 
-* `-os`: specifies OS of the image.  Default is "coreos"
+* `--os`: specifies OS of the image.  Default is "coreos"
 
 `sabactl images [-os OS] upload`
 --------------------------------
@@ -146,7 +146,7 @@ $ sabactl images upload ID coreos_production_pxe.vmlinuz coreos_production_pxe_i
 
 Upload a set of boot image files identified by `ID`.
 
-* `-os`: specifies OS of the image.  Default is "coreos"
+* `--os`: specifies OS of the image.  Default is "coreos"
 
 `sabactl images [-os OS] delete`
 --------------------------------
@@ -157,7 +157,7 @@ $ sabactl images delete ID
 
 Delete an image.
 
-* `-os`: specifies OS of the image.  Default is "coreos"
+* `--os`: specifies OS of the image.  Default is "coreos"
 
 `sabactl assets index`
 ----------------------
@@ -169,7 +169,7 @@ Get the index of assets as a JSON array of asset names.
 
 Get the meta data of the named asset.
 
-`sabactl assets upload [-meta KEY=VALUE]... NAME FILE`
+`sabactl assets upload [--meta KEY=VALUE]... NAME FILE`
 ---------------------------------------------------
 
 ```console
@@ -179,7 +179,7 @@ $ sabactl assets upload data.tar.gz /path/to/data.tar.gz
 Upload an asset.  NAME is the asset filename.
 The data is read from FILE.
 
-* `-meta`: adds meta data.
+* `--meta`: adds meta data.
 
 `sabactl assets delete NAME`
 ----------------------------
@@ -209,7 +209,7 @@ Get a registered ignition template of ID in the role.
 $ sabactl ignitions cat <role> <id>
 ```
 
-`sabactl ignitions set -f FILE [-meta KEY=VALUE] ROLE ID`
+`sabactl ignitions set -f FILE [--meta KEY=VALUE] ROLE ID`
 ---------------------------------------------------------
 
 Register a new ignition template for a certain role.  The format ignitions are described in [Ignition Controls](ignition.md).
@@ -218,7 +218,7 @@ Register a new ignition template for a certain role.  The format ignitions are d
 $ sabactl ignitions set -f <ignition.yml> <role> <id>
 ```
 
-* `-meta`: adds meta data.
+* `--meta`: adds meta data.
 
 `sabactl ignitions delete ROLE ID`
 ----------------------------------
@@ -229,12 +229,12 @@ Delete a ignition template for a certain role.
 $ sabactl ignitions delete <role> <id>
 ```
 
-`sabactl log [-json] [START_DATE] [END_DATE]`
+`sabactl log [--json] [START_DATE] [END_DATE]`
 -------------------------------------
 
 Retrieve [audit logs](audit.md) and output them to stdout.
 
-If `-json` is given, each log entry will be displayed in JSON.
+If `--json` is given, each log entry will be displayed in JSON.
 
 If `START_DATE` is given, and `END_DATE` is *not* given, logs
 of `START_DATE` are retrieved.
@@ -247,7 +247,7 @@ retrieved.
 
 Set/update kernel parameters.
 
-* `-os`: specifies OS of the image.  Default is "coreos"
+* `--os`: specifies OS of the image.  Default is "coreos"
 
 ```console
 $ sabactl kernel-params set "<param0>=<value0> <param1>=<value1> ..."
@@ -258,7 +258,7 @@ $ sabactl kernel-params set "<param0>=<value0> <param1>=<value1> ..."
 
 Get the current kernel parameters.
 
-* `-os`: specifies OS of the image.  Default is "coreos"
+* `--os`: specifies OS of the image.  Default is "coreos"
 
 ```console
 $ sabactl kernel-params get
@@ -270,7 +270,7 @@ $ sabactl kernel-params get
 Deletes all keys of a machine, and make its status `retired`.
 The command fails when the target machine's status is not `retiring`.
 
-- `-force`: explicitly required
+- `--force`: explicitly required
 
 ```console
 $ sabactl crypts delete -force <serial>

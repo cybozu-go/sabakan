@@ -61,7 +61,7 @@ $ sudo $GOPATH/bin/sabakan -config-file /usr/local/etc/sabakan.yml
 ```
 
 A sample systemd service file is available at
-[cmd/sabakan/sabakan.service](../cmd/sabakan/sabakan.service).
+[pkg/sabakan/sabakan.service](../pkg/sabakan/sabakan.service).
 
 Alternatively, you may use docker to run sabakan:
 * Repository: [quay.io/cybozu/sabakan](https://quay.io/cybozu/sabakan)
