@@ -20,8 +20,6 @@ func (d *driver) PutTemplate(ctx context.Context, role, id string, template stri
 	if metadata == nil {
 		return errors.New("metadata should not be nil")
 	}
-RETRY:
-	now := time.Now()
 	target := path.Join(KeyIgnitionsTemplate, role, id)
 	meta := path.Join(KeyIgnitionsMetadata, role, id)
 	metaJSON, err := json.Marshal(metadata)
@@ -41,10 +39,10 @@ RETRY:
 
 	if !tresp.Succeeded {
 		time.Sleep(1 * time.Nanosecond)
-		goto RETRY
+		return sabakan.ErrConflicted
 	}
 
-	d.addLog(ctx, now, tresp.Header.Revision, sabakan.AuditIgnition, role, "put",
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditIgnition, role, "put",
 		fmt.Sprintf("id=%s\n%s", id, template))
 
 	tmplPrefix := path.Join(KeyIgnitionsTemplate, role) + "/"

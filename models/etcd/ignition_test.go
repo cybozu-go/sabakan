@@ -23,6 +23,10 @@ func testTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	err = d.PutTemplate(context.Background(), "cs", id, "data", map[string]string{})
+	if err != sabakan.ErrConflicted {
+		t.Fatal(err)
+	}
 
 	ign, err := d.GetTemplate(context.Background(), "cs", id)
 	if err != nil {
