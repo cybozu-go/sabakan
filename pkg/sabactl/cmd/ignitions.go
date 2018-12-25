@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	ignitionsRole    string
 	ignitionsSetFile string
 	ignitionsSetMeta map[string]string
 )

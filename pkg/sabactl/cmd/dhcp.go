@@ -31,8 +31,7 @@ var dhcpGetCmd = &cobra.Command{
 			}
 			e := json.NewEncoder(cmd.OutOrStdout())
 			e.SetIndent("", "  ")
-			e.Encode(conf)
-			return nil
+			return e.Encode(conf)
 		})
 		well.Stop()
 		return well.Wait()

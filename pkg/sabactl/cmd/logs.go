@@ -96,11 +96,10 @@ are retrieved.`,
 			}
 		}
 		well.Go(func(ctx context.Context) error {
-			var w io.Writer = cmd.OutOrStdout()
+			w := cmd.OutOrStdout()
 			if !logsJSON {
 				w = &logPrinter{w: w}
 			}
-
 			return api.LogsGet(ctx, since, until, w)
 		})
 		well.Stop()
