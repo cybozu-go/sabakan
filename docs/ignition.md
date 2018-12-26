@@ -35,32 +35,41 @@ How it works
 
 ### Ignition configuration
 
-Sabakan generates ignitions from ignition-like YAML format as a source.
-The YAML contains text template to apply machine's parameters and the value of
-`storage.files.contents.source` is in plain text but not URL encoded:
+Sabakan generates ignitions from ignition-like template in JSON via REST API.
+This format contains control sequence in in `text.Template` to apply machine's specs.
+To render contents in `storage.files.contents.source`, the values is plane text
+but not URL encoded:
 
-```yaml
-ignition:
-  version: "2.2.0"
-storage:
-  files:
-  - filesystem: root
-    path: "/etc/hostname"
-    mode: 420
-    contents:
-      source: "{{ .Serial }}"`,
+```json
+{
+  "ignition": {
+    "version": "2.2.0"
+  },
+  "storage": {
+    "files": [
+      {
+        "filesystem": "root",
+        "path": "/etc/hostname",
+        "mode": 420,
+        "contents": {
+          "source": "{{ .Serial }}"
+        }
+      }
+    ]
+  }
+}
 ```
 
-The variables `sabakan` used in YAML are defined in [Machine](https://github.com/cybozu-go/sabakan/blob/d1a01d79307d3b3e188ff7a909204d71b5c2b9bb/machines.go#L12-L22) struct.
+The template variables are defined in [type MachineSpec][].
 The context of the template is the instance of the struct.
-For example, the YAML can refers serial number of the machine by `.Serial`.
-And the `MyURL` and `Metadata` function can be used in YAML.
-`MyURL` function will return the url of this sabakan server itself.
+For example, the template can refers serial number of the machine by `.Serial`.
+And the `MyURL` and `Metadata` function can be used in the template.
+`MyURL` function will return the URL of this sabakan server itself.
 `Metadata` function will return the metadata of the key passed as an argument.
 
-User can set YAML files to sabakan via REST API `POST /api/v1/ignitions/ROLE` for each roles.
-The iPXE booted machine loads rendered ignitions in JSON via REST API `GET /api/v1/boot/coreos/ipxe/SERIAL`.
-Sabakan applies the template parameters to YAML and convert it to JSON format on REST API `GET /api/v1/boot/coreos/ipxe/SERIAL`.
+User can update the ignitions via REST API `PUT /api/v1/ignitions/ROLE/ID` for each roles and IDs.
+The iPXE booted machine loads rendered ignitions via REST API `GET /api/v1/boot/coreos/ipxe/SERIAL`.
+Sabakan renders the template with parameters to JSON format on REST API `GET /api/v1/boot/coreos/ipxe/SERIAL`.
 
 ### Setting ignitions by sabactl
 
@@ -163,3 +172,4 @@ From the above files, user can register an ignition by `sabactl` command:
 $ sabactl ignitions set -f worker.yml worker 1.1.0-3
 ```
 
+[type MachineSpec]: https://godoc.org/github.com/cybozu-go/sabakan#MachineSpec

@@ -752,7 +752,8 @@ $ curl -s -XGET localhost:10080/api/v1/ignitions/worker/1527731687
 
 ## <a name="putignitions" />`PUT /api/v1/ignitions/<role>/<id>`
 
-Create CoreOS ignition for a certain role from ignition-like YAML format (see [Ignition Controls](ignition.md)).
+Create CoreOS ignition for a certain role from ignition-like template in JSON
+(see [Ignition Controls](ignition.md)).
 
 **Request headers**
 
