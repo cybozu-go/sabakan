@@ -36,8 +36,8 @@ How it works
 ### Ignition configuration
 
 Sabakan generates ignitions from ignition-like template in JSON via REST API.
-This format contains control sequence in in `text.Template` to apply machine's specs.
-To render contents in `storage.files.contents.source`, the values is plane text
+This format contains control sequence in `text.Template` to apply machine's specs.
+To render contents in `storage.files.contents.source`, the values is plain text
 but not URL encoded:
 
 ```json
