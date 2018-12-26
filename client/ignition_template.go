@@ -1,6 +1,7 @@
 package client
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -64,7 +65,7 @@ func AssembleIgnitionTemplate(fname string, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	return yaml.NewEncoder(w).Encode(builder.ignition)
+	return json.NewEncoder(w).Encode(builder.ignition)
 }
 
 func loadSource(fname string) (*ignitionSource, error) {
