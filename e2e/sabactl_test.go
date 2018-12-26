@@ -516,9 +516,8 @@ func testSabactlAssets(t *testing.T) {
 }
 
 func testSabactlIgnitions(t *testing.T) {
-	saved := `ignition:
-  version: 2.2.0
-`
+	cat := `{"ignition":{"version":"2.2.0"}}`
+
 	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "--meta", "version=20181010", "cs", "1.0.0")
 	code := exitCode(err)
 	if code != ExitSuccess {
@@ -569,8 +568,8 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to cat ignition template", code)
 	}
-	if stdout.String() != saved {
-		t.Error("stdout.String() != saved", stdout.String())
+	if strings.TrimSpace(stdout.String()) != cat {
+		t.Error("unexpected sabactl ignition cat:", stdout.String())
 	}
 
 	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", "1.0.0")

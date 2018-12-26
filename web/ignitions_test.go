@@ -18,29 +18,32 @@ import (
 func TestIgnitions(t *testing.T) {
 	t.Parallel()
 
-	ign := `ignition:
-  version: 2.2.0
-storage:
-  files:
-  - filesystem: root
-    path: "/etc/hostname"
-    mode: 420
-    contents:
-      source: "{{.Serial}}"
-  - contents:
-      source: "{{ .Rack }}"
-    filesystem: root
-    mode: 420
-    path: "/etc/neco/rack"
-networkd:
-  units:
-  - contents: |
-      [Match]
-      Name=node0
-
-      [Network]
-      Address={{ index .IPv4 0 }}/32
-    name: 10-node0.network
+	ign := `{
+"ignition": { "version": "2.2.0" },
+  "storage": {
+    "files": [
+      {
+        "filesystem": "root",
+        "path": "/etc/hostname",
+        "mode": 420,
+        "contents": { "source": "{{.Serial}}" }
+      }, {
+        "filesystem": "root",
+        "mode": 420,
+        "path": "/etc/neco/rack",
+	"contents": { "source": "{{ .Rack }}" }
+      }
+    ]
+  },
+  "networkd": {
+    "units": [
+      {
+        "name": "10-node0.network",
+        "contents": "[Match]\nName=node0\n\n[Network]\nAddress={{ index .IPv4 0 }}/32\n"
+      }
+    ]
+  }
+}
 `
 
 	expected := `{
@@ -239,9 +242,8 @@ func testIgnitionTemplatesGet(t *testing.T) {
 func testIgnitionTemplatesPost(t *testing.T) {
 	t.Parallel()
 
-	ign := `ignition:
-  version: 2.2.0`
-	invalid := `ignition:`
+	ign := `{ "ignition" : { "version": "2.2.0" } }`
+	invalid := `{ "ignition" : {} }`
 
 	m := mock.NewModel()
 	handler := newTestServer(m)
