@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"html/template"
 	"net/url"
 
@@ -63,7 +64,7 @@ func RenderIgnition(tmpl string, params *IgnitionParams) (string, error) {
 		return "", err
 	}
 
-	dst, err := renderLeaves(raw, params)
+	dst, err := renderLeaves("", raw, params)
 	if err != nil {
 		return "", err
 	}
@@ -76,13 +77,13 @@ func RenderIgnition(tmpl string, params *IgnitionParams) (string, error) {
 	return string(b), nil
 }
 
-func renderLeaves(src interface{}, params *IgnitionParams) (interface{}, error) {
+func renderLeaves(name string, src interface{}, params *IgnitionParams) (interface{}, error) {
 	var err error
 	switch x := src.(type) {
 	case map[string]interface{}:
 		m := make(map[string]interface{})
 		for k, v := range x {
-			m[k], err = renderLeaves(v, params)
+			m[k], err = renderLeaves(name+"."+k, v, params)
 			if err != nil {
 				return nil, err
 			}
@@ -91,14 +92,14 @@ func renderLeaves(src interface{}, params *IgnitionParams) (interface{}, error) 
 	case []interface{}:
 		s := make([]interface{}, len(x))
 		for i, v := range x {
-			s[i], err = renderLeaves(v, params)
+			s[i], err = renderLeaves(fmt.Sprintf("%s[%d]", name, i), v, params)
 			if err != nil {
 				return nil, err
 			}
 		}
 		return s, err
 	case string:
-		r, err := renderString("name", x, params)
+		r, err := renderString(name, x, params)
 		if err != nil {
 			return nil, err
 		}
