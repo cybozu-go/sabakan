@@ -25,3 +25,9 @@ models:
     model: github.com/cybozu-go/sabakan/gql.IPAddress
   DateTime:
     model: github.com/cybozu-go/sabakan/gql.DateTime
+  MachineInfo:
+    model: github.com/cybozu-go/sabakan.MachineInfo
+  BMCInfo:
+    model: github.com/cybozu-go/sabakan.BMCInfo
+  BMCInfoIPv4:
+    model: github.com/cybozu-go/sabakan.BMCInfoIPv4
