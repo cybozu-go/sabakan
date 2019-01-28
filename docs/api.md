@@ -86,7 +86,8 @@ $ curl -s -XPUT 'localhost:10080/api/v1/config/ipam' -d '
    "bmc-ipv4-pool": "10.72.16.0/20",
    "bmc-ipv4-offset": "0.0.1.0",
    "bmc-ipv4-range-size": 5,
-   "bmc-ipv4-range-mask": 20
+   "bmc-ipv4-range-mask": 20,
+   "bmc-ipv4-gateway-offset": 1
 }'
 ```
 
@@ -122,7 +123,8 @@ $ curl -s -XGET 'localhost:10080/api/v1/config/ipam'
    "bmc-ipv4-pool": "10.72.16.0/20",
    "bmc-ipv4-offset": "0.0.1.0",
    "bmc-ipv4-range-size": 5,
-   "bmc-ipv4-range-mask": 20
+   "bmc-ipv4-range-mask": 20,
+   "bmc-ipv4-gateway-offset": 1
 }
 ```
 
@@ -1027,4 +1029,3 @@ get sabakan health status
 $ curl -s -XGET localhost:10080/health
 {"health":"healthy"}
 ```
-

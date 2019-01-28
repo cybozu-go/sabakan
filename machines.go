@@ -114,10 +114,25 @@ type MachineStatus struct {
 	State     MachineState `json:"state"`
 }
 
+// BMCInfo represents BMC NIC configuration information.
+type BMCInfo struct {
+	IPv4 struct {
+		Address string `json:"address"`
+		Netmask string `json:"netmask"`
+		Gateway string `json:"gateway"`
+	} `json:"ipv4"`
+}
+
+// MachineInfo is a set of associated information of a Machine.
+type MachineInfo struct {
+	BMC BMCInfo `json:"bmc"`
+}
+
 // Machine represents a server hardware.
 type Machine struct {
 	Spec   MachineSpec   `json:"spec"`
 	Status MachineStatus `json:"status"`
+	Info   MachineInfo   `json:"info"`
 }
 
 // NewMachine creates a new machine instance.
