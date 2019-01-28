@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"net/url"
+	"text/template"
 
 	ignition "github.com/coreos/ignition/config/v2_3"
 	"github.com/vincent-petithory/dataurl"
