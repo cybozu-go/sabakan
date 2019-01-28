@@ -26,12 +26,12 @@ func TestIgnitions(t *testing.T) {
         "filesystem": "root",
         "path": "/etc/hostname",
         "mode": 420,
-        "contents": { "source": "{{.Serial}}" }
+        "contents": { "source": "{{.Spec.Serial}}" }
       }, {
         "filesystem": "root",
         "mode": 420,
         "path": "/etc/neco/rack",
-	"contents": { "source": "{{ .Rack }}" }
+	"contents": { "source": "{{ .Spec.Rack }}" }
       }
     ]
   },
@@ -39,7 +39,7 @@ func TestIgnitions(t *testing.T) {
     "units": [
       {
         "name": "10-node0.network",
-        "contents": "[Match]\nName=node0\n\n[Network]\nAddress={{ index .IPv4 0 }}/32\n"
+        "contents": "[Match]\nName=node0\n\n[Network]\nAddress={{ index .Spec.IPv4 0 }}/32\n"
       }
     ]
   }
@@ -249,17 +249,18 @@ func testIgnitionTemplatesPost(t *testing.T) {
 	handler := newTestServer(m)
 
 	config := &sabakan.IPAMConfig{
-		MaxNodesInRack:  28,
-		NodeIPv4Pool:    "10.69.0.0/20",
-		NodeIPv4Offset:  "",
-		NodeRangeSize:   6,
-		NodeRangeMask:   26,
-		NodeIndexOffset: 3,
-		NodeIPPerNode:   3,
-		BMCIPv4Pool:     "10.72.16.0/20",
-		BMCIPv4Offset:   "0.0.1.0",
-		BMCRangeSize:    5,
-		BMCRangeMask:    20,
+		MaxNodesInRack:   28,
+		NodeIPv4Pool:     "10.69.0.0/20",
+		NodeIPv4Offset:   "",
+		NodeRangeSize:    6,
+		NodeRangeMask:    26,
+		NodeIndexOffset:  3,
+		NodeIPPerNode:    3,
+		BMCIPv4Pool:      "10.72.16.0/20",
+		BMCIPv4Offset:    "0.0.1.0",
+		BMCRangeSize:     5,
+		BMCRangeMask:     20,
+		BMCGatewayOffset: 1,
 	}
 
 	err := m.IPAM.PutConfig(context.Background(), config)
