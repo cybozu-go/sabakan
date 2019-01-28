@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2019-01-28
+
+### Changed
+- Fix a regression in ignition template introdued in #131 (#133).
+
 ## [1.0.0] - 2019-01-28
 
 ### Breaking changes
@@ -122,7 +127,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix a bug that leaves files of deleted OS images (#86).
 
 [placemat]: https://github.com/cybozu-go/placemat
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/cybozu-go/sabakan/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/cybozu-go/sabakan/compare/v0.31...v1.0.0
 [0.31]: https://github.com/cybozu-go/sabakan/compare/v0.30...v0.31
 [0.30]: https://github.com/cybozu-go/sabakan/compare/v0.29...v0.30
