@@ -31,7 +31,7 @@ func TestValidateIgnitionTemplate(t *testing.T) {
 		      "path": "/etc/hostname",
 		      "mode": 420,
 		      "contents": {
-		        "source": "{{.Serial}}"
+		        "source": "{{.Spec.Serial}}"
 		      }
 		    }]
 		  }
@@ -88,7 +88,7 @@ func TestRenderIgnition(t *testing.T) {
 			      {
 			        "path": "/opt/file1",
 			        "filesystem": "root",
-			        "contents": { "source": "{{.Serial}}" },
+			        "contents": { "source": "{{.Spec.Serial}}" },
 			        "mode": 420,
 			        "user": { "id": 500 },
 			        "group": { "id": 501 }
@@ -111,7 +111,7 @@ func TestRenderIgnition(t *testing.T) {
 		"version": "20181010",
 	}
 	for _, c := range cases {
-		ign, err := RenderIgnition(c.tmpl, &IgnitionParams{Metadata: metadata, MachineSpec: c.mc.Spec, MyURL: u})
+		ign, err := RenderIgnition(c.tmpl, &IgnitionParams{Metadata: metadata, Machine: c.mc, MyURL: u})
 		if err != nil {
 			t.Fatal(err)
 		}

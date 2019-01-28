@@ -26,12 +26,12 @@ Sabakan also keeps metadata of each ignition other than `id` for external progra
 How it works
 ------------
 
-### Serving ignitions from CoreOS
+### Serving ignition configuration via HTTP
 
 1. iPXE received DHCP IP address with iPXE script which kernel parameter includes the newest ignition URL.
 2. HTTP BOOT retrieves kernel and initrd. 
-3. The initrd download ignition file from sabakan.
-4. CoreOS apply downloaded ignition to its system.
+3. The initrd downloads ignition config from sabakan.
+4. Ignition running in CoreOS Container Linux applies downloaded config to its system.
 
 ### Ignition configuration
 
@@ -52,7 +52,7 @@ but not URL encoded:
         "path": "/etc/hostname",
         "mode": 420,
         "contents": {
-          "source": "{{ .Serial }}"
+          "source": "{{ .Spec.Serial }}"
         }
       }
     ]
@@ -60,9 +60,9 @@ but not URL encoded:
 }
 ```
 
-The template variables are defined in [type MachineSpec][].
-The context of the template is the instance of the struct.
-For example, the template can refers serial number of the machine by `.Serial`.
+The template context `.` is the booting [`Machine`](machine.md#machine-struct).
+
+For example, the template can refers serial number of the machine by `.Spec.Serial`.
 And the `MyURL` and `Metadata` function can be used in the template.
 `MyURL` function will return the URL of this sabakan server itself.
 `Metadata` function will return the metadata of the key passed as an argument.
@@ -120,7 +120,7 @@ The path must be *absolute path* and user need to put the source file in the `fi
 
 ```conf
 # files/etc/hostname
-{{ .Serial }}
+{{ .Spec.Serial }}
 ```
 
 ```conf
@@ -171,5 +171,3 @@ From the above files, user can register an ignition by `sabactl` command:
 # sabactl ignitions set -f <FILE> <ROLE> <ID>
 $ sabactl ignitions set -f worker.yml worker 1.1.0-3
 ```
-
-[type MachineSpec]: https://godoc.org/github.com/cybozu-go/sabakan#MachineSpec
