@@ -23,5 +23,9 @@ write_files:
         endpoints: [http://@HOST1@:2379]
     path: /etc/sabakan.yml
     permissions: '0644'
+apt:
+  primary:
+    - arches: [default]
+      uri: http://ubuntutym.u-toyama.ac.jp/ubuntu/
 packages:
   - grub-ipxe

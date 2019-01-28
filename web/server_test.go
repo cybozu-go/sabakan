@@ -94,7 +94,8 @@ func testAuditContext(t *testing.T) {
    "node-ip-per-node": 3,
    "bmc-ipv4-pool": "10.72.16.0/20",
    "bmc-ipv4-range-size": 5,
-   "bmc-ipv4-range-mask": 20
+   "bmc-ipv4-range-mask": 20,
+   "bmc-ipv4-gateway-offset": 1
 }
 `
 

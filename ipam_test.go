@@ -8,17 +8,18 @@ import (
 
 var (
 	testIPAMConfig = &IPAMConfig{
-		MaxNodesInRack:  28,
-		NodeIPv4Pool:    "10.69.0.0/20",
-		NodeIPv4Offset:  "",
-		NodeRangeSize:   6,
-		NodeRangeMask:   26,
-		NodeIndexOffset: 3,
-		NodeIPPerNode:   3,
-		BMCIPv4Pool:     "10.72.16.0/20",
-		BMCIPv4Offset:   "0.0.1.0",
-		BMCRangeSize:    5,
-		BMCRangeMask:    20,
+		MaxNodesInRack:   28,
+		NodeIPv4Pool:     "10.69.0.0/20",
+		NodeIPv4Offset:   "",
+		NodeRangeSize:    6,
+		NodeRangeMask:    26,
+		NodeIndexOffset:  3,
+		NodeIPPerNode:    3,
+		BMCIPv4Pool:      "10.72.16.0/20",
+		BMCIPv4Offset:    "0.0.1.0",
+		BMCRangeSize:     5,
+		BMCRangeMask:     20,
+		BMCGatewayOffset: 1,
 	}
 )
 
@@ -29,6 +30,8 @@ func testGenerateIP(t *testing.T) {
 		machine       *Machine
 		nodeAddresses []string
 		bmcAddress    string
+		bmcMask       string
+		bmcGateway    string
 	}{
 		{
 			NewMachine(MachineSpec{
@@ -42,6 +45,8 @@ func testGenerateIP(t *testing.T) {
 				"10.69.1.67",
 			},
 			"10.72.17.35",
+			"255.255.240.0",
+			"10.72.16.1",
 		},
 		{
 			NewMachine(MachineSpec{
@@ -55,12 +60,15 @@ func testGenerateIP(t *testing.T) {
 				"10.69.0.133",
 			},
 			"10.72.17.5",
+			"255.255.240.0",
+			"10.72.16.1",
 		},
 	}
 
 	for _, c := range cases {
 		testIPAMConfig.GenerateIP(c.machine)
 		spec := c.machine.Spec
+		info := c.machine.Info
 
 		if len(spec.IPv4) != int(testIPAMConfig.NodeIPPerNode) {
 			t.Fatal("wrong number of networks")
@@ -70,6 +78,17 @@ func testGenerateIP(t *testing.T) {
 		}
 		if spec.BMC.IPv4 != c.bmcAddress {
 			t.Errorf("wrong IP Address: %v", spec.BMC.IPv4)
+		}
+
+		bmcInfo := info.BMC.IPv4
+		if bmcInfo.Address != c.bmcAddress {
+			t.Errorf("wrong BMC IP address info: %v", bmcInfo.Address)
+		}
+		if bmcInfo.Netmask != c.bmcMask {
+			t.Errorf("wrong BMC netmask: %v", bmcInfo.Netmask)
+		}
+		if bmcInfo.Gateway != c.bmcGateway {
+			t.Errorf("wrong BMC gateway: %v", bmcInfo.Gateway)
 		}
 	}
 }

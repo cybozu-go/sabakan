@@ -111,17 +111,18 @@ func testSabactlDHCP(t *testing.T) {
 
 func testSabactlIPAM(t *testing.T) {
 	var conf = sabakan.IPAMConfig{
-		MaxNodesInRack:  28,
-		NodeIPv4Pool:    "10.69.0.0/20",
-		NodeIPv4Offset:  "",
-		NodeRangeSize:   6,
-		NodeRangeMask:   26,
-		NodeIndexOffset: 3,
-		NodeIPPerNode:   3,
-		BMCIPv4Pool:     "10.72.16.0/20",
-		BMCIPv4Offset:   "0.0.1.0",
-		BMCRangeSize:    5,
-		BMCRangeMask:    20,
+		MaxNodesInRack:   28,
+		NodeIPv4Pool:     "10.69.0.0/20",
+		NodeIPv4Offset:   "",
+		NodeRangeSize:    6,
+		NodeRangeMask:    26,
+		NodeIndexOffset:  3,
+		NodeIPPerNode:    3,
+		BMCIPv4Pool:      "10.72.16.0/20",
+		BMCIPv4Offset:    "0.0.1.0",
+		BMCRangeSize:     5,
+		BMCRangeMask:     20,
+		BMCGatewayOffset: 1,
 	}
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "ipam", "set")
 	code := exitCode(err)
@@ -151,17 +152,18 @@ func testSabactlIPAM(t *testing.T) {
 	}
 
 	var badConf = sabakan.IPAMConfig{
-		MaxNodesInRack:  0,
-		NodeIPv4Pool:    "10.69.0.0/20",
-		NodeIPv4Offset:  "",
-		NodeRangeSize:   6,
-		NodeRangeMask:   26,
-		NodeIndexOffset: 3,
-		NodeIPPerNode:   3,
-		BMCIPv4Pool:     "10.72.16.0/20",
-		BMCIPv4Offset:   "0.0.1.0",
-		BMCRangeSize:    5,
-		BMCRangeMask:    20,
+		MaxNodesInRack:   0,
+		NodeIPv4Pool:     "10.69.0.0/20",
+		NodeIPv4Offset:   "",
+		NodeRangeSize:    6,
+		NodeRangeMask:    26,
+		NodeIndexOffset:  3,
+		NodeIPPerNode:    3,
+		BMCIPv4Pool:      "10.72.16.0/20",
+		BMCIPv4Offset:    "0.0.1.0",
+		BMCRangeSize:     5,
+		BMCRangeMask:     20,
+		BMCGatewayOffset: 1,
 	}
 	stdout, stderr, err = runSabactlWithFile(t, &badConf, "ipam", "set")
 	code = exitCode(err)
@@ -174,17 +176,18 @@ func testSabactlIPAM(t *testing.T) {
 
 func testSabactlMachines(t *testing.T) {
 	var conf = sabakan.IPAMConfig{
-		MaxNodesInRack:  28,
-		NodeIPv4Pool:    "10.69.0.0/20",
-		NodeIPv4Offset:  "",
-		NodeRangeSize:   6,
-		NodeRangeMask:   26,
-		NodeIndexOffset: 3,
-		NodeIPPerNode:   3,
-		BMCIPv4Pool:     "10.72.16.0/20",
-		BMCIPv4Offset:   "0.0.1.0",
-		BMCRangeSize:    5,
-		BMCRangeMask:    20,
+		MaxNodesInRack:   28,
+		NodeIPv4Pool:     "10.69.0.0/20",
+		NodeIPv4Offset:   "",
+		NodeRangeSize:    6,
+		NodeRangeMask:    26,
+		NodeIndexOffset:  3,
+		NodeIPPerNode:    3,
+		BMCIPv4Pool:      "10.72.16.0/20",
+		BMCIPv4Offset:    "0.0.1.0",
+		BMCRangeSize:     5,
+		BMCRangeMask:     20,
+		BMCGatewayOffset: 1,
 	}
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "ipam", "set")
 	code := exitCode(err)

@@ -20,17 +20,18 @@ func testConfigIPAMGet(t *testing.T) {
 	handler := Server{Model: m}
 
 	config := &sabakan.IPAMConfig{
-		MaxNodesInRack:  28,
-		NodeIPv4Pool:    "10.69.0.0/20",
-		NodeIPv4Offset:  "",
-		NodeRangeSize:   6,
-		NodeRangeMask:   26,
-		NodeIndexOffset: 3,
-		NodeIPPerNode:   3,
-		BMCIPv4Pool:     "10.72.16.0/20",
-		BMCIPv4Offset:   "0.0.1.0",
-		BMCRangeSize:    5,
-		BMCRangeMask:    20,
+		MaxNodesInRack:   28,
+		NodeIPv4Pool:     "10.69.0.0/20",
+		NodeIPv4Offset:   "",
+		NodeRangeSize:    6,
+		NodeRangeMask:    26,
+		NodeIndexOffset:  3,
+		NodeIPPerNode:    3,
+		BMCIPv4Pool:      "10.72.16.0/20",
+		BMCIPv4Offset:    "0.0.1.0",
+		BMCRangeSize:     5,
+		BMCRangeMask:     20,
+		BMCGatewayOffset: 1,
 	}
 
 	err := m.IPAM.PutConfig(context.Background(), config)
@@ -76,7 +77,8 @@ func testConfigIPAMPut(t *testing.T) {
    "bmc-ipv4-pool": "10.72.16.0/20",
    "bmc-ipv4-offset": "0.0.1.0",
    "bmc-ipv4-range-size": 5,
-   "bmc-ipv4-range-mask": 20
+   "bmc-ipv4-range-mask": 20,
+   "bmc-ipv4-gateway-offset": 1
 }
 `
 
@@ -103,17 +105,18 @@ func testConfigIPAMPut(t *testing.T) {
 		t.Fatal(err)
 	}
 	expected := &sabakan.IPAMConfig{
-		MaxNodesInRack:  28,
-		NodeIPv4Pool:    "10.69.0.0/20",
-		NodeIPv4Offset:  "0.0.0.0",
-		NodeRangeSize:   6,
-		NodeRangeMask:   26,
-		NodeIndexOffset: 3,
-		NodeIPPerNode:   3,
-		BMCIPv4Pool:     "10.72.16.0/20",
-		BMCIPv4Offset:   "0.0.1.0",
-		BMCRangeSize:    5,
-		BMCRangeMask:    20,
+		MaxNodesInRack:   28,
+		NodeIPv4Pool:     "10.69.0.0/20",
+		NodeIPv4Offset:   "0.0.0.0",
+		NodeRangeSize:    6,
+		NodeRangeMask:    26,
+		NodeIndexOffset:  3,
+		NodeIPPerNode:    3,
+		BMCIPv4Pool:      "10.72.16.0/20",
+		BMCIPv4Offset:    "0.0.1.0",
+		BMCRangeSize:     5,
+		BMCRangeMask:     20,
+		BMCGatewayOffset: 1,
 	}
 	if !reflect.DeepEqual(conf, expected) {
 		t.Errorf("mismatch: %#v", conf)

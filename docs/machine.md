@@ -34,7 +34,8 @@ Values for auto fields are filled by sabakan at registration.
 Machine struct
 --------------
 
-`Machine` has `MachineSpec` and its status as described in [lifecycle management](lifecycle.md).
+`Machine` has `MachineSpec` and its `status` as described in [lifecycle management](lifecycle.md)
+as well as additional `info`.
 
 A JSON representation of `Machine` looks like:
 
@@ -63,9 +64,21 @@ A JSON representation of `Machine` looks like:
     "state": "healthy",
     "timestamp": "2018-06-19T03:43:25.46669721Z",
     "duration": 362.1
+  },
+
+  "info": {
+    "bmc": {
+      "ipv4": {
+        "address": "10.72.17.37",
+        "netmask": "255.255.255.0",
+        "gateway": "10.71.17.1"
+      }
+    }
   }
 }
 ```
 
 `status.duration` is the duration between the current time and `status.timestamp`.
 The unit of `status.duration` is seconds.
+
+`info.bmc` contains BMC NIC configuration information.

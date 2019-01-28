@@ -14,19 +14,20 @@ IPAMConfig
 `IPAMConfig` is a set of configurations to assign IP addresses automatically.
 It is given as JSON object with the following fields:
 
-Field                  | Type   | Description
----------------------- | ------ | -----------
-`max-nodes-in-rack`    | int    | The maximum number of nodes in a rack, excluding "boot" node.
-`node-ipv4-pool`       | string | CIDR IPv4 network for node IP pool.
-`node-ipv4-offset`     | string | Node IPs will be started by adding this to `node-ipv4-pool`.  Default is "", equivalent to `0.0.0.0`.
-`node-ipv4-range-size` | int    | Size of the address range to divide the pool (bit counts).
-`node-ipv4-range-mask` | int    | The subnet mask for a divided range.
-`node-ip-per-node`     | int    | The number of IP addresses for each node.
-`node-index-offset`    | int    | Offset for assigning IP address to a node in a divided range.
-`bmc-ipv4-pool`        | string | CIDR IPv4 network for BMC IP pool.
-`bmc-ipv4-offset`      | string | BMC IPs will be started by adding this to `bmc-ipv4-pool`.  Default is "", equivalent to `0.0.0.0`.
-`bmc-ipv4-range-size`  | int    | Size of the address range to divide the pool (bit counts).
-`bmc-ipv4-range-mask`  | int    | The subnet mask for a divided range.
+Field                     | Type   | Description
+------------------------- | ------ | -----------
+`max-nodes-in-rack`       | int    | The maximum number of nodes in a rack, excluding "boot" node.
+`node-ipv4-pool`          | string | CIDR IPv4 network for node IP pool.
+`node-ipv4-offset`        | string | Node IPs will be started by adding this to `node-ipv4-pool`.  Default is "", equivalent to `0.0.0.0`.
+`node-ipv4-range-size`    | int    | Size of the address range to divide the pool (bit counts).
+`node-ipv4-range-mask`    | int    | The subnet mask for a divided range.
+`node-ip-per-node`        | int    | The number of IP addresses for each node.
+`node-index-offset`       | int    | Offset for assigning IP address to a node in a divided range.
+`bmc-ipv4-pool`           | string | CIDR IPv4 network for BMC IP pool.
+`bmc-ipv4-offset`         | string | BMC IPs will be started by adding this to `bmc-ipv4-pool`.  Default is "", equivalent to `0.0.0.0`.
+`bmc-ipv4-range-size`     | int    | Size of the address range to divide the pool (bit counts).
+`bmc-ipv4-range-mask`     | int    | The subnet mask for a divided range.
+`bmc-ipv4-gateway-offset` | int    | The default gateway address offset.
 
 Setting the index of a node
 ---------------------------
@@ -90,19 +91,20 @@ Examples
 
 Suppose that IPAM configurations are as follows:
 
-Field                  | Value
----------------------- | -----:
-`max-nodes-in-rack`    | 28
-`node-ipv4-pool`       | 10.69.0.0/16
-`node-ipv4-offset`     | 0.0.0.0
-`node-ipv4-range-size` | 6
-`node-ipv4-range-mask` | 26
-`node-ip-per-node`     | 3
-`node-index-offset`    | 3
-`bmc-ipv4-pool`        | 10.72.16.0/20
-`bmc-ipv4-offset`      | 0.0.1.0
-`bmc-ipv4-range-size`  | 5
-`bmc-ipv4-range-mask`  | 20
+Field                     | Value
+------------------------- | -----:
+`max-nodes-in-rack`       | 28
+`node-ipv4-pool`          | 10.69.0.0/16
+`node-ipv4-offset`        | 0.0.0.0
+`node-ipv4-range-size`    | 6
+`node-ipv4-range-mask`    | 26
+`node-ip-per-node`        | 3
+`node-index-offset`       | 3
+`bmc-ipv4-pool`           | 10.72.16.0/20
+`bmc-ipv4-offset`         | 0.0.1.0
+`bmc-ipv4-range-size`     | 5
+`bmc-ipv4-range-mask`     | 20
+`bmc-ipv4-gateway-offset` | 1
 
 For a node whose rack number is `0` and index in rack is `4`,
 its static addresses for node OS are:

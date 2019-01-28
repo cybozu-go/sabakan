@@ -28,6 +28,7 @@ Machine represents a physical server in a datacenter rack.
 type Machine {
     spec: MachineSpec!
     status: MachineStatus!
+    info: MachineInfo!
 }
 
 """
@@ -91,4 +92,27 @@ enum MachineState {
     UPDATING
     RETIRING
     RETIRED
+}
+
+"""
+MachineInfo represents miscellaneous information for Machine.
+"""
+type MachineInfo {
+    bmc: BMCInfo!
+}
+
+"""
+BMCInfo represents BMC NIC configuration information.
+"""
+type BMCInfo {
+    ipv4: BMCInfoIPv4!
+}
+
+"""
+BMCInfoIPv4 represents IPv4 configuration for BMC NIC.
+"""
+type BMCInfoIPv4 {
+    address: IPAddress!
+    netmask: IPAddress!
+    gateway: IPAddress!
 }

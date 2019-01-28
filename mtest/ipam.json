@@ -7,5 +7,6 @@
   "node-ip-per-node": 1,
   "bmc-ipv4-pool": "10.0.1.0/24",
   "bmc-ipv4-range-size": 8,
-  "bmc-ipv4-range-mask": 24
+  "bmc-ipv4-range-mask": 24,
+  "bmc-ipv4-gateway-offset": 1
 }

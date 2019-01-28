@@ -7,7 +7,7 @@ HOST2 = 10.0.0.102
 HOST3 = 10.0.0.103
 WORKER = 10.0.0.104
 PLACEMAT = /usr/bin/placemat
-GINKGO = $(GOPATH)/bin/ginkgo
+GINKGO =  env GO111MODULE=on GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo
 ETCD_VERSION = 3.3.8
 PLACEMAT_DATADIR = /var/scratch/placemat
 
@@ -18,6 +18,10 @@ COREOS_INITRD := coreos_production_pxe_image.cpio.gz
 
 export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER PLACEMAT GINKGO
 export COREOS_VERSION COREOS_KERNEL COREOS_INITRD
+
+### for Go
+GOFLAGS = -mod=vendor
+export GOFLAGS
 
 # non-configuration variables
 ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
@@ -67,9 +71,7 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 
 $(OUTPUT)/sabakan $(OUTPUT)/sabactl:
 	mkdir -p $(OUTPUT)
-	cd ..; \
-		go get -d ./... && \
-		GOBIN=$(realpath $(OUTPUT)) go install ./pkg/$(notdir $@)
+	cd ..; GOBIN=$(realpath $(OUTPUT)) go install ./pkg/$(notdir $@)
 
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)

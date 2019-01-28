@@ -33,6 +33,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	BMC() BMCResolver
+	BMCInfoIPv4() BMCInfoIPv4Resolver
 	MachineSpec() MachineSpecResolver
 	MachineStatus() MachineStatusResolver
 	Query() QueryResolver
@@ -47,6 +48,16 @@ type ComplexityRoot struct {
 		Ipv4    func(childComplexity int) int
 	}
 
+	Bmcinfo struct {
+		Ipv4 func(childComplexity int) int
+	}
+
+	BmcinfoIpv4 struct {
+		Address func(childComplexity int) int
+		Netmask func(childComplexity int) int
+		Gateway func(childComplexity int) int
+	}
+
 	Label struct {
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
@@ -55,6 +66,11 @@ type ComplexityRoot struct {
 	Machine struct {
 		Spec   func(childComplexity int) int
 		Status func(childComplexity int) int
+		Info   func(childComplexity int) int
+	}
+
+	MachineInfo struct {
+		Bmc func(childComplexity int) int
 	}
 
 	MachineSpec struct {
@@ -84,6 +100,11 @@ type ComplexityRoot struct {
 type BMCResolver interface {
 	BmcType(ctx context.Context, obj *sabakan.MachineBMC) (string, error)
 	Ipv4(ctx context.Context, obj *sabakan.MachineBMC) (IPAddress, error)
+}
+type BMCInfoIPv4Resolver interface {
+	Address(ctx context.Context, obj *sabakan.BMCInfoIPv4) (IPAddress, error)
+	Netmask(ctx context.Context, obj *sabakan.BMCInfoIPv4) (IPAddress, error)
+	Gateway(ctx context.Context, obj *sabakan.BMCInfoIPv4) (IPAddress, error)
 }
 type MachineSpecResolver interface {
 	Labels(ctx context.Context, obj *sabakan.MachineSpec) ([]Label, error)
@@ -223,6 +244,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Bmc.Ipv4(childComplexity), true
 
+	case "BMCInfo.ipv4":
+		if e.complexity.Bmcinfo.Ipv4 == nil {
+			break
+		}
+
+		return e.complexity.Bmcinfo.Ipv4(childComplexity), true
+
+	case "BMCInfoIPv4.address":
+		if e.complexity.BmcinfoIpv4.Address == nil {
+			break
+		}
+
+		return e.complexity.BmcinfoIpv4.Address(childComplexity), true
+
+	case "BMCInfoIPv4.netmask":
+		if e.complexity.BmcinfoIpv4.Netmask == nil {
+			break
+		}
+
+		return e.complexity.BmcinfoIpv4.Netmask(childComplexity), true
+
+	case "BMCInfoIPv4.gateway":
+		if e.complexity.BmcinfoIpv4.Gateway == nil {
+			break
+		}
+
+		return e.complexity.BmcinfoIpv4.Gateway(childComplexity), true
+
 	case "Label.name":
 		if e.complexity.Label.Name == nil {
 			break
@@ -250,6 +299,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Machine.Status(childComplexity), true
+
+	case "Machine.info":
+		if e.complexity.Machine.Info == nil {
+			break
+		}
+
+		return e.complexity.Machine.Info(childComplexity), true
+
+	case "MachineInfo.bmc":
+		if e.complexity.MachineInfo.Bmc == nil {
+			break
+		}
+
+		return e.complexity.MachineInfo.Bmc(childComplexity), true
 
 	case "MachineSpec.serial":
 		if e.complexity.MachineSpec.Serial == nil {
@@ -490,6 +553,198 @@ func (ec *executionContext) _BMC_ipv4(ctx context.Context, field graphql.Collect
 	return res
 }
 
+var bMCInfoImplementors = []string{"BMCInfo"}
+
+// nolint: gocyclo, errcheck, gas, goconst
+func (ec *executionContext) _BMCInfo(ctx context.Context, sel ast.SelectionSet, obj *sabakan.BMCInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, bMCInfoImplementors)
+
+	out := graphql.NewOrderedMap(len(fields))
+	invalid := false
+	for i, field := range fields {
+		out.Keys[i] = field.Alias
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BMCInfo")
+		case "ipv4":
+			out.Values[i] = ec._BMCInfo_ipv4(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _BMCInfo_ipv4(ctx context.Context, field graphql.CollectedField, obj *sabakan.BMCInfo) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object: "BMCInfo",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IPv4, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(sabakan.BMCInfoIPv4)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+
+	return ec._BMCInfoIPv4(ctx, field.Selections, &res)
+}
+
+var bMCInfoIPv4Implementors = []string{"BMCInfoIPv4"}
+
+// nolint: gocyclo, errcheck, gas, goconst
+func (ec *executionContext) _BMCInfoIPv4(ctx context.Context, sel ast.SelectionSet, obj *sabakan.BMCInfoIPv4) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, bMCInfoIPv4Implementors)
+
+	var wg sync.WaitGroup
+	out := graphql.NewOrderedMap(len(fields))
+	invalid := false
+	for i, field := range fields {
+		out.Keys[i] = field.Alias
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BMCInfoIPv4")
+		case "address":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._BMCInfoIPv4_address(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
+		case "netmask":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._BMCInfoIPv4_netmask(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
+		case "gateway":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._BMCInfoIPv4_gateway(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	wg.Wait()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _BMCInfoIPv4_address(ctx context.Context, field graphql.CollectedField, obj *sabakan.BMCInfoIPv4) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object: "BMCInfoIPv4",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.BMCInfoIPv4().Address(rctx, obj)
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(IPAddress)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return res
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _BMCInfoIPv4_netmask(ctx context.Context, field graphql.CollectedField, obj *sabakan.BMCInfoIPv4) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object: "BMCInfoIPv4",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.BMCInfoIPv4().Netmask(rctx, obj)
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(IPAddress)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return res
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _BMCInfoIPv4_gateway(ctx context.Context, field graphql.CollectedField, obj *sabakan.BMCInfoIPv4) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object: "BMCInfoIPv4",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.BMCInfoIPv4().Gateway(rctx, obj)
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(IPAddress)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return res
+}
+
 var labelImplementors = []string{"Label"}
 
 // nolint: gocyclo, errcheck, gas, goconst
@@ -603,6 +858,11 @@ func (ec *executionContext) _Machine(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "info":
+			out.Values[i] = ec._Machine_info(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -668,6 +928,92 @@ func (ec *executionContext) _Machine_status(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
 	return ec._MachineStatus(ctx, field.Selections, &res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Machine_info(ctx context.Context, field graphql.CollectedField, obj *sabakan.Machine) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object: "Machine",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Info, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(sabakan.MachineInfo)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+
+	return ec._MachineInfo(ctx, field.Selections, &res)
+}
+
+var machineInfoImplementors = []string{"MachineInfo"}
+
+// nolint: gocyclo, errcheck, gas, goconst
+func (ec *executionContext) _MachineInfo(ctx context.Context, sel ast.SelectionSet, obj *sabakan.MachineInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, machineInfoImplementors)
+
+	out := graphql.NewOrderedMap(len(fields))
+	invalid := false
+	for i, field := range fields {
+		out.Keys[i] = field.Alias
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MachineInfo")
+		case "bmc":
+			out.Values[i] = ec._MachineInfo_bmc(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _MachineInfo_bmc(ctx context.Context, field graphql.CollectedField, obj *sabakan.MachineInfo) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object: "MachineInfo",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BMC, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(sabakan.BMCInfo)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+
+	return ec._BMCInfo(ctx, field.Selections, &res)
 }
 
 var machineSpecImplementors = []string{"MachineSpec"}
@@ -3007,6 +3353,7 @@ Machine represents a physical server in a datacenter rack.
 type Machine {
     spec: MachineSpec!
     status: MachineStatus!
+    info: MachineInfo!
 }
 
 """
@@ -3070,6 +3417,29 @@ enum MachineState {
     UPDATING
     RETIRING
     RETIRED
+}
+
+"""
+MachineInfo represents miscellaneous information for Machine.
+"""
+type MachineInfo {
+    bmc: BMCInfo!
+}
+
+"""
+BMCInfo represents BMC NIC configuration information.
+"""
+type BMCInfo {
+    ipv4: BMCInfoIPv4!
+}
+
+"""
+BMCInfoIPv4 represents IPv4 configuration for BMC NIC.
+"""
+type BMCInfoIPv4 {
+    address: IPAddress!
+    netmask: IPAddress!
+    gateway: IPAddress!
 }
 `},
 )
