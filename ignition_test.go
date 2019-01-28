@@ -81,7 +81,8 @@ func TestRenderIgnition(t *testing.T) {
 			` { "ignition": { "version": "2.3.0" } }`,
 			&Machine{},
 			`{"ignition":{"version":"2.3.0"}}`,
-		}, {
+		},
+		{
 			`{
 			  "ignition": { "version": "2.3.0" },
 			  "storage": {
@@ -101,7 +102,23 @@ func TestRenderIgnition(t *testing.T) {
 			  }
 			}`,
 			NewMachine(MachineSpec{Serial: "abcd, 1234"}),
-			`{"ignition":{"version":"2.3.0"},"storage":{"files":[{"filesystem":"root","group":{"id":501},"path":"/opt/file1","user":{"id":500},"contents":{"source":"data:,abcd%2C%201234"},"mode":420},{"contents":{"source":"data:,20181010"},"path":"/etc/ignitions/version"}]}}`},
+			`{"ignition":{"version":"2.3.0"},"storage":{"files":[{"filesystem":"root","group":{"id":501},"path":"/opt/file1","user":{"id":500},"contents":{"source":"data:,abcd%2C%201234"},"mode":420},{"contents":{"source":"data:,20181010"},"path":"/etc/ignitions/version"}]}}`,
+		},
+		{
+			`{"contents": "{{ json .Info.BMC.IPv4 }}" }`,
+			&Machine{
+				Info: MachineInfo{
+					BMC: BMCInfo{
+						IPv4: BMCInfoIPv4{
+							Address: "1.2.3.4",
+							Netmask: "255.255.255.0",
+							Gateway: "1.2.3.2",
+						},
+					},
+				},
+			},
+			`{"contents":"{\"address\":\"1.2.3.4\",\"netmask\":\"255.255.255.0\",\"gateway\":\"1.2.3.2\"}"}`,
+		},
 	}
 	u, err := url.Parse("http://localhost:10080")
 	if err != nil {
@@ -127,7 +144,7 @@ func TestRenderIgnition(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !reflect.DeepEqual(expected, actual) {
-			t.Error("unexpected ignitions:", ign)
+			t.Error("unexpected ignitions:", expected, actual)
 		}
 	}
 }
