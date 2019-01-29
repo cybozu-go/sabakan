@@ -1,173 +1,76 @@
 Ignition Controls
 =================
 
-In order to distribute CoreOS ignitions, sabakan provides an ignition management system as follows.
+[Ignition][] is a provisioning tool for CoreOS Container Linux.
 
-* Operators need to upload template ignitions to one sabakan server.
+As a network boot server for CoreOS Container Linux, sabakan provides a template
+system for Ignition.  For each machine `role`, administrator can upload Ignition
+template to sabakan.
 
-    Rest of sabakan servers will automatically save by etcd cluster.
+Writing templates
+-----------------
 
-* Sabakan saves ignition templates for each `<role>`.
-
-    `<role>` is referred from a parameter `<role>` in a machine.
-
-* Sabakan keeps versions of ignitions by `<role>`.
-
-    In case of a new ignition fatal detects, the change can be rolled back by DELETE API.
-    User must specify `<id>` to identify ignition version.
-    Running CoreOS can refer a kernel parameter `coreos.config.url` to know which `<id>` of the ignition template applied.
-
-* Sabakan saves configured number of ignitions.
-
-    Sabakan deletes older ignitions when operators upload a new ignition template.
-
-Sabakan also keeps metadata of each ignition other than `id` for external programs.
-
-How it works
-------------
-
-### Serving ignition configuration via HTTP
-
-1. iPXE received DHCP IP address with iPXE script which kernel parameter includes the newest ignition URL.
-2. HTTP BOOT retrieves kernel and initrd. 
-3. The initrd downloads ignition config from sabakan.
-4. Ignition running in CoreOS Container Linux applies downloaded config to its system.
-
-### Ignition configuration
-
-Sabakan generates ignitions from ignition-like template in JSON via REST API.
-This format contains control sequence in `text.Template` to apply machine's specs.
-To render contents in `storage.files.contents.source`, the values is plain text
-but not URL encoded:
-
-```json
-{
-  "ignition": {
-    "version": "2.2.0"
-  },
-  "storage": {
-    "files": [
-      {
-        "filesystem": "root",
-        "path": "/etc/hostname",
-        "mode": 420,
-        "contents": {
-          "source": "{{ .Spec.Serial }}"
-        }
-      }
-    ]
-  }
-}
-```
-
-The template context `.` is the booting [`Machine`](machine.md#machine-struct).
-
-For example, the template can refers serial number of the machine by `.Spec.Serial`.
-And the `MyURL` and `Metadata` function can be used in the template.
-`MyURL` function will return the URL of this sabakan server itself.
-`Metadata` function will return the metadata of the key passed as an argument.
-
-User can update the ignitions via REST API `PUT /api/v1/ignitions/ROLE/ID` for each roles and IDs.
-The iPXE booted machine loads rendered ignitions via REST API `GET /api/v1/boot/coreos/ipxe/SERIAL`.
-Sabakan renders the template with parameters to JSON format on REST API `GET /api/v1/boot/coreos/ipxe/SERIAL`.
-
-### Setting ignitions by sabactl
-
-`sabactl` supports user-friendly yaml format to generate and register ignitions easily.
-It is generated from YAML and source files as the following directory layout:
-
-```text
-|- site.yml
-|- common.yml
-|- files
-|   `- etc
-|       `- hostname
-|       `- ignitions
-|          `- version
-|- networkd
-|   `- 10-eno1.network
-`- passwd.yml
-```
-
-`site.yml` is an entry point file.  It contains the files to include into the ignition.
+An ignition template is defined by a YAML file like this:
 
 ```yaml
-# site.yml
-include: base.yml
+include: ../base/base.yml
 passwd: passwd.yml
 files:
   - /etc/hostname
-  - /etc/ignitions/version
 systemd:
-  - enabled: false
-    source: amyapp.service
+  - name: chronyd.service
+    enabled: true
 networkd:
-  - 10-eno1.netdev
+  - 10-node0.netdev
 ```
 
-This entry point file contains the following fields:
+Each field in the template YAML corresponds to an item in [ignition configuration](https://coreos.com/ignition/docs/latest/configuration-v2_3.html):
 
-- `include`: Relative path to extend YAML file.
-- `passwd`: Relative path to file which describes user and group settings.
-- `files`: String list to deploy static files to Container Linux.
-The file content of the item is extract to `storage.files.contents.source` in the ignition.
-The path must be *absolute path* and user need to put the source file in the `files` directory.
-- `systemd`: Systemd services configuration.  The items are extracted to `systemd` field in the ignition.
-    - `enabled`: Enable the service if `true`, otherwise the service will be disabled.
-    - `source`: Source file of the systemd.  User need to put the source file in `systemd` directory.
-      The basename of the file correspond to the service name.
-- `networkd`: Systemd-networkd configuration files.  User need to put the source file in `networkd` directory.
+* `include`: Another ignition template to be included.
+* `passwd`: A filename in the same directory of the template.  
+    The contents should be a YAML encoded ignition's `passwd` object.
+* `files`: List of filenames to be provisioned.  
+    The file contents are read from files under `files/` sub directory.
+* `systemd`: List of systemd unit files to be provisioned.  
+    The unit contents are read from files under `systemd/` sub directory.
+* `networkd`: List of networkd unit files to be provisioned.  
+    The unit contents are read from files under `networkd/` sub directory.
 
-```conf
-# files/etc/hostname
-{{ .Spec.Serial }}
-```
+### Rendering specifications
 
-```conf
-# files/etc/ignitions/version
-{{ Metadata "version" }}
-```
+Files pointed by the template YAML are rendered by [text/template][].
 
-```ini
-# systemd/myapp.service
-[Unit]
-Description=Some simple daemon
+`.` in the template is set to the [`Machine`](machine.md#machine-struct) struct of the target machine.  
+For example, `{{ .Spec.Serial }}` will be replaced with the serial number of the target machine.
 
-[Service]
-ExecStart=/usr/share/oem/bin/myapp.service --server={{ MyURL }}
+Following additional template functions are defined and can be used:
 
-[Install]
-WantedBy=multi-user.target
-```
+* `MyURL`: returns the URL of the sabakan server.
+* `Metadata`: takes a key to retrieve metadata value saved along with the template.
+* `json`: renders the argument as JSON.
 
-```ini
-# networkd/10-eno1.network
-[Match]
-Name=eno1
+Uploading templates to sabakan
+------------------------------
 
-[Network]
-Address=10.1.10.10/24
-Gateway=10.1.10.1
-```
+`sabactl ignitions set -f YAML ROLE ID` will upload an ignition template `YAML` for
+machines whose role is `ROLE`.  `ID` is a version string such as `1.2.3`.
 
-The file described in `passwd` is described in as `passwd` field in the
-[Ignition v2.1.0](https://coreos.com/ignition/docs/latest/configuration-v2_1.html).
+Sabakan keeps up to 10 old ignition templates for each role.  
+When a new ignition template has some defects, administrators can revert it to old one
+by deleting the new template.
 
-```yaml
-# passwd.yml
-users:
-  - name: core
-    passwordHash: "$6$43y3tkl..."
-    sshAuthorizedKeys:
-      - key1
-groups:
-  - name: mgmt
-    gid: 10000
-```
-
-From the above files, user can register an ignition by `sabactl` command:
+Templates may have meta data.  To associate meta data, use `--meta` as follows:
 
 ```console
-# sabactl ignitions set -f <FILE> <ROLE> <ID>
-$ sabactl ignitions set -f worker.yml worker 1.1.0-3
+$ sabactl ignitions set --meta KEY1=VALUE1,KEY2=VALUE2 -f cs.yaml cs 1.0.0
 ```
+
+The meta data can be referenced by text/template function `Metadata` as described above.
+
+Example
+-------
+
+[`testdata/`](../testdata) directory contains a complete set of ignition templates.
+
+[Ignition]: https://coreos.com/ignition/docs/latest/
+[text/template]: https://golang.org/pkg/text/template/

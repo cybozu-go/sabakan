@@ -150,7 +150,17 @@ func renderString(name string, src string, params *IgnitionParams) (string, erro
 
 	var dst bytes.Buffer
 	t, err := template.New(name).
-		Funcs(template.FuncMap{"MyURL": getMyURL, "Metadata": getMetadata}).
+		Funcs(template.FuncMap{
+			"MyURL":    getMyURL,
+			"Metadata": getMetadata,
+			"json": func(i interface{}) (string, error) {
+				data, err := json.Marshal(i)
+				if err != nil {
+					return "", err
+				}
+				return string(data), nil
+			},
+		}).
 		Parse(src)
 	if err != nil {
 		return "", err
