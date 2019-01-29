@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2019-01-29
+
+### Added
+- [ignition] `json` template function to render objects in JSON (#134).
+
 ## [1.0.1] - 2019-01-28
 
 ### Changed
@@ -14,7 +19,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Breaking changes
 - `ipam.json` adds new mandatory field `bmc-ipv4-gateway-offset` (#132).
-- Ignition template renderer sets the context `.` as `Machine` instead of `MachineSpec` (#132).
+- Ignition template renderer sets `.` as `Machine` instead of `MachineSpec` (#132).
 
 ### Added
 - `Machine` has additional information field for BMC NIC configuration (#132).
