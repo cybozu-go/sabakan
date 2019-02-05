@@ -68,6 +68,7 @@ var ignitionsCatCmd = &cobra.Command{
 	Use:   "cat ROLE ID",
 	Short: "show the ignition template",
 	Long:  `Show the ignition template for the ID and ROLE.`,
+	Args:  cobra.ExactArgs(2),
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		role, id := args[0], args[1]
@@ -83,6 +84,7 @@ var ignitionsDeleteCmd = &cobra.Command{
 	Use:   "delete ROLE ID",
 	Short: "delete an ignition template",
 	Long:  `Delete an ignition template for the ID and ROLE.`,
+	Args:  cobra.ExactArgs(2),
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		role, id := args[0], args[1]
