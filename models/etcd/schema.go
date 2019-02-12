@@ -47,7 +47,7 @@ func (d *driver) Upgrade(ctx context.Context) error {
 		return err
 	}
 
-	if sv != sabakan.SchemaVersion {
+	if sv == sabakan.SchemaVersion {
 		return nil
 	}
 
@@ -58,7 +58,7 @@ func (d *driver) Upgrade(ctx context.Context) error {
 
 	switch sv {
 	case "1":
-		err := d.convertTo2(ctx)
+		err := d.convertTo2(ctx, mu)
 		if err != nil {
 			return err
 		}

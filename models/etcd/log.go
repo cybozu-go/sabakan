@@ -167,7 +167,7 @@ func (d *driver) logDump(ctx context.Context, since, until time.Time, w io.Write
 	if err != nil {
 		return err
 	}
-	rev := resp.Header.Revision //  to retrieve following pages from the same revisoin.
+	rev := resp.Header.Revision //  to retrieve following pages at the same revision.
 	kvs := resp.Kvs
 
 REDO:

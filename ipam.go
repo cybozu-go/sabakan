@@ -134,10 +134,12 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 		nics[i].Gateway = gw.IP.String()
 	}
 	mc.Spec.IPv4 = strIPs
+	mc.Spec.IPv6 = nil
 	mc.Info.Network.IPv4 = nics
 
 	bmcIPs := calc(c.BMCIPv4Pool, c.BMCIPv4Offset, c.BMCRangeSize, 1, lrn, idx)
 	mc.Spec.BMC.IPv4 = bmcIPs[0].String()
+	mc.Spec.BMC.IPv6 = ""
 	bmcMask := net.CIDRMask(int(c.BMCRangeMask), 32)
 	mc.Info.BMC.IPv4.Address = mc.Spec.BMC.IPv4
 	mc.Info.BMC.IPv4.Netmask = net.IP(bmcMask).String()
