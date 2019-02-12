@@ -117,6 +117,7 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	bmcMask := net.CIDRMask(int(c.BMCRangeMask), 32)
 	mc.Info.BMC.IPv4.Address = mc.Spec.BMC.IPv4
 	mc.Info.BMC.IPv4.Netmask = net.IP(bmcMask).String()
+	mc.Info.BMC.IPv4.MaskBits = int(c.BMCRangeMask)
 	bmcGW := netutil.IntToIP4(netutil.IP4ToInt(bmcIPs[0].Mask(bmcMask)) + uint32(c.BMCGatewayOffset))
 	mc.Info.BMC.IPv4.Gateway = bmcGW.String()
 }

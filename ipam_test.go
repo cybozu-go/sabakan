@@ -31,6 +31,7 @@ func testGenerateIP(t *testing.T) {
 		nodeAddresses []string
 		bmcAddress    string
 		bmcMask       string
+		bmcMaskBits   int
 		bmcGateway    string
 	}{
 		{
@@ -46,6 +47,7 @@ func testGenerateIP(t *testing.T) {
 			},
 			"10.72.17.35",
 			"255.255.240.0",
+			20,
 			"10.72.16.1",
 		},
 		{
@@ -61,6 +63,7 @@ func testGenerateIP(t *testing.T) {
 			},
 			"10.72.17.5",
 			"255.255.240.0",
+			20,
 			"10.72.16.1",
 		},
 	}
@@ -86,6 +89,9 @@ func testGenerateIP(t *testing.T) {
 		}
 		if bmcInfo.Netmask != c.bmcMask {
 			t.Errorf("wrong BMC netmask: %v", bmcInfo.Netmask)
+		}
+		if bmcInfo.MaskBits != c.bmcMaskBits {
+			t.Errorf("wrong BMC mask bits: %v", bmcInfo.MaskBits)
 		}
 		if bmcInfo.Gateway != c.bmcGateway {
 			t.Errorf("wrong BMC gateway: %v", bmcInfo.Gateway)
