@@ -114,6 +114,11 @@ type MachineStatus struct {
 	State     MachineState `json:"state"`
 }
 
+// NetworkInfo represents NIC configurations.
+type NetworkInfo struct {
+	IPv4 []NICConfig `json:"ipv4"`
+}
+
 // BMCInfo represents BMC NIC configuration information.
 type BMCInfo struct {
 	IPv4 NICConfig `json:"ipv4"`
@@ -129,7 +134,8 @@ type NICConfig struct {
 
 // MachineInfo is a set of associated information of a Machine.
 type MachineInfo struct {
-	BMC BMCInfo `json:"bmc"`
+	Network NetworkInfo `json:"network"`
+	BMC     BMCInfo     `json:"bmc"`
 }
 
 // Machine represents a server hardware.

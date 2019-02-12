@@ -98,7 +98,15 @@ enum MachineState {
 MachineInfo represents miscellaneous information for Machine.
 """
 type MachineInfo {
+    network: NetworkInfo!
     bmc: BMCInfo!
+}
+
+"""
+NetworkInfo represents NIC configuration information.
+"""
+type NetworkInfo {
+    ipv4: [NICConfig!]!
 }
 
 """

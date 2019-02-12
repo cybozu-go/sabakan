@@ -11,7 +11,7 @@ your servers with CoreOS Container Linux.
   * [Run sabakan](#run)
 * [Netboot](#netboot)
   * [Configure IPAM](#ipam)
-  * [Configure DHCP](#dhcp)
+  * [Configure DHCP (option)](#dhcp)
   * [Upload CoreOS Container Linux](#upload)
   * [Register machines](#register)
   * [Register kernel parameters](#kernelparams)
@@ -78,8 +78,9 @@ Prepare `ipam.json` as follows:
    "node-ipv4-pool": "10.69.0.0/20",
    "node-ipv4-range-size": 6,
    "node-ipv4-range-mask": 26,
-   "node-index-offset": 3,
    "node-ip-per-node": 3,
+   "node-index-offset": 3,
+   "node-gateway-offset": 1,
    "bmc-ipv4-pool": "10.72.16.0/20",
    "bmc-ipv4-offset": "0.0.1.0",
    "bmc-ipv4-range-size": 5,
@@ -95,21 +96,23 @@ $ sabactl ipam set -f ipam.json
 
 Read [ipam.md](ipam.md) for details.
 
-### <a name="dhcp" />Configure DHCP
+### <a name="dhcp" />Configure DHCP (option)
 
-Prepare `dhcp.json` as follows:
-```json
-{
-   "gateway-offset": 1,
-}
-```
+If you want to customize DHCP options as described in [dhcp.md](./dhcp.md),
 
-Then put the JSON to sabakan:
-```console
-$ sabactl dhcp set -f dhcp.json
-```
+1. Prepare `dhcp.json` as follows:
 
-Read [dhcp.md](dhcp.md) for details.
+    ```json
+    {
+        "dns-servers": ["8.8.8.8", "1.1.1.1"]
+    }
+    ```
+
+2. Put the JSON to sabakan:
+
+    ```console
+    $ sabactl dhcp set -f dhcp.json
+    ```
 
 ### <a name="upload" />Upload CoreOS Container Linux
 

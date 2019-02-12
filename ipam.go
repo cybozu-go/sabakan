@@ -9,13 +9,14 @@ import (
 
 // IPAMConfig is a set of IPAM configurations.
 type IPAMConfig struct {
-	MaxNodesInRack  uint   `json:"max-nodes-in-rack"`
-	NodeIPv4Pool    string `json:"node-ipv4-pool"`
-	NodeIPv4Offset  string `json:"node-ipv4-offset,omitempty"`
-	NodeRangeSize   uint   `json:"node-ipv4-range-size"`
-	NodeRangeMask   uint   `json:"node-ipv4-range-mask"`
-	NodeIPPerNode   uint   `json:"node-ip-per-node"`
-	NodeIndexOffset uint   `json:"node-index-offset"`
+	MaxNodesInRack    uint   `json:"max-nodes-in-rack"`
+	NodeIPv4Pool      string `json:"node-ipv4-pool"`
+	NodeIPv4Offset    string `json:"node-ipv4-offset,omitempty"`
+	NodeRangeSize     uint   `json:"node-ipv4-range-size"`
+	NodeRangeMask     uint   `json:"node-ipv4-range-mask"`
+	NodeIPPerNode     uint   `json:"node-ip-per-node"`
+	NodeIndexOffset   uint   `json:"node-index-offset"`
+	NodeGatewayOffset uint   `json:"node-gateway-offset"`
 
 	BMCIPv4Pool      string `json:"bmc-ipv4-pool"`
 	BMCIPv4Offset    string `json:"bmc-ipv4-offset,omitempty"`
@@ -52,6 +53,9 @@ func (c *IPAMConfig) Validate() error {
 	if c.NodeIndexOffset == 0 {
 		return errors.New("node-index-offset must not be zero")
 	}
+	if c.NodeGatewayOffset == 0 {
+		return errors.New("node-gateway-offset must not be zero")
+	}
 
 	ip, ipNet, err = net.ParseCIDR(c.BMCIPv4Pool)
 	if err != nil {
@@ -76,10 +80,20 @@ func (c *IPAMConfig) Validate() error {
 	return nil
 }
 
+// GatewayAddress returns a gateway address for the given node address
+func (c *IPAMConfig) GatewayAddress(addr *net.IPNet) *net.IPNet {
+	a := netutil.IP4ToInt(addr.IP.Mask(addr.Mask))
+	a += uint32(c.NodeGatewayOffset)
+	return &net.IPNet{
+		IP:   netutil.IntToIP4(a),
+		Mask: addr.Mask,
+	}
+}
+
 // GenerateIP generates IP addresses for a machine.
 // Generated IP addresses are stored in mc.
 func (c *IPAMConfig) GenerateIP(mc *Machine) {
-	// IP addresses are calculated as following (LRN=Logical Rack Number):
+	// IP addresses are calculated as follows (LRN=Logical Rack Number):
 	// node0: INET_NTOA(INET_ATON(NodeIPv4Pool) + INET_ATON(NodeIPv4Offset) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack)
 	// node1: INET_NTOA(INET_ATON(NodeIPv4Pool) + INET_ATON(NodeIPv4Offset) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRangeSize)
 	// node2: INET_NTOA(INET_ATON(NodeIPv4Pool) + INET_ATON(NodeIPv4Offset) + (2^NodeRangeSize * NodeIPPerNode * LRN) + index-in-rack + 2^NodeRangeSize * 2)
@@ -107,10 +121,20 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 
 	ips := calc(c.NodeIPv4Pool, c.NodeIPv4Offset, c.NodeRangeSize, c.NodeIPPerNode, lrn, idx)
 	strIPs := make([]string, len(ips))
+	nics := make([]NICConfig, len(ips))
+	mask := net.CIDRMask(int(c.NodeRangeMask), 32)
+	strMask := net.IP(mask).String()
 	for i, p := range ips {
-		strIPs[i] = p.String()
+		strP := p.String()
+		strIPs[i] = strP
+		nics[i].Address = strP
+		nics[i].Netmask = strMask
+		nics[i].MaskBits = int(c.NodeRangeMask)
+		gw := c.GatewayAddress(&net.IPNet{IP: p, Mask: mask})
+		nics[i].Gateway = gw.IP.String()
 	}
 	mc.Spec.IPv4 = strIPs
+	mc.Info.Network.IPv4 = nics
 
 	bmcIPs := calc(c.BMCIPv4Pool, c.BMCIPv4Offset, c.BMCRangeSize, 1, lrn, idx)
 	mc.Spec.BMC.IPv4 = bmcIPs[0].String()

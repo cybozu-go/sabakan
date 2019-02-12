@@ -64,7 +64,8 @@ type ComplexityRoot struct {
 	}
 
 	MachineInfo struct {
-		Bmc func(childComplexity int) int
+		Network func(childComplexity int) int
+		Bmc     func(childComplexity int) int
 	}
 
 	MachineSpec struct {
@@ -90,6 +91,10 @@ type ComplexityRoot struct {
 		Netmask  func(childComplexity int) int
 		Maskbits func(childComplexity int) int
 		Gateway  func(childComplexity int) int
+	}
+
+	NetworkInfo struct {
+		Ipv4 func(childComplexity int) int
 	}
 
 	Query struct {
@@ -288,6 +293,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Machine.Info(childComplexity), true
 
+	case "MachineInfo.network":
+		if e.complexity.MachineInfo.Network == nil {
+			break
+		}
+
+		return e.complexity.MachineInfo.Network(childComplexity), true
+
 	case "MachineInfo.bmc":
 		if e.complexity.MachineInfo.Bmc == nil {
 			break
@@ -406,6 +418,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Nicconfig.Gateway(childComplexity), true
+
+	case "NetworkInfo.ipv4":
+		if e.complexity.NetworkInfo.Ipv4 == nil {
+			break
+		}
+
+		return e.complexity.NetworkInfo.Ipv4(childComplexity), true
 
 	case "Query.machine":
 		if e.complexity.Query.Machine == nil {
@@ -847,6 +866,11 @@ func (ec *executionContext) _MachineInfo(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MachineInfo")
+		case "network":
+			out.Values[i] = ec._MachineInfo_network(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "bmc":
 			out.Values[i] = ec._MachineInfo_bmc(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -861,6 +885,34 @@ func (ec *executionContext) _MachineInfo(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 	return out
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _MachineInfo_network(ctx context.Context, field graphql.CollectedField, obj *sabakan.MachineInfo) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object: "MachineInfo",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Network, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(sabakan.NetworkInfo)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+
+	return ec._NetworkInfo(ctx, field.Selections, &res)
 }
 
 // nolint: vetshadow
@@ -1556,6 +1608,96 @@ func (ec *executionContext) _NICConfig_gateway(ctx context.Context, field graphq
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return res
+}
+
+var networkInfoImplementors = []string{"NetworkInfo"}
+
+// nolint: gocyclo, errcheck, gas, goconst
+func (ec *executionContext) _NetworkInfo(ctx context.Context, sel ast.SelectionSet, obj *sabakan.NetworkInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, networkInfoImplementors)
+
+	out := graphql.NewOrderedMap(len(fields))
+	invalid := false
+	for i, field := range fields {
+		out.Keys[i] = field.Alias
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NetworkInfo")
+		case "ipv4":
+			out.Values[i] = ec._NetworkInfo_ipv4(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _NetworkInfo_ipv4(ctx context.Context, field graphql.CollectedField, obj *sabakan.NetworkInfo) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object: "NetworkInfo",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IPv4, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]sabakan.NICConfig)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+
+	arr1 := make(graphql.Array, len(res))
+	var wg sync.WaitGroup
+
+	isLen1 := len(res) == 1
+	if !isLen1 {
+		wg.Add(len(res))
+	}
+
+	for idx1 := range res {
+		idx1 := idx1
+		rctx := &graphql.ResolverContext{
+			Index:  &idx1,
+			Result: &res[idx1],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(idx1 int) {
+			if !isLen1 {
+				defer wg.Done()
+			}
+			arr1[idx1] = func() graphql.Marshaler {
+
+				return ec._NICConfig(ctx, field.Selections, &res[idx1])
+			}()
+		}
+		if isLen1 {
+			f(idx1)
+		} else {
+			go f(idx1)
+		}
+
+	}
+	wg.Wait()
+	return arr1
 }
 
 var queryImplementors = []string{"Query"}
@@ -3464,7 +3606,15 @@ enum MachineState {
 MachineInfo represents miscellaneous information for Machine.
 """
 type MachineInfo {
+    network: NetworkInfo!
     bmc: BMCInfo!
+}
+
+"""
+NetworkInfo represents NIC configuration information.
+"""
+type NetworkInfo {
+    ipv4: [NICConfig!]!
 }
 
 """

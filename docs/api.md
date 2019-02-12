@@ -83,6 +83,7 @@ $ curl -s -XPUT 'localhost:10080/api/v1/config/ipam' -d '
    "node-ipv4-range-mask": 26,
    "node-ip-per-node": 3,
    "node-index-offset": 3,
+   "node-gateway-offset": 1,
    "bmc-ipv4-pool": "10.72.16.0/20",
    "bmc-ipv4-offset": "0.0.1.0",
    "bmc-ipv4-range-size": 5,
@@ -120,6 +121,7 @@ $ curl -s -XGET 'localhost:10080/api/v1/config/ipam'
    "node-ipv4-range-mask": 26,
    "node-ip-per-node": 3,
    "node-index-offset": 3,
+   "node-gateway-offset": 1,
    "bmc-ipv4-pool": "10.72.16.0/20",
    "bmc-ipv4-offset": "0.0.1.0",
    "bmc-ipv4-range-size": 5,
@@ -147,7 +149,7 @@ The body must be JSON representation of [DHCPConfig](dhcp.md#dhcpconfig).
 ```console
 $ curl -s -XPUT 'localhost:10080/api/v1/config/dhcp' -d '
 {
-    "gateway-offset": 1
+    "dns-servers": ["1.1.1.1", "8.8.8.8"]
 }'
 ```
 
@@ -172,7 +174,7 @@ Get DHCP configurations.
 ```console
 $ curl -s -XGET 'localhost:10080/api/v1/config/dhcp'
 {
-    "gateway-offset": 254
+    "dns-servers": ["1.1.1.1", "8.8.8.8"]
 }
 ```
 

@@ -19,9 +19,7 @@ func testConfigDHCPGet(t *testing.T) {
 	m := mock.NewModel()
 	handler := Server{Model: m}
 
-	config := &sabakan.DHCPConfig{
-		GatewayOffset: 100,
-	}
+	config := &sabakan.DHCPConfig{}
 
 	err := m.DHCP.PutConfig(context.Background(), config)
 	if err != nil {
@@ -53,22 +51,14 @@ func testConfigDHCPPut(t *testing.T) {
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
-	bad := "{}"
-	bad2 := `
+	bad := `
 {
-   "gateway-offset": 100,
    "lease-minutes": 30,
    "dns-servers": ["10.0.0.1", "::1"]
 }
 `
 	good := `
 {
-   "gateway-offset": 100
-}
-`
-	good2 := `
-{
-   "gateway-offset": 100,
    "lease-minutes": 30,
    "dns-servers": ["10.0.0.1", "10.0.0.2"]
 }
@@ -79,15 +69,6 @@ func testConfigDHCPPut(t *testing.T) {
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Error("resp.StatusCode != http.StatusBadRequest")
-	}
-
-	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/config/dhcp", strings.NewReader(bad2))
-	handler.ServeHTTP(w, r)
-
-	resp = w.Result()
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Error("resp.StatusCode != http.StatusBadRequest")
 	}
@@ -106,12 +87,14 @@ func testConfigDHCPPut(t *testing.T) {
 		t.Fatal(err)
 	}
 	expected := &sabakan.DHCPConfig{
-		GatewayOffset: 100,
+		LeaseMinutes: 30,
+		DNSServers:   []string{"10.0.0.1", "10.0.0.2"},
 	}
 	if !reflect.DeepEqual(conf, expected) {
 		t.Errorf("mismatch: %#v", conf)
 	}
 
+	// overwrite should succeed
 	r = httptest.NewRequest("PUT", "/api/v1/config/dhcp", strings.NewReader(good))
 	w = httptest.NewRecorder()
 	handler.ServeHTTP(w, r)
@@ -119,28 +102,6 @@ func testConfigDHCPPut(t *testing.T) {
 	resp = w.Result()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
-	}
-
-	r = httptest.NewRequest("PUT", "/api/v1/config/dhcp", strings.NewReader(good2))
-	w = httptest.NewRecorder()
-	handler.ServeHTTP(w, r)
-
-	resp = w.Result()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatal("request failed with " + http.StatusText(resp.StatusCode))
-	}
-
-	conf, err = m.DHCP.GetConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
-	expected = &sabakan.DHCPConfig{
-		GatewayOffset: 100,
-		LeaseMinutes:  30,
-		DNSServers:    []string{"10.0.0.1", "10.0.0.2"},
-	}
-	if !reflect.DeepEqual(conf, expected) {
-		t.Errorf("mismatch: %#v", conf)
 	}
 }
 

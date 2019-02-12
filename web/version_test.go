@@ -20,5 +20,4 @@ func testHandleVersion(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("resp.StatusCode != http.StatusOK:", resp.StatusCode)
 	}
-
 }
