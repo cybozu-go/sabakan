@@ -6,7 +6,12 @@ This document describes how to release a new version of sabakan.
 Versioning
 ----------
 
-Follow [semantic versioning 2.0.0][semver] to choose the new version number.
+Sabakan has two kind of versions: _API version_ and _schema version_.
+
+API version should follow [semantic versioning 2.0.0][semver] to choose the new version number.
+It is also used for archive versions.
+
+Schema version is a positive integer.  It must be incremented when some data format has been changed.
 
 Prepare change log entries
 --------------------------
@@ -30,13 +35,23 @@ It should look like:
 (snip)
 ```
 
+Increment schema version
+------------------------
+
+When a backward-incompatible change is to be merged to `master`, the schema version must be incremented
+and conversion from old schema need to be implemented.
+
+1. Increment `SchemaVersion` in [version.go](./version.go) by 1.
+2. Add conversion method from old schema in [models/etcd/convert.go](./models/etcd/convert.go).
+3. Call the conversion method from `driver.Upgrade` defined in [models/etcd/schema.go](./models/etcd/schema.go).
+
 Bump version
 ------------
 
-1. Determine a new version number.  Let it write `$VERSION`.
+1. Determine a new API/program version number.  Let it write `$VERSION`.
 2. Checkout `master` branch.
 3. Edit `CHANGELOG.md` for the new version ([example][]).
-4. Update `version.go`
+4. Update `Version` constant in [version.go](./version.go).
 5. Commit the change and add a git tag, then push them.
 
     ```console

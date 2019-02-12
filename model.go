@@ -109,6 +109,12 @@ type HealthModel interface {
 	GetHealth(ctx context.Context) error
 }
 
+// SchemaModel is an interface for schema versioning.
+type SchemaModel interface {
+	Version(ctx context.Context) (string, error)
+	Upgrade(ctx context.Context) error
+}
+
 // Runner is an interface to run the underlying goroutines.
 //
 // The caller must pass a channel as follows.
@@ -137,4 +143,5 @@ type Model struct {
 	Log          LogModel
 	KernelParams KernelParamsModel
 	Health       HealthModel
+	Schema       SchemaModel
 }
