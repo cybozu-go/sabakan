@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
@@ -13,16 +15,38 @@ import (
 const noVersion = "1"
 
 func (d *driver) Version(ctx context.Context) (string, error) {
+RETRY:
 	resp, err := d.client.Get(ctx, KeyVersion)
 	if err != nil {
 		return "", err
 	}
 
-	if resp.Count == 0 {
+	if resp.Count > 0 {
+		return string(resp.Kvs[0].Value), nil
+	}
+
+	resp, err = d.client.Get(ctx, KeyIPAM)
+	if err != nil {
+		return "", err
+	}
+	if resp.Count > 0 {
 		return noVersion, nil
 	}
 
-	return string(resp.Kvs[0].Value), nil
+	// For sabakan < 1.2.0, when IPAM config is not set, convertTo2 does nothing.
+	// Therefore it is safe to set schema version to sabakan.SchemaVersion as an
+	// initialization.
+	tresp, err := d.client.Txn(ctx).
+		If(clientv3util.KeyMissing(KeyVersion)).
+		Then(clientv3.OpPut(KeyVersion, sabakan.SchemaVersion)).
+		Commit()
+	if err != nil {
+		return "", err
+	}
+	if !tresp.Succeeded {
+		goto RETRY
+	}
+	return sabakan.SchemaVersion, nil
 }
 
 func (d *driver) Upgrade(ctx context.Context) error {
