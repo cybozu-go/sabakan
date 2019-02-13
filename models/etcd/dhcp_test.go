@@ -13,9 +13,8 @@ import (
 )
 
 var testDHCPConfig = sabakan.DHCPConfig{
-	GatewayOffset: 100,
-	LeaseMinutes:  30,
-	DNSServers:    []string{"10.0.0.1", "10.0.0.2"},
+	LeaseMinutes: 30,
+	DNSServers:   []string{"10.0.0.1", "10.0.0.2"},
 }
 
 func testDHCPPutConfig(t *testing.T) {

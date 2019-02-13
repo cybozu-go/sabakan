@@ -9,7 +9,6 @@ import (
 	"path"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/netutil"
 	"github.com/cybozu-go/sabakan"
 	"go.universe.tf/netboot/dhcp4"
 )
@@ -111,9 +110,8 @@ func (h DHCPHandler) makeOptions(ciaddr net.IP) (dhcp4.Options, error) {
 	opts[dhcp4.OptSubnetMask] = mask
 
 	// default gateway address (router)
-	nnet := netutil.IP4ToInt(ciaddr.Mask(mask))
-	gw := netutil.IntToIP4(nnet + uint32(config.GatewayOffset)).To4()
-	opts[dhcp4.OptRouters] = gw
+	gw := ipam.GatewayAddress(&net.IPNet{IP: ciaddr, Mask: mask})
+	opts[dhcp4.OptRouters] = gw.IP.To4()
 
 	// domain name server
 	if len(config.DNSServers) > 0 {

@@ -21,9 +21,9 @@ func (r *Resolver) BMC() BMCResolver {
 	return &bMCResolver{r}
 }
 
-// BMCInfoIPv4 implements ResolverRoot.
-func (r *Resolver) BMCInfoIPv4() BMCInfoIPv4Resolver {
-	return &bMCInfoIPv4Resolver{r}
+// NICConfig implements ResolverRoot.
+func (r *Resolver) NICConfig() NICConfigResolver {
+	return &nICConfigResolver{r}
 }
 
 // MachineSpec implements ResolverRoot.
@@ -50,15 +50,15 @@ func (r *bMCResolver) Ipv4(ctx context.Context, obj *sabakan.MachineBMC) (IPAddr
 	return IPAddress(net.ParseIP(obj.IPv4)), nil
 }
 
-type bMCInfoIPv4Resolver struct{ *Resolver }
+type nICConfigResolver struct{ *Resolver }
 
-func (r *bMCInfoIPv4Resolver) Address(ctx context.Context, obj *sabakan.BMCInfoIPv4) (IPAddress, error) {
+func (r *nICConfigResolver) Address(ctx context.Context, obj *sabakan.NICConfig) (IPAddress, error) {
 	return IPAddress(net.ParseIP(obj.Address)), nil
 }
-func (r *bMCInfoIPv4Resolver) Netmask(ctx context.Context, obj *sabakan.BMCInfoIPv4) (IPAddress, error) {
+func (r *nICConfigResolver) Netmask(ctx context.Context, obj *sabakan.NICConfig) (IPAddress, error) {
 	return IPAddress(net.ParseIP(obj.Netmask)), nil
 }
-func (r *bMCInfoIPv4Resolver) Gateway(ctx context.Context, obj *sabakan.BMCInfoIPv4) (IPAddress, error) {
+func (r *nICConfigResolver) Gateway(ctx context.Context, obj *sabakan.NICConfig) (IPAddress, error) {
 	return IPAddress(net.ParseIP(obj.Gateway)), nil
 }
 

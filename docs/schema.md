@@ -1,11 +1,18 @@
 Data Schema in etcd
 ===================
 
-Sabakan stores various types of data in etcd.
-Keys and values in etcd are described below.
+Schema version: **2**
+
+Schema version is incremented when data format has changed.
 
 All keys are prefixed with a string specified in the sabakan command-line option.
 This prefix string is denoted as `<prefix>` in the following.
+
+`<prefix>/version`
+------------------
+
+This key contains the schema version.
+Before version 1.2, sabakan did not have this key.
 
 `<prefix>/machines/<serial>`
 ----------------------------

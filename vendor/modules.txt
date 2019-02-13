@@ -10,6 +10,7 @@ github.com/ajeddeloh/go-json
 # github.com/coreos/etcd v3.3.10+incompatible
 github.com/coreos/etcd/clientv3
 github.com/coreos/etcd/clientv3/clientv3util
+github.com/coreos/etcd/clientv3/concurrency
 github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes
 github.com/coreos/etcd/auth/authpb
 github.com/coreos/etcd/etcdserver/etcdserverpb
@@ -59,6 +60,11 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/google/go-cmp v0.2.0
+github.com/google/go-cmp/cmp
+github.com/google/go-cmp/cmp/internal/diff
+github.com/google/go-cmp/cmp/internal/function
+github.com/google/go-cmp/cmp/internal/value
 # github.com/google/subcommands v0.0.0-20181012225330-46f0354f6315
 github.com/google/subcommands
 # github.com/gorilla/websocket v1.4.0

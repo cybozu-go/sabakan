@@ -4,6 +4,8 @@ import "time"
 
 // Internal schema keys.
 const (
+	KeyVersion           = "version"
+	KeySchemaLockPrefix  = "schema-lock/"
 	KeyCrypts            = "crypts/"
 	KeyDHCP              = "dhcp"
 	KeyIPAM              = "ipam"

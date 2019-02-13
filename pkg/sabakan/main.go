@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
-	"fmt"
 	"math/rand"
 	"net"
 	"net/http"
@@ -15,6 +15,7 @@ import (
 
 	"github.com/cybozu-go/etcdutil"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/sabakan"
 	"github.com/cybozu-go/sabakan/dhcpd"
 	"github.com/cybozu-go/sabakan/models/etcd"
 	"github.com/cybozu-go/sabakan/web"
@@ -51,6 +52,15 @@ func main() {
 	// seed math/random
 	rand.Seed(time.Now().UnixNano())
 
+	well.Go(subMain)
+	well.Stop()
+	err := well.Wait()
+	if !well.IsSignaled(err) && err != nil {
+		log.ErrorExit(err)
+	}
+}
+
+func subMain(ctx context.Context) error {
 	cfg := newConfig()
 	if *flagConfigFile == "" {
 		cfg.AdvertiseURL = *flagAdvertiseURL
@@ -72,37 +82,49 @@ func main() {
 	} else {
 		f, err := os.Open(*flagConfigFile)
 		if err != nil {
-			log.ErrorExit(err)
+			return err
 		}
 		err = yaml.NewDecoder(f).Decode(cfg)
 		if err != nil {
-			log.ErrorExit(err)
+			return err
 		}
 		f.Close()
 	}
 
 	if !filepath.IsAbs(cfg.DataDir) {
-		fmt.Fprintln(os.Stderr, "data-dir must be an absolute path")
-		os.Exit(1)
+		return errors.New("data-dir must be an absolute path")
 	}
 	if cfg.AdvertiseURL == "" {
-		fmt.Fprintln(os.Stderr, "advertise-url must be specified")
-		os.Exit(1)
+		return errors.New("advertise-url must be specified")
 	}
 	advertiseURL, err := url.Parse(cfg.AdvertiseURL)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
 
 	c, err := etcdutil.NewClient(cfg.Etcd)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
 	defer c.Close()
 
 	model := etcd.NewModel(c, cfg.DataDir, advertiseURL)
+
+	// update schema
+	sv, err := model.Schema.Version(ctx)
+	if err != nil {
+		return err
+	}
+	if sv != sabakan.SchemaVersion {
+		err = model.Schema.Upgrade(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	env := well.NewEnvironment(ctx)
 	ch := make(chan struct{})
-	well.Go(func(ctx context.Context) error {
+	env.Go(func(ctx context.Context) error {
 		return model.Run(ctx, ch)
 	})
 
@@ -111,17 +133,17 @@ func main() {
 
 	conn, err := dhcp4.NewConn(cfg.DHCPBind)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
 	dhcpServer := dhcpd.Server{
 		Handler: dhcpd.DHCPHandler{Model: model, MyURL: advertiseURL},
 		Conn:    conn,
 	}
-	well.Go(dhcpServer.Serve)
+	env.Go(dhcpServer.Serve)
 
 	allowedIPs, err := parseAllowIPs(cfg.AllowIPs)
 	if err != nil {
-		log.ErrorExit(err)
+		return err
 	}
 	webServer := web.NewServer(model, cfg.IPXEPath, advertiseURL, allowedIPs, cfg.Playground)
 	s := &well.HTTPServer{
@@ -130,14 +152,12 @@ func main() {
 			Handler: webServer,
 		},
 		ShutdownTimeout: 3 * time.Minute,
+		Env:             env,
 	}
 	s.ListenAndServe()
 
-	well.Stop()
-	err = well.Wait()
-	if !well.IsSignaled(err) && err != nil {
-		log.ErrorExit(err)
-	}
+	env.Stop()
+	return env.Wait()
 }
 
 func parseAllowIPs(ips []string) ([]*net.IPNet, error) {

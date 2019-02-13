@@ -109,15 +109,16 @@ func TestRenderIgnition(t *testing.T) {
 			&Machine{
 				Info: MachineInfo{
 					BMC: BMCInfo{
-						IPv4: BMCInfoIPv4{
-							Address: "1.2.3.4",
-							Netmask: "255.255.255.0",
-							Gateway: "1.2.3.2",
+						IPv4: NICConfig{
+							Address:  "1.2.3.4",
+							Netmask:  "255.255.255.0",
+							MaskBits: 24,
+							Gateway:  "1.2.3.2",
 						},
 					},
 				},
 			},
-			`{"contents":"{\"address\":\"1.2.3.4\",\"netmask\":\"255.255.255.0\",\"gateway\":\"1.2.3.2\"}"}`,
+			`{"contents":"{\"address\":\"1.2.3.4\",\"netmask\":\"255.255.255.0\",\"maskbits\":24,\"gateway\":\"1.2.3.2\"}"}`,
 		},
 	}
 	u, err := url.Parse("http://localhost:10080")

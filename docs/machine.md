@@ -67,10 +67,27 @@ A JSON representation of `Machine` looks like:
   },
 
   "info": {
+    "network": {
+      "ipv4": [
+        {
+          "address": "10.69.0.69",
+          "netmask": "255.255.255.192",
+          "maskbits": 26,
+          "gateway": "10.69.0.65"
+        },
+        {
+          "address": "10.69.0.133",
+          "netmask": "255.255.255.192",
+          "maskbits": 26,
+          "gateway": "10.69.0.129"
+        }
+      ]
+    },
     "bmc": {
       "ipv4": {
         "address": "10.72.17.37",
         "netmask": "255.255.255.0",
+        "maskbits": 24,
         "gateway": "10.71.17.1"
       }
     }
@@ -81,4 +98,5 @@ A JSON representation of `Machine` looks like:
 `status.duration` is the duration between the current time and `status.timestamp`.
 The unit of `status.duration` is seconds.
 
-`info.bmc` contains BMC NIC configuration information.
+`info.network` contains server NIC configurations.
+`info.bmc` contains BMC NIC configuration.

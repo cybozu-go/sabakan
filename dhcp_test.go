@@ -1,30 +1,14 @@
 package sabakan
 
 import (
-	"net"
 	"testing"
 	"time"
 )
 
-func testGatewayAddress(t *testing.T) {
-	t.Parallel()
-
-	c := &DHCPConfig{
-		GatewayOffset: 1,
-	}
-	_, addr, _ := net.ParseCIDR("12.34.56.78/24")
-	addr2 := c.GatewayAddress(addr)
-	if addr2.String() != "12.34.56.1/24" {
-		t.Error("wrong gateway address:", addr2.String())
-	}
-}
-
 func testLeaseDuration(t *testing.T) {
 	t.Parallel()
 
-	c := &DHCPConfig{
-		GatewayOffset: 100,
-	}
+	c := &DHCPConfig{}
 
 	du := c.LeaseDuration()
 	if du != DefaultLeaseDuration {
@@ -38,6 +22,5 @@ func testLeaseDuration(t *testing.T) {
 }
 
 func TestDHCP(t *testing.T) {
-	t.Run("GatewayAddress", testGatewayAddress)
 	t.Run("LeaseDuration", testLeaseDuration)
 }

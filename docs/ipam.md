@@ -23,6 +23,7 @@ Field                     | Type   | Description
 `node-ipv4-range-mask`    | int    | The subnet mask for a divided range.
 `node-ip-per-node`        | int    | The number of IP addresses for each node.
 `node-index-offset`       | int    | Offset for assigning IP address to a node in a divided range.
+`node-gateway-offset`     | int    | The default gateway address offset.
 `bmc-ipv4-pool`           | string | CIDR IPv4 network for BMC IP pool.
 `bmc-ipv4-offset`         | string | BMC IPs will be started by adding this to `bmc-ipv4-pool`.  Default is "", equivalent to `0.0.0.0`.
 `bmc-ipv4-range-size`     | int    | Size of the address range to divide the pool (bit counts).
@@ -100,6 +101,7 @@ Field                     | Value
 `node-ipv4-range-mask`    | 26
 `node-ip-per-node`        | 3
 `node-index-offset`       | 3
+`node-gateway-offset`     | 1
 `bmc-ipv4-pool`           | 10.72.16.0/20
 `bmc-ipv4-offset`         | 0.0.1.0
 `bmc-ipv4-range-size`     | 5
@@ -127,3 +129,20 @@ its static addresses for node OS are:
 and its BMC address is:
 
 * 10.72.17.37
+
+### Gateway address
+
+A default gateway need to be given to clients to communicate with
+servers outside of the L2 network.  The default gateway address is
+henceforth an address in the L2 network.
+
+To calculate it automatically, sabakan uses `node-gateway-offset` as follows.
+Suppose the client has an IPv4 address "10.72.18.3",
+
+1. Mask the address with `node-ipv4-range-mask` bit mask.
+2. Add `node-gateway-offset` value.
+
+With the given IPAM configurations, the gateway address is computed as "10.72.16.1".
+
+The default gateway address for BMC is computed just like this but
+using `bmc-ipv4-gateway-offset`.

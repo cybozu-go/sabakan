@@ -35,6 +35,7 @@ func NewModel() sabakan.Model {
 		Log:          logDriver{d},
 		KernelParams: newKernelParamsDriver(),
 		Health:       newHealthDriver(),
+		Schema:       d,
 	}
 }
 
