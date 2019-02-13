@@ -82,7 +82,7 @@ A JSON representation of `Machine` looks like:
           "gateway": "10.69.0.129"
         }
       ]
-    }
+    },
     "bmc": {
       "ipv4": {
         "address": "10.72.17.37",
