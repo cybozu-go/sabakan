@@ -1,7 +1,7 @@
 Data Schema in etcd
 ===================
 
-Schema version: **1.2**
+Schema version: **2**
 
 Schema version is incremented when data format has changed.
 
