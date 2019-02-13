@@ -48,6 +48,13 @@ Following additional template functions are defined and can be used:
 * `MyURL`: returns the URL of the sabakan server.
 * `Metadata`: takes a key to retrieve metadata value saved along with the template.
 * `json`: renders the argument as JSON.
+* `add`, `sub`, `mul`, `div`: do arithmetic on parameters.
+
+For example, the following template may be replaced with 6 when `Machine.Spec.Rack` is 3.
+
+```
+{{ add .Spec.Rack 3 }}
+```
 
 Uploading templates to sabakan
 ------------------------------
