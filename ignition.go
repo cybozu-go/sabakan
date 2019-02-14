@@ -160,6 +160,10 @@ func renderString(name string, src string, params *IgnitionParams) (string, erro
 				}
 				return string(data), nil
 			},
+			"add": add,
+			"sub": sub,
+			"mul": mul,
+			"div": div,
 		}).
 		Parse(src)
 	if err != nil {
@@ -170,4 +174,122 @@ func renderString(name string, src string, params *IgnitionParams) (string, erro
 		return "", err
 	}
 	return dst.String(), nil
+}
+
+func isIntLike(a interface{}) bool{
+	switch a.(type) {
+		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+			return true
+		default:
+			return false
+	}
+}
+
+func isFloatLike(a interface{}) bool {
+	switch a.(type) {
+	case float32, float64:
+		return true
+	default:
+		return false
+	}
+}
+
+func add(a, b interface{})(interface{}, error){
+	switch a {
+	case isIntLike(a):
+		switch b {
+		case isIntLike(b):
+			return a.(int64) + b.(int64), nil
+		case isFloatLike(b):
+			return float64(a.(int64)) + b.(float64), nil
+		default:
+			return nil, fmt.Errorf("add: unknown type %T %v", b, b)
+		}
+	case isFloatLike(a):
+		switch b {
+		case isIntLike(b):
+			return float64(a.(int64)) + b.(float64), nil
+		case isFloatLike(b):
+			return float64(a.(int64)) + b.(float64), nil
+		default:
+			return nil, fmt.Errorf("add: unknown type %T %v", b, b)
+		}
+	default:
+		return nil, fmt.Errorf("add: unknown type %T %v", a, a)
+	}
+}
+
+func sub(a, b interface{})(interface{}, error){
+	switch a {
+	case isIntLike(a):
+		switch b {
+		case isIntLike(b):
+			return a.(int64) - b.(int64), nil
+		case isFloatLike(b):
+			return float64(a.(int64)) - b.(float64), nil
+		default:
+			return nil, fmt.Errorf("sub: unknown type %T %v", b, b)
+		}
+	case isFloatLike(a):
+		switch b {
+		case isIntLike(b):
+			return float64(a.(int64)) - b.(float64), nil
+		case isFloatLike(b):
+			return float64(a.(int64)) - b.(float64), nil
+		default:
+			return nil, fmt.Errorf("sub: unknown type %T %v", b, b)
+		}
+	default:
+		return nil, fmt.Errorf("sub: unknown type %T %v", a, a)
+	}
+}
+
+func mul(a, b interface{})(interface{}, error){
+	switch a {
+	case isIntLike(a):
+		switch b {
+		case isIntLike(b):
+			return a.(int64) * b.(int64), nil
+		case isFloatLike(b):
+			return float64(a.(int64)) * b.(float64), nil
+		default:
+			return nil, fmt.Errorf("mul: unknown type %T %v", b, b)
+		}
+	case isFloatLike(a):
+		switch b {
+		case isIntLike(b):
+			return float64(a.(int64)) * b.(float64), nil
+		case isFloatLike(b):
+			return float64(a.(int64)) * b.(float64), nil
+		default:
+			return nil, fmt.Errorf("mul: unknown type %T %v", b, b)
+		}
+	default:
+		return nil, fmt.Errorf("mul: unknown type %T %v", a, a)
+	}
+}
+
+func div(a, b interface{})(interface{}, error){
+	switch a {
+	case isIntLike(a):
+		switch b {
+		case isIntLike(b):
+			return a.(int64) / b.(int64), nil
+		case isFloatLike(b):
+			return float64(a.(int64)) / b.(float64), nil
+		default:
+			return nil, fmt.Errorf("div: unknown type %T %v", b, b)
+		}
+	case isFloatLike(a):
+		switch b {
+		case isIntLike(b):
+			return float64(a.(int64)) / b.(float64), nil
+		case isFloatLike(b):
+			return float64(a.(int64)) / b.(float64), nil
+		default:
+			return nil, fmt.Errorf("div: unknown type %T %v", b, b)
+		}
+	default:
+		return nil, fmt.Errorf("div: unknown type %T %v", a, a)
+	}
 }
