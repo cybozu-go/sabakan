@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	errNotInt   = errors.New("not an integer")
-	errNotFloat = errors.New("not a float")
+	errNotInt       = errors.New("not an integer")
+	errNotFloat     = errors.New("not a float")
+	errZeroDivision = errors.New("zero division")
 )
 
 func jsonFunc(i interface{}) (string, error) {
@@ -129,10 +130,16 @@ func mulFunc(a, b interface{}) (interface{}, error) {
 func divFunc(a, b interface{}) (interface{}, error) {
 	ia, ib, err := getAsInts(a, b)
 	if err == nil {
+		if ib == 0 {
+			return nil, errZeroDivision
+		}
 		return ia / ib, nil
 	}
 	fa, fb, err := getAsFloats(a, b)
 	if err == nil {
+		if fb == 0 {
+			return nil, errZeroDivision
+		}
 		return fa / fb, nil
 	}
 	return nil, err
