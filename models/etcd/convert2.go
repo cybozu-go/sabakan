@@ -134,8 +134,9 @@ func (d *driver) convertTo2(ctx context.Context, mu *concurrency.Mutex) error {
 	}
 
 	// update schema version
+	const thisVersion = "2"
 	tresp, err := d.client.Txn(ctx).If(mu.IsOwner()).
-		Then(clientv3.OpPut(KeyVersion, sabakan.SchemaVersion)).
+		Then(clientv3.OpPut(KeyVersion, thisVersion)).
 		Commit()
 	if err != nil {
 		return err
@@ -145,7 +146,7 @@ func (d *driver) convertTo2(ctx context.Context, mu *concurrency.Mutex) error {
 	}
 
 	log.Info("updated schema version", map[string]interface{}{
-		"to": sabakan.SchemaVersion,
+		"to": thisVersion,
 	})
 	return nil
 }

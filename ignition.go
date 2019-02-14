@@ -153,13 +153,11 @@ func renderString(name string, src string, params *IgnitionParams) (string, erro
 		Funcs(template.FuncMap{
 			"MyURL":    getMyURL,
 			"Metadata": getMetadata,
-			"json": func(i interface{}) (string, error) {
-				data, err := json.Marshal(i)
-				if err != nil {
-					return "", err
-				}
-				return string(data), nil
-			},
+			"json":     jsonFunc,
+			"add":      addFunc,
+			"sub":      subFunc,
+			"mul":      mulFunc,
+			"div":      divFunc,
 		}).
 		Parse(src)
 	if err != nil {

@@ -42,8 +42,9 @@ When a backward-incompatible change is to be merged to `master`, the schema vers
 and conversion from old schema need to be implemented.
 
 1. Increment `SchemaVersion` in [version.go](./version.go) by 1.
-2. Add conversion method from old schema.  Example: [models/etcd/convert2.go](./models/etcd/convert2.go).
-3. Call the conversion method from `driver.Upgrade` defined in [models/etcd/schema.go](./models/etcd/schema.go).
+2. Increment schema version at the top of [docs/schema.md](./docs/schema.md) by 1.
+3. Add conversion method from old schema.  Example: [models/etcd/convert2.go](./models/etcd/convert2.go).
+4. Call the conversion method from `driver.Upgrade` defined in [models/etcd/schema.go](./models/etcd/schema.go).
 
 Bump version
 ------------
