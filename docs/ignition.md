@@ -66,13 +66,20 @@ Sabakan keeps up to 10 old ignition templates for each role.
 When a new ignition template has some defects, administrators can revert it to old one
 by deleting the new template.
 
-Templates may have meta data.  To associate meta data, use `--meta` as follows:
+Templates may have meta data.  To associate meta data, create a JSON file
+containing a JSON object, and specify it with `--meta FILENAME` as follows:
 
 ```console
-$ sabactl ignitions set --meta KEY1=VALUE1,KEY2=VALUE2 -f cs.yaml cs 1.0.0
+$ cat >meta.json <<'EOF'
+{
+  "key1": "value1",
+  "key2": [1, 2, 3]
+}
+EOF
+$ sabactl ignitions set --meta meta.json -f cs.yaml cs 1.0.0
 ```
 
-The meta data can be referenced by text/template function `Metadata` as described above.
+The meta data can be referenced by [text/template][] function `Metadata` as described above.
 
 Example
 -------

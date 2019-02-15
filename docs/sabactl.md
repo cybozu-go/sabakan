@@ -190,35 +190,38 @@ $ sabactl assets delete data.tar.gz
 
 Delete an asset.
 
-`sabactl ignitions get ROLE`
-----------------------------
+`sabactl ignitions get ROLE [ID]`
+---------------------------------
 
-Get a registered ignition template meta data list of the role.
-Each meta data contains template ID with key of `id` as well as explicitly registered ones.
+List of get ignition templates for `ROLE`.
 
-```console
-$ sabactl ignitions get <role>
+If `ID` is not specified, the command outputs the list of available `ID` for `ROLE`.
+
+If `ID` is specified, the command outputs a JSON object like this:
+```json
+{
+  "version": "2.3",
+  "template": "{\"ignition\": {\"version\": \"2.3.0\"}, ...}",
+  "meta": "{\"foo\": [1, 2, 3]}"
+}
 ```
 
-`sabactl ignitions cat ROLE ID`
--------------------------------
+`sabactl ignitions set -f FILE [--json] [--meta FILENAME] ROLE ID`
+------------------------------------------------------------------
 
-Get a registered ignition template of ID in the role. 
+Register a new ignition template for `ROLE` with `ID`.
+For details, see .
+
+`FILE` is either a template YAML as described in [Ignition Controls](ignition.md), or
+a JSON got by `sabactl ignitions get ROLE ID` if `--json` is given.
+
+A template can be associated with meta data if `--meta FILENAME` is given.
+The meta data file must contain a JSON object.  Meta data can be referenced
+when rendering the ignition template.
 
 ```console
-$ sabactl ignitions cat <role> <id>
+$ sabactl ignitions set -f compute.yml <role> <id>
 ```
-
-`sabactl ignitions set -f FILE [--meta KEY=VALUE] ROLE ID`
----------------------------------------------------------
-
-Register a new ignition template for a certain role.  The format ignitions are described in [Ignition Controls](ignition.md).
-
-```console
-$ sabactl ignitions set -f <ignition.yml> <role> <id>
-```
-
-* `--meta`: adds meta data.
 
 `sabactl ignitions delete ROLE ID`
 ----------------------------------
@@ -284,4 +287,3 @@ Show sabactl version
 ```console
 $ sabactl version
 ```
-

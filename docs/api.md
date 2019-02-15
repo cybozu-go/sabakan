@@ -30,10 +30,10 @@ For GraphQL API, see [graphql.md](graphql.md).
 * [GET|HEAD /api/v1/boot/coreos/kernel](#getcoreoskernel)
 * [GET|HEAD /api/v1/boot/coreos/initrd.gz](#getcoreosinitrd)
 * [GET /api/v1/boot/ignitions/\<serial\>/\<id\>](#getigitionsid)
-* [GET /api/v1/ignitions/\<role\>](#getignitions)
-* [GET /api/v1/ignitions/\<role\>/\<id\>](#getignitionsid)
-* [PUT /api/v1/ignitions/\<role\>/\<id\>](#putignitions)
-* [DELETE /api/v1/ignitions/\<role\>/\<id\>](#deleteignitions)
+* [GET /api/v1/ignitions/\<role\>](#listignitiontemplates)
+* [GET /api/v1/ignitions/\<role\>/\<id\>](#getignitiontemplate)
+* [PUT /api/v1/ignitions/\<role\>/\<id\>](#putignitiontemplate)
+* [DELETE /api/v1/ignitions/\<role\>/\<id\>](#deleteignitiontemplate)
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
@@ -187,13 +187,13 @@ There is no possibility that part of machines will be registered.
 
 In the HTTP request body, specify the following list of the machine information in JSON format.
 
-Field                        | Description
------                        | -----------
-`serial=<serial>`            | The serial number of the machine
-`labels={<key=value>, ...}`    | The labels of the machine
-`rack=<rack>`                | The rack number where the machine is in. If it is omitted, value set to `0`
-`role=<role>`                | The role of the machine (e.g. `boot` or `worker`)
-`bmc=<bmc>`                  | The BMC spec
+| Field                       | Description                                                                 |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `serial=<serial>`           | The serial number of the machine                                            |
+| `labels={<key=value>, ...}` | The labels of the machine                                                   |
+| `rack=<rack>`               | The rack number where the machine is in. If it is omitted, value set to `0` |
+| `role=<role>`               | The role of the machine (e.g. `boot` or `worker`)                           |
+| `bmc=<bmc>`                 | The BMC spec                                                                |
 
 **Successful response**
 
@@ -227,16 +227,16 @@ $ curl -s -X POST 'localhost:10080/api/v1/machines' -d '
 
 Search registered machines. A user can specify the following URL queries.
 
-Query                      | Description
------                      | -----------
-`serial=<serial>`          | The serial number of the machine
-`labels=<key=value>,...`   | The labels of the machine.
-`rack=<rack>`              | The rack number where the machine is in
-`role=<role>`              | The role of the machine
-`ipv4=<ip address>`        | IPv4 address
-`ipv6=<ip address>`        | IPv6 address
-`bmc-type=<bmc-type>`      | BMC type
-`state=<state>`            | The state of the machine
+| Query                    | Description                             |
+| ------------------------ | --------------------------------------- |
+| `serial=<serial>`        | The serial number of the machine        |
+| `labels=<key=value>,...` | The labels of the machine.              |
+| `rack=<rack>`            | The rack number where the machine is in |
+| `role=<role>`            | The role of the machine                 |
+| `ipv4=<ip address>`      | IPv4 address                            |
+| `ipv6=<ip address>`      | IPv6 address                            |
+| `bmc-type=<bmc-type>`    | BMC type                                |
+| `state=<state>`          | The state of the machine                |
 
 **Successful response**
 
@@ -658,9 +658,9 @@ Get iPXE script to boot CoreOS Container Linux.
 
 Following query parameters can be added.
 
-Name   | Value  | Description
-----   | -----  | -----------
-serial | 0 or 1 | serial console is enabled if 1
+| Name   | Value  | Description                    |
+| ------ | ------ | ------------------------------ |
+| serial | 0 or 1 | serial console is enabled if 1 |
 
 ## <a name="getcoreoskernel" />`GET|HEAD /api/v1/boot/coreos/kernel`
 
@@ -699,10 +699,10 @@ $ curl -s -XGET localhost:10080/api/v1/boot/ignitions/1234abcd/1527731687
 }
 ```
 
-## <a name="getignitions" />`GET /api/v1/ignitions/<role>`
+## <a name="listignitiontemplates" />`GET /api/v1/ignitions/<role>`
 
-Get CoreOS ignition template specs with meta data for a certain role.
-Specs are sorted by their ID as a version number, in ascending order.
+Return list of ignition template IDs.  IDs are sorted as a semantic
+versioning numbers in ascending order.
 
 **Successful response**
 
@@ -722,12 +722,21 @@ Specs are sorted by their ID as a version number, in ascending order.
 
 ```console
 $ curl -s -XGET localhost:10080/api/v1/boot/ignitions/worker
-[ {"id": "1.0.0", "meta": {"foo": "bar"}}, {"id": "1.0.1", "meta": {"foo": "baz"} ]
+["1.0.0", "1.0.1"]
 ```
 
-## <a name="getignitionsid" />`GET /api/v1/ignitions/<role>/<id>`
+## <a name="getignitiontemplate" />`GET /api/v1/ignitions/<role>/<id>`
 
-Get CoreOS ignition template for a certain role.
+Get an ignition template specified by `<role>` and `<id>`.
+
+A template is represeted as a JSON object like this:
+```json
+{
+  "version": "2.3",
+  "template": "{\"ignition\": {\"version\": \"2.3.0\"}, ...}",
+  "meta": "{\"foo\": [1, 2, 3]}"
+}
+```
 
 **Successful response**
 
@@ -735,7 +744,7 @@ Get CoreOS ignition template for a certain role.
 
 **Failure responses**
 
-- No `<id>` exists in `<role>`.
+- No `<id>` for `<role>`.
 
   HTTP status code: 404 Not found
 
@@ -748,20 +757,28 @@ Get CoreOS ignition template for a certain role.
 ```console
 $ curl -s -XGET localhost:10080/api/v1/ignitions/worker/1527731687
 {
-  "systemd": [
-    ......
-  ]
+  "version": "2.3",
+  "template": "{\"ignition\": {\"version\": \"2.3.0\"}, ...}",
+  "meta": "{\"foo\": [1, 2, 3]}"
 }
 ```
 
-## <a name="putignitions" />`PUT /api/v1/ignitions/<role>/<id>`
+## <a name="putignitiontemplate" />`PUT /api/v1/ignitions/<role>/<id>`
 
-Create CoreOS ignition for a certain role from ignition-like template in JSON
-(see [Ignition Controls](ignition.md)).
+Upload an Ignition template for `<role>` with `<id>`.
 
-**Request headers**
+The request body must be a JSON object with these fields:
 
-- `X-Sabakan-Ignition-<KEY>`: if given, the ignition will have meta data of `"<Lowercased KEY>": "<VALUE>"`.
+| Name       | Type   | Description                                                                         |
+| ---------- | ------ | ----------------------------------------------------------------------------------- |
+| `version`  | string | Ignition configuration specification as `major.minor`.                              |
+| `template` | object | An ignition configuration to be rendered as desribed in [ignition.md](ignition.md). |
+| `meta`     | object | Meta data associated with this template.                                            |
+
+The currently supported ignition specifications are: `2.3`.
+
+`template` must be a JSON object defined by the spec.
+For `2.3`, refer to https://coreos.com/ignition/docs/latest/configuration-v2_3.html
 
 **Successful response**
 
@@ -769,10 +786,6 @@ Create CoreOS ignition for a certain role from ignition-like template in JSON
 - HTTP response body: empty
 
 **Failure responses**
-
-- Invalid request header (e.g. KEY == "id").
-
-  HTTP status code: 400 Bad Request
 
 - Invalid ignition format.
 
@@ -786,14 +799,7 @@ Create CoreOS ignition for a certain role from ignition-like template in JSON
 
   HTTP status code: 409 Conflict
 
-**Example**
-
-```console
-$ echo $'ignition:\n version: "2.2.0"' | curl -s -XPUT -d - localhost:10080/api/v1/ignitions/worker/1.0.1-2
-(No output in stdout)
-```
-
-## <a name="deleteignitions" />`DELETE /api/v1/ignitions/<role>/<id>`
+## <a name="deleteignitiontemplate" />`DELETE /api/v1/ignitions/<role>/<id>`
 
 Delete CoreOS ignition by role and id.
 
