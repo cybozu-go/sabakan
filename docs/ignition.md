@@ -1,5 +1,5 @@
-Ignition Controls
-=================
+Ignition Templates
+==================
 
 [Ignition][] is a provisioning tool for CoreOS Container Linux.
 
@@ -13,6 +13,7 @@ Writing templates
 An ignition template is defined by a YAML file like this:
 
 ```yaml
+version: "2.3"
 include: ../base/base.yml
 passwd: passwd.yml
 files:
@@ -20,19 +21,23 @@ files:
 systemd:
   - name: chronyd.service
     enabled: true
+    mask: false
 networkd:
   - 10-node0.netdev
 ```
 
-Each field in the template YAML corresponds to an item in [ignition configuration](https://coreos.com/ignition/docs/latest/configuration-v2_3.html):
+Field descriptions:
 
+* `version`: Ignition specification version.  Currently, only "2.3" is supported.
 * `include`: Another ignition template to be included.
 * `passwd`: A filename in the same directory of the template.  
-    The contents should be a YAML encoded ignition's `passwd` object.
+    The contents should be a YAML encoded ignition's [`passwd` object](https://coreos.com/ignition/docs/latest/configuration-v2_3.html).
 * `files`: List of filenames to be provisioned.  
     The file contents are read from files under `files/` sub directory.
 * `systemd`: List of systemd unit files to be provisioned.  
-    The unit contents are read from files under `systemd/` sub directory.
+    The unit contents are read from files under `systemd/` sub directory.  
+    If `enabled` is true, the unit will be enabled.  
+    If `mask` is true, the unit will be masked.
 * `networkd`: List of networkd unit files to be provisioned.  
     The unit contents are read from files under `networkd/` sub directory.
 

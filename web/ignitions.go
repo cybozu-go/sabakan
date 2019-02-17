@@ -1,95 +1,61 @@
 package web
 
 import (
-	"io/ioutil"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/well"
 )
 
-func (s Server) handleIgnitions(w http.ResponseWriter, r *http.Request) {
-	params := strings.Split(r.URL.Path[len("/api/v1/boot/ignitions/"):], "/")
-	if len(params) != 2 {
-		renderError(r.Context(), w, APIErrBadRequest)
-		return
-	}
-
-	serial := params[0]
-	id := params[1]
-
-	if len(serial) == 0 || len(id) == 0 {
-		renderError(r.Context(), w, APIErrBadRequest)
-		return
-	}
-	if r.Method != "GET" {
-		renderError(r.Context(), w, APIErrBadMethod)
-		return
-	}
-
-	s.serveIgnition(w, r, id, serial)
-}
+const maxIgnitionTemplateSize = 2 * 1024 * 1024
 
 func (s Server) handleIgnitionTemplates(w http.ResponseWriter, r *http.Request) {
 	params := strings.Split(r.URL.Path[len("/api/v1/ignitions/"):], "/")
+	var role, id string
 
-	if r.Method == "GET" && len(params) == 1 {
-		role := params[0]
+	// validate params
+	if len(params) > 0 {
+		role = params[0]
 		if !sabakan.IsValidRole(role) {
-			renderError(r.Context(), w, APIErrBadRequest)
+			renderError(r.Context(), w, BadRequest("invalid role name: "+role))
 			return
 		}
-		s.handleIgnitionTemplateIndexGet(w, r, role)
-	} else if r.Method == "GET" && len(params) == 2 {
-		role := params[0]
-		id := params[1]
-		if !sabakan.IsValidRole(role) {
-			renderError(r.Context(), w, APIErrBadRequest)
-			return
-		}
-		s.handleIgnitionTemplatesGet(w, r, role, id)
-	} else if r.Method == "PUT" && len(params) == 2 {
-		role := params[0]
-		id := params[1]
-		if !sabakan.IsValidRole(role) {
-			renderError(r.Context(), w, APIErrBadRequest)
-			return
-		}
+	}
+	if len(params) > 1 {
+		id = params[1]
 		if !sabakan.IsValidIgnitionID(id) {
-			renderError(r.Context(), w, APIErrBadRequest)
+			renderError(r.Context(), w, BadRequest("invalid ignition id: "+id))
 			return
 		}
+	}
+
+	switch {
+	case r.Method == "GET" && len(params) == 1:
+		s.handleIgnitionTemplateListIDs(w, r, role)
+	case r.Method == "GET" && len(params) == 2:
+		s.handleIgnitionTemplatesGet(w, r, role, id)
+	case r.Method == "PUT" && len(params) == 2:
 		s.handleIgnitionTemplatesPut(w, r, role, id)
-	} else if r.Method == "DELETE" && len(params) == 2 {
-		role := params[0]
-		id := params[1]
-		if !sabakan.IsValidRole(role) || len(id) == 0 {
-			renderError(r.Context(), w, APIErrBadRequest)
-			return
-		}
+	case r.Method == "DELETE" && len(params) == 2:
 		s.handleIgnitionTemplatesDelete(w, r, role, id)
-	} else {
+	default:
 		renderError(r.Context(), w, APIErrBadRequest)
 	}
 }
 
-func (s Server) handleIgnitionTemplateIndexGet(w http.ResponseWriter, r *http.Request, role string) {
-	index, err := s.Model.Ignition.GetTemplateIndex(r.Context(), role)
-	if err == sabakan.ErrNotFound {
-		renderError(r.Context(), w, APIErrNotFound)
-		return
-	}
+func (s Server) handleIgnitionTemplateListIDs(w http.ResponseWriter, r *http.Request, role string) {
+	ids, err := s.Model.Ignition.GetTemplateIDs(r.Context(), role)
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
-	renderJSON(w, index, http.StatusOK)
+	renderJSON(w, ids, http.StatusOK)
 }
 
 func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Request, role string, id string) {
-	ign, err := s.Model.Ignition.GetTemplate(r.Context(), role, id)
+	tmpl, err := s.Model.Ignition.GetTemplate(r.Context(), role, id)
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
@@ -98,53 +64,29 @@ func (s Server) handleIgnitionTemplatesGet(w http.ResponseWriter, r *http.Reques
 		renderError(r.Context(), w, InternalServerError(err))
 		return
 	}
-	w.Header().Set("Content-Type", "text/plain")
-	_, err = w.Write([]byte(ign))
-	if err != nil {
-		fields := well.FieldsFromContext(r.Context())
-		fields[log.FnError] = err.Error()
-		log.Error("failed to write response for GET /ignitions", fields)
-	}
+
+	renderJSON(w, tmpl, http.StatusOK)
 }
 
 func (s Server) handleIgnitionTemplatesPut(w http.ResponseWriter, r *http.Request, role, id string) {
-	// 1MB is maximum ignition template size
-	body, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 1073741824))
+	tmpl := new(sabakan.IgnitionTemplate)
+	err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxIgnitionTemplateSize)).Decode(tmpl)
 	if err != nil {
-		renderError(r.Context(), w, InternalServerError(err))
-		return
-	}
-	ipam, err := s.Model.IPAM.GetConfig()
-	if err != nil {
-		renderError(r.Context(), w, InternalServerError(err))
-		return
-	}
-	metadata := make(map[string]string)
-	for k, v := range r.Header {
-		optionHeaderPrefix := "x-sabakan-ignitions-"
-		if strings.HasPrefix(strings.ToLower(k), optionHeaderPrefix) {
-			key := strings.ToLower(k[len(optionHeaderPrefix):])
-			if len(key) == 0 {
-				continue
-			}
-			if !sabakan.IsValidLabelName(key) || key == "id" {
-				renderError(r.Context(), w, BadRequest("invalid option key"+key))
-				return
-			}
-			if !sabakan.IsValidLabelValue(v[0]) {
-				renderError(r.Context(), w, BadRequest("invalid option value"+v[0]))
-				return
-			}
-			metadata[key] = v[0]
-		}
-	}
-	err = sabakan.ValidateIgnitionTemplate(string(body), metadata, ipam)
-	if err != nil {
-		renderError(r.Context(), w, BadRequest(err.Error()))
+		renderError(r.Context(), w, BadRequest(fmt.Sprintf("invalid request body: %v", err)))
 		return
 	}
 
-	err = s.Model.Ignition.PutTemplate(r.Context(), role, id, string(body), metadata)
+	err = s.validateIgnitionTemplate(tmpl)
+	if err != nil {
+		renderError(r.Context(), w, BadRequest(fmt.Sprintf("invalid template: %v", err)))
+		return
+	}
+
+	err = s.Model.Ignition.PutTemplate(r.Context(), role, id, tmpl)
+	if err == sabakan.ErrConflicted {
+		renderError(r.Context(), w, APIErrConflict)
+		return
+	}
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return
@@ -162,34 +104,18 @@ func (s Server) handleIgnitionTemplatesDelete(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s Server) serveIgnition(w http.ResponseWriter, r *http.Request, id, serial string) {
-	m, err := s.Model.Machine.Get(r.Context(), serial)
-	if err == sabakan.ErrNotFound {
-		renderError(r.Context(), w, APIErrNotFound)
-		return
-	}
-
-	tmpl, err := s.Model.Ignition.GetTemplate(r.Context(), m.Spec.Role, id)
-	if err == sabakan.ErrNotFound {
-		renderError(r.Context(), w, APIErrNotFound)
-		return
-	}
-	meta, err := s.Model.Ignition.GetTemplateMetadata(r.Context(), m.Spec.Role, id)
-	if err == sabakan.ErrNotFound {
-		renderError(r.Context(), w, APIErrNotFound)
-		return
-	}
-	ign, err := sabakan.RenderIgnition(tmpl, &sabakan.IgnitionParams{Metadata: meta, Machine: m, MyURL: s.MyURL})
+func (s Server) validateIgnitionTemplate(tmpl *sabakan.IgnitionTemplate) error {
+	ipam, err := s.Model.IPAM.GetConfig()
 	if err != nil {
-		renderError(r.Context(), w, InternalServerError(err))
-		return
+		return err
 	}
+	mc := sabakan.NewMachine(sabakan.MachineSpec{
+		Serial:      "1234abcd",
+		Rack:        1,
+		IndexInRack: 1,
+	})
+	ipam.GenerateIP(mc)
 
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write([]byte(ign))
-	if err != nil {
-		fields := well.FieldsFromContext(r.Context())
-		fields[log.FnError] = err.Error()
-		log.Error("failed to write response for GET /boot/ignitions", fields)
-	}
+	_, err = s.renderIgnition(tmpl, mc)
+	return err
 }

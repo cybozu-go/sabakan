@@ -1,173 +1,99 @@
 package client
 
 import (
-	"reflect"
+	"encoding/json"
 	"testing"
+
+	ign23 "github.com/coreos/ignition/config/v2_3/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/vincent-petithory/dataurl"
 )
 
-func testIgnitionBuilderConstructIgnitionYAML(t *testing.T) {
-	b := newIgnitionBuilder("../testdata/test")
-
-	tests := []struct {
-		name    string
-		source  *ignitionSource
-		wantErr bool
-	}{
-		{name: "passwd", source: &ignitionSource{Passwd: "../base/passwd.yml"}, wantErr: false},
-		{name: "files", source: &ignitionSource{Files: []string{"/etc/hostname"}}, wantErr: false},
-		{name: "systemd", source: &ignitionSource{Systemd: []systemd{{Name: "bird.service"}}}, wantErr: false},
-		{name: "networkd", source: &ignitionSource{Networkd: []string{"10-node0.netdev"}}, wantErr: false},
-		{name: "include yml from different working directory", source: &ignitionSource{Include: "../base/base.yml"}, wantErr: false},
-
-		{name: "passwd not found", source: &ignitionSource{Passwd: "nonexists_file.yml"}, wantErr: true},
-		{name: "files not found", source: &ignitionSource{Files: []string{"/etc/not_file"}}, wantErr: true},
-		{name: "systemd not found", source: &ignitionSource{Systemd: []systemd{{Name: "hoge.service"}}}, wantErr: true},
-		{name: "networkd not found", source: &ignitionSource{Networkd: []string{"nonexists.netdev"}}, wantErr: true},
-		{name: "include not found", source: &ignitionSource{Include: "nonexits_base.yml"}, wantErr: true},
-
-		{name: "name not found", source: &ignitionSource{Systemd: []systemd{{Enabled: true}}}, wantErr: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := b.constructIgnitionYAML(tt.source); (err != nil) != tt.wantErr {
-				t.Errorf("ignitionBuilder.constructIgnitionYAML() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+func TestBuildIgnitionTemplate(t *testing.T) {
+	t.Run("2.3", testBuildIgnitionTemplate2_3)
 }
 
-func testIgnitionBuilderConstructFile(t *testing.T) {
-	b := newIgnitionBuilder("../testdata/test")
-	inputFile := "/etc/hostname"
-	if err := b.constructFile(inputFile); err != nil {
-		t.Fatal(err)
-	}
-	if err := b.constructFile(inputFile); err != nil {
-		t.Fatal(err)
-	}
-	storage, ok := b.ignition["storage"].(map[string]interface{})
-	if !ok {
-		t.Fatal("failed to construct ignition map")
-	}
+func testBuildIgnitionTemplate2_3(t *testing.T) {
+	t.Parallel()
 
-	actual := len(storage["files"].([]interface{}))
-	if actual != 2 {
-		t.Errorf("Should not overwrite units, so expected length:%d, actual %d", 2, actual)
+	meta := map[string]interface{}{
+		"foo": []int{1, 2, 3},
+		"bar": "zot",
 	}
-}
-
-func testIgnitionBuilderConstructSystemd(t *testing.T) {
-	b := newIgnitionBuilder("../testdata/test")
-	bird := systemd{Name: "bird.service", Enabled: true}
-	err := b.constructSystemd(bird)
+	tmpl, err := BuildIgnitionTemplate("../testdata/test/test.yml", meta)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = b.constructSystemd(bird)
+	if tmpl.Version != Ignition2_3 {
+		t.Error(`tmpl.Version != Ignition2_3:`, tmpl.Version)
+	}
+	if !cmp.Equal(meta, tmpl.Metadata) {
+		t.Error("wrong meta data:", cmp.Diff(meta, tmpl.Metadata))
+	}
+
+	var cfg ign23.Config
+	err = json.Unmarshal(tmpl.Template, &cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	updateEngine := systemd{Name: "update-engine.service", Mask: true}
-	err = b.constructSystemd(updateEngine)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expectedBird := `[Unit]
-Description=bird
-`
-	expected := map[string]interface{}{
-		"units": []interface{}{
-			map[string]interface{}{
-				"name":     "bird.service",
-				"enabled":  true,
-				"contents": expectedBird,
-			},
-			map[string]interface{}{
-				"name":     "bird.service",
-				"enabled":  true,
-				"contents": expectedBird,
-			},
-			map[string]interface{}{
-				"name": "update-engine.service",
-				"mask": true,
-			},
+	boolPtr := func(b bool) *bool { return &b }
+	intPtr := func(i int) *int { return &i }
+	strPtr := func(s string) *string { return &s }
+	expected := ign23.Config{}
+	expected.Passwd.Groups = []ign23.PasswdGroup{
+		{
+			Name: "cybozu",
+			Gid:  intPtr(10000),
 		},
 	}
+	expected.Passwd.Users = []ign23.PasswdUser{
+		{
+			Name:              "core",
+			PasswordHash:      strPtr("$6$43y3tkl..."),
+			SSHAuthorizedKeys: []ign23.SSHAuthorizedKey{"key1"},
+		},
+	}
+	expectedFiles := make([]ign23.File, 2)
+	expectedFiles[0].Path = "/etc/rack"
+	expectedFiles[0].Contents.Source = "data:," + dataurl.EscapeString("{{ .Spec.Rack }}\n")
+	expectedFiles[1].Path = "/etc/hostname"
+	expectedFiles[1].Contents.Source = "data:," + dataurl.EscapeString("{{ .Spec.Serial }}\n")
+	expected.Storage.Files = expectedFiles
+	expected.Networkd.Units = []ign23.Networkdunit{
+		{
+			Name: "10-node0.netdev",
+			Contents: `[NetDev]
+Name=node0
+Kind=dummy
+Address={{ index .Spec.IPv4 0 }}/32
+`,
+		},
+	}
+	expected.Systemd.Units = []ign23.Unit{
+		{
+			Name:    "chronyd.service",
+			Enabled: boolPtr(true),
+			Contents: `[Unit]
+Description=Chrony
 
-	if !reflect.DeepEqual(b.ignition["systemd"], expected) {
-		t.Error("b.ignition['systemd'] is not expected: ", b.ignition["systemd"])
-	}
-}
+[Service]
+ExecStart=/usr/bin/chronyd
 
-func testIgnitionBuilderConstructNetworkd(t *testing.T) {
-	b := newIgnitionBuilder("../testdata/test")
-	src := "10-node0.netdev"
-	err := b.constructNetworkd(src)
-	if err != nil {
-		t.Fatal(err)
+[Install]
+WantedBy=multi-user.target
+`,
+		},
+		{
+			Name:     "bird.service",
+			Contents: "[Unit]\nDescription=bird\n",
+		},
+		{
+			Name: "update-engine.service",
+			Mask: true,
+		},
 	}
-	err = b.constructNetworkd(src)
-	if err != nil {
-		t.Fatal(err)
+	if !cmp.Equal(expected, cfg) {
+		t.Error("unexpected build result:", cmp.Diff(expected, cfg))
 	}
-	networkd, ok := b.ignition["networkd"].(map[string]interface{})
-	if !ok {
-		t.Fatal("failed to construct ignition map")
-	}
-
-	actual := len(networkd["units"].([]interface{}))
-	if actual != 2 {
-		t.Errorf("Should not overwrite units, so expected length:%d, actual %d", 2, actual)
-	}
-}
-
-func testIgnitionBuilderConstructPasswd(t *testing.T) {
-	b := newIgnitionBuilder("../testdata/test")
-	src := "../base/passwd.yml"
-	err := b.constructPasswd(src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = b.constructPasswd(src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	passwd, ok := b.ignition["passwd"].(map[interface{}]interface{})
-	if !ok {
-		t.Fatal("failed to construct ignition map")
-	}
-
-	actual := len(passwd["users"].([]interface{}))
-	if actual != 1 {
-		t.Errorf("constructPasswd does not append unit, so expected length:%d, actual %d", 1, actual)
-	}
-}
-
-func testIgnitionBuilderConstructInclude(t *testing.T) {
-	b := newIgnitionBuilder("../testdata/test")
-
-	err := b.constructIgnitionYAML(&ignitionSource{Systemd: []systemd{{Name: "bird.service"}}, Include: "../base/base.yml"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	systemd, ok := b.ignition["systemd"].(map[string]interface{})
-	if !ok {
-		t.Fatal("failed to construct ignition map")
-	}
-
-	actual := len(systemd["units"].([]interface{}))
-	if actual != 2 {
-		t.Errorf("in base.yml, defined a systemd unit, so expected length:%d, actual %d", 2, actual)
-	}
-}
-
-func TestSabactlIgnitionTemplate(t *testing.T) {
-	t.Run("constructIgnitionYAML", testIgnitionBuilderConstructIgnitionYAML)
-	t.Run("constructFiles", testIgnitionBuilderConstructFile)
-	t.Run("constructSystemd", testIgnitionBuilderConstructSystemd)
-	t.Run("constructNetworkd", testIgnitionBuilderConstructNetworkd)
-	t.Run("constructPasswd", testIgnitionBuilderConstructPasswd)
-	t.Run("constructInclude", testIgnitionBuilderConstructInclude)
 }

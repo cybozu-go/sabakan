@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -20,8 +20,8 @@ import (
 	"github.com/cybozu-go/sabakan/models/etcd"
 	"github.com/cybozu-go/sabakan/web"
 	"github.com/cybozu-go/well"
+	"github.com/ghodss/yaml"
 	"go.universe.tf/netboot/dhcp4"
-	yaml "gopkg.in/yaml.v2"
 )
 
 var (
@@ -80,15 +80,14 @@ func subMain(ctx context.Context) error {
 		cfg.Etcd.TLSCertFile = *flagEtcdTLSCert
 		cfg.Etcd.TLSKeyFile = *flagEtcdTLSKey
 	} else {
-		f, err := os.Open(*flagConfigFile)
+		data, err := ioutil.ReadFile(*flagConfigFile)
 		if err != nil {
 			return err
 		}
-		err = yaml.NewDecoder(f).Decode(cfg)
+		err = yaml.Unmarshal(data, cfg)
 		if err != nil {
 			return err
 		}
-		f.Close()
 	}
 
 	if !filepath.IsAbs(cfg.DataDir) {

@@ -2,10 +2,10 @@ package etcd
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/cybozu-go/sabakan"
+	"github.com/google/go-cmp/cmp"
 )
 
 func testTemplate(t *testing.T) {
@@ -19,11 +19,14 @@ func testTemplate(t *testing.T) {
 		t.Fatal("unexpected error: ", err)
 	}
 
-	err = d.PutTemplate(context.Background(), "cs", id, "data", map[string]string{})
+	tmpl := &sabakan.IgnitionTemplate{
+		Version: sabakan.Ignition2_3,
+	}
+	err = d.PutTemplate(context.Background(), "cs", id, tmpl)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = d.PutTemplate(context.Background(), "cs", id, "data", map[string]string{})
+	err = d.PutTemplate(context.Background(), "cs", id, tmpl)
 	if err != sabakan.ErrConflicted {
 		t.Fatal(err)
 	}
@@ -32,7 +35,7 @@ func testTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ign != "data" {
+	if ign.Version != sabakan.Ignition2_3 {
 		t.Error("wrong template stored", ign)
 	}
 
@@ -47,58 +50,38 @@ func testTemplate(t *testing.T) {
 	}
 }
 
-func testTemplateMetadata(t *testing.T) {
+func testTemplateIDs(t *testing.T) {
 	t.Parallel()
 
 	d, _ := testNewDriver(t)
 
-	_, err := d.GetTemplateIndex(context.Background(), "cs")
-	if err != sabakan.ErrNotFound {
-		t.Fatal("unexpected error: ", err)
+	tmpl := &sabakan.IgnitionTemplate{
+		Version: sabakan.Ignition2_3,
 	}
-
-	err = d.PutTemplate(context.Background(), "cs", "1.0.0", "data", map[string]string{"version": "20181010"})
+	err := d.PutTemplate(context.Background(), "cs", "1.2.3", tmpl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = d.PutTemplate(context.Background(), "cs", "1.4.0", tmpl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = d.PutTemplate(context.Background(), "cs", "1.2", tmpl)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	index, err := d.GetTemplateIndex(context.Background(), "cs")
+	ids, err := d.GetTemplateIDs(context.Background(), "cs")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(index) != 1 {
-		t.Error("wrong number of templates", len(index))
-	}
-	if index[0].ID != "1.0.0" {
-		t.Error("wrong id", index[0].ID)
-	}
-	if index[0].Metadata["version"] != "20181010" {
-		t.Error("wrong version", index[0].Metadata)
-	}
-
-	for i := 0; i < sabakan.MaxIgnitions+10; i++ {
-		id := fmt.Sprintf("1.1.%d", i)
-		err = d.PutTemplate(context.Background(), "cs", id, "data", map[string]string{})
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	index, err = d.GetTemplateIndex(context.Background(), "cs")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(index) != sabakan.MaxIgnitions {
-		t.Error("wrong number of templates", len(index))
-	}
-	if index[0].ID != fmt.Sprintf("1.1.%d", 10) {
-		t.Error("wrong oldest template", index[0])
-	}
-	if index[sabakan.MaxIgnitions-1].ID != fmt.Sprintf("1.1.%d", sabakan.MaxIgnitions+9) {
-		t.Error("wrong latest template", index[sabakan.MaxIgnitions-1])
+	expected := []string{"1.2", "1.2.3", "1.4.0"}
+	if !cmp.Equal(expected, ids) {
+		t.Error("wrong template IDs:", cmp.Diff(expected, ids))
 	}
 }
 
 func TestIgnitionTemplate(t *testing.T) {
 	t.Run("Template", testTemplate)
-	t.Run("TemplateIDs", testTemplateMetadata)
+	t.Run("TemplateIDs", testTemplateIDs)
 }

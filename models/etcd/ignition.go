@@ -3,8 +3,6 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"path"
 	"sort"
 	"time"
 
@@ -12,55 +10,46 @@ import (
 	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/sabakan"
 	version "github.com/hashicorp/go-version"
-	"github.com/pkg/errors"
 )
 
-// PutTemplate implements sabakan.IgnitionModel
-func (d *driver) PutTemplate(ctx context.Context, role, id string, template string, metadata map[string]string) error {
-	if metadata == nil {
-		return errors.New("metadata should not be nil")
-	}
-	target := path.Join(KeyIgnitionsTemplate, role, id)
-	meta := path.Join(KeyIgnitionsMetadata, role, id)
-	metaJSON, err := json.Marshal(metadata)
+func keyIgnitionRolePrefix(role string) string {
+	return KeyIgnitions + role + "/"
+}
+
+func (d *driver) PutTemplate(ctx context.Context, role, id string, tmpl *sabakan.IgnitionTemplate) error {
+	pfx := keyIgnitionRolePrefix(role)
+	target := pfx + id
+	data, err := json.Marshal(tmpl)
 	if err != nil {
 		return err
 	}
 
 	tresp, err := d.client.Txn(ctx).
 		// Prohibit overwriting
-		If(clientv3util.KeyMissing(target), clientv3util.KeyMissing(meta)).
-		Then(clientv3.OpPut(target, template), clientv3.OpPut(meta, string(metaJSON))).
-		Else().
+		If(clientv3util.KeyMissing(target)).
+		Then(clientv3.OpPut(target, string(data))).
 		Commit()
 	if err != nil {
 		return err
 	}
 
 	if !tresp.Succeeded {
-		time.Sleep(1 * time.Nanosecond)
 		return sabakan.ErrConflicted
 	}
 
-	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditIgnition, role, "put",
-		fmt.Sprintf("id=%s\n%s", id, template))
+	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditIgnition, role, "put", id)
 
-	tmplPrefix := path.Join(KeyIgnitionsTemplate, role) + "/"
-	metaPrefix := path.Join(KeyIgnitionsMetadata, role) + "/"
-	resp, err := d.client.Get(ctx, tmplPrefix,
-		clientv3.WithPrefix(),
-		clientv3.WithKeysOnly())
+	resp, err := d.client.Get(ctx, pfx, clientv3.WithPrefix(), clientv3.WithKeysOnly())
 	if err != nil {
 		return err
 	}
-	if resp.Count <= sabakan.MaxIgnitions {
+	if resp.Count <= MaxIgnitions {
 		return nil
 	}
 
 	versions := make([]*version.Version, resp.Count)
 	for i, kv := range resp.Kvs {
-		id := string(kv.Key[len(tmplPrefix):])
-		ver, err := version.NewVersion(id)
+		ver, err := version.NewVersion(string(kv.Key[len(pfx):]))
 		if err != nil {
 			return err
 		}
@@ -69,13 +58,8 @@ func (d *driver) PutTemplate(ctx context.Context, role, id string, template stri
 
 	sort.Sort(version.Collection(versions))
 
-	for _, ver := range versions[:len(versions)-sabakan.MaxIgnitions] {
-		_, err = d.client.Txn(ctx).
-			Then(
-				clientv3.OpDelete(tmplPrefix+ver.Original()),
-				clientv3.OpDelete(metaPrefix+ver.Original()),
-			).
-			Commit()
+	for _, ver := range versions[:len(versions)-MaxIgnitions] {
+		_, err = d.client.Delete(ctx, pfx+ver.Original())
 		if err != nil {
 			return err
 		}
@@ -84,32 +68,20 @@ func (d *driver) PutTemplate(ctx context.Context, role, id string, template stri
 	return nil
 }
 
-// GetTemplateIndex implements sabakan.IgnitionModel
-func (d *driver) GetTemplateIndex(ctx context.Context, role string) ([]*sabakan.IgnitionInfo, error) {
-	target := path.Join(KeyIgnitionsMetadata, role) + "/"
-	resp, err := d.client.Get(ctx, target,
-		clientv3.WithPrefix(),
-	)
+func (d *driver) GetTemplateIDs(ctx context.Context, role string) ([]string, error) {
+	pfx := keyIgnitionRolePrefix(role)
+	resp, err := d.client.Get(ctx, pfx, clientv3.WithPrefix())
 	if err != nil {
 		return nil, err
 	}
-
 	if resp.Count == 0 {
-		return nil, sabakan.ErrNotFound
+		return nil, nil
 	}
 
-	index := make(map[string]*sabakan.IgnitionInfo)
 	versions := make([]*version.Version, len(resp.Kvs))
 	for i, kv := range resp.Kvs {
-		info := new(sabakan.IgnitionInfo)
-		err = json.Unmarshal(kv.Value, &info.Metadata)
-		if err != nil {
-			return nil, err
-		}
-		info.ID = string(kv.Key[len(target):])
-		index[info.ID] = info
-
-		ver, err := version.NewVersion(info.ID)
+		id := string(kv.Key[len(pfx):])
+		ver, err := version.NewVersion(id)
 		if err != nil {
 			return nil, err
 		}
@@ -118,32 +90,16 @@ func (d *driver) GetTemplateIndex(ctx context.Context, role string) ([]*sabakan.
 
 	sort.Sort(version.Collection(versions))
 
-	result := make([]*sabakan.IgnitionInfo, len(versions))
+	result := make([]string, len(versions))
 	for i, ver := range versions {
-		result[i] = index[ver.Original()]
+		result[i] = ver.Original()
 	}
 
 	return result, nil
 }
 
-// GetTemplate implements sabakan.IgnitionModel
-func (d *driver) GetTemplate(ctx context.Context, role string, id string) (string, error) {
-	target := path.Join(KeyIgnitionsTemplate, role, id)
-	resp, err := d.client.Get(ctx, target)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.Count == 0 {
-		return "", sabakan.ErrNotFound
-	}
-
-	return string(resp.Kvs[0].Value), nil
-}
-
-// GetTemplateMetadata implements sabakan.IgnitionModel
-func (d *driver) GetTemplateMetadata(ctx context.Context, role string, id string) (map[string]string, error) {
-	target := path.Join(KeyIgnitionsMetadata, role, id)
+func (d *driver) GetTemplate(ctx context.Context, role string, id string) (*sabakan.IgnitionTemplate, error) {
+	target := keyIgnitionRolePrefix(role) + id
 	resp, err := d.client.Get(ctx, target)
 	if err != nil {
 		return nil, err
@@ -152,33 +108,27 @@ func (d *driver) GetTemplateMetadata(ctx context.Context, role string, id string
 	if resp.Count == 0 {
 		return nil, sabakan.ErrNotFound
 	}
-	var metadata map[string]string
-	err = json.Unmarshal(resp.Kvs[0].Value, &metadata)
+
+	tmpl := new(sabakan.IgnitionTemplate)
+	err = json.Unmarshal(resp.Kvs[0].Value, tmpl)
 	if err != nil {
 		return nil, err
 	}
-	return metadata, nil
+	return tmpl, nil
 }
 
 // DeleteTemplate implements sabakan.IgnitionModel
 func (d *driver) DeleteTemplate(ctx context.Context, role string, id string) error {
-	tmplTarget := path.Join(KeyIgnitionsTemplate, role, id)
-	metaTarget := path.Join(KeyIgnitionsMetadata, role, id)
-	tresp, err := d.client.Txn(ctx).
-		Then(
-			clientv3.OpDelete(tmplTarget),
-			clientv3.OpDelete(metaTarget),
-		).
-		Commit()
+	target := keyIgnitionRolePrefix(role) + id
+	resp, err := d.client.Delete(ctx, target)
 	if err != nil {
 		return err
 	}
-
-	if tresp.Responses[0].GetResponseDeleteRange().Deleted == 0 || tresp.Responses[1].GetResponseDeleteRange().Deleted == 0 {
+	if resp.Deleted == 0 {
 		return sabakan.ErrNotFound
 	}
 
-	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditIgnition, role, "delete", id)
+	d.addLog(ctx, time.Now(), resp.Header.Revision, sabakan.AuditIgnition, role, "delete", id)
 
 	return nil
 }

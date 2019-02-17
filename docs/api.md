@@ -656,12 +656,6 @@ Get iPXE script to chain URL to redirect  `/api/v1/boot/coreos/ipxe/<serial>`
 
 Get iPXE script to boot CoreOS Container Linux.
 
-Following query parameters can be added.
-
-| Name   | Value  | Description                    |
-| ------ | ------ | ------------------------------ |
-| serial | 0 or 1 | serial console is enabled if 1 |
-
 ## <a name="getcoreoskernel" />`GET|HEAD /api/v1/boot/coreos/kernel`
 
 Get Linux kernel image to boot CoreOS.
@@ -672,7 +666,10 @@ Get initial RAM disk image to boot CoreOS.
 
 ## <a name="getigitionsid" />`GET /api/v1/boot/ignitions/<serial>/<id>`
 
-Get CoreOS ignition for a certain serial.
+Get ignition configuration for a machine identified by `<serial>`.
+
+The ignition configuration will be rendered from the template for the
+machine's role.  The ID of the template is specified by `<id>`.
 
 **Successful response**
 
@@ -680,11 +677,11 @@ Get CoreOS ignition for a certain serial.
 
 **Failure responses**
 
-- No `<serial>` is found.
+- No machine for `<serial>` is found.
 
   HTTP status code: 404 Not found
 
-- No ignition for `<id>` is found.
+- No matching ignition template is found.
 
   HTTP status code: 404 Not found
 
@@ -709,10 +706,6 @@ versioning numbers in ascending order.
 - HTTP status code: 200 OK
 
 **Failure responses**
-
-- No ignitions are registered in the role.
-
-  HTTP status code: 404 Not found
 
 - Invalid `<role>`.
 
@@ -748,7 +741,7 @@ A template is represeted as a JSON object like this:
 
   HTTP status code: 404 Not found
 
-- Invalid `<role>`.
+- Invalid `<role>` or `<id>`.
 
   HTTP status code: 400 Bad Request
 
@@ -810,15 +803,11 @@ Delete CoreOS ignition by role and id.
 
 **Failure responses**
 
-- Missing role or id
-
-  HTTP status code: 400 Bad Request
-
-- No `<id>` exists in `<role>`.
+- No `<id>` exists for `<role>`.
 
   HTTP status code: 404 Not found
 
-- Invalid `<role>`.
+- Invalid `<role>` or `<id>`.
 
   HTTP status code: 400 Bad Request
 

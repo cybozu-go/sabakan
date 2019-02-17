@@ -8,9 +8,9 @@ Usage
 $ sabactl [--server http://localhost:10080] <subcommand> <args>...
 ```
 
-Option     | Default value            | Description
-------     | -------------            | -----------
-`--server` | `http://localhost:10080` | URL of sabakan
+| Option     | Default value            | Description    |
+| ---------- | ------------------------ | -------------- |
+| `--server` | `http://localhost:10080` | URL of sabakan |
 
 `sabactl ipam set`
 ------------------
@@ -193,7 +193,7 @@ Delete an asset.
 `sabactl ignitions get ROLE [ID]`
 ---------------------------------
 
-List of get ignition templates for `ROLE`.
+List or get ignition templates for `ROLE`.
 
 If `ID` is not specified, the command outputs the list of available `ID` for `ROLE`.
 
@@ -212,7 +212,7 @@ If `ID` is specified, the command outputs a JSON object like this:
 Register a new ignition template for `ROLE` with `ID`.
 For details, see .
 
-`FILE` is either a template YAML as described in [Ignition Controls](ignition.md), or
+`FILE` is either a template YAML described in [Ignition Templates](ignition.md), or
 a JSON got by `sabactl ignitions get ROLE ID` if `--json` is given.
 
 A template can be associated with meta data if `--meta FILENAME` is given.

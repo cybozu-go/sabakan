@@ -26,12 +26,12 @@ func newConfig() *config {
 }
 
 type config struct {
-	ListenHTTP   string           `yaml:"http"`
-	DHCPBind     string           `yaml:"dhcp-bind"`
-	IPXEPath     string           `yaml:"ipxe-efi-path"`
-	DataDir      string           `yaml:"data-dir"`
-	AdvertiseURL string           `yaml:"advertise-url"`
-	AllowIPs     []string         `yaml:"allow-ips"`
-	Playground   bool             `yaml:"enable-playground"`
-	Etcd         *etcdutil.Config `yaml:"etcd"`
+	ListenHTTP   string           `json:"http"`
+	DHCPBind     string           `json:"dhcp-bind"`
+	IPXEPath     string           `json:"ipxe-efi-path"`
+	DataDir      string           `json:"data-dir"`
+	AdvertiseURL string           `json:"advertise-url"`
+	AllowIPs     []string         `json:"allow-ips"`
+	Playground   bool             `json:"enable-playground"`
+	Etcd         *etcdutil.Config `json:"etcd"`
 }

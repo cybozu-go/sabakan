@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/sabakan"
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/subcommands"
 )
 
@@ -522,16 +523,14 @@ func testSabactlAssets(t *testing.T) {
 }
 
 func testSabactlIgnitions(t *testing.T) {
-	cat := `{"ignition":{"version":"2.2.0"}}`
-
-	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "--meta", "version=20181010", "cs", "1.0.0")
+	stdout, stderr, err := runSabactl("ignitions", "set", "-f", "../testdata/test/empty.yml", "cs", "1.0.0")
 	code := exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to set ignition template", code)
 	}
-	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "--meta", "version=20181012", "cs", "1.0.1")
+	stdout, stderr, err = runSabactl("ignitions", "set", "-f", "../testdata/test/test.yml", "--meta", "../testdata/meta.json", "cs", "1.0.1")
 	code = exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
@@ -539,43 +538,27 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Fatal("failed to set ignition template", code)
 	}
 
-	stdout, stderr, err = runSabactl("ignitions", "get", "cs")
+	stdout, stderr, err = runSabactl("ignitions", "get", "cs", "1.0.1")
 	code = exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
-		t.Fatal("failed to get ignition template IDs of cs", code)
+		t.Fatal("failed to get an ignition template", code)
 	}
-	var index []*sabakan.IgnitionInfo
-	err = json.NewDecoder(stdout).Decode(&index)
+	var tmpl sabakan.IgnitionTemplate
+	err = json.NewDecoder(stdout).Decode(&tmpl)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(index) != 2 {
-		t.Error("expected: 2, actual:", len(index))
+	if len(tmpl.Template) == 0 {
+		t.Error("empty template")
 	}
-	if index[0].ID != "1.0.0" {
-		t.Error("wrong ID", index[0].ID)
+	expectedMeta := map[string]interface{}{
+		"foo":   "bar",
+		"array": []interface{}{1.0, 2.0, 3.0},
 	}
-	if index[1].ID != "1.0.1" {
-		t.Error("wrong ID", index[1].ID)
-	}
-	if index[0].Metadata["version"] != "20181010" {
-		t.Error("wrong metadata", index[0].Metadata)
-	}
-	if index[1].Metadata["version"] != "20181012" {
-		t.Error("wrong metadata", index[1].Metadata)
-	}
-
-	stdout, stderr, err = runSabactl("ignitions", "cat", "cs", "1.0.0")
-	code = exitCode(err)
-	if code != ExitSuccess {
-		t.Log("stdout:", stdout.String())
-		t.Log("stderr:", stderr.String())
-		t.Fatal("failed to cat ignition template", code)
-	}
-	if strings.TrimSpace(stdout.String()) != cat {
-		t.Error("unexpected sabactl ignition cat:", stdout.String())
+	if !cmp.Equal(expectedMeta, tmpl.Metadata) {
+		t.Error("wrong meta data:", cmp.Diff(expectedMeta, tmpl.Metadata))
 	}
 
 	stdout, stderr, err = runSabactl("ignitions", "delete", "cs", "1.0.0")
@@ -586,6 +569,23 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Fatal("failed to delete an ignition template", code)
 	}
 
+	f, err := ioutil.TempFile("", "sabakan-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	err = json.NewEncoder(f).Encode(tmpl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stdout, stderr, err = runSabactl("ignitions", "set", "-f", f.Name(), "--json", "cs", "1.1.0")
+	code = exitCode(err)
+	if code != ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("failed to set ignition template", code)
+	}
+
 	stdout, stderr, err = runSabactl("ignitions", "get", "cs")
 	code = exitCode(err)
 	if code != ExitSuccess {
@@ -593,13 +593,14 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("failed to get ignition template IDs of cs", code)
 	}
-	index = []*sabakan.IgnitionInfo{}
-	err = json.NewDecoder(stdout).Decode(&index)
+	var ids []string
+	err = json.NewDecoder(stdout).Decode(&ids)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(index) != 1 {
-		t.Error("expected:1, actual:", len(index))
+	expectedIDs := []string{"1.0.1", "1.1.0"}
+	if !cmp.Equal(expectedIDs, ids) {
+		t.Error("unmatched template IDs:", cmp.Diff(expectedIDs, ids))
 	}
 }
 
