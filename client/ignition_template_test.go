@@ -24,8 +24,8 @@ func testBuildIgnitionTemplate2_3(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if tmpl.Version != Ignition2_3 {
-		t.Error(`tmpl.Version != Ignition2_3:`, tmpl.Version)
+	if tmpl.Version != Ignition2_2 {
+		t.Error(`tmpl.Version != Ignition2_2:`, tmpl.Version)
 	}
 	if !cmp.Equal(meta, tmpl.Metadata) {
 		t.Error("wrong meta data:", cmp.Diff(meta, tmpl.Metadata))

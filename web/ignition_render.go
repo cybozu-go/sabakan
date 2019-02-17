@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/template"
 
+	ign22 "github.com/coreos/ignition/config/v2_2/types"
 	ign23 "github.com/coreos/ignition/config/v2_3/types"
 	"github.com/cybozu-go/sabakan"
 	"github.com/vincent-petithory/dataurl"
@@ -87,11 +88,129 @@ func (s Server) renderIgnition(tmpl *sabakan.IgnitionTemplate, m *sabakan.Machin
 	}
 
 	switch tmpl.Version {
+	case sabakan.Ignition2_2:
+		return renderIgnition2_2(tmpl, render)
 	case sabakan.Ignition2_3:
 		return renderIgnition2_3(tmpl, render)
 	}
 
 	return nil, errors.New("unsupported ignition version: " + string(tmpl.Version))
+}
+
+func renderIgnition2_2(tmpl *sabakan.IgnitionTemplate, render renderFunc) (interface{}, error) {
+	ign := new(ign22.Config)
+	err := json.Unmarshal([]byte(tmpl.Template), ign)
+	if err != nil {
+		return nil, err
+	}
+
+	ign.Ignition.Version = "2.2.0"
+	for i := range ign.Passwd.Groups {
+		g := &ign.Passwd.Groups[i]
+		pfx := fmt.Sprintf("passwd.groups[%d].", i)
+		g.Name, err = render(pfx+"name", g.Name)
+		if err != nil {
+			return nil, err
+		}
+		g.PasswordHash, err = render(pfx+"passwordHash", g.PasswordHash)
+		if err != nil {
+			return nil, err
+		}
+	}
+	for i := range ign.Passwd.Users {
+		u := &ign.Passwd.Users[i]
+		pfx := fmt.Sprintf("passwd.users[%d].", i)
+		u.Name, err = render(pfx+"name", u.Name)
+		if err != nil {
+			return nil, err
+		}
+		if u.PasswordHash != nil {
+			passwd, err := render(pfx+"passwordHash", *u.PasswordHash)
+			if err != nil {
+				return nil, err
+			}
+			u.PasswordHash = &passwd
+		}
+		for j, key := range u.SSHAuthorizedKeys {
+			name := pfx + fmt.Sprintf("sshAuthorizedKeys[%d]", j)
+			k, err := render(name, string(key))
+			if err != nil {
+				return nil, err
+			}
+			u.SSHAuthorizedKeys[j] = ign22.SSHAuthorizedKey(k)
+		}
+		u.Gecos, err = render(pfx+"gecos", u.Gecos)
+		if err != nil {
+			return nil, err
+		}
+		u.HomeDir, err = render(pfx+"homeDir", u.HomeDir)
+		if err != nil {
+			return nil, err
+		}
+		u.PrimaryGroup, err = render(pfx+"primaryGroup", u.PrimaryGroup)
+		if err != nil {
+			return nil, err
+		}
+		for j, group := range u.Groups {
+			name := pfx + fmt.Sprintf("groups[%d]", j)
+			g, err := render(name, string(group))
+			if err != nil {
+				return nil, err
+			}
+			u.Groups[j] = ign22.Group(g)
+		}
+		u.Shell, err = render(pfx+"shell", u.Shell)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for i := range ign.Storage.Files {
+		file := &ign.Storage.Files[i]
+		if file.Contents.Verification.Hash != nil {
+			h, err := render(file.Path, *file.Contents.Verification.Hash)
+			if err != nil {
+				return nil, err
+			}
+			file.Contents.Verification.Hash = &h
+		}
+		if !strings.HasPrefix(file.Contents.Source, "data:") {
+			file.Contents.Source, err = render(file.Path, file.Contents.Source)
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		// Render the file contents if embedded.
+		d, err := dataurl.DecodeString(file.Contents.Source)
+		if err != nil {
+			return nil, err
+		}
+		rendered, err := render(file.Path, string(d.Data))
+		if err != nil {
+			return nil, err
+		}
+		file.Contents.Source = "data:," + dataurl.EscapeString(rendered)
+	}
+
+	for i := range ign.Networkd.Units {
+		unit := &ign.Networkd.Units[i]
+		unit.Contents, err = render(unit.Name, unit.Contents)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for i := range ign.Systemd.Units {
+		unit := &ign.Systemd.Units[i]
+		unit.Contents, err = render(unit.Name, unit.Contents)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ign, nil
 }
 
 func renderIgnition2_3(tmpl *sabakan.IgnitionTemplate, render renderFunc) (interface{}, error) {

@@ -10,6 +10,7 @@ type IgnitionVersion = sabakan.IgnitionVersion
 
 // Supported ignition versions
 const (
+	Ignition2_2 = sabakan.Ignition2_2
 	Ignition2_3 = sabakan.Ignition2_3
 )
 

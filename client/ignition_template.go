@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	ign22 "github.com/coreos/ignition/config/v2_2/types"
 	ign23 "github.com/coreos/ignition/config/v2_3/types"
 	"github.com/ghodss/yaml"
 	"github.com/vincent-petithory/dataurl"
@@ -51,7 +52,7 @@ func loadSource(sourceFile, baseDir string) (*TemplateSource, string, error) {
 	}
 
 	if src.Version == "" {
-		src.Version = Ignition2_3 // for backward compatibility
+		src.Version = Ignition2_2 // for backward compatibility
 	}
 	return src, newBaseDir, nil
 }
@@ -72,6 +73,16 @@ func BuildIgnitionTemplate(sourceFile string, metadata map[string]interface{}) (
 		Metadata: metadata,
 	}
 	switch src.Version {
+	case Ignition2_2:
+		ign, err := buildTemplate2_2(src, baseDir)
+		if err != nil {
+			return nil, err
+		}
+		data, err := json.Marshal(ign)
+		if err != nil {
+			return nil, err
+		}
+		tmpl.Template = json.RawMessage(data)
 	case Ignition2_3:
 		ign, err := buildTemplate2_3(src, baseDir)
 		if err != nil {
@@ -87,6 +98,95 @@ func BuildIgnitionTemplate(sourceFile string, metadata map[string]interface{}) (
 	}
 
 	return tmpl, nil
+}
+
+func buildTemplate2_2(src *TemplateSource, baseDir string) (*ign22.Config, error) {
+	var cfg *ign22.Config
+	if src.Include == "" {
+		cfg = &ign22.Config{}
+	} else {
+		parentSrc, parentBaseDir, err := loadSource(src.Include, baseDir)
+		if err != nil {
+			return nil, err
+		}
+		if parentSrc.Version != src.Version {
+			return nil, errors.New("unmatched ignition version in " + src.Include)
+		}
+		cfg, err = buildTemplate2_2(parentSrc, parentBaseDir)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if src.Passwd != "" {
+		passwdFile := src.Passwd
+		if !filepath.IsAbs(passwdFile) {
+			passwdFile = filepath.Join(baseDir, passwdFile)
+		}
+
+		data, err := ioutil.ReadFile(passwdFile)
+		if err != nil {
+			return nil, err
+		}
+
+		var passwd ign22.Passwd
+		err = yaml.Unmarshal(data, &passwd)
+		if err != nil {
+			return nil, fmt.Errorf("invalid passwd YAML: %s: %v", passwdFile, err)
+		}
+		cfg.Passwd = passwd
+	}
+
+	for _, fname := range src.Files {
+		// filepath.IsAbs is intentionally avoided to allow running clients on Windows.
+		if !strings.HasPrefix(fname, "/") {
+			return nil, errors.New("non-absolute filename: " + fname)
+		}
+		target := filepath.Join(baseDir, "files", fname)
+		data, err := ioutil.ReadFile(target)
+		if err != nil {
+			return nil, err
+		}
+		var file ign22.File
+		file.Path = fname
+		file.Contents.Source = "data:," + dataurl.Escape(data)
+		cfg.Storage.Files = append(cfg.Storage.Files, file)
+	}
+
+	for _, netunit := range src.Networkd {
+		target := filepath.Join(baseDir, "networkd", netunit)
+		data, err := ioutil.ReadFile(target)
+		if err != nil {
+			return nil, err
+		}
+
+		var unit ign22.Networkdunit
+		unit.Name = netunit
+		unit.Contents = string(data)
+		cfg.Networkd.Units = append(cfg.Networkd.Units, unit)
+	}
+
+	for _, sysunit := range src.Systemd {
+		var unit ign22.Unit
+		unit.Name = sysunit.Name
+		if sysunit.Mask {
+			unit.Mask = true
+		} else {
+			target := filepath.Join(baseDir, "systemd", sysunit.Name)
+			data, err := ioutil.ReadFile(target)
+			if err != nil {
+				return nil, err
+			}
+
+			if sysunit.Enabled {
+				unit.Enabled = &sysunit.Enabled
+			}
+			unit.Contents = string(data)
+		}
+		cfg.Systemd.Units = append(cfg.Systemd.Units, unit)
+	}
+
+	return cfg, nil
 }
 
 func buildTemplate2_3(src *TemplateSource, baseDir string) (*ign23.Config, error) {

@@ -28,7 +28,9 @@ networkd:
 
 Field descriptions:
 
-* `version`: Ignition specification version.  Currently, only "2.3" is supported.
+* `version`: Ignition specification version.  Current supported versions are:
+    * "2.2" (default)
+    * "2.3"
 * `include`: Another ignition template to be included.
 * `passwd`: A filename in the same directory of the template.  
     The contents should be a YAML encoded ignition's [`passwd` object](https://coreos.com/ignition/docs/latest/configuration-v2_3.html).

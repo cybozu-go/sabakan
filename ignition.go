@@ -9,6 +9,7 @@ type IgnitionVersion string
 
 // Supported ignition versions
 const (
+	Ignition2_2 = IgnitionVersion("2.2")
 	Ignition2_3 = IgnitionVersion("2.3")
 )
 
