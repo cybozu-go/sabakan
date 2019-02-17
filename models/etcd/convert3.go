@@ -9,7 +9,7 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	ign22 "github.com/coreos/ignition/config/v2_2/types"
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 	"github.com/vincent-petithory/dataurl"
 )
 

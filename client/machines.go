@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 // MachinesGet get machine information from sabakan server

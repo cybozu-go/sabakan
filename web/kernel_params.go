@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func (s Server) handleKernelParams(w http.ResponseWriter, r *http.Request) {

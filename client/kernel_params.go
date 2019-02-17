@@ -5,7 +5,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 // KernelParamsGet retrieves kernel parameters

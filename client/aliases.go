@@ -1,6 +1,6 @@
 package client
 
-import "github.com/cybozu-go/sabakan"
+import "github.com/cybozu-go/sabakan/v2"
 
 // ImageIndex is a list of *Image.
 type ImageIndex = sabakan.ImageIndex

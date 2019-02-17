@@ -4,13 +4,13 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"io/ioutil"
 	"sync"
 	"time"
 
-	"github.com/cybozu-go/sabakan"
-	"github.com/pkg/errors"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 type imageData struct {

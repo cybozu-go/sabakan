@@ -9,7 +9,7 @@ import (
 	"path"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 	"go.universe.tf/netboot/dhcp4"
 )
 

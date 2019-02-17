@@ -5,7 +5,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func TestStorage(t *testing.T) {

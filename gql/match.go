@@ -3,7 +3,7 @@ package gql
 import (
 	"time"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func matchMachine(m *sabakan.Machine, h, nh *MachineParams, now time.Time) bool {

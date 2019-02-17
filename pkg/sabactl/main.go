@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/cybozu-go/sabakan/pkg/sabactl/cmd"
+	"github.com/cybozu-go/sabakan/v2/pkg/sabactl/cmd"
 )
 
 func main() {

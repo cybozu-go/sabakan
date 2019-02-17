@@ -11,7 +11,7 @@ import (
 
 	ign22 "github.com/coreos/ignition/config/v2_2/types"
 	ign23 "github.com/coreos/ignition/config/v2_3/types"
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 	"github.com/vincent-petithory/dataurl"
 )
 

@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,8 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cybozu-go/sabakan"
-	"github.com/pkg/errors"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 type assetDriver struct {

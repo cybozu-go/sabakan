@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cybozu-go/sabakan/models/mock"
+	"github.com/cybozu-go/sabakan/v2/models/mock"
 )
 
 func TestKernelParams(t *testing.T) {

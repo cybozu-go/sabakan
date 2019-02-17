@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func testRegister(t *testing.T) {

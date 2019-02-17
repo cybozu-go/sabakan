@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 // IPAMConfigGet retrieves IPAM configurations

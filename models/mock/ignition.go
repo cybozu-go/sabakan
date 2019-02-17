@@ -5,7 +5,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 	version "github.com/hashicorp/go-version"
 )
 

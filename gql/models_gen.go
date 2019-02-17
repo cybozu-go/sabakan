@@ -3,7 +3,7 @@
 package gql
 
 import (
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 // Label represents an arbitrary key-value pairs.

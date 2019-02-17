@@ -10,7 +10,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 // AssetsIndex retrieves index of assets

@@ -10,8 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/models/mock"
+	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v2/models/mock"
 )
 
 func newTestImage(kernel, initrd string) io.Reader {

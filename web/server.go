@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/99designs/gqlgen/handler"
-	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/gql"
+	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v2/gql"
 )
 
 const (

@@ -2,11 +2,11 @@ package mock
 
 import (
 	"context"
+	"errors"
 	"path"
 	"strings"
 
-	"github.com/cybozu-go/sabakan"
-	"github.com/pkg/errors"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 // GetEncryptionKey implements sabakan.StorageModel
