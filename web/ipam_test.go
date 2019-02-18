@@ -9,36 +9,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/models/mock"
+	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v2/models/mock"
 )
 
 func testConfigIPAMGet(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
+	config := testWithIPAM(t, m)
 	handler := Server{Model: m}
-
-	config := &sabakan.IPAMConfig{
-		MaxNodesInRack:    28,
-		NodeIPv4Pool:      "10.69.0.0/20",
-		NodeIPv4Offset:    "",
-		NodeRangeSize:     6,
-		NodeRangeMask:     26,
-		NodeIPPerNode:     3,
-		NodeIndexOffset:   3,
-		NodeGatewayOffset: 1,
-		BMCIPv4Pool:       "10.72.16.0/20",
-		BMCIPv4Offset:     "0.0.1.0",
-		BMCRangeSize:      5,
-		BMCRangeMask:      20,
-		BMCGatewayOffset:  1,
-	}
-
-	err := m.IPAM.PutConfig(context.Background(), config)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/api/v1/config/ipam", nil)
@@ -50,8 +30,7 @@ func testConfigIPAMGet(t *testing.T) {
 	}
 
 	var result sabakan.IPAMConfig
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(&result, config) {

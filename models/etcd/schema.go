@@ -9,10 +9,14 @@ import (
 	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 const noVersion = "1"
+
+var (
+	errLostOwner = errors.New("lost ownership during conversion")
+)
 
 func (d *driver) Version(ctx context.Context) (string, error) {
 RETRY:
@@ -87,7 +91,14 @@ func (d *driver) Upgrade(ctx context.Context) error {
 			return err
 		}
 
-		// fallthrough when case "2" is added
+		fallthrough
+	case "2":
+		err := d.convertTo3(ctx, mu)
+		if err != nil {
+			return err
+		}
+
+		// fallthrough when case "3" is added
 		//fallthrough
 	default:
 		return errors.New("unknown schema version: " + sv)

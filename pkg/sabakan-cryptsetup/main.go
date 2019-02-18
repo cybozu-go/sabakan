@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/client"
+	"github.com/cybozu-go/sabakan/v2/client"
 	"github.com/cybozu-go/well"
 )
 

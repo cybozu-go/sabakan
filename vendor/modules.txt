@@ -5,8 +5,6 @@ github.com/99designs/gqlgen/handler
 github.com/99designs/gqlgen/complexity
 # github.com/agnivade/levenshtein v1.0.1
 github.com/agnivade/levenshtein
-# github.com/ajeddeloh/go-json v0.0.0-20170920214419-6a2fe990e083
-github.com/ajeddeloh/go-json
 # github.com/coreos/etcd v3.3.10+incompatible
 github.com/coreos/etcd/clientv3
 github.com/coreos/etcd/clientv3/clientv3util
@@ -22,24 +20,11 @@ github.com/coreos/go-semver/semver
 # github.com/coreos/go-systemd v0.0.0-20181031085051-9002847aa142
 github.com/coreos/go-systemd/unit
 # github.com/coreos/ignition v0.30.0
-github.com/coreos/ignition/config/v2_3
-github.com/coreos/ignition/config/shared/errors
-github.com/coreos/ignition/config/util
-github.com/coreos/ignition/config/v2_2
 github.com/coreos/ignition/config/v2_2/types
 github.com/coreos/ignition/config/v2_3/types
-github.com/coreos/ignition/config/validate
-github.com/coreos/ignition/config/validate/report
-github.com/coreos/ignition/config/v2_4_experimental/types
-github.com/coreos/ignition/config/v2_1
-github.com/coreos/ignition/config/v2_1/types
+github.com/coreos/ignition/config/shared/errors
 github.com/coreos/ignition/config/shared/validations
-github.com/coreos/ignition/config/validate/astjson
-github.com/coreos/ignition/config/validate/astnode
-github.com/coreos/ignition/config/v2_0
-github.com/coreos/ignition/config/v2_0/types
-github.com/coreos/ignition/config/v1
-github.com/coreos/ignition/config/v1/types
+github.com/coreos/ignition/config/validate/report
 # github.com/cybozu-go/etcdutil v1.3.1
 github.com/cybozu-go/etcdutil
 # github.com/cybozu-go/log v1.5.0
@@ -50,6 +35,8 @@ github.com/cybozu-go/netutil
 github.com/cybozu-go/well
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
+# github.com/ghodss/yaml v1.0.0
+github.com/ghodss/yaml
 # github.com/gogo/protobuf v1.1.1
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
@@ -167,8 +154,6 @@ github.com/vektah/gqlparser/lexer
 github.com/vincent-petithory/dataurl
 # go.universe.tf/netboot v0.0.0-20181010164912-24067fad46fd
 go.universe.tf/netboot/dhcp4
-# go4.org v0.0.0-20181109185143-00e24f1b2599
-go4.org/errorutil
 # golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
 golang.org/x/crypto/ssh
 golang.org/x/crypto/curve25519

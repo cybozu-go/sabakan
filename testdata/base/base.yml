@@ -1,4 +1,6 @@
 passwd: passwd.yml
+files:
+  - /etc/rack
 systemd:
   - name: chronyd.service
     enabled: true

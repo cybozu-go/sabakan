@@ -1,7 +1,7 @@
 Data Schema in etcd
 ===================
 
-Schema version: **2**
+Schema version: **3**
 
 Schema version is incremented when data format has changed.
 
@@ -32,7 +32,7 @@ Name   | Description
 serial | Serial number of a machine
 path   | Name of an encrypted disk, in the format shown in `/dev/disk/by-path`
 
-This type of key holds the encryption key of a disk.
+These keys hold the encryption key of a disk.
 The value is a raw binary key.
 
 ```console
@@ -43,13 +43,13 @@ $ etcdctl get /sabakan/crypts/1234abcd/pci-0000:00:1f.2-ata-3 --print-value-only
 `<prefix>/images/coreos`
 ------------------------
 
-This type of key holds the index of CoreOS container Linux images.
+This key holds the index of CoreOS container Linux images.
 The value is described in [boot image management](image_management.md).
 
 `<prefix>/images/coreos/deleted`
 --------------------------------
 
-This type of key holds a list of deleted image IDs as follows:
+This key holds a list of deleted image IDs as follows:
 
 ```javascript
 ["123.45.6", "789.0.1", "2018.04.01"]
@@ -64,30 +64,27 @@ or updated, the value will be incremented by one.
 `<prefix>/assets/<NAME>`
 ------------------------
 
-This type of key holds the meta data of an asset.
+These keys hold the meta data of an asset.
 The value is described in [asset management](assets.md).
 
-`<prefix>/ignitions/template/<role>/<id>`
--------------------------
+`<prefix>/ignitions/<role>/<id>`
+--------------------------------
 
-This type of key holds an ignition template. Ignitions are distinguished by `<role>`.
+These keys store Ignition templates for `<role>`.  `<id>` should be a version
+string conforming to [Semantic Versioning 2.0.0](https://semver.org/).
 
-`<prefix>/ignitions/meta/<role>/<id>`
--------------------------------------
-
-This type of key holds the meta data of an ignition template.
-The value is `map[string]string` formatted in JSON.
+The value of a key is a JSON object as described in [api.md](api.md#putignitiontemplate).
 
 `<prefix>/ipam`
 ---------------
 
-This type of key holds IPAM configurations.
+This key holds IPAM configurations.
 The value is [IPAMConfig](ipam.md#ipamconfig) formatted in JSON.
 
 `<prefix>/dhcp`
 ---------------
 
-This type of key holds DHCP configurations.
+This key holds DHCP configurations.
 The value is [DHCPConfig](dhcp.md#dhcpconfig) formatted in JSON.
 
 `<prefix>/lease-usages/<ip>`

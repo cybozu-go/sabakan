@@ -14,7 +14,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/clientv3util"
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func (d *driver) getAssetDir() AssetDir {

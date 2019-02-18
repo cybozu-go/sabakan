@@ -3,17 +3,12 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan"
-)
-
-var (
-	errLostOwner = errors.New("lost ownership during conversion")
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func (d *driver) convertTo2Machines(ctx context.Context, mu *concurrency.Mutex, ipam *sabakan.IPAMConfig) error {

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func (s Server) handleImages(w http.ResponseWriter, r *http.Request) {

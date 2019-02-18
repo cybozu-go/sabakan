@@ -1,0 +1,18 @@
+Host *
+User ubuntu
+IdentityFile mtest_key
+StrictHostKeyChecking no
+UserKnownHostsFile /dev/null
+LogLevel ERROR
+
+Host host-1
+HostName 10.0.0.101
+
+Host host-2
+HostName 10.0.0.102
+
+Host host-3
+HostName 10.0.0.103
+
+Host worker
+HostName 10.0.0.104

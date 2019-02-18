@@ -5,23 +5,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 
-	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/models/mock"
+	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v2/models/mock"
 )
 
 func testHandleiPXE(t *testing.T) {
 	t.Parallel()
 
 	m := mock.NewModel()
-	url, err := url.Parse("http://localhost")
-	if err != nil {
-		t.Fatal(err)
-	}
-	handler := Server{Model: m, MyURL: url}
+	handler := newTestServer(m)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/api/v1/boot/coreos/ipxe", nil)
@@ -53,15 +48,9 @@ func testHandleiPXEWithSerial(t *testing.T) {
 		}),
 	}
 
-	ign := `{ "ignition": { "version": "2.2.0" } }`
-
 	m := mock.NewModel()
-	url, err := url.Parse("http://localhost")
-	if err != nil {
-		t.Fatal(err)
-	}
-	handler := newTestServerWithURL(m, url)
-	err = m.Machine.Register(context.Background(), machines)
+	handler := newTestServer(m)
+	err := m.Machine.Register(context.Background(), machines)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +64,10 @@ func testHandleiPXEWithSerial(t *testing.T) {
 		t.Error("resp.StatusCode != http.StatusNotFound:", resp.StatusCode)
 	}
 
-	err = m.Ignition.PutTemplate(context.Background(), "cs", "1.0.0", ign, map[string]string{})
+	tmpl := &sabakan.IgnitionTemplate{
+		Version: sabakan.Ignition2_3,
+	}
+	err = m.Ignition.PutTemplate(context.Background(), "cs", "1.0.0", tmpl)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/sabakan"
-	"github.com/cybozu-go/sabakan/models/mock"
+	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v2/models/mock"
 )
 
 func TestRetireDate(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 type leaseUsage struct {

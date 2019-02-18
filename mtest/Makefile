@@ -8,10 +8,10 @@ HOST3 = 10.0.0.103
 WORKER = 10.0.0.104
 PLACEMAT = /usr/bin/placemat
 GINKGO =  env GO111MODULE=on GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo
-ETCD_VERSION = 3.3.8
+ETCD_VERSION = 3.3.11
 PLACEMAT_DATADIR = /var/scratch/placemat
 
-COREOS_VERSION := 1745.5.0
+COREOS_VERSION := 1967.6.0
 COREOS_URL := http://stable.release.core-os.net/amd64-usr
 COREOS_KERNEL := coreos_production_pxe.vmlinuz
 COREOS_INITRD := coreos_production_pxe_image.cpio.gz

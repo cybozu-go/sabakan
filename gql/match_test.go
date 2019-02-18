@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func testInt(i int) *int {

@@ -2,10 +2,10 @@ package mock
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/cybozu-go/sabakan"
-	"github.com/pkg/errors"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func (d *driver) machineRegister(ctx context.Context, machines []*sabakan.Machine) error {

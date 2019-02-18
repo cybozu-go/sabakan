@@ -1,4 +1,4 @@
-module github.com/cybozu-go/sabakan
+module github.com/cybozu-go/sabakan/v2
 
 require (
 	github.com/99designs/gqlgen v0.7.1
@@ -12,6 +12,7 @@ require (
 	github.com/cybozu-go/log v1.5.0
 	github.com/cybozu-go/netutil v1.2.0
 	github.com/cybozu-go/well v1.8.1
+	github.com/ghodss/yaml v1.0.0
 	github.com/golang/groupcache v0.0.0-20181024230925-c65c006176ff // indirect
 	github.com/google/go-cmp v0.2.0
 	github.com/google/subcommands v0.0.0-20181012225330-46f0354f6315
@@ -22,7 +23,6 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/onsi/ginkgo v1.7.0
 	github.com/onsi/gomega v1.4.3
-	github.com/pkg/errors v0.8.0
 	github.com/prometheus/client_golang v0.9.1 // indirect
 	github.com/prometheus/common v0.0.0-20181126121408-4724e9255275 // indirect
 	github.com/prometheus/procfs v0.0.0-20181126161756-619930b0b471 // indirect
@@ -44,5 +44,4 @@ require (
 	golang.org/x/sys v0.0.0-20181128092732-4ed8d59d0b35 // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/genproto v0.0.0-20181127195345-31ac5d88444a // indirect
-	gopkg.in/yaml.v2 v2.2.1
 )

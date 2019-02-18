@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 const (
@@ -68,13 +68,13 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 	}
 
 	role := m.Spec.Role
-	index, err := s.Model.Ignition.GetTemplateIndex(r.Context(), role)
-	if err == sabakan.ErrNotFound {
-		renderError(r.Context(), w, APIErrNotFound)
-		return
-	}
+	ids, err := s.Model.Ignition.GetTemplateIDs(r.Context(), role)
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
+		return
+	}
+	if len(ids) == 0 {
+		renderError(r.Context(), w, APIErrNotFound)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 
 	u := *s.MyURL
 	u.Path = path.Join("/api/v1/boot")
-	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), index[len(index)-1].ID, params)
+	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), ids[len(ids)-1], params)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
 	w.Write([]byte(ipxe))

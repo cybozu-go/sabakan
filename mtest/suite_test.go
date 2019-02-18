@@ -63,9 +63,9 @@ var _ = BeforeSuite(func() {
 	// register ipam.json, dhcp.json, machines.json, and ignitions
 	sabactl("ipam", "set", "-f", ipamJSONPath)
 	sabactl("dhcp", "set", "-f", dhcpJSONPath)
-	sabactl("machines", "create", "-f", machinesJSONPath)
 	ignitionSource := filepath.Join(ignitionsPath, "worker.yml")
 	sabactl("ignitions", "set", "-f", ignitionSource, "worker", "1.0.0")
+	sabactl("machines", "create", "-f", machinesJSONPath)
 
 	time.Sleep(time.Second)
 	fmt.Println("Begin tests...")

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cybozu-go/sabakan"
+	"github.com/cybozu-go/sabakan/v2"
 )
 
 func testAssetGetIndex(t *testing.T) {

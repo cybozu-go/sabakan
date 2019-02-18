@@ -4,283 +4,276 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
+	"strings"
 
-	yaml "gopkg.in/yaml.v2"
+	ign22 "github.com/coreos/ignition/config/v2_2/types"
+	ign23 "github.com/coreos/ignition/config/v2_3/types"
+	"github.com/ghodss/yaml"
+	"github.com/vincent-petithory/dataurl"
 )
 
-const baseFileDir = "files"
-const baseSystemdDir = "systemd"
-const baseNetworkdDir = "networkd"
-
-type systemd struct {
-	Name    string `yaml:"name"`
-	Enabled bool   `yaml:"enabled"`
-	Mask    bool   `yaml:"mask"`
+// SystemdUnit represents a systemd unit in Ignition template.
+type SystemdUnit struct {
+	Name    string `json:"name"`
+	Enabled bool   `json:"enabled"`
+	Mask    bool   `json:"mask"`
 }
 
-type ignitionSource struct {
-	Passwd   string    `yaml:"passwd"`
-	Files    []string  `yaml:"files"`
-	Systemd  []systemd `yaml:"systemd"`
-	Networkd []string  `yaml:"networkd"`
-	Include  string    `yaml:"include"`
+// TemplateSource represents YAML/JSON source file of Ignition template.
+type TemplateSource struct {
+	Version  IgnitionVersion `json:"version"`
+	Include  string          `json:"include"`
+	Passwd   string          `json:"passwd"`
+	Files    []string        `json:"files"`
+	Systemd  []SystemdUnit   `json:"systemd"`
+	Networkd []string        `json:"networkd"`
 }
 
-type ignitionBuilder struct {
-	baseDir     string
-	ignition    map[string]interface{}
-	loadedFiles map[string]bool
-}
-
-func newIgnitionBuilder(baseDir string) *ignitionBuilder {
-	return &ignitionBuilder{
-		baseDir:     baseDir,
-		ignition:    make(map[string]interface{}),
-		loadedFiles: make(map[string]bool),
+func loadSource(sourceFile, baseDir string) (*TemplateSource, string, error) {
+	if !filepath.IsAbs(sourceFile) {
+		sourceFile = filepath.Join(baseDir, sourceFile)
 	}
-}
-
-// AssembleIgnitionTemplate assemble ignition template from fname to w
-func AssembleIgnitionTemplate(fname string, w io.Writer) error {
-	absPath, err := filepath.Abs(fname)
+	newBaseDir, err := filepath.EvalSymlinks(filepath.Dir(sourceFile))
 	if err != nil {
-		return err
-	}
-	baseDir := filepath.Dir(absPath)
-	builder := newIgnitionBuilder(baseDir)
-
-	source, err := loadSource(absPath)
-	if err != nil {
-		return err
+		return nil, "", err
 	}
 
-	builder.ignition["ignition"] = map[string]interface{}{
-		"version": "2.2.0",
-	}
-	err = builder.constructIgnitionYAML(source)
+	data, err := ioutil.ReadFile(sourceFile)
 	if err != nil {
-		return err
+		return nil, "", err
 	}
-	return json.NewEncoder(w).Encode(builder.normalized())
+
+	src := &TemplateSource{}
+	err = yaml.Unmarshal(data, src)
+	if err != nil {
+		return nil, "", fmt.Errorf("invalid source YAML: %s: %v", sourceFile, err)
+	}
+
+	if src.Version == "" {
+		src.Version = Ignition2_2 // for backward compatibility
+	}
+	return src, newBaseDir, nil
 }
 
-func loadSource(fname string) (*ignitionSource, error) {
-	f, err := os.Open(fname)
+// BuildIgnitionTemplate constructs an IgnitionTemplate from source file.
+func BuildIgnitionTemplate(sourceFile string, metadata map[string]interface{}) (*IgnitionTemplate, error) {
+	cwd, err := filepath.Abs(".")
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
-	data, err := ioutil.ReadAll(f)
+	src, baseDir, err := loadSource(sourceFile, cwd)
 	if err != nil {
 		return nil, err
 	}
 
-	var source ignitionSource
-	err = yaml.Unmarshal(data, &source)
-	if err != nil {
-		return nil, err
+	tmpl := &IgnitionTemplate{
+		Version:  src.Version,
+		Metadata: metadata,
 	}
-	return &source, nil
+	switch src.Version {
+	case Ignition2_2:
+		ign, err := buildTemplate2_2(src, baseDir)
+		if err != nil {
+			return nil, err
+		}
+		data, err := json.Marshal(ign)
+		if err != nil {
+			return nil, err
+		}
+		tmpl.Template = json.RawMessage(data)
+	case Ignition2_3:
+		ign, err := buildTemplate2_3(src, baseDir)
+		if err != nil {
+			return nil, err
+		}
+		data, err := json.Marshal(ign)
+		if err != nil {
+			return nil, err
+		}
+		tmpl.Template = json.RawMessage(data)
+	default:
+		return nil, errors.New("unsupported ignition spec: " + string(src.Version))
+	}
+
+	return tmpl, nil
 }
 
-func (b *ignitionBuilder) constructIgnitionYAML(source *ignitionSource) error {
-	if source.Include != "" {
-		if b.loadedFiles[source.Include] {
-			return fmt.Errorf("same file was included: %s", source.Include)
-		}
-		b.loadedFiles[source.Include] = true
-
-		include, err := loadSource(filepath.Join(b.baseDir, source.Include))
-		if err != nil {
-			return err
-		}
-
-		childBaseDir := filepath.Dir(filepath.Join(b.baseDir, source.Include))
-		childBuilder := ignitionBuilder{baseDir: childBaseDir, ignition: b.ignition, loadedFiles: b.loadedFiles}
-		err = childBuilder.constructIgnitionYAML(include)
-		if err != nil {
-			return err
-		}
-	}
-	if source.Passwd != "" {
-		err := b.constructPasswd(source.Passwd)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, file := range source.Files {
-		err := b.constructFile(file)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, s := range source.Systemd {
-		err := b.constructSystemd(s)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, n := range source.Networkd {
-		err := b.constructNetworkd(n)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (b *ignitionBuilder) constructPasswd(passwd string) error {
-	pf, err := os.Open(filepath.Join(b.baseDir, passwd))
-	if err != nil {
-		return err
-	}
-	defer pf.Close()
-	passData, err := ioutil.ReadAll(pf)
-	if err != nil {
-		return err
-	}
-
-	var p interface{}
-	err = yaml.Unmarshal(passData, &p)
-	if err != nil {
-		return err
-	}
-	b.ignition["passwd"] = p
-
-	return nil
-}
-
-func (b *ignitionBuilder) constructFile(inputFile string) error {
-	if !filepath.IsAbs(inputFile) {
-		return errors.New("file source must be absolute path")
-	}
-	p := filepath.Join(b.baseDir, baseFileDir, inputFile)
-	f, err := os.Open(p)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		return err
-	}
-	fi, err := os.Stat(p)
-	if err != nil {
-		return err
-	}
-	mode := int(fi.Mode())
-
-	storage, ok := b.ignition["storage"].(map[string]interface{})
-	if !ok {
-		storage = make(map[string]interface{})
-	}
-	files, _ := storage["files"].([]interface{})
-	files = append(files, map[string]interface{}{
-		"path":       inputFile,
-		"filesystem": "root",
-		"mode":       mode,
-		"contents": map[string]interface{}{
-			"source": string(data),
-		},
-	})
-
-	storage["files"] = files
-	b.ignition["storage"] = storage
-
-	return nil
-}
-
-func (b *ignitionBuilder) constructSystemd(s systemd) error {
-	if len(s.Name) == 0 {
-		return errors.New("name: is not defined in systemd field")
-	}
-
-	systemd, ok := b.ignition["systemd"].(map[string]interface{})
-	if !ok {
-		systemd = make(map[string]interface{})
-	}
-	units, _ := systemd["units"].([]interface{})
-
-	var unit map[string]interface{}
-
-	if s.Mask {
-		unit = map[string]interface{}{
-			"name": s.Name,
-			"mask": s.Mask,
-		}
+func buildTemplate2_2(src *TemplateSource, baseDir string) (*ign22.Config, error) {
+	var cfg *ign22.Config
+	if src.Include == "" {
+		cfg = &ign22.Config{}
 	} else {
-		data, err := ioutil.ReadFile(filepath.Join(b.baseDir, baseSystemdDir, s.Name))
+		parentSrc, parentBaseDir, err := loadSource(src.Include, baseDir)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		unit = map[string]interface{}{
-			"name":     s.Name,
-			"enabled":  s.Enabled,
-			"contents": string(data),
+		if parentSrc.Version != src.Version {
+			return nil, errors.New("unmatched ignition version in " + src.Include)
+		}
+		cfg, err = buildTemplate2_2(parentSrc, parentBaseDir)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	units = append(units, unit)
-	systemd["units"] = units
-	b.ignition["systemd"] = systemd
+	if src.Passwd != "" {
+		passwdFile := src.Passwd
+		if !filepath.IsAbs(passwdFile) {
+			passwdFile = filepath.Join(baseDir, passwdFile)
+		}
 
-	return nil
+		data, err := ioutil.ReadFile(passwdFile)
+		if err != nil {
+			return nil, err
+		}
+
+		var passwd ign22.Passwd
+		err = yaml.Unmarshal(data, &passwd)
+		if err != nil {
+			return nil, fmt.Errorf("invalid passwd YAML: %s: %v", passwdFile, err)
+		}
+		cfg.Passwd = passwd
+	}
+
+	for _, fname := range src.Files {
+		// filepath.IsAbs is intentionally avoided to allow running clients on Windows.
+		if !strings.HasPrefix(fname, "/") {
+			return nil, errors.New("non-absolute filename: " + fname)
+		}
+		target := filepath.Join(baseDir, "files", fname)
+		data, err := ioutil.ReadFile(target)
+		if err != nil {
+			return nil, err
+		}
+		var file ign22.File
+		file.Path = fname
+		file.Contents.Source = "data:," + dataurl.Escape(data)
+		cfg.Storage.Files = append(cfg.Storage.Files, file)
+	}
+
+	for _, netunit := range src.Networkd {
+		target := filepath.Join(baseDir, "networkd", netunit)
+		data, err := ioutil.ReadFile(target)
+		if err != nil {
+			return nil, err
+		}
+
+		var unit ign22.Networkdunit
+		unit.Name = netunit
+		unit.Contents = string(data)
+		cfg.Networkd.Units = append(cfg.Networkd.Units, unit)
+	}
+
+	for _, sysunit := range src.Systemd {
+		var unit ign22.Unit
+		unit.Name = sysunit.Name
+		if sysunit.Mask {
+			unit.Mask = true
+		} else {
+			target := filepath.Join(baseDir, "systemd", sysunit.Name)
+			data, err := ioutil.ReadFile(target)
+			if err != nil {
+				return nil, err
+			}
+
+			if sysunit.Enabled {
+				unit.Enabled = &sysunit.Enabled
+			}
+			unit.Contents = string(data)
+		}
+		cfg.Systemd.Units = append(cfg.Systemd.Units, unit)
+	}
+
+	return cfg, nil
 }
 
-func (b *ignitionBuilder) constructNetworkd(n string) error {
-	f, err := os.Open(filepath.Join(b.baseDir, baseNetworkdDir, n))
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		return err
-	}
-
-	networkd, ok := b.ignition["networkd"].(map[string]interface{})
-	if !ok {
-		networkd = make(map[string]interface{})
-	}
-	units, _ := networkd["units"].([]interface{})
-	units = append(units, map[string]interface{}{
-		"name":     n,
-		"contents": string(data),
-	})
-	networkd["units"] = units
-	b.ignition["networkd"] = networkd
-
-	return nil
-}
-
-func (b *ignitionBuilder) normalized() interface{} {
-	return normalizeMap(b.ignition)
-}
-
-func normalizeMap(src interface{}) interface{} {
-	switch x := src.(type) {
-	case map[string]interface{}:
-		for k, v := range x {
-			x[k] = normalizeMap(v)
+func buildTemplate2_3(src *TemplateSource, baseDir string) (*ign23.Config, error) {
+	var cfg *ign23.Config
+	if src.Include == "" {
+		cfg = &ign23.Config{}
+	} else {
+		parentSrc, parentBaseDir, err := loadSource(src.Include, baseDir)
+		if err != nil {
+			return nil, err
 		}
-	case map[interface{}]interface{}:
-		m := map[string]interface{}{}
-		for k, v := range x {
-			m[k.(string)] = normalizeMap(v)
+		if parentSrc.Version != src.Version {
+			return nil, errors.New("unmatched ignition version in " + src.Include)
 		}
-		return m
-	case []interface{}:
-		for i, v := range x {
-			x[i] = normalizeMap(v)
+		cfg, err = buildTemplate2_3(parentSrc, parentBaseDir)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return src
 
+	if src.Passwd != "" {
+		passwdFile := src.Passwd
+		if !filepath.IsAbs(passwdFile) {
+			passwdFile = filepath.Join(baseDir, passwdFile)
+		}
+
+		data, err := ioutil.ReadFile(passwdFile)
+		if err != nil {
+			return nil, err
+		}
+
+		var passwd ign23.Passwd
+		err = yaml.Unmarshal(data, &passwd)
+		if err != nil {
+			return nil, fmt.Errorf("invalid passwd YAML: %s: %v", passwdFile, err)
+		}
+		cfg.Passwd = passwd
+	}
+
+	for _, fname := range src.Files {
+		// filepath.IsAbs is intentionally avoided to allow running clients on Windows.
+		if !strings.HasPrefix(fname, "/") {
+			return nil, errors.New("non-absolute filename: " + fname)
+		}
+		target := filepath.Join(baseDir, "files", fname)
+		data, err := ioutil.ReadFile(target)
+		if err != nil {
+			return nil, err
+		}
+		var file ign23.File
+		file.Path = fname
+		file.Contents.Source = "data:," + dataurl.Escape(data)
+		cfg.Storage.Files = append(cfg.Storage.Files, file)
+	}
+
+	for _, netunit := range src.Networkd {
+		target := filepath.Join(baseDir, "networkd", netunit)
+		data, err := ioutil.ReadFile(target)
+		if err != nil {
+			return nil, err
+		}
+
+		var unit ign23.Networkdunit
+		unit.Name = netunit
+		unit.Contents = string(data)
+		cfg.Networkd.Units = append(cfg.Networkd.Units, unit)
+	}
+
+	for _, sysunit := range src.Systemd {
+		var unit ign23.Unit
+		unit.Name = sysunit.Name
+		if sysunit.Mask {
+			unit.Mask = true
+		} else {
+			target := filepath.Join(baseDir, "systemd", sysunit.Name)
+			data, err := ioutil.ReadFile(target)
+			if err != nil {
+				return nil, err
+			}
+
+			if sysunit.Enabled {
+				unit.Enabled = &sysunit.Enabled
+			}
+			unit.Contents = string(data)
+		}
+		cfg.Systemd.Units = append(cfg.Systemd.Units, unit)
+	}
+
+	return cfg, nil
 }
