@@ -5,6 +5,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2019-02-18
+
+### Added
+- Ignition templates have `version` to specify Ignition spec version for rendering (#138).
+- Arithmetic functions are available in Ignition templates (#137).
+
+### Changed
+- [Semantic import versioning](https://github.com/golang/go/wiki/Modules#semantic-import-versioning) for v2 has been applied.
+- REST API for Ignition templates has been revamped breaking backward-compatibility (#138).
+- Go client library has been changed for new Ignition template API (#138).
+
 ## [1.2.0] - 2019-02-13
 
 ### Added
@@ -43,7 +54,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/cybozu-go/sabakan/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/cybozu-go/sabakan/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/cybozu-go/sabakan/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/cybozu-go/sabakan/compare/v1.0.0...v1.0.1
