@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.1] - 2019-02-19
+
+### Added
+- Ignition template can list remote files (#139).
+
+### Changed
+- Fix a critical degradation in ignition template introduced in 2.0.0 (#140).
+
 ## [2.0.0] - 2019-02-18
 
 ### Added
