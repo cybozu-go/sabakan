@@ -1,3 +1,8 @@
 passwd: passwd.yml
+files:
+  - /etc/hostname
 networkd:
-        - 10-eth0.network
+  - 10-eth0.network
+systemd:
+  - name: foo.service
+    enabled: true
