@@ -18,6 +18,9 @@ include: ../base/base.yml
 passwd: passwd.yml
 files:
   - /etc/hostname
+remote_files:
+  - name: /tmp/some.img
+    url: "{{ MyURL }}/v1/assets/some.img"
 systemd:
   - name: chronyd.service
     enabled: true
@@ -32,10 +35,10 @@ Field descriptions:
     * "2.2" (default)
     * "2.3"
 * `include`: Another ignition template to be included.
-* `passwd`: A filename in the same directory of the template.  
-    The contents should be a YAML encoded ignition's [`passwd` object](https://coreos.com/ignition/docs/latest/configuration-v2_3.html).
+* `passwd`: A YAML filename that contains YAML encoded ignition's [`passwd` object](https://coreos.com/ignition/docs/latest/configuration-v2_3.html).
 * `files`: List of filenames to be provisioned.  
     The file contents are read from files under `files/` sub directory.
+* `remote_files`: List of remote files to be provisioned.
 * `systemd`: List of systemd unit files to be provisioned.  
     The unit contents are read from files under `systemd/` sub directory.  
     If `enabled` is true, the unit will be enabled.  
@@ -46,6 +49,7 @@ Field descriptions:
 ### Rendering specifications
 
 Files pointed by the template YAML are rendered by [text/template][].
+Strings in `passwd` YAML and `url` for `remote_files` are also rendered as templates.
 
 `.` in the template is set to the [`Machine`](machine.md#machine-struct) struct of the target machine.  
 For example, `{{ .Spec.Serial }}` will be replaced with the serial number of the target machine.

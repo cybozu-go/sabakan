@@ -212,7 +212,7 @@ If `ID` is specified, the command outputs a JSON object like this:
 Register a new ignition template for `ROLE` with `ID`.
 For details, see .
 
-`FILE` is either a template YAML described in [Ignition Templates](ignition.md), or
+`FILE` is either a template YAML described in [Ignition Templates](ignition_template.md), or
 a JSON got by `sabactl ignitions get ROLE ID` if `--json` is given.
 
 A template can be associated with meta data if `--meta FILENAME` is given.

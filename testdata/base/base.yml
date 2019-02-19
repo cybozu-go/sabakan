@@ -1,6 +1,10 @@
+version: "2.3"
 passwd: passwd.yml
 files:
   - /etc/rack
+remote_files:
+  - name: /tmp/foo.img
+    url: "{{ MyURL }}/api/v1/assets/foo.img"
 systemd:
   - name: chronyd.service
     enabled: true

@@ -24,8 +24,8 @@ func testBuildIgnitionTemplate2_3(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if tmpl.Version != Ignition2_2 {
-		t.Error(`tmpl.Version != Ignition2_2:`, tmpl.Version)
+	if tmpl.Version != Ignition2_3 {
+		t.Error(`tmpl.Version != Ignition2_3:`, tmpl.Version)
 	}
 	if !cmp.Equal(meta, tmpl.Metadata) {
 		t.Error("wrong meta data:", cmp.Diff(meta, tmpl.Metadata))
@@ -54,11 +54,13 @@ func testBuildIgnitionTemplate2_3(t *testing.T) {
 			SSHAuthorizedKeys: []ign23.SSHAuthorizedKey{"key1"},
 		},
 	}
-	expectedFiles := make([]ign23.File, 2)
+	expectedFiles := make([]ign23.File, 3)
 	expectedFiles[0].Path = "/etc/rack"
 	expectedFiles[0].Contents.Source = "data:," + dataurl.EscapeString("{{ .Spec.Rack }}\n")
-	expectedFiles[1].Path = "/etc/hostname"
-	expectedFiles[1].Contents.Source = "data:," + dataurl.EscapeString("{{ .Spec.Serial }}\n")
+	expectedFiles[1].Path = "/tmp/foo.img"
+	expectedFiles[1].Contents.Source = "{{ MyURL }}/api/v1/assets/foo.img"
+	expectedFiles[2].Path = "/etc/hostname"
+	expectedFiles[2].Contents.Source = "data:," + dataurl.EscapeString("{{ .Spec.Serial }}\n")
 	expected.Storage.Files = expectedFiles
 	expected.Networkd.Units = []ign23.Networkdunit{
 		{
