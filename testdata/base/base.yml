@@ -5,6 +5,9 @@ files:
 remote_files:
   - name: /tmp/foo.img
     url: "{{ MyURL }}/api/v1/assets/foo.img"
+  - name: /opt/sbin/bar
+    url: "{{ MyURL }}/api/v1/assets/bar"
+    mode: 0755
 systemd:
   - name: chronyd.service
     enabled: true

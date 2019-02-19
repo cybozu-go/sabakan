@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -25,6 +26,7 @@ type SystemdUnit struct {
 type RemoteFile struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
+	Mode *int   `json:"mode"`
 }
 
 // TemplateSource represents YAML/JSON source file of Ignition template.
@@ -154,9 +156,16 @@ func buildTemplate2_2(src *TemplateSource, baseDir string) (*ign22.Config, error
 		if err != nil {
 			return nil, err
 		}
+		fi, err := os.Stat(target)
+		if err != nil {
+			return nil, err
+		}
 		var file ign22.File
+		file.Filesystem = "root"
 		file.Path = fname
 		file.Contents.Source = "data:," + dataurl.Escape(data)
+		mode := int(fi.Mode().Perm())
+		file.Mode = &mode
 		cfg.Storage.Files = append(cfg.Storage.Files, file)
 	}
 
@@ -167,8 +176,10 @@ func buildTemplate2_2(src *TemplateSource, baseDir string) (*ign22.Config, error
 			return nil, errors.New("non-absolute filename: " + fname)
 		}
 		var file ign22.File
+		file.Filesystem = "root"
 		file.Path = fname
 		file.Contents.Source = remoteFile.URL
+		file.Mode = remoteFile.Mode
 		cfg.Storage.Files = append(cfg.Storage.Files, file)
 	}
 
@@ -255,9 +266,16 @@ func buildTemplate2_3(src *TemplateSource, baseDir string) (*ign23.Config, error
 		if err != nil {
 			return nil, err
 		}
+		fi, err := os.Stat(target)
+		if err != nil {
+			return nil, err
+		}
 		var file ign23.File
+		file.Filesystem = "root"
 		file.Path = fname
 		file.Contents.Source = "data:," + dataurl.Escape(data)
+		mode := int(fi.Mode().Perm())
+		file.Mode = &mode
 		cfg.Storage.Files = append(cfg.Storage.Files, file)
 	}
 
@@ -268,8 +286,10 @@ func buildTemplate2_3(src *TemplateSource, baseDir string) (*ign23.Config, error
 			return nil, errors.New("non-absolute filename: " + fname)
 		}
 		var file ign23.File
+		file.Filesystem = "root"
 		file.Path = fname
 		file.Contents.Source = remoteFile.URL
+		file.Mode = remoteFile.Mode
 		cfg.Storage.Files = append(cfg.Storage.Files, file)
 	}
 

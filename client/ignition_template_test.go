@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	ign23 "github.com/coreos/ignition/config/v2_3/types"
@@ -54,13 +55,30 @@ func testBuildIgnitionTemplate2_3(t *testing.T) {
 			SSHAuthorizedKeys: []ign23.SSHAuthorizedKey{"key1"},
 		},
 	}
-	expectedFiles := make([]ign23.File, 3)
+	fi0, err := os.Stat("../testdata/base/files/etc/rack")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fi3, err := os.Stat("../testdata/test/files/etc/hostname")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedFiles := make([]ign23.File, 4)
+	expectedFiles[0].Filesystem = "root"
 	expectedFiles[0].Path = "/etc/rack"
 	expectedFiles[0].Contents.Source = "data:," + dataurl.EscapeString("{{ .Spec.Rack }}\n")
+	expectedFiles[0].Mode = intPtr(int(fi0.Mode().Perm()))
+	expectedFiles[1].Filesystem = "root"
 	expectedFiles[1].Path = "/tmp/foo.img"
 	expectedFiles[1].Contents.Source = "{{ MyURL }}/api/v1/assets/foo.img"
-	expectedFiles[2].Path = "/etc/hostname"
-	expectedFiles[2].Contents.Source = "data:," + dataurl.EscapeString("{{ .Spec.Serial }}\n")
+	expectedFiles[2].Filesystem = "root"
+	expectedFiles[2].Path = "/opt/sbin/bar"
+	expectedFiles[2].Contents.Source = "{{ MyURL }}/api/v1/assets/bar"
+	expectedFiles[2].Mode = intPtr(0755)
+	expectedFiles[3].Filesystem = "root"
+	expectedFiles[3].Path = "/etc/hostname"
+	expectedFiles[3].Contents.Source = "data:," + dataurl.EscapeString("{{ .Spec.Serial }}\n")
+	expectedFiles[3].Mode = intPtr(int(fi3.Mode().Perm()))
 	expected.Storage.Files = expectedFiles
 	expected.Networkd.Units = []ign23.Networkdunit{
 		{

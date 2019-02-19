@@ -21,6 +21,7 @@ files:
 remote_files:
   - name: /tmp/some.img
     url: "{{ MyURL }}/v1/assets/some.img"
+    mode: 0755
 systemd:
   - name: chronyd.service
     enabled: true
@@ -38,7 +39,8 @@ Field descriptions:
 * `passwd`: A YAML filename that contains YAML encoded ignition's [`passwd` object](https://coreos.com/ignition/docs/latest/configuration-v2_3.html).
 * `files`: List of filenames to be provisioned.  
     The file contents are read from files under `files/` sub directory.
-* `remote_files`: List of remote files to be provisioned.
+* `remote_files`: List of remote files to be provisioned.  
+    `mode` is optional.  It should be an octal UNIX file permission bits.
 * `systemd`: List of systemd unit files to be provisioned.  
     The unit contents are read from files under `systemd/` sub directory.  
     If `enabled` is true, the unit will be enabled.  
