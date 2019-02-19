@@ -21,14 +21,21 @@ type SystemdUnit struct {
 	Mask    bool   `json:"mask"`
 }
 
+// RemoteFile represents a remote file.
+type RemoteFile struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
 // TemplateSource represents YAML/JSON source file of Ignition template.
 type TemplateSource struct {
-	Version  IgnitionVersion `json:"version"`
-	Include  string          `json:"include"`
-	Passwd   string          `json:"passwd"`
-	Files    []string        `json:"files"`
-	Systemd  []SystemdUnit   `json:"systemd"`
-	Networkd []string        `json:"networkd"`
+	Version     IgnitionVersion `json:"version"`
+	Include     string          `json:"include"`
+	Passwd      string          `json:"passwd"`
+	Files       []string        `json:"files"`
+	RemoteFiles []RemoteFile    `json:"remote_files"`
+	Systemd     []SystemdUnit   `json:"systemd"`
+	Networkd    []string        `json:"networkd"`
 }
 
 func loadSource(sourceFile, baseDir string) (*TemplateSource, string, error) {
@@ -153,6 +160,18 @@ func buildTemplate2_2(src *TemplateSource, baseDir string) (*ign22.Config, error
 		cfg.Storage.Files = append(cfg.Storage.Files, file)
 	}
 
+	for _, remoteFile := range src.RemoteFiles {
+		fname := remoteFile.Name
+		// filepath.IsAbs is intentionally avoided to allow running clients on Windows.
+		if !strings.HasPrefix(fname, "/") {
+			return nil, errors.New("non-absolute filename: " + fname)
+		}
+		var file ign22.File
+		file.Path = fname
+		file.Contents.Source = remoteFile.URL
+		cfg.Storage.Files = append(cfg.Storage.Files, file)
+	}
+
 	for _, netunit := range src.Networkd {
 		target := filepath.Join(baseDir, "networkd", netunit)
 		data, err := ioutil.ReadFile(target)
@@ -239,6 +258,18 @@ func buildTemplate2_3(src *TemplateSource, baseDir string) (*ign23.Config, error
 		var file ign23.File
 		file.Path = fname
 		file.Contents.Source = "data:," + dataurl.Escape(data)
+		cfg.Storage.Files = append(cfg.Storage.Files, file)
+	}
+
+	for _, remoteFile := range src.RemoteFiles {
+		fname := remoteFile.Name
+		// filepath.IsAbs is intentionally avoided to allow running clients on Windows.
+		if !strings.HasPrefix(fname, "/") {
+			return nil, errors.New("non-absolute filename: " + fname)
+		}
+		var file ign23.File
+		file.Path = fname
+		file.Contents.Source = remoteFile.URL
 		cfg.Storage.Files = append(cfg.Storage.Files, file)
 	}
 

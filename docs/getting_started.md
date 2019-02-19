@@ -164,7 +164,7 @@ CoreOS Container Linux using [UEFI HTTP Boot][HTTPBoot].
 
 CoreOS can be initialized at first boot by [ignition][].
 Sabakan can generate ignition configuration from templates.
-Read [ignition.md](ignition.md) for details.
+Read [ignition_template.md](ignition_template.md) for details.
 
 ### <a name="kernelparams" />Register kernel parameters
 

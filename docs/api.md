@@ -762,11 +762,11 @@ Upload an Ignition template for `<role>` with `<id>`.
 
 The request body must be a JSON object with these fields:
 
-| Name       | Type   | Description                                                                         |
-| ---------- | ------ | ----------------------------------------------------------------------------------- |
-| `version`  | string | Ignition configuration specification as `major.minor`.                              |
-| `template` | object | An ignition configuration to be rendered as desribed in [ignition.md](ignition.md). |
-| `meta`     | object | Meta data associated with this template.                                            |
+| Name       | Type   | Description                                                                                           |
+| ---------- | ------ | ----------------------------------------------------------------------------------------------------- |
+| `version`  | string | Ignition configuration specification as `major.minor`.                                                |
+| `template` | object | An ignition configuration to be rendered as desribed in [ignition_template.md](ignition_template.md). |
+| `meta`     | object | Meta data associated with this template.                                                              |
 
 The currently supported ignition specifications are: `2.3`.
 
