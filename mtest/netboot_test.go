@@ -12,7 +12,7 @@ var _ = Describe("netboot", func() {
 
 	It("is achieved", func() {
 		By("Set-up kernel params")
-		sabactl("kernel-params", "set", "coreos.autologin=ttyS0,console=ttyS0")
+		sabactl("kernel-params", "set", "coreos.autologin=ttyS0 console=ttyS0")
 
 		By("Uploading an image")
 		sabactl("images", "upload", coreosVersion, coreosKernel, coreosInitrd)
