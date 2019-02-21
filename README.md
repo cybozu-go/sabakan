@@ -55,15 +55,15 @@ Features
     REST API.  Users can build an automatic status controller to mark machines as unhealthy,
     unreachable, retiring, or retired.
 
-* Encryption key store
+* Disk encryption support
 
     To help implementing full disk encryption on client machines, sabakan accepts and stores
     encrypted disk encryption keys.  The key can be downloaded in the next boot to decrypt
     disks.
     
-    `sabakan-cryptsetup` tools is also available for clients; this tools generates a disk
+    `sabakan-cryptsetup` is a tool for clients to encrypt disks; the tool generates a disk
     encryption key, encrypts it, and sends the encrypted key to sabakan.  In the next boot,
-    it downloads the encrypted key from sabakan, decrypts it, then use it to decrypt storages.
+    it downloads the encrypted key from sabakan, decrypts it, then uses it to decrypt disks.
 
 * Audit logs
 
