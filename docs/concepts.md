@@ -56,8 +56,10 @@ Ignition
 --------
 
 [Ignition][] is a provisioning utility for [CoreOS Container Linux][CoreOS].
-Sabakan can generate ignition config file for each node to provision CoreOS
-Container Linux into nodes via network.
+Its configuration is just a plain JSON.
+
+Sabakan provides a versatile template system to generate Ignition configuration
+for each machine.
 
 [BMC]: https://en.wikipedia.org/wiki/Intelligent_Platform_Management_Interface#Baseboard_management_controller
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
