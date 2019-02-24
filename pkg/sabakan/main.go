@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -22,6 +23,10 @@ import (
 	"github.com/cybozu-go/well"
 	"github.com/ghodss/yaml"
 	"go.universe.tf/netboot/dhcp4"
+)
+
+const (
+	cryptsetupEnv = "SABAKAN_CRYPTSETUP"
 )
 
 var (
@@ -58,6 +63,22 @@ func main() {
 	if !well.IsSignaled(err) && err != nil {
 		log.ErrorExit(err)
 	}
+}
+
+func findCryptSetup() string {
+	p := os.Getenv(cryptsetupEnv)
+	if p != "" {
+		return p
+	}
+	p, err := filepath.EvalSymlinks("/proc/self/exe")
+	if err != nil {
+		return ""
+	}
+	p, err = filepath.Abs(p)
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(filepath.Dir(p), "sabakan-cryptsetup")
 }
 
 func subMain(ctx context.Context) error {
@@ -140,11 +161,12 @@ func subMain(ctx context.Context) error {
 	}
 	env.Go(dhcpServer.Serve)
 
+	cryptsetupPath := findCryptSetup()
 	allowedIPs, err := parseAllowIPs(cfg.AllowIPs)
 	if err != nil {
 		return err
 	}
-	webServer := web.NewServer(model, cfg.IPXEPath, advertiseURL, allowedIPs, cfg.Playground)
+	webServer := web.NewServer(model, cfg.IPXEPath, cryptsetupPath, advertiseURL, allowedIPs, cfg.Playground)
 	s := &well.HTTPServer{
 		Server: &http.Server{
 			Addr:    cfg.ListenHTTP,

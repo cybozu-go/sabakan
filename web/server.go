@@ -31,6 +31,7 @@ type Server struct {
 	Model          sabakan.Model
 	MyURL          *url.URL
 	IPXEFirmware   string
+	CryptSetup     string
 	AllowedRemotes []*net.IPNet
 
 	graphQL    http.HandlerFunc
@@ -38,7 +39,8 @@ type Server struct {
 }
 
 // NewServer constructs Server instance
-func NewServer(model sabakan.Model, ipxePath string, advertiseURL *url.URL, allowedIPs []*net.IPNet, playground bool) *Server {
+func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
+	advertiseURL *url.URL, allowedIPs []*net.IPNet, playground bool) *Server {
 	graphQL := handler.GraphQL(gql.NewExecutableSchema(
 		gql.Config{Resolvers: &gql.Resolver{
 			Model: model,
@@ -46,6 +48,7 @@ func NewServer(model sabakan.Model, ipxePath string, advertiseURL *url.URL, allo
 	s := &Server{
 		Model:          model,
 		IPXEFirmware:   ipxePath,
+		CryptSetup:     cryptsetupPath,
 		MyURL:          advertiseURL,
 		AllowedRemotes: allowedIPs,
 		graphQL:        graphQL,
@@ -134,6 +137,8 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 		s.handleConfigIPAM(w, r)
 	case strings.HasPrefix(p, "crypts/"):
 		s.handleCrypts(w, r)
+	case p == "cryptsetup":
+		s.handleCryptSetup(w, r)
 	case strings.HasPrefix(p, "ignitions/"):
 		s.handleIgnitionTemplates(w, r)
 	case p == "images/coreos" || strings.HasPrefix(p, "images/coreos/"):

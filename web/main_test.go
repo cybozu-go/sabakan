@@ -16,7 +16,7 @@ func newTestServer(m sabakan.Model) *Server {
 	// https://golang.org/src/net/http/httptest/httptest.go?s=1162:1230#L31
 	_, ipnet, _ := net.ParseCIDR("192.0.2.1/24")
 	u, _ := url.Parse(testMyURL)
-	return NewServer(m, "", u, []*net.IPNet{ipnet}, false)
+	return NewServer(m, "", "", u, []*net.IPNet{ipnet}, false)
 }
 
 func testWithIPAM(t *testing.T, m sabakan.Model) *sabakan.IPAMConfig {

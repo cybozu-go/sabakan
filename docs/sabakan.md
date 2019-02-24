@@ -33,16 +33,16 @@ Usage of sabakan:
         Log level [critical,error,warning,info,debug]
 ```
 
-Option              | Default value            | Description
-------------------- | ------------------------ | -----------
-`advertise-url`     | ""                       | Public URL to access this server.  Required.
-`allow-ips`         | `127.0.0.1,::1`          | Comma-separated IPs allowed to change resources.
-`config-file`       | ""                       | If given, configurations are read from the file.
-`data-dir`          | `/var/lib/sabakan`       | Directory to store files.
-`dhcp-bind`         | `0.0.0.0:10067`          | IP address and port number of DHCP server.
-`enable-playground` | false                    | Enable GraphQL playground service.
-`http`              | `0.0.0.0:10080`          | IP address and port number of HTTP server.
-`ipxe-efi-path`     | `/usr/lib/ipxe/ipxe.efi` | Path to ipxe.efi .
+| Option              | Default value            | Description                                      |
+| ------------------- | ------------------------ | ------------------------------------------------ |
+| `advertise-url`     | ""                       | Public URL to access this server.  Required.     |
+| `allow-ips`         | `127.0.0.1,::1`          | Comma-separated IPs allowed to change resources. |
+| `config-file`       | ""                       | If given, configurations are read from the file. |
+| `data-dir`          | `/var/lib/sabakan`       | Directory to store files.                        |
+| `dhcp-bind`         | `0.0.0.0:10067`          | IP address and port number of DHCP server.       |
+| `enable-playground` | false                    | Enable GraphQL playground service.               |
+| `http`              | `0.0.0.0:10080`          | IP address and port number of HTTP server.       |
+| `ipxe-efi-path`     | `/usr/lib/ipxe/ipxe.efi` | Path to ipxe.efi .                               |
 
 Config file
 -----------
@@ -54,6 +54,16 @@ options.
 Properties in YAML are the same as the command-line option names without leading slashes.
 etcd config can be defined `etcd:`. The etcd parameters are defined by [cybozu-go/etcdutil](https://github.com/cybozu-go/etcdutil), and not shown below will use default values of the etcdutil.
 
-Name     | Type   | Required | Description
--------- | ------ | -------- | -----------
-`prefix` | string | No       | Key prefix of etcd objects.  Default is `/sabakan/`.
+| Name     | Type   | Required | Description                                          |
+| -------- | ------ | -------- | ---------------------------------------------------- |
+| `prefix` | string | No       | Key prefix of etcd objects.  Default is `/sabakan/`. |
+
+Environment variable
+--------------------
+
+| Name                 | Description                              |
+| -------------------- | ---------------------------------------- |
+| `SABAKAN_CRYPTSETUP` | Path to `sabakan-cryptsetup` executable. |
+
+* If `SABAKAN_CRYPTSETUP` is not specified, `sabakan-cryptsetup` will be looked up
+    in the same directory of `sabakan` executable file.
