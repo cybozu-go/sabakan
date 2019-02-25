@@ -37,6 +37,7 @@ For GraphQL API, see [graphql.md](graphql.md).
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
+* [GET /api/v1/cryptsetup](#getcryptsetup)
 * [GET /api/v1/logs](#getlogs)
 * [PUT /api/v1/kernel_params/coreos](#putkernelparams)
 * [GET /api/v1/kernel_params/coreos](#getkernelparams)
@@ -911,6 +912,22 @@ $ curl -s -X DELETE 'localhost:10080/api/v1/crypts/1'
 - The machine is not found.
 
     HTTP status code: 404 Not Found
+
+## <a name="getcryptsetup" />`GET /api/v1/cryptsetup`
+
+Download `sabakan-cryptsetup` utility.
+
+** Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response headers: `Content-Type: application/octet-stream`
+
+** Example**
+
+```console
+$ curl -fs http://localhost:10080/api/v1/cryptsetup > sabakan-cryptsetup
+$ chmod a+x ./sabakan-cryptsetup
+```
 
 ## <a name="getlogs" />`GET /api/v1/logs`
 

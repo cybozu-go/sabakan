@@ -115,3 +115,11 @@ func (s Server) handleCryptsDelete(w http.ResponseWriter, r *http.Request, seria
 
 	renderJSON(w, keys, http.StatusOK)
 }
+
+func (s Server) handleCryptSetup(w http.ResponseWriter, r *http.Request) {
+	if s.CryptSetup == "" {
+		http.NotFound(w, r)
+		return
+	}
+	http.ServeFile(w, r, s.CryptSetup)
+}

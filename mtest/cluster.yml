@@ -12,6 +12,8 @@ files:
     file: sabakan
   - name: sabactl
     file: sabactl
+  - name: sabakan-cryptsetup
+    file: sabakan-cryptsetup
   - name: etcd
     file: etcd
   - name: etcdctl
