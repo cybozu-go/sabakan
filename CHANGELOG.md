@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.1.0-rc.1] - 2019-02-25
+
+### Added
+- REST API to download `sabakan-cryptsetup` (#142).
+
+### Changed
+- `sabakan-cryptsetup` was rewritten (#142).
+
 ## [2.0.1] - 2019-02-19
 
 ### Added
@@ -62,7 +70,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.1.0-rc.1...HEAD
+[2.1.0-rc.1]: https://github.com/cybozu-go/sabakan/compare/v2.0.1...v2.1.0-rc.1
+[2.0.1]: https://github.com/cybozu-go/sabakan/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/cybozu-go/sabakan/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/cybozu-go/sabakan/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/cybozu-go/sabakan/compare/v1.0.1...v1.1.0
