@@ -20,7 +20,6 @@ var opts struct {
 	cipher     string
 	keySize    int
 	excludes   []string
-	force      bool
 }
 
 var rootCmd = &cobra.Command{

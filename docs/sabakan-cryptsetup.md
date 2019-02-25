@@ -40,7 +40,7 @@ Target disks
 Following example excludes NVMe disks.
 
 ```console
-$ sabakan-cryptsetup --exclude 'nvme*'
+$ sabakan-cryptsetup --excludes 'nvme*' --excludes 'sd*'
 ```
 
 Crypt device name
