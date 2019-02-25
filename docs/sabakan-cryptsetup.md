@@ -37,7 +37,7 @@ Target disks
 * Read-only devices (devices whose `/sys/block/*/ro` are not `0`)
 
 `--excludes` can be used to exclude some disks from automatic encryption.
-Following example excludes NVMe disks.
+Following example excludes NVMe snd SCSI disks.
 
 ```console
 $ sabakan-cryptsetup --excludes 'nvme*' --excludes 'sd*'
