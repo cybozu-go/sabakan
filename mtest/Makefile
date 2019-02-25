@@ -7,7 +7,7 @@ HOST2 = 10.0.0.102
 HOST3 = 10.0.0.103
 WORKER = 10.0.0.104
 PLACEMAT = /usr/bin/placemat
-GINKGO =  env GO111MODULE=on GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo
+GINKGO =  env GO111MODULE=on GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo -v
 ETCD_VERSION = 3.3.11
 PLACEMAT_DATADIR = /var/scratch/placemat
 
@@ -39,7 +39,7 @@ export SSH_PRIVKEY SABACTL ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
 
 
 GENERATED_FILES = $(OUTPUT)/etcd  $(OUTPUT)/etcdctl \
-	$(OUTPUT)/sabakan $(OUTPUT)/sabactl \
+	$(OUTPUT)/sabakan $(OUTPUT)/sabactl $(OUTPUT)/sabakan-cryptsetup \
 	$(OUTPUT)/cluster.yml \
 	$(OUTPUT)/user-data1.yml \
 	$(OUTPUT)/user-data2.yml \
@@ -69,7 +69,7 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	tar -C $(OUTPUT) -x -z --wildcards --strip-components 1 -f $< '*/$(notdir $@)'
 	touch $@
 
-$(OUTPUT)/sabakan $(OUTPUT)/sabactl:
+$(OUTPUT)/sabakan $(OUTPUT)/sabactl $(OUTPUT)/sabakan-cryptsetup:
 	mkdir -p $(OUTPUT)
 	cd ..; GOBIN=$(realpath $(OUTPUT)) go install ./pkg/$(notdir $@)
 

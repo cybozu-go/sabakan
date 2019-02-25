@@ -3,6 +3,7 @@ package mtest
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -52,7 +53,7 @@ var _ = Describe("netboot", func() {
 			return err
 		}).Should(Succeed())
 
-		By("Waiting worker to boot")
+		By("Checking kernel boot parameter")
 		cli, err := sshTo(worker, sshKey)
 		Expect(err).NotTo(HaveOccurred())
 		defer cli.Close()
@@ -63,12 +64,27 @@ var _ = Describe("netboot", func() {
 		sess.Stdout = &stdout
 		sess.Stderr = &stderr
 		err = sess.Run("cat /proc/cmdline")
-		Expect(err).NotTo(HaveOccurred())
 		sess.Close()
-
+		Expect(err).NotTo(HaveOccurred())
 		Expect(stdout.String()).To(ContainSubstring("coreos.autologin=ttyS0"))
 
-		By("Waiting worker to boot")
+		By("Checking encrypted disks")
+		Eventually(func() error {
+			sess, err := cli.NewSession()
+			if err != nil {
+				return err
+			}
+			var stdout bytes.Buffer
+			sess.Stdout = &stdout
+			err = sess.Run("ls /dev/mapper/crypt-*")
+			sess.Close()
+			if err != nil {
+				return err
+			}
+			fmt.Println("encrypted devices: " + stdout.String())
+			return nil
+		}).Should(Succeed())
+
 		By("Removing the image from the index")
 		sabactl("images", "delete", coreosVersion)
 
