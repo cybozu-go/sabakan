@@ -52,17 +52,24 @@ func (s Server) handleStatePut(w http.ResponseWriter, r *http.Request, serial st
 
 	ms := sabakan.MachineState(state)
 	switch ms {
-	case sabakan.StateUninitialized, sabakan.StateHealthy, sabakan.StateUnhealthy, sabakan.StateUnreachable, sabakan.StateUpdating, sabakan.StateRetiring:
+	case sabakan.StateUninitialized, sabakan.StateHealthy, sabakan.StateUnhealthy, sabakan.StateUnreachable, sabakan.StateUpdating, sabakan.StateRetiring, sabakan.StateRetired:
 	default:
 		renderError(r.Context(), w, BadRequest("invalid state: "+string(state)))
 		return
 	}
 	err = s.Model.Machine.SetState(r.Context(), serial, ms)
-	if err == sabakan.ErrNotFound {
-		renderError(r.Context(), w, APIErrNotFound)
+	if err == nil {
 		return
 	}
-	if err != nil {
+	switch err {
+	case sabakan.ErrNotFound:
+		renderError(r.Context(), w, APIErrNotFound)
+		return
+	case sabakan.ErrBadRequest:
+		renderError(r.Context(), w, APIErrBadRequest)
+		return
+	default:
 		renderError(r.Context(), w, InternalServerError(err))
+		return
 	}
 }

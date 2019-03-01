@@ -122,6 +122,7 @@ STATE can be one of:
     unreachable    The machine does not communicate with others.
     updating       The machine is updating.
     retiring       The machine should soon be retired/repaired.
+    retired        The machine's disk encryption keys were deleted.
 	`,
 	Args: cobra.ExactArgs(2),
 

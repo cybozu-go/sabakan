@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/cybozu-go/sabakan/v2"
@@ -42,6 +43,15 @@ func (d *driver) machineSetState(ctx context.Context, serial string, state sabak
 	m, ok := d.machines[serial]
 	if !ok {
 		return sabakan.ErrNotFound
+	}
+
+	if state == sabakan.StateRetired {
+		prefix := serial + "/"
+		for k := range d.storage {
+			if strings.HasPrefix(k, prefix) {
+				return sabakan.ErrBadRequest
+			}
+		}
 	}
 	return m.SetState(state)
 }

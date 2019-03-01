@@ -61,11 +61,6 @@ func (d *driver) DeleteEncryptionKeys(ctx context.Context, serial string) ([]str
 		return nil, errors.New("machine is not retiring")
 	}
 
-	err := m.SetState(sabakan.StateRetired)
-	if err != nil {
-		return nil, err
-	}
-
 	var resp []string
 	for k := range d.storage {
 		if strings.HasPrefix(k, prefix) {
