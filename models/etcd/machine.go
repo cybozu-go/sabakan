@@ -125,34 +125,32 @@ RETRY:
 		return err
 	}
 
-	var tresp *clientv3.TxnResponse
-	if state == sabakan.StateRetired {
+	var thenOp clientv3.Op
+	if state != sabakan.StateRetired {
+		thenOp = clientv3.OpPut(key, string(data))
+	} else {
 		cryptKey := KeyCrypts + serial + "/"
-		tresp, err = d.client.Txn(ctx).
-			If(clientv3.Compare(clientv3.ModRevision(key), "=", rev)).
-			Then(clientv3.OpTxn([]clientv3.Cmp{clientv3util.KeyMissing(cryptKey).WithPrefix()},
-				[]clientv3.Op{clientv3.OpPut(key, string(data))}, nil)).
-			Commit()
-		if err != nil {
-			return err
-		}
-		if !tresp.Succeeded {
-			goto RETRY
-		}
+		thenOp = clientv3.OpTxn(
+			[]clientv3.Cmp{clientv3util.KeyMissing(cryptKey).WithPrefix()},
+			[]clientv3.Op{clientv3.OpPut(key, string(data))},
+			nil,
+		)
+	}
+
+	tresp, err := d.client.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", rev)).
+		Then(thenOp).
+		Commit()
+	if err != nil {
+		return err
+	}
+	if !tresp.Succeeded {
+		goto RETRY
+	}
+	if state == sabakan.StateRetired {
 		if !tresp.Responses[0].GetResponseTxn().Succeeded {
 			// inner If, i.e. KeyMissing(cryptKey), evaluated to false
 			return sabakan.ErrBadRequest
-		}
-	} else {
-		tresp, err = d.client.Txn(ctx).
-			If(clientv3.Compare(clientv3.ModRevision(key), "=", rev)).
-			Then(clientv3.OpPut(key, string(data))).
-			Commit()
-		if err != nil {
-			return err
-		}
-		if !tresp.Succeeded {
-			goto RETRY
 		}
 	}
 
