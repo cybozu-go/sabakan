@@ -57,9 +57,9 @@ External controllers are responsible to:
 * A **Retiring** machine can transition only to **Retired**.
 * A **Healthy** machine can transition to **Unhealthy**, **Unreachable**, **Retiring**, and **Updating**.
 * A **Unreachable** machine can transition to **Healthy**.
-* **Uneahlthy** machine cannot return to **Healthy** directly.
+* **Unhealthy** machine cannot return to **Healthy** directly.
 * Disk encryption keys of a machine can be deleted if the machine is in **Retiring** state.
-* A machine transitions to **Retired** when its disk encryption keys are deleted.
+* A **Retiring** machine can transition to **Retired** only when its disk encryption keys have been deleted.
 * Only **Retired** machines can be removed from sabakan.
 * No new disk encryption keys can be added to **Retired** machines.
 * **Retired** machines can transition only to **Uninitialized**.

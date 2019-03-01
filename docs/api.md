@@ -288,6 +288,7 @@ The new state is given by contents of request body and should be one of:
 * `unreachable`
 * `updating`
 * `retiring`
+* `retired`
 
 **Successful response**
 
@@ -297,6 +298,10 @@ The new state is given by contents of request body and should be one of:
 
 - Invalid state value.
 
+  HTTP status code: 400 Bad Request
+
+- Disk encryption keys have not been deleted.
+  
   HTTP status code: 400 Bad Request
 
 - No specified machine found.
