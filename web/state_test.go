@@ -95,7 +95,6 @@ func testStatePut(t *testing.T) {
 		{"retired", 200},
 		{"healthy", 500},
 		{"uninitialized", 200},
-		{"retiring", 200},
 	}
 
 	for _, td := range testData {
@@ -124,10 +123,19 @@ func testStatePut(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("PUT", "/api/v1/state/123", strings.NewReader("retired"))
+	r := httptest.NewRequest("PUT", "/api/v1/state/123", strings.NewReader("retiring"))
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
+	if resp.StatusCode != 200 {
+		t.Error("wrong status code, state:", "retiring", "expects:", 200, ", actual:", resp.StatusCode)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/state/123", strings.NewReader("retired"))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
 	if resp.StatusCode != 400 {
 		t.Error("wrong status code, state:", "retired", "expects:", 400, ", actual:", resp.StatusCode)
 	}

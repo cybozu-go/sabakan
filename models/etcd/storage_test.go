@@ -72,6 +72,11 @@ func TestStorage(t *testing.T) {
 		t.Error(`m3.Status.State != sabakan.StateRetiring`)
 	}
 
+	err = d.PutEncryptionKey(context.Background(), "12345678", "abcd-efgh", []byte("data"))
+	if err == nil {
+		t.Error("encryption keys should not be added to retiring machines")
+	}
+
 	err = d.machineSetState(context.Background(), "12345678", sabakan.StateRetired)
 	if err != nil {
 		t.Fatal(err)

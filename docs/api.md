@@ -300,8 +300,8 @@ The new state is given by contents of request body and should be one of:
 
   HTTP status code: 400 Bad Request
 
-- Disk encryption keys have not been deleted.
-  
+- Transitioning a retiring server to retired that still has disk encryption keys.
+
   HTTP status code: 400 Bad Request
 
 - No specified machine found.
@@ -839,7 +839,7 @@ Register disk encryption key. The request body is raw binary format of the key.
 
     HTTP status code: 404 Not Found
 
-- The state of the machine is `retired`.
+- The state of the machine is `retiring` or `retired`.
 
     HTTP status code: 500 Internal Server Error
 

@@ -36,8 +36,8 @@ RETRY:
 	if err != nil {
 		return err
 	}
-	if m.Status.State == sabakan.StateRetired {
-		return errors.New("machine was retired")
+	if m.Status.State == sabakan.StateRetiring || m.Status.State == sabakan.StateRetired {
+		return errors.New("machine was retiring or retired")
 	}
 
 	tresp, err := d.client.Txn(ctx).
@@ -95,7 +95,7 @@ RETRY:
 	}
 
 	d.addLog(ctx, time.Now(), resp.Header.Revision, sabakan.AuditCrypts, serial, "delete",
-		"machine "+serial+" retired")
+		"")
 
 	dresp := resp.Responses[0].GetResponseDeleteRange()
 

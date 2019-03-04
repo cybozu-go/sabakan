@@ -101,6 +101,8 @@ $ sabactl machines set-retire-date <serial> 2023-11-21
 Set the state of a machine.
 State is one of `uninitialized`, `healthy`, `unhealthy`, `unreachable`, `updating`, `retiring` or `retired`.
 
+Transition from `retiring` to `retired` is permitted only when the machine has no disk encryption keys.
+
 ```console
 $ sabactl machines set-state <serial> <state>
 ```
@@ -271,7 +273,7 @@ $ sabactl kernel-params get
 ------------------
 
 Deletes all keys of a machine.
-The command fails when the target machine's status is not `retiring`, or when the target machine's disk encryption keys have not been deleted.
+The command fails when the target machine's status is not `retiring`.
 
 - `--force`: explicitly required
 

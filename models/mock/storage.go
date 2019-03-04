@@ -32,8 +32,8 @@ func (d *driver) PutEncryptionKey(ctx context.Context, serial string, diskByPath
 	if !ok {
 		return sabakan.ErrNotFound
 	}
-	if m.Status.State == sabakan.StateRetired {
-		return errors.New("machine was retired")
+	if m.Status.State == sabakan.StateRetiring || m.Status.State == sabakan.StateRetired {
+		return errors.New("machine was retiring or retired")
 	}
 
 	target := path.Join(serial, diskByPath)
