@@ -184,11 +184,11 @@ func testSetState(t *testing.T) {
 		t.Error("m.Status.State == sabakan.StateHealthy:", m.Status.State)
 	}
 
-	err = d.machineSetState(ctx, "12345678", sabakan.StateRetiring)
+	err = d.PutEncryptionKey(ctx, "12345678", "abcd-efgh", []byte("data"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = d.PutEncryptionKey(ctx, "12345678", "abcd-efgh", []byte("data"))
+	err = d.machineSetState(ctx, "12345678", sabakan.StateRetiring)
 	if err != nil {
 		t.Fatal(err)
 	}
