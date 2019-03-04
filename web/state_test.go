@@ -89,9 +89,12 @@ func testStatePut(t *testing.T) {
 		{"unreachable", 500},
 		{"uninitialized", 200},
 		{"healthy", 200},
-		{"retired", 400},
+		{"retired", 500},
 		{"retiring", 200},
 		{"healthy", 500},
+		{"retired", 200},
+		{"healthy", 500},
+		{"uninitialized", 200},
 	}
 
 	for _, td := range testData {
@@ -114,11 +117,34 @@ func testStatePut(t *testing.T) {
 		}
 	}
 
+	err = m.Storage.PutEncryptionKey(ctx, "123", "path", []byte("aaa"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("PUT", "/api/v1/state/456", strings.NewReader("healthy"))
+	r := httptest.NewRequest("PUT", "/api/v1/state/123", strings.NewReader("retiring"))
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
+	if resp.StatusCode != 200 {
+		t.Error("wrong status code, state:", "retiring", "expects:", 200, ", actual:", resp.StatusCode)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/state/123", strings.NewReader("retired"))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
+	if resp.StatusCode != 400 {
+		t.Error("wrong status code, state:", "retired", "expects:", 400, ", actual:", resp.StatusCode)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/state/456", strings.NewReader("healthy"))
+	handler.ServeHTTP(w, r)
+
+	resp = w.Result()
 	if resp.StatusCode != http.StatusNotFound {
 		t.Error("wrong status code, expects: NotFound, actual:", resp.StatusCode)
 	}

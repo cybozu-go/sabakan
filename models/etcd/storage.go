@@ -2,7 +2,6 @@ package etcd
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"path"
 	"time"
@@ -37,8 +36,8 @@ RETRY:
 	if err != nil {
 		return err
 	}
-	if m.Status.State == sabakan.StateRetired {
-		return errors.New("machine was retired")
+	if m.Status.State == sabakan.StateRetiring || m.Status.State == sabakan.StateRetired {
+		return errors.New("machine was retiring or retired")
 	}
 
 	tresp, err := d.client.Txn(ctx).
@@ -83,22 +82,9 @@ RETRY:
 		return nil, errors.New("machine is not retiring")
 	}
 
-	err = m.SetState(sabakan.StateRetired)
-	if err != nil {
-		return nil, err
-	}
-
-	j, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-
 	resp, err := d.client.Txn(ctx).
 		If(clientv3.Compare(clientv3.ModRevision(mkey), "=", rev)).
-		Then(
-			clientv3.OpDelete(ckey, clientv3.WithPrefix(), clientv3.WithPrevKV()),
-			clientv3.OpPut(mkey, string(j)),
-		).
+		Then(clientv3.OpDelete(ckey, clientv3.WithPrefix(), clientv3.WithPrevKV())).
 		Commit()
 	if err != nil {
 		return nil, err
@@ -109,7 +95,7 @@ RETRY:
 	}
 
 	d.addLog(ctx, time.Now(), resp.Header.Revision, sabakan.AuditCrypts, serial, "delete",
-		"machine "+serial+" retired")
+		"")
 
 	dresp := resp.Responses[0].GetResponseDeleteRange()
 

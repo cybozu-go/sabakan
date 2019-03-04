@@ -288,6 +288,7 @@ The new state is given by contents of request body and should be one of:
 * `unreachable`
 * `updating`
 * `retiring`
+* `retired`
 
 **Successful response**
 
@@ -296,6 +297,10 @@ The new state is given by contents of request body and should be one of:
 **Failure responses**
 
 - Invalid state value.
+
+  HTTP status code: 400 Bad Request
+
+- Transitioning a retiring server to retired that still has disk encryption keys.
 
   HTTP status code: 400 Bad Request
 
@@ -834,7 +839,7 @@ Register disk encryption key. The request body is raw binary format of the key.
 
     HTTP status code: 404 Not Found
 
-- The state of the machine is `retired`.
+- The state of the machine is `retiring` or `retired`.
 
     HTTP status code: 500 Internal Server Error
 

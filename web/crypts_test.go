@@ -196,8 +196,18 @@ func testCryptsDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if retired.Status.State != sabakan.StateRetired {
-		t.Error(`retired.Status.State != sabakan.StateRetired`)
+	if retired.Status.State != sabakan.StateRetiring {
+		t.Error(`retired.Status.State != sabakan.StateRetiring`)
+	}
+
+	err = m.Storage.PutEncryptionKey(ctx, serial, "pathx", []byte("abc"))
+	if err == nil {
+		t.Error("no new encryption key can be added to retiring machine")
+	}
+
+	err = m.Machine.SetState(ctx, serial, sabakan.StateRetired)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	err = m.Storage.PutEncryptionKey(ctx, serial, "pathx", []byte("abc"))

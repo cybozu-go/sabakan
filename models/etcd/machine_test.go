@@ -183,6 +183,35 @@ func testSetState(t *testing.T) {
 	if m.Status.State != sabakan.StateHealthy {
 		t.Error("m.Status.State == sabakan.StateHealthy:", m.Status.State)
 	}
+
+	err = d.PutEncryptionKey(ctx, "12345678", "abcd-efgh", []byte("data"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = d.machineSetState(ctx, "12345678", sabakan.StateRetiring)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = d.machineSetState(ctx, "12345678", sabakan.StateRetired)
+	if err == nil {
+		t.Error("transition to retired succeeded while encryption key exists")
+	}
+
+	_, err = d.DeleteEncryptionKeys(ctx, "12345678")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = d.machineSetState(ctx, "12345678", sabakan.StateRetired)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, err = d.machineGet(ctx, "12345678")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.Status.State != sabakan.StateRetired {
+		t.Error("m.Status.State == sabakan.StateRetired:", m.Status.State)
+	}
 }
 
 func testAddLabels(t *testing.T) {
