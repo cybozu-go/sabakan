@@ -15,7 +15,27 @@ jobs:
           background: true
       # make test on CircleCI runs e2e test at once.
       - run: make test
-
+  build-image:
+    docker:
+      - image: docker:stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build image
+          command: |
+            docker build -t quay.io/cybozu/sabakan:latest .
+      - run:
+          name: Push docker image to Quay.io
+          command: |
+            docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
+            echo "pushing sabakan image ..."
+            TAG=$(echo $CIRCLE_TAG | cut -c 2-)
+            docker tag quay.io/cybozu/sabakan:latest quay.io/cybozu/sabakan:$TAG
+            docker push quay.io/cybozu/sabakan:$TAG
+            BRANCH=$(echo $TAG | cut -d "." -f 1-2)
+            docker tag quay.io/cybozu/sabakan:latest quay.io/cybozu/sabakan:$BRANCH
+            docker push quay.io/cybozu/sabakan:$BRANCH
   mtest:
     docker:
       - image: google/cloud-sdk
@@ -34,3 +54,11 @@ workflows:
     jobs:
       - build
       - mtest
+  release:
+    jobs:
+      - build-image:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
