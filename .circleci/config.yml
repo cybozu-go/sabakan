@@ -15,16 +15,35 @@ jobs:
           background: true
       # make test on CircleCI runs e2e test at once.
       - run: make test
+      - run:
+          command: |
+            mkdir /tmp/workspace
+            cp ./sabakan ./sabactl /tmp/workspace
+      - run: cp LICENSE /tmp/workspace
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - sabakan
+            - sabactl
+            - LICENSE
   build-image:
     docker:
       - image: docker:stable
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Copy binaries
+          command: |
+            cp /tmp/workspace/sabakan docker
+            cp /tmp/workspace/sabactl docker
+            cp /tmp/workspace/LICENSE docker
       - setup_remote_docker
       - run:
           name: Build image
           command: |
-            docker build -t quay.io/cybozu/sabakan:latest .
+            docker build -t quay.io/cybozu/sabakan:latest ./docker
       - run:
           name: Push docker image to Quay.io
           command: |
@@ -56,7 +75,15 @@ workflows:
       - mtest
   release:
     jobs:
+      - build:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
       - build-image:
+          requires:
+            - build
           filters:
             branches:
               ignore: /.*/
