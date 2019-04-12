@@ -8,12 +8,6 @@ address: @BRIDGE_ADDRESS@/24
 kind: DataFolder
 name: data
 files:
-  - name: sabakan
-    file: sabakan
-  - name: sabactl
-    file: sabactl
-  - name: sabakan-cryptsetup
-    file: sabakan-cryptsetup
   - name: etcd
     file: etcd
   - name: etcdctl
