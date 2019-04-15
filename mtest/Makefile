@@ -93,7 +93,7 @@ $(OUTPUT)/$(UBUNTU_IMAGE): $(UBUNTU_IMAGE)
 	touch $@
 
 $(COREOS_KERNEL) $(COREOS_INITRD):
-	curl -fSL -o $@ http://stable.release.core-os.net/amd64-usr/$(COREOS_VERSION)/$@
+	curl -fSL -o $@ http://stable.release.core-os.net/amd64-usr/$(COREOS_VERSION)/$(notdir $@)
 
 $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	mkdir -p $(OUTPUT)
