@@ -14,7 +14,7 @@ import (
 func TestNetboot() {
 	It("is achieved", func() {
 		By("Set-up kernel params")
-		sabactlSafe("kernel-params", "set", "coreos.autologin=ttyS0 console=ttyS0")
+		sabactlSafe("kernel-params", "set", "\"coreos.autologin=ttyS0 console=ttyS0\"")
 
 		By("Uploading an image")
 		kernel := filepath.Join("/tmp", filepath.Base(coreosKernel))
@@ -48,13 +48,7 @@ func TestNetboot() {
 		}).Should(Succeed())
 
 		By("Waiting worker to boot")
-		Eventually(func() error {
-			_, stderr, err := execAt(worker, "date")
-			if err != nil {
-				return fmt.Errorf("%v: stderr=%s", err, stderr)
-			}
-			return nil
-		}).Should(Succeed())
+		Expect(prepareSSHClients(worker)).NotTo(HaveOccurred())
 
 		By("Checking kernel boot parameter")
 		stdout, stderr, err := execAt(worker, "cat", "/proc/cmdline")
@@ -63,11 +57,10 @@ func TestNetboot() {
 
 		By("Checking encrypted disks")
 		Eventually(func() error {
-			stdout, stderr, err := execAt(worker, "ls", "/dev/mapper/crypt-*")
+			_, stderr, err := execAt(worker, "ls", "/dev/mapper/crypt-*")
 			if err != nil {
 				return fmt.Errorf("%v: stderr=%s", err, stderr)
 			}
-			fmt.Sprintf("encrypted devices: %s", string(stdout))
 			return nil
 		}).Should(Succeed())
 

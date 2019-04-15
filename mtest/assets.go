@@ -14,7 +14,7 @@ import (
 func TestAssets() {
 	It("should work as expected", func() {
 		By("Uploading an asset")
-		execSafeAt(host1, "touch", "asset.txt")
+		execSafeAt(host1, "echo", "test", ">", "asset.txt")
 		sabactlSafe("assets", "upload", "test", "asset.txt")
 
 		By("Checking all servers pull the asset")
@@ -56,9 +56,9 @@ func TestAssets() {
 		Expect(err).To(Succeed())
 
 		By("Adding two assets")
-		execSafeAt(host1, "touch", "update1.txt")
+		execSafeAt(host1, "echo", "test1", ">", "update1.txt")
 		sabactlSafe("assets", "upload", "test2", "update1.txt")
-		execSafeAt(host1, "touch", "update2.txt")
+		execSafeAt(host1, "echo", "test2", ">", "update2.txt")
 		sabactlSafe("assets", "upload", "test2", "update2.txt")
 
 		By("Getting the current revision")

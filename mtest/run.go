@@ -95,7 +95,7 @@ func prepareSSHClients(addresses ...string) error {
 			return errors.New("prepareSSHClients timed out")
 		default:
 		}
-		agent, err := sshTo(a, sshKey, "cybozu")
+		agent, err := sshTo(a, sshKey, "ubuntu")
 		if err != nil {
 			time.Sleep(time.Second)
 			goto RETRY
@@ -148,7 +148,7 @@ func runEtcd() error {
 				return err
 			}
 			defer sess.Close()
-			return sess.Run("sudo systemd-run --unit=my-etcd.service /data/etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://localhost:2379 --data-dir /home/ubuntu/default.etcd")
+			return sess.Run("sudo systemd-run --unit=my-etcd.service /opt/bin/etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://localhost:2379 --data-dir /home/ubuntu/default.etcd")
 		})
 	}
 	env.Stop()
@@ -276,16 +276,16 @@ func remoteTempFile(body string) string {
 }
 
 func sabactl(args ...string) ([]byte, []byte, error) {
-	args = append([]string{"--server", "http://" + host1 + ":10080"}, args...)
+	args = append([]string{"/opt/bin/sabactl", "--server", "http://" + host1 + ":10080"}, args...)
 	return execAt(host1, args...)
 }
 
 func sabactlSafe(args ...string) []byte {
-	args = append([]string{"--server", "http://" + host1 + ":10080"}, args...)
+	args = append([]string{"/opt/bin/sabactl", "--server", "http://" + host1 + ":10080"}, args...)
 	return execSafeAt(host1, args...)
 }
 
-func etcdctl(crt, key, ca string, args ...string) ([]byte, []byte, error) {
+func etcdctl(args ...string) ([]byte, []byte, error) {
 	args = append([]string{"env", "ETCDCTL_API=3", "/opt/bin/etcdctl", "--endpoints=http://" + host1 + ":2379"}, args...)
 	return execAt(host1, args...)
 }

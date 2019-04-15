@@ -15,6 +15,7 @@ var (
 	coreosKernel          = os.Getenv("COREOS_KERNEL")
 	coreosVersion         = os.Getenv("COREOS_VERSION")
 	dhcpJSONPath          = os.Getenv("DHCP_JSON")
+	etcdPath              = os.Getenv("ETCD")
 	etcdctlPath           = os.Getenv("ETCDCTL")
 	ignitionsPath         = os.Getenv("IGNITIONS")
 	ipamJSONPath          = os.Getenv("IPAM_JSON")

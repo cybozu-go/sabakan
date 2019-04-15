@@ -10,11 +10,11 @@ echo "placemat PID: $PLACEMAT_PID"
 fin() {
     chmod 600 ./mtest_key
     echo "-------- host1: sabakan log"
-    ./mssh cybozu@${HOST1} sudo journalctl -u sabakan.service --no-pager
+    ./mssh ubuntu@${HOST1} sudo journalctl -u sabakan.service --no-pager
     echo "-------- host2: sabakan log"
-    ./mssh cybozu@${HOST2} sudo journalctl -u sabakan.service --no-pager
+    ./mssh ubuntu@${HOST2} sudo journalctl -u sabakan.service --no-pager
     echo "-------- host3: sabakan log"
-    ./mssh cybozu@${HOST3} sudo journalctl -u sabakan.service --no-pager
+    ./mssh ubuntu@${HOST3} sudo journalctl -u sabakan.service --no-pager
 }
 trap fin INT TERM HUP 0
 

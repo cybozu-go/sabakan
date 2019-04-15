@@ -7,15 +7,21 @@ HOST2 = 10.0.0.102
 HOST3 = 10.0.0.103
 WORKER = 10.0.0.104
 PLACEMAT = /usr/bin/placemat
-GINKGO =  env GO111MODULE=on GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo -v
+GINKGO = env GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo
 ETCD_VERSION = 3.3.11
 PLACEMAT_DATADIR = /var/scratch/placemat
-
 COREOS_VERSION := 2023.5.0
-COREOS_KERNEL := coreos_production_pxe.vmlinuz
-COREOS_INITRD := coreos_production_pxe_image.cpio.gz
+COREOS_KERNEL := $(abspath .)/coreos_production_pxe.vmlinuz
+COREOS_INITRD := $(abspath .)/coreos_production_pxe_image.cpio.gz
+SUDO = sudo
+SUITE = ./functions
+ifeq ($(findstring /,$(SUITE)),)
+  SUITE_PACKAGE = ./$(SUITE)
+else
+  SUITE_PACKAGE = $(SUITE)
+endif
 
-export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER PLACEMAT GINKGO
+export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER PLACEMAT GINKGO SUITE_PACKAGE
 export COREOS_VERSION COREOS_KERNEL COREOS_INITRD
 
 ### for Go
@@ -27,16 +33,18 @@ ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
 SSH_PRIVKEY = $(realpath ./mtest_key)
 OUTPUT := ./output
 UBUNTU_IMAGE := ubuntu-18.04-server-cloudimg-amd64.img
+UBUNTU_IMAGE_DISK_SIZE = 5G
 SABACTL := $(abspath $(OUTPUT))/sabactl
 SABAKAN := $(abspath $(OUTPUT))/sabakan
 SABAKAN_CRYPTSETUP := $(abspath $(OUTPUT))/sabakan-cryptsetup
+ETCD := $(abspath $(OUTPUT))/etcd
 ETCDCTL := $(abspath $(OUTPUT))/etcdctl
 MACHINES_JSON := $(abspath $(OUTPUT))/machines.json
 IPAM_JSON := $(abspath $(OUTPUT))/ipam.json
 DHCP_JSON := $(abspath $(OUTPUT))/dhcp.json
 IGNITIONS := $(abspath $(OUTPUT))/ignitions
 
-export SSH_PRIVKEY SABACTL SABAKAN SABAKAN_CRYPTSETUP ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
+export SSH_PRIVKEY SABACTL SABAKAN SABAKAN_CRYPTSETUP ETCD ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
 
 TEST_DEPS = \
 	$(COREOS_INITRD) \
@@ -59,7 +67,7 @@ PLACEMAT_DEPS = \
 	$(OUTPUT)/user-data1.yml \
 	$(OUTPUT)/user-data2.yml \
 	$(OUTPUT)/user-data3.yml \
-	$(UBUNTU_IMAGE)
+	$(OUTPUT)/$(UBUNTU_IMAGE)
 
 all:
 	@echo "Specify one of these targets:"
@@ -77,6 +85,13 @@ $(ETCD_ARCHIVE):
 $(UBUNTU_IMAGE):
 	curl -sSLf -o $@ https://cloud-images.ubuntu.com/releases/18.04/release/$@
 
+$(OUTPUT)/$(UBUNTU_IMAGE): $(UBUNTU_IMAGE)
+	mkdir -p $(OUTPUT)
+	rm -f $@
+	cp $< $@
+	qemu-img resize $@ $(UBUNTU_IMAGE_DISK_SIZE)
+	touch $@
+
 $(COREOS_KERNEL) $(COREOS_INITRD):
 	curl -fSL -o $@ http://stable.release.core-os.net/amd64-usr/$(COREOS_VERSION)/$@
 
@@ -93,8 +108,8 @@ $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)
 	sed -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
 		-e 's/@BMC_ADDRESS@/$(BMC_ADDRESS)/' \
-		-e 's/@COREOS_KERNEL@/$(COREOS_KERNEL)/' \
-		-e 's/@COREOS_INITRD@/$(COREOS_INITRD)/' $< > $@
+		-e 's/@COREOS_KERNEL@/$(notdir $(COREOS_KERNEL))/' \
+		-e 's/@COREOS_INITRD@/$(notdir $(COREOS_INITRD))/' $< > $@
 
 $(OUTPUT)/user-data1.yml: user-data.yml
 	mkdir -p $(OUTPUT)

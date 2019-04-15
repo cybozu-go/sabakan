@@ -23,7 +23,7 @@ func RunBeforeSuite() {
 
 	Eventually(func() error {
 		for _, host := range []string{host1, host2, host3} {
-			_, _, err := execAt(host, "test -f /boot/ipxe.efi")
+			_, _, err := execAt(host, "test", "-f", "/boot/ipxe.efi")
 			if err != nil {
 				return err
 			}
@@ -37,38 +37,37 @@ func RunBeforeSuite() {
 	}
 
 	By("copying test files")
-	for _, testFile := range []string{sabactlPath, sabakanPath, sabakanCryptsetupPath} {
+	for _, testFile := range []string{etcdPath, etcdctlPath, sabactlPath, sabakanPath, sabakanCryptsetupPath} {
 		f, err := os.Open(testFile)
 		Expect(err).NotTo(HaveOccurred())
 		defer f.Close()
 		remoteFilename := filepath.Join("/tmp", filepath.Base(testFile))
-		for _, host := range []string{host1, host2} {
+		for _, host := range []string{host1, host2, host3} {
 			_, err := f.Seek(0, os.SEEK_SET)
 			Expect(err).NotTo(HaveOccurred())
 			stdout, stderr, err := execAtWithStream(host, f, "dd", "of="+remoteFilename)
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+			stdout, stderr, err = execAt(host, "sudo", "mkdir", "-p", "/opt/bin")
 			stdout, stderr, err = execAt(host, "sudo", "mv", remoteFilename, filepath.Join("/opt/bin", filepath.Base(testFile)))
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 			stdout, stderr, err = execAt(host, "sudo", "chmod", "755", filepath.Join("/opt/bin", filepath.Base(testFile)))
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 		}
 	}
-	for _, testFile := range []string{coreosKernel, coreosInitrd} {
+	for _, testFile := range []string{coreosKernel, coreosInitrd, sshKeyFile} {
 		f, err := os.Open(testFile)
 		Expect(err).NotTo(HaveOccurred())
 		defer f.Close()
 		remoteFilename := filepath.Join("/tmp", filepath.Base(testFile))
-		for _, host := range []string{host1, host2} {
+		for _, host := range []string{host1} {
 			_, err := f.Seek(0, os.SEEK_SET)
 			Expect(err).NotTo(HaveOccurred())
 			stdout, stderr, err := execAtWithStream(host, f, "dd", "of="+remoteFilename)
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
-			stdout, stderr, err = execAt(host, "mv", remoteFilename, filepath.Join("/tmp", filepath.Base(testFile)))
-			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 		}
 	}
 
-	By("(re)starting etcd")
+	By("starting etcd")
 	err = stopEtcd()
 	Expect(err).NotTo(HaveOccurred())
 	err = runEtcd()
@@ -76,7 +75,7 @@ func RunBeforeSuite() {
 
 	time.Sleep(time.Second)
 
-	By("(re)starting sabakan")
+	By("starting sabakan")
 	err = stopSabakan()
 	Expect(err).NotTo(HaveOccurred())
 	err = runSabakan()
@@ -88,7 +87,7 @@ func RunBeforeSuite() {
 		return err
 	}).Should(Succeed())
 
-	By("sabakan config")
+	By("configuring sabakan")
 	// register ipam.json, dhcp.json, machines.json, and ignitions
 	ipam, err := ioutil.ReadFile(ipamJSONPath)
 	Expect(err).NotTo(HaveOccurred())
@@ -98,15 +97,14 @@ func RunBeforeSuite() {
 	dhcp, err := ioutil.ReadFile(dhcpJSONPath)
 	Expect(err).NotTo(HaveOccurred())
 	dhcpFile := remoteTempFile(string(dhcp))
-	sabactl("dhcp", "set", "-f", dhcpFile)
+	sabactlSafe("dhcp", "set", "-f", dhcpFile)
 
-	ignitionSource := filepath.Join(ignitionsPath, "worker.yml")
-	sabactl("ignitions", "set", "-f", ignitionSource, "worker", "1.0.0")
+	sabactlSafe("ignitions", "set", "-f", "/ignitions/worker.yml", "worker", "1.0.0")
 
 	machines, err := ioutil.ReadFile(machinesJSONPath)
 	Expect(err).NotTo(HaveOccurred())
 	machinesFile := remoteTempFile(string(machines))
-	sabactl("machines", "create", "-f", machinesFile)
+	sabactlSafe("machines", "create", "-f", machinesFile)
 
 	time.Sleep(time.Second)
 	fmt.Println("Begin tests...")

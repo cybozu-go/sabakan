@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cybozu-go/cke/mtest"
+	"github.com/cybozu-go/sabakan/v2/mtest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
