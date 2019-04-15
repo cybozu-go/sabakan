@@ -62,7 +62,7 @@ cp /assets/ubuntu-*.img .
 cp /assets/coreos_production_qemu_image.img .
 make setup
 make placemat
-exec make test CONTAINER_RUNTIME=${CONTAINER_RUNTIME} SUITE=${SUITE} TARGET="${TARGET}"
+exec make test SUITE=${SUITE} TARGET="${TARGET}"
 EOF
 chmod +x run.sh
 
