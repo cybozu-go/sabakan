@@ -38,4 +38,4 @@ mod:
 clean:
 	rm -f $(BUILT_TARGET)
 
-.PHONY: all build start-etcd stop-etcd test e2e clean
+.PHONY: all build start-etcd stop-etcd test e2e mod clean

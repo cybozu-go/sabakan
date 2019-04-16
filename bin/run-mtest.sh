@@ -59,7 +59,6 @@ git checkout -qf ${CIRCLE_SHA1}
 cd mtest
 cp /assets/etcd-*.tar.gz .
 cp /assets/ubuntu-*.img .
-cp /assets/coreos_production_qemu_image.img .
 make setup
 make placemat
 sleep 3
