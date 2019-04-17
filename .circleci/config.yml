@@ -1,4 +1,23 @@
-version: 2
+version: 2.1
+commands:
+  run-mtest:
+    description: "multi-host test"
+    parameters:
+      suite:
+        type: string
+      target:
+        type: string
+        default: ""
+    steps:
+      - run:
+          name: Store Service Account
+          command: |
+            echo $GCLOUD_SERVICE_ACCOUNT > account.json
+            gcloud auth activate-service-account --key-file=account.json
+      - run:
+          command: |
+            ./bin/run-mtest.sh <<parameters.suite>> <<parameters.target>>
+
 jobs:
   build:
     docker:
@@ -77,12 +96,8 @@ jobs:
       - image: google/cloud-sdk
     steps:
       - checkout
-      - run:
-          name: Store Service Account
-          command: |
-            echo $GCLOUD_SERVICE_ACCOUNT > account.json
-            gcloud auth activate-service-account --key-file=account.json
-      - run: ./bin/run-mtest.sh
+      - run-mtest:
+          suite: ./functions
 
 workflows:
   version: 2

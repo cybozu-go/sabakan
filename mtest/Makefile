@@ -7,16 +7,21 @@ HOST2 = 10.0.0.102
 HOST3 = 10.0.0.103
 WORKER = 10.0.0.104
 PLACEMAT = /usr/bin/placemat
-GINKGO =  env GO111MODULE=on GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo -v
-ETCD_VERSION = 3.3.11
+GINKGO = env GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo
+ETCD_VERSION = 3.3.12
 PLACEMAT_DATADIR = /var/scratch/placemat
+COREOS_VERSION := 2023.5.0
+COREOS_KERNEL := $(abspath .)/coreos_production_pxe.vmlinuz
+COREOS_INITRD := $(abspath .)/coreos_production_pxe_image.cpio.gz
+SUDO = sudo
+SUITE = ./functions
+ifeq ($(findstring /,$(SUITE)),)
+  SUITE_PACKAGE = ./$(SUITE)
+else
+  SUITE_PACKAGE = $(SUITE)
+endif
 
-COREOS_VERSION := 1967.6.0
-COREOS_URL := http://stable.release.core-os.net/amd64-usr
-COREOS_KERNEL := coreos_production_pxe.vmlinuz
-COREOS_INITRD := coreos_production_pxe_image.cpio.gz
-
-export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER PLACEMAT GINKGO
+export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER PLACEMAT GINKGO SUITE_PACKAGE
 export COREOS_VERSION COREOS_KERNEL COREOS_INITRD
 
 ### for Go
@@ -25,35 +30,54 @@ export GOFLAGS
 
 # non-configuration variables
 ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
-SSH_PRIVKEY := ./mtest_key
+SSH_PRIVKEY = $(realpath ./mtest_key)
 OUTPUT := ./output
 UBUNTU_IMAGE := ubuntu-18.04-server-cloudimg-amd64.img
-SABACTL := $(OUTPUT)/sabactl
-ETCDCTL := $(OUTPUT)/etcdctl
-MACHINES_JSON := $(OUTPUT)/machines.json
-IPAM_JSON := $(OUTPUT)/ipam.json
-DHCP_JSON := $(OUTPUT)/dhcp.json
-IGNITIONS := $(OUTPUT)/ignitions
+UBUNTU_IMAGE_DISK_SIZE = 5G
+SABACTL := $(abspath $(OUTPUT))/sabactl
+SABAKAN := $(abspath $(OUTPUT))/sabakan
+SABAKAN_CRYPTSETUP := $(abspath $(OUTPUT))/sabakan-cryptsetup
+ETCD := $(abspath $(OUTPUT))/etcd
+ETCDCTL := $(abspath $(OUTPUT))/etcdctl
+MACHINES_JSON := $(abspath $(OUTPUT))/machines.json
+IPAM_JSON := $(abspath $(OUTPUT))/ipam.json
+DHCP_JSON := $(abspath $(OUTPUT))/dhcp.json
+IGNITIONS := $(abspath $(OUTPUT))/ignitions
 
-export SSH_PRIVKEY SABACTL ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
+export SSH_PRIVKEY SABACTL SABAKAN SABAKAN_CRYPTSETUP ETCD ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
 
-
-GENERATED_FILES = $(OUTPUT)/etcd  $(OUTPUT)/etcdctl \
-	$(OUTPUT)/sabakan $(OUTPUT)/sabactl $(OUTPUT)/sabakan-cryptsetup \
-	$(OUTPUT)/cluster.yml \
-	$(OUTPUT)/user-data1.yml \
-	$(OUTPUT)/user-data2.yml \
-	$(OUTPUT)/user-data3.yml \
-	$(OUTPUT)/network1.yml \
-	$(OUTPUT)/network2.yml \
-	$(OUTPUT)/network3.yml \
+TEST_DEPS = \
+	$(COREOS_INITRD) \
+	$(COREOS_KERNEL) \
 	$(OUTPUT)/dhcp.json \
 	$(OUTPUT)/ipam.json \
 	$(OUTPUT)/machines.json \
-	$(OUTPUT)/ignitions \
-	$(UBUNTU_IMAGE)
+	$(OUTPUT)/sabactl \
+	$(OUTPUT)/sabakan \
+	$(OUTPUT)/sabakan-cryptsetup
 
-all: test
+PLACEMAT_DEPS = \
+	$(OUTPUT)/cluster.yml \
+	$(OUTPUT)/etcd \
+	$(OUTPUT)/etcdctl \
+	$(OUTPUT)/ignitions \
+	$(OUTPUT)/network1.yml \
+	$(OUTPUT)/network2.yml \
+	$(OUTPUT)/network3.yml \
+	$(OUTPUT)/user-data1.yml \
+	$(OUTPUT)/user-data2.yml \
+	$(OUTPUT)/user-data3.yml \
+	$(OUTPUT)/$(UBUNTU_IMAGE)
+
+all:
+	@echo "Specify one of these targets:"
+	@echo
+	@echo "    placemat - run VMs in placemat."
+	@echo "    stop     - stop placemat."
+	@echo "    test     - run test in placemat env."
+	@echo "    setup    - install dependencies."
+	@echo
+	@echo "'make test' accepts SUITE."
 
 $(ETCD_ARCHIVE):
 	curl -sSLf -o $@ https://github.com/coreos/etcd/releases/download/v$(ETCD_VERSION)/etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
@@ -61,8 +85,15 @@ $(ETCD_ARCHIVE):
 $(UBUNTU_IMAGE):
 	curl -sSLf -o $@ https://cloud-images.ubuntu.com/releases/18.04/release/$@
 
+$(OUTPUT)/$(UBUNTU_IMAGE): $(UBUNTU_IMAGE)
+	mkdir -p $(OUTPUT)
+	rm -f $@
+	cp $< $@
+	qemu-img resize $@ $(UBUNTU_IMAGE_DISK_SIZE)
+	touch $@
+
 $(COREOS_KERNEL) $(COREOS_INITRD):
-	curl -fSL -o $@ $(COREOS_URL)/$(COREOS_VERSION)/$@
+	curl -fSL -o $@ http://stable.release.core-os.net/amd64-usr/$(COREOS_VERSION)/$(notdir $@)
 
 $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	mkdir -p $(OUTPUT)
@@ -77,8 +108,8 @@ $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)
 	sed -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
 		-e 's/@BMC_ADDRESS@/$(BMC_ADDRESS)/' \
-		-e 's/@COREOS_KERNEL@/$(COREOS_KERNEL)/' \
-		-e 's/@COREOS_INITRD@/$(COREOS_INITRD)/' $< > $@
+		-e 's/@COREOS_KERNEL@/$(notdir $(COREOS_KERNEL))/' \
+		-e 's/@COREOS_INITRD@/$(notdir $(COREOS_INITRD))/' $< > $@
 
 $(OUTPUT)/user-data1.yml: user-data.yml
 	mkdir -p $(OUTPUT)
@@ -118,23 +149,22 @@ $(OUTPUT)/ignitions:
 	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
             -e 's/@WORKER@/$(WORKER)/' $@/networkd/10-eth0.network
 
-test: $(GENERATED_FILES) $(COREOS_KERNEL) $(COREOS_INITRD)
-	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host1
-	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host2
-	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host3
-	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/worker
-	./test.sh
+# Targets
+test: $(TEST_DEPS)
+	./test.sh "$(TARGET)"
 
-placemat: $(GENERATED_FILES) $(COREOS_KERNEL) $(COREOS_INITRD)
-	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host1
-	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host2
-	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/host3
-	sudo rm -rf $(PLACEMAT_DATADIR)/volumes/worker
-	sudo -b $(PLACEMAT) output/cluster.yml
-	@echo 'Placemat is running.  To kill it, do "sudo pkill placemat".'
+placemat: $(PLACEMAT_DEPS) $(TEST_DEPS)
+	sudo rm -rf $(PLACEMAT_DATADIR)
+	sudo rm -rf $(VM_SHARED_DIR)
+	sudo systemd-run --unit=placemat.service $(PLACEMAT) -enable-virtfs $(abspath output/cluster.yml)
+	@echo 'Placemat is running.  To kill it, do "make stop".'
 
-test-light:
-	$(GINKGO)
+stop:
+	sudo systemctl stop placemat.service
+	sudo systemctl disable placemat.service
+	sudo rm /run/systemd/transient/placemat.service
+	sudo systemctl daemon-reload
+	sudo systemctl reset-failed placemat.service
 
 clean:
 	rm -rf $(OUTPUT)
@@ -142,4 +172,4 @@ clean:
 setup:
 	go install github.com/onsi/ginkgo/ginkgo
 
-.PHONY:	all clean setup test
+.PHONY: all test placemat stop clean setup
