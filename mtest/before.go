@@ -37,7 +37,7 @@ func RunBeforeSuite() {
 	}
 
 	By("copying test files")
-	for _, testFile := range []string{etcdPath, etcdctlPath, sabactlPath, sabakanPath, sabakanCryptsetupPath} {
+	for _, testFile := range []string{etcdPath, etcdctlPath} {
 		f, err := os.Open(testFile)
 		Expect(err).NotTo(HaveOccurred())
 		defer f.Close()
@@ -54,7 +54,7 @@ func RunBeforeSuite() {
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 		}
 	}
-	for _, testFile := range []string{coreosKernel, coreosInitrd, sshKeyFile} {
+	for _, testFile := range []string{coreosKernel, coreosInitrd, sshKeyFile, sabakanImagePath} {
 		f, err := os.Open(testFile)
 		Expect(err).NotTo(HaveOccurred())
 		defer f.Close()

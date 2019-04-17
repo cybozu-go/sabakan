@@ -32,11 +32,9 @@ export GOFLAGS
 ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
 SSH_PRIVKEY = $(realpath ./mtest_key)
 OUTPUT := ./output
-UBUNTU_IMAGE := ubuntu-18.04-server-cloudimg-amd64.img
-UBUNTU_IMAGE_DISK_SIZE = 5G
-SABACTL := $(abspath $(OUTPUT))/sabactl
-SABAKAN := $(abspath $(OUTPUT))/sabakan
-SABAKAN_CRYPTSETUP := $(abspath $(OUTPUT))/sabakan-cryptsetup
+COREOS_IMAGE := coreos_production_qemu_image.img
+COREOS_IMAGE_DISK_SIZE = 5G
+SABAKAN_IMAGE := $(abspath $(OUTPUT))/sabakan.img
 ETCD := $(abspath $(OUTPUT))/etcd
 ETCDCTL := $(abspath $(OUTPUT))/etcdctl
 MACHINES_JSON := $(abspath $(OUTPUT))/machines.json
@@ -44,7 +42,7 @@ IPAM_JSON := $(abspath $(OUTPUT))/ipam.json
 DHCP_JSON := $(abspath $(OUTPUT))/dhcp.json
 IGNITIONS := $(abspath $(OUTPUT))/ignitions
 
-export SSH_PRIVKEY SABACTL SABAKAN SABAKAN_CRYPTSETUP ETCD ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
+export SSH_PRIVKEY SABAKAN_IMAGE ETCD ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
 
 TEST_DEPS = \
 	$(COREOS_INITRD) \
@@ -52,9 +50,7 @@ TEST_DEPS = \
 	$(OUTPUT)/dhcp.json \
 	$(OUTPUT)/ipam.json \
 	$(OUTPUT)/machines.json \
-	$(OUTPUT)/sabactl \
-	$(OUTPUT)/sabakan \
-	$(OUTPUT)/sabakan-cryptsetup
+	$(OUTPUT)/sabakan.img
 
 PLACEMAT_DEPS = \
 	$(OUTPUT)/cluster.yml \
@@ -67,7 +63,7 @@ PLACEMAT_DEPS = \
 	$(OUTPUT)/user-data1.yml \
 	$(OUTPUT)/user-data2.yml \
 	$(OUTPUT)/user-data3.yml \
-	$(OUTPUT)/$(UBUNTU_IMAGE)
+	$(OUTPUT)/$(COREOS_IMAGE)
 
 all:
 	@echo "Specify one of these targets:"
@@ -82,14 +78,15 @@ all:
 $(ETCD_ARCHIVE):
 	curl -sSLf -o $@ https://github.com/coreos/etcd/releases/download/v$(ETCD_VERSION)/etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
 
-$(UBUNTU_IMAGE):
-	curl -sSLf -o $@ https://cloud-images.ubuntu.com/releases/18.04/release/$@
+$(COREOS_IMAGE):
+	curl -sSLf -o $@.bz2 https://stable.release.core-os.net/amd64-usr/current/$@.bz2
+	bunzip2 -q $@.bz2
 
-$(OUTPUT)/$(UBUNTU_IMAGE): $(UBUNTU_IMAGE)
+$(OUTPUT)/$(COREOS_IMAGE): $(COREOS_IMAGE)
 	mkdir -p $(OUTPUT)
 	rm -f $@
 	cp $< $@
-	qemu-img resize $@ $(UBUNTU_IMAGE_DISK_SIZE)
+	qemu-img resize $@ $(COREOS_IMAGE_DISK_SIZE)
 	touch $@
 
 $(COREOS_KERNEL) $(COREOS_INITRD):
@@ -100,9 +97,14 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	tar -C $(OUTPUT) -x -z --wildcards --strip-components 1 -f $< '*/$(notdir $@)'
 	touch $@
 
-$(OUTPUT)/sabakan $(OUTPUT)/sabactl $(OUTPUT)/sabakan-cryptsetup:
+$(OUTPUT)/sabakan.img:
+	GOBIN=$(shell pwd)/../docker go install ../pkg/sabakan
+	GOBIN=$(shell pwd)/../docker go install ../pkg/sabakan-cryptsetup
+	GOBIN=$(shell pwd)/../docker go install ../pkg/sabactl
+	cp ../LICENSE $(shell pwd)/../docker
+	sudo podman build --no-cache --rm=false -t quay.io/cybozu/sabakan:dev ../docker/
 	mkdir -p $(OUTPUT)
-	cd ..; GOBIN=$(realpath $(OUTPUT)) go install ./pkg/$(notdir $@)
+	sudo podman save -o $@ quay.io/cybozu/sabakan:dev
 
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)
@@ -110,21 +112,6 @@ $(OUTPUT)/cluster.yml: cluster.yml
 		-e 's/@BMC_ADDRESS@/$(BMC_ADDRESS)/' \
 		-e 's/@COREOS_KERNEL@/$(notdir $(COREOS_KERNEL))/' \
 		-e 's/@COREOS_INITRD@/$(notdir $(COREOS_INITRD))/' $< > $@
-
-$(OUTPUT)/user-data1.yml: user-data.yml
-	mkdir -p $(OUTPUT)
-	sed -e 's/@HOST1@/$(HOST1)/' \
-			-e 's/@HOST@/$(HOST1)/' $< > $@
-
-$(OUTPUT)/user-data2.yml: user-data.yml
-	mkdir -p $(OUTPUT)
-	sed -e 's/@HOST1@/$(HOST1)/' \
-			-e 's/@HOST@/$(HOST2)/' $< > $@
-
-$(OUTPUT)/user-data3.yml: user-data.yml
-	mkdir -p $(OUTPUT)
-	sed -e 's/@HOST1@/$(HOST1)/' \
-			-e 's/@HOST@/$(HOST3)/' $< > $@
 
 $(OUTPUT)/network1.yml: network.yml
 	mkdir -p $(OUTPUT)
@@ -148,6 +135,27 @@ $(OUTPUT)/ignitions:
 	cp -r ignitions $@
 	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
             -e 's/@WORKER@/$(WORKER)/' $@/networkd/10-eth0.network
+
+$(CT):
+	curl -fsSL -o ct https://github.com/coreos/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
+	chmod +x ct
+	$(SUDO) mv ct $@
+
+$(OUTPUT)/host.ign: host-ign.yml $(CT)
+	mkdir -p $(OUTPUT)
+	$(CT) -in-file=$< -pretty -out-file=$@
+
+$(OUTPUT)/node1.ign: $(OUTPUT)/node.ign
+	sed -e 's/__HOST1__/$(HOST1)/' \
+		-e 's/__HOST__/$(HOST1)/' $< > $@
+
+$(OUTPUT)/node2.ign: $(OUTPUT)/node.ign
+	sed -e 's/__HOST1__/$(HOST1)/' \
+		-e 's/__HOST__/$(HOST2)/' $< > $@
+
+$(OUTPUT)/node3.ign: $(OUTPUT)/node.ign
+	sed -e 's/__HOST1__/$(HOST1)/' \
+		-e 's/__HOST__/$(HOST3)/' $< > $@
 
 # Targets
 test: $(TEST_DEPS)
