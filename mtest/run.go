@@ -334,8 +334,9 @@ func stopHost2Sabakan() ([]byte, []byte, error) {
 
 func startHost2Sabakan(image string) ([]byte, []byte, error) {
 	return execAt(host2, "sudo", "systemd-run", "--unit=sabakan.service",
-		"docker", "run", "--rm", "-d", "--read-only", "--cap-drop", "ALL", "--cap-add", "NET_BIND_SERVICE",
+		"docker", "run", "--rm", "--read-only", "--cap-drop", "ALL", "--cap-add", "NET_BIND_SERVICE",
 		"--network", "host", "--name", "sabakan",
 		"--mount", "type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan",
+		"--mount", "type=bind,source=/etc/sabakan.yml,target=/etc/sabakan.yml",
 		image, "-config-file=/etc/sabakan.yml")
 }
