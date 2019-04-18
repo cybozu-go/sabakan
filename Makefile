@@ -1,7 +1,7 @@
 # Makefile for sabakan
 
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
-BUILT_TARGET=sabakan sabactl
+BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 ETCD_DIR = /tmp/neco-etcd
 
 # for Go
