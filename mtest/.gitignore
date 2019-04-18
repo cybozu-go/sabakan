@@ -2,4 +2,5 @@
 *.img
 /coreos_*.vmlinuz
 /coreos_*.cpio.gz
+/coreos_*.img
 /etcd-*.tar.gz

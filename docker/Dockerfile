@@ -9,6 +9,7 @@ RUN apt-get update \
 
 COPY sabakan /usr/local/sabakan/bin/
 COPY sabactl /usr/local/sabakan/bin/
+COPY sabakan-cryptsetup /usr/local/sabakan/bin/
 COPY install-tools /usr/local/sabakan/install-tools
 COPY LICENSE /usr/local/sabakan/
 

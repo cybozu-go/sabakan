@@ -21,6 +21,7 @@ var (
 	ipamJSONPath     = os.Getenv("IPAM_JSON")
 	machinesJSONPath = os.Getenv("MACHINES_JSON")
 	sabakanImagePath = os.Getenv("SABAKAN_IMAGE")
+	sabakanImageURL  = os.Getenv("SABAKAN_IMAGE_URL")
 
 	sshKeyFile = os.Getenv("SSH_PRIVKEY")
 )
