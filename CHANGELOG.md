@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.2.2] - 2019-04-18
+
+### Changed
+- Run mtest using built container image, fix bug (#153).
+
 ## [2.2.1] - 2019-04-17
 
 ### Added
@@ -89,7 +94,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.2.1...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.2.2...HEAD
+[2.2.2]: https://github.com/cybozu-go/sabakan/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/cybozu-go/sabakan/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/cybozu-go/sabakan/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/cybozu-go/sabakan/compare/v2.0.1...v2.1.0
