@@ -37,13 +37,14 @@ jobs:
       - run:
           command: |
             mkdir /tmp/workspace
-            cp ./sabakan ./sabactl /tmp/workspace
+            cp ./sabakan ./sabactl ./sabakan-cryptsetup /tmp/workspace
       - run: cp LICENSE /tmp/workspace
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
             - sabakan
             - sabactl
+            - sabakan-cryptsetup
             - LICENSE
   build-image:
     docker:
@@ -57,6 +58,7 @@ jobs:
           command: |
             cp /tmp/workspace/sabakan docker
             cp /tmp/workspace/sabactl docker
+            cp /tmp/workspace/sabakan-cryptsetup docker
             cp /tmp/workspace/LICENSE docker
       - setup_remote_docker
       - run:
