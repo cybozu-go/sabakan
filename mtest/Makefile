@@ -35,7 +35,6 @@ ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
 SSH_PRIVKEY = $(realpath ./mtest_key)
 OUTPUT := ./output
 COREOS_IMAGE := coreos_production_qemu_image.img
-COREOS_IMAGE_DISK_SIZE = 5G
 SABAKAN_IMAGE := $(abspath $(OUTPUT))/sabakan.img
 SABAKAN_IMAGE_URL := quay.io/cybozu/sabakan:dev
 ETCD := $(abspath $(OUTPUT))/etcd
