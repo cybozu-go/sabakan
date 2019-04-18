@@ -21,51 +21,48 @@ func RunBeforeSuite() {
 	err := prepareSSHClients(host1, host2, host3)
 	Expect(err).NotTo(HaveOccurred())
 
-	Eventually(func() error {
-		for _, host := range []string{host1, host2, host3} {
-			_, _, err := execAt(host, "test", "-f", "/boot/ipxe.efi")
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}).Should(Succeed())
-
 	// sync VM root filesystem to store newly generated SSH host keys.
 	for h := range sshClients {
 		execSafeAt(h, "sync")
 	}
 
 	By("copying test files")
-	for _, testFile := range []string{etcdPath, etcdctlPath, sabactlPath, sabakanPath, sabakanCryptsetupPath} {
+	for _, testFile := range []string{etcdPath, etcdctlPath} {
 		f, err := os.Open(testFile)
 		Expect(err).NotTo(HaveOccurred())
 		defer f.Close()
-		remoteFilename := filepath.Join("/tmp", filepath.Base(testFile))
+		remoteFilename := filepath.Join("/var/tmp", filepath.Base(testFile))
 		for _, host := range []string{host1, host2, host3} {
 			_, err := f.Seek(0, os.SEEK_SET)
 			Expect(err).NotTo(HaveOccurred())
 			stdout, stderr, err := execAtWithStream(host, f, "dd", "of="+remoteFilename)
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
-			stdout, stderr, err = execAt(host, "sudo", "mkdir", "-p", "/opt/bin")
 			stdout, stderr, err = execAt(host, "sudo", "mv", remoteFilename, filepath.Join("/opt/bin", filepath.Base(testFile)))
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 			stdout, stderr, err = execAt(host, "sudo", "chmod", "755", filepath.Join("/opt/bin", filepath.Base(testFile)))
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 		}
 	}
-	for _, testFile := range []string{coreosKernel, coreosInitrd, sshKeyFile} {
+	for _, testFile := range []string{coreosKernel, coreosInitrd, sshKeyFile, sabakanImagePath} {
 		f, err := os.Open(testFile)
 		Expect(err).NotTo(HaveOccurred())
 		defer f.Close()
-		remoteFilename := filepath.Join("/tmp", filepath.Base(testFile))
-		for _, host := range []string{host1} {
+		remoteFilename := filepath.Join("/var/tmp", filepath.Base(testFile))
+		for _, host := range []string{host1, host2, host3} {
 			_, err := f.Seek(0, os.SEEK_SET)
 			Expect(err).NotTo(HaveOccurred())
 			stdout, stderr, err := execAtWithStream(host, f, "dd", "of="+remoteFilename)
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 		}
 	}
+
+	By("loading test image")
+	err = loadImage(filepath.Join("/var/tmp", filepath.Base(sabakanImagePath)))
+	Expect(err).NotTo(HaveOccurred())
+
+	By("running install-tools")
+	err = installTools(sabakanImageURL)
+	Expect(err).NotTo(HaveOccurred())
 
 	By("starting etcd")
 	err = stopEtcd()
@@ -78,7 +75,7 @@ func RunBeforeSuite() {
 	By("starting sabakan")
 	err = stopSabakan()
 	Expect(err).NotTo(HaveOccurred())
-	err = runSabakan()
+	err = runSabakan(sabakanImageURL)
 	Expect(err).NotTo(HaveOccurred())
 
 	// wait sabakan

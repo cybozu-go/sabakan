@@ -95,7 +95,7 @@ func prepareSSHClients(addresses ...string) error {
 			return errors.New("prepareSSHClients timed out")
 		default:
 		}
-		agent, err := sshTo(a, sshKey, "ubuntu")
+		agent, err := sshTo(a, sshKey, "cybozu")
 		if err != nil {
 			time.Sleep(time.Second)
 			goto RETRY
@@ -121,6 +121,44 @@ func parsePrivateKey(keyPath string) (ssh.Signer, error) {
 	return ssh.ParsePrivateKey(data)
 }
 
+func loadImage(path string) error {
+	env := well.NewEnvironment(context.Background())
+	for _, host := range []string{host1, host2, host3} {
+		host2 := host
+		env.Go(func(ctx context.Context) error {
+			sess, err := sshClients[host2].client.NewSession()
+			if err != nil {
+				return err
+			}
+			defer func() {
+				sess.Run("rm -f " + path)
+				sess.Close()
+			}()
+			return sess.Run("docker load -i " + path)
+		})
+	}
+	env.Stop()
+	return env.Wait()
+
+}
+
+func installTools(image string) error {
+	env := well.NewEnvironment(context.Background())
+	for _, host := range []string{host1, host2, host3} {
+		host2 := host
+		env.Go(func(ctx context.Context) error {
+			sess, err := sshClients[host2].client.NewSession()
+			if err != nil {
+				return err
+			}
+			defer sess.Close()
+			return sess.Run("docker run --rm -u root:root --entrypoint /usr/local/sabakan/install-tools --mount type=bind,src=/opt/bin,target=/host/usr/local/bin " + image)
+		})
+	}
+	env.Stop()
+	return env.Wait()
+}
+
 func stopEtcd() error {
 	env := well.NewEnvironment(context.Background())
 	for _, host := range []string{host1, host2, host3} {
@@ -131,7 +169,7 @@ func stopEtcd() error {
 				return err
 			}
 			defer sess.Close()
-			return sess.Run("sudo systemctl stop my-etcd.service; sudo rm -rf /home/ubuntu/default.etcd")
+			return sess.Run("sudo systemctl stop my-etcd.service; sudo rm -rf /home/cybozu/default.etcd")
 		})
 	}
 	env.Stop()
@@ -148,7 +186,7 @@ func runEtcd() error {
 				return err
 			}
 			defer sess.Close()
-			return sess.Run("sudo systemd-run --unit=my-etcd.service /opt/bin/etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://localhost:2379 --data-dir /home/ubuntu/default.etcd")
+			return sess.Run("sudo systemd-run --unit=my-etcd.service /opt/bin/etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://localhost:2379 --data-dir /home/cybozu/default.etcd")
 		})
 	}
 	env.Stop()
@@ -172,7 +210,7 @@ func stopSabakan() error {
 	return env.Wait()
 }
 
-func runSabakan() error {
+func runSabakan(image string) error {
 	env := well.NewEnvironment(context.Background())
 	for _, host := range []string{host1, host2, host3} {
 		host2 := host
@@ -182,7 +220,7 @@ func runSabakan() error {
 				return err
 			}
 			defer sess.Close()
-			return sess.Run("sudo systemd-run --unit=sabakan.service /opt/bin/sabakan -config-file /etc/sabakan.yml")
+			return sess.Run("sudo mkdir -p /var/lib/sabakan && sudo systemd-run --unit=sabakan.service docker run --rm --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE --network host --name sabakan --mount type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan --mount type=bind,source=/etc/sabakan.yml,target=/etc/sabakan.yml " + image + " -config-file /etc/sabakan.yml")
 		})
 	}
 	env.Stop()
@@ -294,6 +332,11 @@ func stopHost2Sabakan() ([]byte, []byte, error) {
 	return execAt(host2, "sudo", "systemctl", "stop", "sabakan.service")
 }
 
-func startHost2Sabakan() ([]byte, []byte, error) {
-	return execAt(host2, "sudo", "systemd-run", "--unit=sabakan.service", "/opt/bin/sabakan", "-config-file", "/etc/sabakan.yml")
+func startHost2Sabakan(image string) ([]byte, []byte, error) {
+	return execAt(host2, "sudo", "systemd-run", "--unit=sabakan.service",
+		"docker", "run", "--rm", "--read-only", "--cap-drop", "ALL", "--cap-add", "NET_BIND_SERVICE",
+		"--network", "host", "--name", "sabakan",
+		"--mount", "type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan",
+		"--mount", "type=bind,source=/etc/sabakan.yml,target=/etc/sabakan.yml",
+		image, "-config-file=/etc/sabakan.yml")
 }

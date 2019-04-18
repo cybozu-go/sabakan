@@ -1,5 +1,5 @@
 Host *
-User ubuntu
+User cybozu
 IdentityFile mtest_key
 StrictHostKeyChecking no
 UserKnownHostsFile /dev/null

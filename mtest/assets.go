@@ -76,7 +76,7 @@ func TestAssets() {
 		etcdctl("compaction", "--physical=true", strconv.Itoa(currentRevision))
 
 		By("Restarting host2 sabakan")
-		_, _, err = startHost2Sabakan()
+		_, _, err = startHost2Sabakan(sabakanImageURL)
 		Expect(err).To(Succeed())
 
 		By("Confirming that sabakan can get the latest asset again")

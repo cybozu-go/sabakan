@@ -1,0 +1,75 @@
+storage:
+  files:
+    - path: "/etc/hostname"
+      filesystem: root
+      mode: 0644
+      contents:
+        inline: |
+          __HOST_NAME__
+
+    - path: "/etc/hosts"
+      filesystem: root
+      mode: 0644
+      contents:
+        inline: |
+          127.0.0.1	localhost
+          ::1		localhost
+
+    - path: "/etc/sabakan.yml"
+      filesystem: root
+      contents:
+        inline: |
+          advertise-url: http://__HOST__:10080
+          allow-ips: [0.0.0.0/0]
+          dhcp-bind: 0.0.0.0:67
+          etcd:
+            endpoints: [http://__HOST1__:2379]
+      mode: 0644
+
+  directories:
+    - filesystem: root
+      path: "/opt/bin"
+      mode: 0755
+
+networkd:
+  units:
+    - name: 00-eth0.network
+      contents: |
+        [Match]
+        Name=eth0
+
+        [Network]
+        Address=__HOST_ADDRESS__/24
+        Gateway=__BRIDGE_ADDRESS__
+        DNS=8.8.8.8
+        DNS=1.1.1.1
+
+passwd:
+  users:
+    - name: cybozu
+      password_hash: "$6$rounds=4096$m3AVOWeB$EPystoHozf.eJNCm4tWyRHpJzgTDymYuGOONWxRN8uk4amLvxwB4Pc7.tEkZdeXewoVEBEX5ujUon9wSpEf1N."
+      ssh_authorized_keys:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfQ2R2DS2LgjTxs+Z27hfWF4eGH2/ymeXvvUWmc5hRgC//RVnk9b2Tcix/pALNvzUqK9nTbk2F3Gn/PziBWFDSHbhYeHBRlkctu9gInLbL+VVNWmhhPDstgrUE9I+EDAB9hm958xRBBFzzpABLB7oXxeYz8RIuuDWY8I0or9q8Z/v4ZvR+hSsQI64A45obnIdp3ak/0WgyZQYtvnLGpTowDtlxz2wpIHZy9AZa/h5WC6q032o6/SzHZva0hDnQ3q2++icT8Ugm1shRaxIz9eu25z2yItEkV3FoTODRNAwzKtrrt+MwdmCabzAzObRQREXtFghZ2TqTi1FTbkPPT/7d mtest
+      groups:
+        - docker
+        - sudo
+
+systemd:
+  units:
+    - name: update-engine.service
+      mask: true
+
+    - name: locksmithd.service
+      mask: true
+
+    - name: ignitions.mount
+      enable: true
+      contents: |
+        [Mount]
+        What=/dev/vdb1
+        Where=/ignitions
+        Type=vfat
+        Options=ro
+
+        [Install]
+        WantedBy=local-fs.target

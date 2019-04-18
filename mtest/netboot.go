@@ -17,8 +17,8 @@ func TestNetboot() {
 		sabactlSafe("kernel-params", "set", "\"coreos.autologin=ttyS0 console=ttyS0\"")
 
 		By("Uploading an image")
-		kernel := filepath.Join("/tmp", filepath.Base(coreosKernel))
-		initrd := filepath.Join("/tmp", filepath.Base(coreosInitrd))
+		kernel := filepath.Join("/var/tmp", filepath.Base(coreosKernel))
+		initrd := filepath.Join("/var/tmp", filepath.Base(coreosInitrd))
 		sabactlSafe("images", "upload", coreosVersion, kernel, initrd)
 
 		By("Waiting images to be distributed")
