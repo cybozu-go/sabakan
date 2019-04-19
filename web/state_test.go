@@ -190,6 +190,7 @@ func testStatePutFromUnreachable(t *testing.T) {
 		}
 	}
 }
+
 func testStatePutFromUpdating(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -222,6 +223,7 @@ func testStatePutFromUpdating(t *testing.T) {
 		}
 	}
 }
+
 func testStatePutFromRetiring(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -238,7 +240,7 @@ func testStatePutFromRetiring(t *testing.T) {
 
 	serial := "123"
 	for _, td := range testData {
-		m, handler  := setupMock(ctx, serial, t)
+		m, handler := setupMock(ctx, serial, t)
 		setStateRequest(serial, "", testTransition{"uninitialized", 200}, handler, t)
 		setStateRequest(serial, "uninitialized", testTransition{"healthy", 200}, handler, t)
 		setStateRequest(serial, "healthy", testTransition{"retiring", 200}, handler, t)
@@ -271,7 +273,7 @@ func testStatePutFromRetired(t *testing.T) {
 
 	serial := "123"
 	for _, td := range testData {
-		m, handler  := setupMock(ctx, serial, t)
+		m, handler := setupMock(ctx, serial, t)
 		setStateRequest(serial, "", testTransition{"uninitialized", 200}, handler, t)
 		setStateRequest(serial, "uninitialized", testTransition{"healthy", 200}, handler, t)
 		setStateRequest(serial, "healthy", testTransition{"retiring", 200}, handler, t)
