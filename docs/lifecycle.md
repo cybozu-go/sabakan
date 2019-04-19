@@ -26,12 +26,12 @@ Machine States
 Sabakan defines following machine states:
 
 * **Uninitialized**: Machines to not be initialized.
-* **Healthy**: Machines that can run applications
-* **Unhealthy**: Machines having problems to be repaired
-* **Unreachable**: Machines that cannot be accessed
-* **Updating**: Machines to be updating
-* **Retiring**: Machines to be retired/repaired
-* **Retired**: Machines whose disk encryption keys were deleted
+* **Healthy**: Machines that can run applications.
+* **Unhealthy**: Machines having problems to be repaired.
+* **Unreachable**: Machines that cannot be accessed.
+* **Updating**: Machines to be updating.
+* **Retiring**: Machines to be retired/repaired.
+* **Retired**: Machines whose disk encryption keys were deleted. These machines can be removed from sabakan.
 
 ### Role of administrators
 
@@ -53,22 +53,23 @@ External controllers are responsible to:
 
 ### Transition constraints
 
-* **Uninitialized**, ***Healthy**, **Unhealthy**, or **Unreachable** machine can transition to **Retiring**.
-* A **Retiring** machine can transition only to **Retired**.
-* A **Healthy** machine can transition to **Unhealthy**, **Unreachable**, **Retiring**, and **Updating**.
-* A **Unreachable** machine can transition to **Healthy**.
-* A **Unhealthy** machine can transition to **Healthy**, **Unreachable**, **Uninitialized**, and **Retiring**.
-* Disk encryption keys of a machine can be deleted if the machine is in **Retiring** state.
-* A **Retiring** machine can transition to **Retired** only when it has no disk encryption keys.
-* Only **Retired** machines can be removed from sabakan.
-* No new disk encryption keys can be added to **Retiring** or **Retired** machines.
-* **Retired** machines can transition only to **Uninitialized**.
-* **Healthy** machines can transition to **Updating** for restarting.
-* **Updating** machines can transition only to **Uninitialized** after restarting.
+* **Uninitialized** can transition to **Healthy** or **Retiring**.
+* **Healthy** can transition to **Unhealthy**, **Unreachable**, **Updating** or **Retiring**.
+* **Unhealthy** can transition to **Healthy**, **Unreachable** or **Retiring**.
+* **Unreachable** can transition to **Healthy** or **Retiring**.
+* **Updating** can transition to **Uninitialized** after restarting.
+* **Retiring** can transition to **Retired** when it has no disk encryption keys.
+* **Retired** can transition to **Uninitialized**.
 
-In short, **Retired** machines are guaranteed that they do not have disk encryption keys,
-therefore any application data.  And only such **Retired** machines can be removed from
-sabakan.
+### Disk encryption keys
+
+**Retiring** or **Retired** machines cannot be added new encryption keys.
+
+**Retiring** machines can be deleted their encryption keys.
+
+**Retired** machines are guaranteed that they do not have disk encryption keys,
+therefore any application data.  
+And only such **Retired** machines can be removed from sabakan.
 
 ### Transition diagram
 
