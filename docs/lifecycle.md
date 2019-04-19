@@ -57,7 +57,7 @@ External controllers are responsible to:
 * A **Retiring** machine can transition only to **Retired**.
 * A **Healthy** machine can transition to **Unhealthy**, **Unreachable**, **Retiring**, and **Updating**.
 * A **Unreachable** machine can transition to **Healthy**.
-* **Unhealthy** machine cannot return to **Healthy** directly.
+* A **Unhealthy** machine can transition to **Healthy**, **Unreachable**, **Uninitialized**, and **Retiring**.
 * Disk encryption keys of a machine can be deleted if the machine is in **Retiring** state.
 * A **Retiring** machine can transition to **Retired** only when it has no disk encryption keys.
 * Only **Retired** machines can be removed from sabakan.
@@ -72,4 +72,4 @@ sabakan.
 
 ### Transition diagram
 
-![state transition diagram](http://www.plantuml.com/plantuml/svg/ZPAnJiGm343tV8Ldf8gz0pe40om8dSI46DpMHwEcJkMwdChNanozIniXT5jiF_krbdUZekZKE_D-ym55uuzStC4RMxPgqTblQimcWYBKdmYTjlCVbJsf5SkV9JnIxT0AWImfOvQs20P5-nj5KgdM4P21HBnad13MBLQEIdWXFNhfO4h93PpPL_A4JKESEZIe4RoyRlTKUHzVe2r17yPR9cFETIZolPHmVr0Ia5DZ8BczxbEsO3Rp-H90ZpoXSxCngoLa-q_v_wKvccjVXOR8ftzV-yrvSBB4fZtr_el6KrDZnmw8Qva7jPwXez2ta5SA4xwSOJZ94XwGGQ9emy91V0yZLjWXcnrn4sxu1m00)
+![state transition diagram](http://www.plantuml.com/plantuml/svg/ZPAzQiD0381tFONcWkdkeQIqGwTI0fbA1yMdv0xREYCh3UdJz-mut3K4ckrE-lJ3XrQZaTgXx-3puGih5uzIFU56WWGBr8KVTl3dXrNAlp5rvaytCckse47sDRvoqr5GHbr204lP36x4dtyJQTpOY2J8gb6lE6LgF6qxhl6TxHYrnKCEbl3rz69unWx3r7LmP3DuUJskUHlZz4BpZ7rg7uG1BdcihhtK-BmpLjIvC97Yxrgb1BFBEbKqyPiLTnhxxAA0DUoztQC42gASKSR_MnBWaimaksdBFcqvpf9S65jaQVGqM8Y2BPy05lAMhm_bWPHBmHbVJY-TOOql9AZpe98zcnbfIoq9h5XSkjjV)
