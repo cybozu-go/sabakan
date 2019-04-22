@@ -48,7 +48,7 @@ const (
 	StateUpdating       = MachineState("updating")
 	StateRetiring       = MachineState("retiring")
 	StateRetired        = MachineState("retired")
-	SetStateErrorFormat = "transition from %s to state %s is forbidden"
+	SetStateErrorFormat = "transition from [ %s ] to [ %s ] is forbidden"
 )
 
 var (

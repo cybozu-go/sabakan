@@ -13,7 +13,15 @@ import (
 
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/cybozu-go/sabakan/v2/models/mock"
+	"github.com/vektah/gqlparser/gqlerror"
 )
+
+type setStateResponse struct {
+	Errors []gqlerror.Error `json:"errors"`
+	Data   struct {
+		State []interface{} `json:"state"`
+	} `json:"data"`
+}
 
 func testMachinesPost(t *testing.T) {
 
@@ -418,6 +426,45 @@ func testMachinesGraphQL(t *testing.T) {
 	if len(gqlResponse.Data.SearchMachines) != 3 {
 		t.Error(`len(gqlResponse.Data.SearchMachines) != 3`, gqlResponse)
 	}
+
+	// Test for mutation SetMachineState()
+	_, err = setMachineState("UNINITIALIZED", handler, t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ssr, err := setMachineState("UPDATING", handler, t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if from := ssr.Errors[0].Extensions["from"]; from != "uninitialized" {
+		t.Error("invalid `from` value. expected:", "uninitialized", "actual:", from)
+	}
+	if to := ssr.Errors[0].Extensions["to"]; to != "updating" {
+		t.Error("invalid `to` value. expected:", "updating", "actual:", to)
+	}
+}
+
+func setMachineState(state string, handler *Server, t *testing.T) (setStateResponse, error) {
+	var ssr setStateResponse
+	resp := setMachineStateRequest(state, handler)
+	if resp.StatusCode != http.StatusOK {
+		t.Error("wrong status code:", resp.StatusCode)
+	}
+	err := json.NewDecoder(resp.Body).Decode(&ssr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	return ssr, err
+}
+
+func setMachineStateRequest(state string, handler *Server) *http.Response {
+	requestBody := `{"query":"mutation {\n  setMachineState(serial: \"1234abcd\", state: ` + state + `) {\n    state, timestamp, duration\n  }\n}\n\n"}`
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST", "/graphql", strings.NewReader(requestBody))
+	r.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(w, r)
+	return w.Result()
 }
 
 func TestMachines(t *testing.T) {
