@@ -37,6 +37,7 @@ type ResolverRoot interface {
 	BMC() BMCResolver
 	MachineSpec() MachineSpecResolver
 	MachineStatus() MachineStatusResolver
+	Mutation() MutationResolver
 	NICConfig() NICConfigResolver
 	Query() QueryResolver
 }
@@ -88,6 +89,10 @@ type ComplexityRoot struct {
 		Timestamp func(childComplexity int) int
 	}
 
+	Mutation struct {
+		SetMachineState func(childComplexity int, serial string, state sabakan.MachineState) int
+	}
+
 	NICConfig struct {
 		Address  func(childComplexity int) int
 		Gateway  func(childComplexity int) int
@@ -120,6 +125,9 @@ type MachineSpecResolver interface {
 }
 type MachineStatusResolver interface {
 	Timestamp(ctx context.Context, obj *sabakan.MachineStatus) (*DateTime, error)
+}
+type MutationResolver interface {
+	SetMachineState(ctx context.Context, serial string, state sabakan.MachineState) (*sabakan.MachineStatus, error)
 }
 type NICConfigResolver interface {
 	Address(ctx context.Context, obj *sabakan.NICConfig) (IPAddress, error)
@@ -301,6 +309,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MachineStatus.Timestamp(childComplexity), true
 
+	case "Mutation.SetMachineState":
+		if e.complexity.Mutation.SetMachineState == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setMachineState_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetMachineState(childComplexity, args["serial"].(string), args["state"].(sabakan.MachineState)), true
+
 	case "NICConfig.Address":
 		if e.complexity.NICConfig.Address == nil {
 			break
@@ -382,7 +402,20 @@ func (e *executableSchema) Query(ctx context.Context, op *ast.OperationDefinitio
 }
 
 func (e *executableSchema) Mutation(ctx context.Context, op *ast.OperationDefinition) *graphql.Response {
-	return graphql.ErrorResponse(ctx, "mutations are not supported")
+	ec := executionContext{graphql.GetRequestContext(ctx), e}
+
+	buf := ec.RequestMiddleware(ctx, func(ctx context.Context) []byte {
+		data := ec._Mutation(ctx, op.SelectionSet)
+		var buf bytes.Buffer
+		data.MarshalGQL(&buf)
+		return buf.Bytes()
+	})
+
+	return &graphql.Response{
+		Data:       buf,
+		Errors:     ec.Errors,
+		Extensions: ec.Extensions,
+	}
 }
 
 func (e *executableSchema) Subscription(ctx context.Context, op *ast.OperationDefinition) func() *graphql.Response {
@@ -427,6 +460,10 @@ var parsedSchema = gqlparser.MustLoadSchema(
 	&ast.Source{Name: "schema.graphql", Input: `type Query {
     machine(serial: ID!): Machine!
     searchMachines(having: MachineParams, notHaving: MachineParams): [Machine!]!
+}
+
+type Mutation {
+    setMachineState(serial: ID!, state: MachineState!): MachineStatus!
 }
 
 """
@@ -557,6 +594,28 @@ type NICConfig {
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_setMachineState_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["serial"]; ok {
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["serial"] = arg0
+	var arg1 sabakan.MachineState
+	if tmp, ok := rawArgs["state"]; ok {
+		arg1, err = ec.unmarshalNMachineState2githubᚗcomᚋcybozuᚑgoᚋsabakanᚋv2ᚐMachineState(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["state"] = arg1
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1229,6 +1288,40 @@ func (ec *executionContext) _MachineStatus_duration(ctx context.Context, field g
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_setMachineState(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_setMachineState_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetMachineState(rctx, args["serial"].(string), args["state"].(sabakan.MachineState))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*sabakan.MachineStatus)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNMachineStatus2ᚖgithubᚗcomᚋcybozuᚑgoᚋsabakanᚋv2ᚐMachineStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NICConfig_address(ctx context.Context, field graphql.CollectedField, obj *sabakan.NICConfig) graphql.Marshaler {
@@ -2736,6 +2829,37 @@ func (ec *executionContext) _MachineStatus(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var mutationImplementors = []string{"Mutation"}
+
+func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, mutationImplementors)
+
+	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
+		Object: "Mutation",
+	})
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Mutation")
+		case "setMachineState":
+			out.Values[i] = ec._Mutation_setMachineState(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var nICConfigImplementors = []string{"NICConfig"}
 
 func (ec *executionContext) _NICConfig(ctx context.Context, sel ast.SelectionSet, obj *sabakan.NICConfig) graphql.Marshaler {
@@ -3317,6 +3441,16 @@ func (ec *executionContext) marshalNMachineState2githubᚗcomᚋcybozuᚑgoᚋsa
 
 func (ec *executionContext) marshalNMachineStatus2githubᚗcomᚋcybozuᚑgoᚋsabakanᚋv2ᚐMachineStatus(ctx context.Context, sel ast.SelectionSet, v sabakan.MachineStatus) graphql.Marshaler {
 	return ec._MachineStatus(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMachineStatus2ᚖgithubᚗcomᚋcybozuᚑgoᚋsabakanᚋv2ᚐMachineStatus(ctx context.Context, sel ast.SelectionSet, v *sabakan.MachineStatus) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._MachineStatus(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNNICConfig2githubᚗcomᚋcybozuᚑgoᚋsabakanᚋv2ᚐNICConfig(ctx context.Context, sel ast.SelectionSet, v sabakan.NICConfig) graphql.Marshaler {

@@ -4,11 +4,13 @@ package gql
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"sort"
 	"time"
 
 	"github.com/cybozu-go/sabakan/v2"
+	"github.com/vektah/gqlparser/gqlerror"
 )
 
 // Resolver implements ResolverRoot.
@@ -29,6 +31,11 @@ func (r *Resolver) MachineSpec() MachineSpecResolver {
 // MachineStatus implements ResolverRoot.
 func (r *Resolver) MachineStatus() MachineStatusResolver {
 	return &machineStatusResolver{r}
+}
+
+// Mutation implements ResolverRoot.
+func (r *Resolver) Mutation() MutationResolver {
+	return &mutationResolver{r}
 }
 
 // NICConfig implements ResolverRoot.
@@ -96,6 +103,36 @@ type machineStatusResolver struct{ *Resolver }
 func (r *machineStatusResolver) Timestamp(ctx context.Context, obj *sabakan.MachineStatus) (*DateTime, error) {
 	ret := DateTime(obj.Timestamp)
 	return &ret, nil
+}
+
+type mutationResolver struct{ *Resolver }
+
+func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, state sabakan.MachineState) (*sabakan.MachineStatus, error) {
+	now := time.Now()
+
+	err := r.Model.Machine.SetState(ctx, serial, state)
+	if err != nil {
+		var from, to string
+		_, err2 := fmt.Sscanf(err.Error(), sabakan.SetStateErrorFormat, &from, &to)
+		if err2 != nil {
+			return &sabakan.MachineStatus{}, err
+		}
+
+		return &sabakan.MachineStatus{}, &gqlerror.Error{
+			Message: err.Error(),
+			Extensions: map[string]interface{}{
+				"from": from,
+				"to":   state,
+			},
+		}
+	}
+
+	machine, err := r.Model.Machine.Get(ctx, serial)
+	if err != nil {
+		return &sabakan.MachineStatus{}, err
+	}
+	machine.Status.Duration = now.Sub(machine.Status.Timestamp).Seconds()
+	return &machine.Status, nil
 }
 
 type nICConfigResolver struct{ *Resolver }
