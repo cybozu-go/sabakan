@@ -8,9 +8,11 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gorilla/websocket"
+	"github.com/hashicorp/golang-lru"
 	"github.com/vektah/gqlparser"
 	"github.com/vektah/gqlparser/ast"
 	"github.com/vektah/gqlparser/gqlerror"
@@ -27,7 +29,7 @@ const (
 	dataMsg                = "data"                 // Server -> Client
 	errorMsg               = "error"                // Server -> Client
 	completeMsg            = "complete"             // Server -> Client
-	//connectionKeepAliveMsg = "ka"                 // Server -> Client  TODO: keepalives
+	connectionKeepAliveMsg = "ka"                   // Server -> Client
 )
 
 type operationMessage struct {
@@ -37,17 +39,19 @@ type operationMessage struct {
 }
 
 type wsConnection struct {
-	ctx    context.Context
-	conn   *websocket.Conn
-	exec   graphql.ExecutableSchema
-	active map[string]context.CancelFunc
-	mu     sync.Mutex
-	cfg    *Config
+	ctx             context.Context
+	conn            *websocket.Conn
+	exec            graphql.ExecutableSchema
+	active          map[string]context.CancelFunc
+	mu              sync.Mutex
+	cfg             *Config
+	cache           *lru.Cache
+	keepAliveTicker *time.Ticker
 
 	initPayload InitPayload
 }
 
-func connectWs(exec graphql.ExecutableSchema, w http.ResponseWriter, r *http.Request, cfg *Config) {
+func connectWs(exec graphql.ExecutableSchema, w http.ResponseWriter, r *http.Request, cfg *Config, cache *lru.Cache) {
 	ws, err := cfg.upgrader.Upgrade(w, r, http.Header{
 		"Sec-Websocket-Protocol": []string{"graphql-ws"},
 	})
@@ -63,6 +67,7 @@ func connectWs(exec graphql.ExecutableSchema, w http.ResponseWriter, r *http.Req
 		conn:   ws,
 		ctx:    r.Context(),
 		cfg:    cfg,
+		cache:  cache,
 	}
 
 	if !conn.init() {
@@ -109,6 +114,20 @@ func (c *wsConnection) write(msg *operationMessage) {
 }
 
 func (c *wsConnection) run() {
+	// We create a cancellation that will shutdown the keep-alive when we leave
+	// this function.
+	ctx, cancel := context.WithCancel(c.ctx)
+	defer cancel()
+
+	// Create a timer that will fire every interval to keep the connection alive.
+	if c.cfg.connectionKeepAlivePingInterval != 0 {
+		c.mu.Lock()
+		c.keepAliveTicker = time.NewTicker(c.cfg.connectionKeepAlivePingInterval)
+		c.mu.Unlock()
+
+		go c.keepAlive(ctx)
+	}
+
 	for {
 		message := c.readOp()
 		if message == nil {
@@ -141,6 +160,18 @@ func (c *wsConnection) run() {
 	}
 }
 
+func (c *wsConnection) keepAlive(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			c.keepAliveTicker.Stop()
+			return
+		case <-c.keepAliveTicker.C:
+			c.write(&operationMessage{Type: connectionKeepAliveMsg})
+		}
+	}
+}
+
 func (c *wsConnection) subscribe(message *operationMessage) bool {
 	var reqParams params
 	if err := jsonDecode(bytes.NewReader(message.Payload), &reqParams); err != nil {
@@ -148,10 +179,27 @@ func (c *wsConnection) subscribe(message *operationMessage) bool {
 		return false
 	}
 
-	doc, qErr := gqlparser.LoadQuery(c.exec.Schema(), reqParams.Query)
-	if qErr != nil {
-		c.sendError(message.ID, qErr...)
-		return true
+	var (
+		doc      *ast.QueryDocument
+		cacheHit bool
+	)
+	if c.cache != nil {
+		val, ok := c.cache.Get(reqParams.Query)
+		if ok {
+			doc = val.(*ast.QueryDocument)
+			cacheHit = true
+		}
+	}
+	if !cacheHit {
+		var qErr gqlerror.List
+		doc, qErr = gqlparser.LoadQuery(c.exec.Schema(), reqParams.Query)
+		if qErr != nil {
+			c.sendError(message.ID, qErr...)
+			return true
+		}
+		if c.cache != nil {
+			c.cache.Add(reqParams.Query, doc)
+		}
 	}
 
 	op := doc.Operations.ForName(reqParams.OperationName)
