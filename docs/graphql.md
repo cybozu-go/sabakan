@@ -26,9 +26,7 @@ Examples
 Example: `machine`
 ------------------
 
-Get a machine specified serial:
-
-can be done with a GraphQL query and variables as follows:
+Get a machine with a given serial. It can be done with a GraphQL query and variables as follows:
 
 ### Query
 
@@ -77,7 +75,7 @@ query get($serial: ID!) {
 Example: `searchMachines`
 -------------------------
 
-Searching machines matching the these conditions:
+Searching machines matching these conditions:
 
 * the machine has a label whose key is "datacenter" and value is "dc1".
 * the machine's current state is _healthy_.
@@ -162,7 +160,7 @@ query search($having: MachineParams = null, $notHaving: MachineParams = null) {
 Example: `setMachineState`
 --------------------------
 
-Set machine state _unhealthy_:
+Set machine state _unhealthy_.
 
 * the machine's current state is _healthy_.
 * the machine's serial is _00000004_.
@@ -203,7 +201,7 @@ mutation setState($serial: ID!, $state: MachineState!) {
 Example: `setMachineState`(Invalid state transitions)
 -----------------------------------------------------
 
-Transition from _healthy_ to _uninitialized_ is not permitted.
+The transition from _healthy_ to _uninitialized_ is not permitted.
 `setMachineState` returns error including _extensions_ when it receives a request for an invalid state transition.
 
 ### Query
