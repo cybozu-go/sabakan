@@ -436,11 +436,8 @@ func testMachinesGraphQL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if from := ssr.Errors[0].Extensions["from"]; from != "uninitialized" {
-		t.Error("invalid `from` value. expected:", "uninitialized", "actual:", from)
-	}
-	if to := ssr.Errors[0].Extensions["to"]; to != "updating" {
-		t.Error("invalid `to` value. expected:", "updating", "actual:", to)
+	if eType := ssr.Errors[0].Extensions["type"]; eType != "INVALID_STATE_TRANSITION" {
+		t.Error("invalid `type` value. expected:", "INVALID_STATE_TRANSITION", "actual:", eType)
 	}
 }
 
