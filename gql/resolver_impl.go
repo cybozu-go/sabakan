@@ -118,7 +118,7 @@ func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, s
 				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"serial": serial,
-					"type":   gqlErrMachineNotFound,
+					"type":   ErrMachineNotFound,
 				},
 			}
 		case sabakan.ErrEncryptionKeyExists:
@@ -126,7 +126,7 @@ func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, s
 				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"serial": serial,
-					"type":   gqlErrEncryptionKeyExists,
+					"type":   ErrEncryptionKeyExists,
 				},
 			}
 		default:
@@ -137,7 +137,7 @@ func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, s
 					Message: err.Error(),
 					Extensions: map[string]interface{}{
 						"serial": serial,
-						"type":   gqlErrInternalServerError,
+						"type":   ErrInternalServerError,
 					},
 				}
 			}
@@ -145,7 +145,7 @@ func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, s
 				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"serial": serial,
-					"type":   gqlErrInvalidStateTransition,
+					"type":   ErrInvalidStateTransition,
 				},
 			}
 		}
