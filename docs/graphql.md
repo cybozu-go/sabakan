@@ -21,14 +21,12 @@ Examples
   - [machine](#example-machine)
   - [searchMachines](#example-searchmachines)
 * Mutation
-  - setMachineState([Valid example](#example-setmachinestate), [Invalid example](#example-setmachinestateinvalid-state-transitions))
+  - [setMachineState](#example-setmachinestate)
 
 Example: `machine`
 ------------------
 
-Get a machine with a given serial. It can be done with a GraphQL query and variables as follows:
-
-### Query
+Query:
 
 ```graphql
 query get($serial: ID!) {
@@ -44,7 +42,7 @@ query get($serial: ID!) {
 }
 ```
 
-### Variables
+Variables:
 
 ```json
 {
@@ -52,7 +50,11 @@ query get($serial: ID!) {
 }
 ```
 
-### Result
+### Successful response
+
+Get a machine with a given serial. It can be done with a GraphQL query and variables as follows:
+
+Result:
 
 ```json
 {
@@ -72,18 +74,26 @@ query get($serial: ID!) {
 }
 ```
 
+### Failure response
+
+```json
+{
+  "errors": [
+    {
+      "message": "not found",
+      "path": [
+        "machine"
+      ]
+    }
+  ],
+  "data": null
+}
+```
+
 Example: `searchMachines`
 -------------------------
 
-Searching machines matching these conditions:
-
-* the machine has a label whose key is "datacenter" and value is "dc1".
-* the machine's current state is _healthy_.
-* the machine is not in rack 1.
-
-can be done with a GraphQL query and variables as follows:
-
-### Query
+Query:
 
 ```graphql
 query search($having: MachineParams = null, $notHaving: MachineParams = null) {
@@ -106,7 +116,7 @@ query search($having: MachineParams = null, $notHaving: MachineParams = null) {
 }
 ```
 
-### Variables
+Variables:
 
 ```json
 {
@@ -122,7 +132,17 @@ query search($having: MachineParams = null, $notHaving: MachineParams = null) {
 }
 ```
 
-### Result
+### Successful response
+
+Searching machines matching these conditions:
+
+* the machine has a label whose key is "datacenter" and value is "dc1".
+* the machine's current state is _healthy_.
+* the machine is not in rack 1.
+
+can be done with a GraphQL query and variables as follows:
+
+Result:
 
 ```json
 {
@@ -157,8 +177,34 @@ query search($having: MachineParams = null, $notHaving: MachineParams = null) {
 }
 ```
 
+### Failure responses
+
+- No such machines found.
+
+Result:
+
+```json
+{
+  "data": {
+    "searchMachines": []
+  }
+}
+```
+
 Example: `setMachineState`
 --------------------------
+
+Query:
+
+```graphql
+mutation {
+  setMachineState(serial: "00000004", state: UNHEALTHY) {
+    state
+  }
+}
+```
+
+### Successful response
 
 Set machine state _unhealthy_.
 
@@ -167,26 +213,7 @@ Set machine state _unhealthy_.
 
 can be done with a GraphQL query and variables as follows:
 
-### Query
-
-```graphql
-mutation setState($serial: ID!, $state: MachineState!) {
-  setMachineState(serial: $serial, state: $state) {
-    state
-  }
-}
-```
-
-### Variables
-
-```json
-{
-  "serial": "00000004",
-  "state": "UNHEALTHY"
-}
-```
-
-### Result
+Result:
 
 ```json
 {
@@ -198,32 +225,71 @@ mutation setState($serial: ID!, $state: MachineState!) {
  }
 ```
 
-Example: `setMachineState`(Invalid state transitions)
------------------------------------------------------
+### Failure responses
 
-The transition from _healthy_ to _uninitialized_ is not permitted.
-`setMachineState` returns error including _extensions_ when it receives a request for an invalid state transition.
-
-### Query
-
-```graphql
-mutation setState($serial: ID!, $state: MachineState!) {
-  setMachineState(serial: $serial, state: $state) {
-    state
-  }
-}
-```
-
-### Variables
+- Invalid state value.
 
 ```json
 {
-  "serial": "00000004",
-  "state": "UNINITIALIZED"
+  "errors": [
+    {
+      "message": "invalid state: RETIRE",
+      "path": [
+        "setMachineState"
+      ],
+      "extensions": {
+        "serial": "00000004",
+        "type": "INVALID_STATE_NAME"
+      }
+    }
+  ],
+  "data": null
 }
 ```
 
-### Result
+- Transitioning a retiring server to retired that still has disk encryption keys.
+
+```json
+{
+  "errors": [
+    {
+      "message": "bad request",
+      "path": [
+        "setMachineState"
+      ],
+      "extensions": {
+        "serial": "00000004",
+        "type": "ENCRYPTION_KEY_EXISTS"
+      }
+    }
+  ],
+  "data": null
+}
+```
+
+- No specified machine found.
+
+```json
+{
+  "errors": [
+    {
+      "message": "not found",
+      "path": [
+        "setMachineState"
+      ],
+      "extensions": {
+        "serial": "00000007",
+        "type": "MACHINE_NOT_FOUND"
+      }
+    }
+  ],
+  "data": null
+}
+```
+
+- Invalid state transition.
+
+Result:
 
 ```json
 {
@@ -234,8 +300,8 @@ mutation setState($serial: ID!, $state: MachineState!) {
         "setMachineState"
       ],
       "extensions": {
-        "from": "healthy",
-        "to": "uninitialized"
+        "serial": "00000004",
+        "type": "INVALID_STATE_TRANSITION"
       }
     }
   ],
