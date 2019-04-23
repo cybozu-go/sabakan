@@ -1,7 +1,6 @@
 package gql
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -10,6 +9,15 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/cybozu-go/sabakan/v2"
+	"github.com/vektah/gqlparser/gqlerror"
+)
+
+const (
+	gqlErrInvalidStateName       = "INVALID_STATE_NAME"
+	gqlErrInvalidStateTransition = "INVALID_STATE_TRANSITION"
+	gqlErrEncryptionKeyExists    = "ENCRYPTION_KEY_EXISTS"
+	gqlErrMachineNotFound        = "MACHINE_NOT_FOUND"
+	gqlErrInternalServerError    = "INTERNAL_SERVER_ERROR"
 )
 
 // IPAddress represents "IPAddress" GraphQL custom scalar.
@@ -68,7 +76,12 @@ func UnmarshalMachineState(v interface{}) (sabakan.MachineState, error) {
 	}
 	st := sabakan.MachineState(strings.ToLower(str))
 	if !st.IsValid() {
-		return "", errors.New("invalid state: " + str)
+		return "", &gqlerror.Error{
+			Message: "invalid state: " + str,
+			Extensions: map[string]interface{}{
+				"type": gqlErrInvalidStateName,
+			},
+		}
 	}
 
 	return st, nil

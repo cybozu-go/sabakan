@@ -238,7 +238,6 @@ Result:
         "setMachineState"
       ],
       "extensions": {
-        "serial": "00000004",
         "type": "INVALID_STATE_NAME"
       }
     }
@@ -253,7 +252,7 @@ Result:
 {
   "errors": [
     {
-      "message": "bad request",
+      "message": "encryption key exists",
       "path": [
         "setMachineState"
       ],

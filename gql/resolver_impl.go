@@ -112,18 +112,42 @@ func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, s
 
 	err := r.Model.Machine.SetState(ctx, serial, state)
 	if err != nil {
-		var from, to string
-		_, err2 := fmt.Sscanf(err.Error(), sabakan.SetStateErrorFormat, &from, &to)
-		if err2 != nil {
-			return &sabakan.MachineStatus{}, err
-		}
-
-		return &sabakan.MachineStatus{}, &gqlerror.Error{
-			Message: err.Error(),
-			Extensions: map[string]interface{}{
-				"from": from,
-				"to":   state,
-			},
+		switch err {
+		case sabakan.ErrNotFound:
+			return &sabakan.MachineStatus{}, &gqlerror.Error{
+				Message: err.Error(),
+				Extensions: map[string]interface{}{
+					"serial": serial,
+					"type":   gqlErrMachineNotFound,
+				},
+			}
+		case sabakan.ErrEncryptionKeyExists:
+			return &sabakan.MachineStatus{}, &gqlerror.Error{
+				Message: err.Error(),
+				Extensions: map[string]interface{}{
+					"serial": serial,
+					"type":   gqlErrEncryptionKeyExists,
+				},
+			}
+		default:
+			var from, to string
+			_, err2 := fmt.Sscanf(err.Error(), sabakan.SetStateErrorFormat, &from, &to)
+			if err2 != nil {
+				return &sabakan.MachineStatus{}, &gqlerror.Error{
+					Message: err.Error(),
+					Extensions: map[string]interface{}{
+						"serial": serial,
+						"type":   gqlErrInternalServerError,
+					},
+				}
+			}
+			return &sabakan.MachineStatus{}, &gqlerror.Error{
+				Message: err.Error(),
+				Extensions: map[string]interface{}{
+					"serial": serial,
+					"type":   gqlErrInvalidStateTransition,
+				},
+			}
 		}
 	}
 

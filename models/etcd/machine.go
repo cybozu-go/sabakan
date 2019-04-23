@@ -150,7 +150,7 @@ RETRY:
 	if state == sabakan.StateRetired {
 		if !tresp.Responses[0].GetResponseTxn().Succeeded {
 			// inner If, i.e. KeyMissing(cryptKey), evaluated to false
-			return sabakan.ErrBadRequest
+			return sabakan.ErrEncryptionKeyExists
 		}
 	}
 

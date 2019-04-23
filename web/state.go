@@ -65,7 +65,7 @@ func (s Server) handleStatePut(w http.ResponseWriter, r *http.Request, serial st
 	case sabakan.ErrNotFound:
 		renderError(r.Context(), w, APIErrNotFound)
 		return
-	case sabakan.ErrBadRequest:
+	case sabakan.ErrBadRequest, sabakan.ErrEncryptionKeyExists:
 		renderError(r.Context(), w, APIErrBadRequest)
 		return
 	default:
