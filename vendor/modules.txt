@@ -1,9 +1,9 @@
-# github.com/99designs/gqlgen v0.7.1
+# github.com/99designs/gqlgen v0.8.3
 github.com/99designs/gqlgen/graphql
 github.com/99designs/gqlgen/graphql/introspection
 github.com/99designs/gqlgen/handler
 github.com/99designs/gqlgen/complexity
-# github.com/agnivade/levenshtein v1.0.1
+# github.com/agnivade/levenshtein v1.0.2
 github.com/agnivade/levenshtein
 # github.com/coreos/etcd v3.3.10+incompatible
 github.com/coreos/etcd/clientv3
@@ -37,7 +37,7 @@ github.com/cybozu-go/well
 github.com/fsnotify/fsnotify
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
-# github.com/gogo/protobuf v1.1.1
+# github.com/gogo/protobuf v1.2.1
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
@@ -58,7 +58,7 @@ github.com/google/subcommands
 github.com/gorilla/websocket
 # github.com/hashicorp/go-version v1.0.0
 github.com/hashicorp/go-version
-# github.com/hashicorp/golang-lru v0.5.0
+# github.com/hashicorp/golang-lru v0.5.1
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
 # github.com/hashicorp/hcl v1.0.0
@@ -125,7 +125,7 @@ github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 # github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
-# github.com/pkg/errors v0.8.0
+# github.com/pkg/errors v0.8.1
 github.com/pkg/errors
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
@@ -140,7 +140,7 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.2.1
 github.com/spf13/viper
-# github.com/vektah/gqlparser v1.0.0
+# github.com/vektah/gqlparser v1.1.2
 github.com/vektah/gqlparser
 github.com/vektah/gqlparser/ast
 github.com/vektah/gqlparser/gqlerror
@@ -152,7 +152,7 @@ github.com/vektah/gqlparser/lexer
 github.com/vincent-petithory/dataurl
 # go.universe.tf/netboot v0.0.0-20181010164912-24067fad46fd
 go.universe.tf/netboot/dhcp4
-# golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
+# golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480
 golang.org/x/crypto/ssh
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/ed25519
@@ -160,7 +160,7 @@ golang.org/x/crypto/internal/chacha20
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ed25519/internal/edwards25519
 golang.org/x/crypto/internal/subtle
-# golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
+# golang.org/x/net v0.0.0-20190420063019-afa5a82059c6
 golang.org/x/net/netutil
 golang.org/x/net/bpf
 golang.org/x/net/ipv4
@@ -176,8 +176,9 @@ golang.org/x/net/html
 golang.org/x/net/http/httpguts
 golang.org/x/net/idna
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20181128092732-4ed8d59d0b35
+# golang.org/x/sys v0.0.0-20190419153524-e8e3143a4f4a
 golang.org/x/sys/unix
+golang.org/x/sys/cpu
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
@@ -231,5 +232,5 @@ google.golang.org/grpc/balancer/base
 gopkg.in/fsnotify.v1
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
-# gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

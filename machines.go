@@ -2,6 +2,7 @@ package sabakan
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -38,15 +39,38 @@ func (ms MachineState) IsValid() bool {
 	return false
 }
 
+// GQLEnum returns graphql defined enum string.
+func (ms MachineState) GQLEnum() string {
+	switch ms {
+	case StateUninitialized:
+		return "UNINITIALIZED"
+	case StateHealthy:
+		return "HEALTHY"
+	case StateUnhealthy:
+		return "UNHEALTHY"
+	case StateUnreachable:
+		return "UNREACHABLE"
+	case StateUpdating:
+		return "UPDATING"
+	case StateRetiring:
+		return "RETIRING"
+	case StateRetired:
+		return "RETIRED"
+	}
+
+	return ""
+}
+
 // Machine state definitions.
 const (
-	StateUninitialized = MachineState("uninitialized")
-	StateHealthy       = MachineState("healthy")
-	StateUnhealthy     = MachineState("unhealthy")
-	StateUnreachable   = MachineState("unreachable")
-	StateUpdating      = MachineState("updating")
-	StateRetiring      = MachineState("retiring")
-	StateRetired       = MachineState("retired")
+	StateUninitialized  = MachineState("uninitialized")
+	StateHealthy        = MachineState("healthy")
+	StateUnhealthy      = MachineState("unhealthy")
+	StateUnreachable    = MachineState("unreachable")
+	StateUpdating       = MachineState("updating")
+	StateRetiring       = MachineState("retiring")
+	StateRetired        = MachineState("retired")
+	SetStateErrorFormat = "transition from [ %s ] to [ %s ] is forbidden"
 )
 
 var (
@@ -186,7 +210,7 @@ func (m *Machine) SetState(ms MachineState) error {
 	}
 
 	if !m.isPermittedTransition(ms) {
-		return errors.New("transition from " + m.Status.State.String() + " to state " + ms.String() + " is forbidden")
+		return fmt.Errorf(SetStateErrorFormat, m.Status.State.String(), ms.String())
 	}
 
 	m.Status.State = ms
