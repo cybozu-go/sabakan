@@ -7,11 +7,12 @@ RUN apt-get update \
     && mkdir -p /usr/lib/ipxe \
     && cp /boot/ipxe.efi /usr/lib/ipxe/ipxe.efi
 
-COPY sabakan /usr/local/sabakan/bin/
-COPY sabactl /usr/local/sabakan/bin/
-COPY sabakan-cryptsetup /usr/local/sabakan/bin/
+COPY sabakan /usr/local/sabakan/bin/sabakan
+COPY sabactl /usr/local/sabakan/bin/sabactl
+COPY sabakan-cryptsetup /usr/local/sabakan/bin/sabakan-cryptsetup
 COPY install-tools /usr/local/sabakan/install-tools
-COPY LICENSE /usr/local/sabakan/
+COPY LICENSE /usr/local/sabakan/LICENSE
+RUN chmod -R +xr /usr/local/sabakan/bin
 
 VOLUME /var/lib/sabakan
 ENV PATH=/usr/local/sabakan/bin:"$PATH"
