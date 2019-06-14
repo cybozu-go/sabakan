@@ -136,6 +136,38 @@ STATE can be one of:
 	},
 }
 
+var machinesSetLabelCmd = &cobra.Command{
+	Use:   "set-label SERIAL NAME VALUE",
+	Short: "add or update a label for the machine",
+	Long:  `Add or update a label of "NAME: VALUE" for the machine.`,
+	Args:  cobra.ExactArgs(3),
+
+	RunE: func(cmd *cobra.Command, args []string) error {
+		serial, label, value := args[0], args[1], args[2]
+		well.Go(func(ctx context.Context) error {
+			return api.MachinesSetLabel(ctx, serial, label, value)
+		})
+		well.Stop()
+		return well.Wait()
+	},
+}
+
+var machinesRemoveLabelCmd = &cobra.Command{
+	Use:   "remove-label SERIAL NAME",
+	Short: "remove a label from the machine",
+	Long:  `Remove a label named NAME from the machine.`,
+	Args:  cobra.ExactArgs(2),
+
+	RunE: func(cmd *cobra.Command, args []string) error {
+		serial, label := args[0], args[1]
+		well.Go(func(ctx context.Context) error {
+			return api.MachinesRemoveLabel(ctx, serial, label)
+		})
+		well.Stop()
+		return well.Wait()
+	},
+}
+
 var machinesSetRetireDateCmd = &cobra.Command{
 	Use:   "set-retire-date SERIAL YYYY-MM-DD",
 	Short: "set the retire date of the machine",
@@ -180,6 +212,8 @@ func init() {
 	machinesCmd.AddCommand(machinesRemoveCmd)
 	machinesCmd.AddCommand(machinesGetStateCmd)
 	machinesCmd.AddCommand(machinesSetStateCmd)
+	machinesCmd.AddCommand(machinesSetLabelCmd)
+	machinesCmd.AddCommand(machinesRemoveLabelCmd)
 	machinesCmd.AddCommand(machinesSetRetireDateCmd)
 	rootCmd.AddCommand(machinesCmd)
 }
