@@ -106,11 +106,13 @@ func TestMachine(t *testing.T) {
 	}
 
 	labels := map[string]string{"datacenter": "Los Alamos", "product": "Cray-1"}
-	m.AddLabels(labels)
+	for k, v := range labels {
+		m.PutLabel(k, v)
+	}
 	if !reflect.DeepEqual(m.Spec.Labels, labels) {
 		t.Error("m.Spec.Labels was not set correctly:", m.Spec.Labels)
 	}
-	m.AddLabels(map[string]string{"datacenter": "Lawrence Livermore"})
+	m.PutLabel("datacenter", "Lawrence Livermore")
 	if dc, ok := m.Spec.Labels["datacenter"]; !ok || dc != "Lawrence Livermore" {
 		t.Error("m.Spec.Labels was not updated correctly:", m.Spec.Labels)
 	}

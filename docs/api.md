@@ -12,8 +12,8 @@ For GraphQL API, see [graphql.md](graphql.md).
 * [DELETE /api/v1/machines](#deletemachines)
 * [PUT /api/v1/state/\<serial\>](#putstate)
 * [GET /api/v1/state/\<serial\>](#getstate)
-* [PUT /api/v1/labels/\<serial\>](#putlabels)
-* [DELETE /api/v1/labels/\<serial\>](#deletelabels)
+* [PUT /api/v1/labels/\<serial\>/\<label\>] (#putlabels)
+* [DELETE /api/v1/labels/\<serial\>/\<label\>](#deletelabels)
 * [PUT /api/v1/retire-date/\<serial\>](#putretiredate)
 * [GET /api/v1/images/coreos](#getimageindex)
 * [PUT /api/v1/images/coreos/\<id\>](#putimages)
@@ -346,9 +346,9 @@ $ curl -s localhost:10080/api/v1/state/1234abcd
 retiring
 ```
 
-## <a name="putlabels" />`PUT /api/v1/labels/<serial>`
+## <a name="putlabels" />`PUT /api/v1/labels/<serial>/<label>`
 
-Add labels to a machine. A value is overwritten when the label already exists.
+Add or update a label for a machine.
 
 **Successful response**
 
@@ -367,11 +367,7 @@ Add labels to a machine. A value is overwritten when the label already exists.
 **Example**
 
 ```console
-$ curl -s -XPUT localhost:10080/api/v1/labels/1234abcd -d '
-{
-    "os-release": "1855.4.0"
-}
-'
+$ curl -s -XPUT localhost:10080/api/v1/labels/1234abcd/os-release -d '1855.4.0'
 (No output in stdout)
 ```
 
@@ -386,7 +382,11 @@ Remove label from a machine.
 
 **Failure responses**
 
-- No label has in the machine.
+- No specified machine found.
+
+  HTTP status code: 404 Not Found
+
+- No specified label found in the machine.
 
   HTTP status code: 404 Not found
 
@@ -1039,7 +1039,7 @@ get sabakan health status
 
 **Failure response**
 - HTTP status code: 500 Internal Server Error
-- HTTP response header: `application/json`
+- HTTP response header: `Content-Type: application/json`
 - HTTP response body: health status of sabakan
 
 **Example**

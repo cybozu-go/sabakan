@@ -28,7 +28,7 @@ func testLabelsPut(t *testing.T) {
 	})
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("PUT", "/api/v1/labels/1234abcd", strings.NewReader(`{"datacenter": "heaven"}`))
+	r := httptest.NewRequest("PUT", "/api/v1/labels/1234abcd/datacenter", strings.NewReader("heaven"))
 	handler.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -45,7 +45,7 @@ func testLabelsPut(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/labels/1234abcd", strings.NewReader("42"))
+	r = httptest.NewRequest("PUT", "/api/v1/labels/1234abcd/"+strings.Repeat("too-long", 8), strings.NewReader("heaven"))
 	handler.ServeHTTP(w, r)
 	resp = w.Result()
 	if resp.StatusCode != http.StatusBadRequest {
@@ -53,7 +53,15 @@ func testLabelsPut(t *testing.T) {
 	}
 
 	w = httptest.NewRecorder()
-	r = httptest.NewRequest("PUT", "/api/v1/labels/5678efgh", strings.NewReader(`{"datacenter": "heaven"}`))
+	r = httptest.NewRequest("PUT", "/api/v1/labels/1234abcd/datacenter", strings.NewReader(strings.Repeat("too-long", 8)))
+	handler.ServeHTTP(w, r)
+	resp = w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Error("resp.StatusCode != http.StatusBadRequest:", resp.StatusCode)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest("PUT", "/api/v1/labels/5678efgh/datacenter", strings.NewReader("heaven"))
 	handler.ServeHTTP(w, r)
 	resp = w.Result()
 	if resp.StatusCode != http.StatusNotFound {
