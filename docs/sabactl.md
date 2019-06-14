@@ -12,8 +12,8 @@ $ sabactl [--server http://localhost:10080] <subcommand> <args>...
 | ---------- | ------------------------ | -------------- |
 | `--server` | `http://localhost:10080` | URL of sabakan |
 
-`sabactl ipam set`
-------------------
+`sabactl ipam set -f FILE`
+--------------------------
 
 Set/update IPAM configurations.  See [IPAMConfig](ipam.md#ipamconfig) for JSON fields.
 
@@ -30,8 +30,8 @@ Get IPAM configurations.
 $ sabactl ipam get
 ```
 
-`sabactl dhcp set`
-------------------
+`sabactl dhcp set -f FILE`
+--------------------------
 
 Set/update DHCP configurations.  See [DHCPConfig](dhcp.md#dhcpconfig) for JSON fields.
 
@@ -48,8 +48,8 @@ Get DHCP configurations.
 $ sabactl dhcp get
 ```
 
-`sabactl machines create`
--------------------------
+`sabactl machines create -f FILE`
+---------------------------------
 
 Register new machines.
 
@@ -67,8 +67,8 @@ Detailed specification of the input JSON file is same as that of the [`POST /api
 ]
 ```
 
-`sabactl machines get`
-----------------------
+`sabactl machines get [QUERY_PARAM]...`
+---------------------------------------
 
 Show machines filtered by query parameters.
 
@@ -86,8 +86,35 @@ $ sabactl machines get \
 
 Detailed specification of the query parameters and the output JSON content is same as those of the [`GET /api/v1/machines` API](api.md#getmachines).
 
-`sabactl machines set-retire-date`
---------------------------------------------------
+`sabactl machines set-label SERIAL NAME VALUE`
+----------------------------------------------
+
+Add or update a label for a machine.
+
+```console
+$ sabactl machines set-label <serial> <name> <value>
+```
+
+`sabactl machines get-label SERIAL NAME`
+----------------------------------------
+
+Get the value of a label of a machine.
+
+```console
+$ sabactl machines get-label <serial> <name>
+```
+
+`sabactl machines remove-label SERIAL NAME`
+-------------------------------------------
+
+Remove a label from a machine.
+
+```console
+$ sabactl machines remove-label <serial> <name>
+```
+
+`sabactl machines set-retire-date SERIAL DATE`
+----------------------------------------------
 
 Set the retire date of a machine.
 
@@ -95,8 +122,8 @@ Set the retire date of a machine.
 $ sabactl machines set-retire-date <serial> 2023-11-21
 ```
 
-`sabactl machines set-state`
-----------------------------
+`sabactl machines set-state SERIAL STATE`
+-----------------------------------------
 
 Set the state of a machine.
 State is one of `uninitialized`, `healthy`, `unhealthy`, `unreachable`, `updating`, `retiring` or `retired`.
@@ -107,8 +134,8 @@ Transition from `retiring` to `retired` is permitted only when the machine has n
 $ sabactl machines set-state <serial> <state>
 ```
 
-`sabactl machines get-state`
-----------------------------
+`sabactl machines get-state SERIAL`
+-----------------------------------
 
 Get the state of a machine.
 State is one of `uninitialized`, `healthy`, `unhealthy`, `unreachable`, `updating`, `retiring` or `retired`.
@@ -117,8 +144,8 @@ State is one of `uninitialized`, `healthy`, `unhealthy`, `unreachable`, `updatin
 $ sabactl machines get-state <serial>
 ```
 
-`sabactl machines remove`
--------------------------
+`sabactl machines remove SERIAL`
+--------------------------------
 
 Unregister a machine specified by a serial number.
 
@@ -139,8 +166,8 @@ Get the current index of the OS images as JSON.
 
 * `--os`: specifies OS of the image.  Default is "coreos"
 
-`sabactl images [-os OS] upload`
---------------------------------
+`sabactl images [-os OS] upload ID KERNEL INITRD`
+-------------------------------------------------
 
 ```console
 $ sabactl images upload ID coreos_production_pxe.vmlinuz coreos_production_pxe_image.cpio.gz
@@ -150,8 +177,8 @@ Upload a set of boot image files identified by `ID`.
 
 * `--os`: specifies OS of the image.  Default is "coreos"
 
-`sabactl images [-os OS] delete`
---------------------------------
+`sabactl images [-os OS] delete ID`
+------------------------------------
 
 ```console
 $ sabactl images delete ID
@@ -172,7 +199,7 @@ Get the index of assets as a JSON array of asset names.
 Get the meta data of the named asset.
 
 `sabactl assets upload [--meta KEY=VALUE]... NAME FILE`
----------------------------------------------------
+-------------------------------------------------------
 
 ```console
 $ sabactl assets upload data.tar.gz /path/to/data.tar.gz
@@ -235,7 +262,7 @@ $ sabactl ignitions delete <role> <id>
 ```
 
 `sabactl log [--json] [START_DATE] [END_DATE]`
--------------------------------------
+----------------------------------------------
 
 Retrieve [audit logs](audit.md) and output them to stdout.
 
@@ -247,8 +274,8 @@ of `START_DATE` are retrieved.
 If `START_DATE` and `END_DATE` is given, logs between them are
 retrieved.
 
-`sabactl kernel-params [-os OS] set`
-------------------
+`sabactl kernel-params [-os OS] set PARAMS`
+-------------------------------------------
 
 Set/update kernel parameters.
 
@@ -259,7 +286,7 @@ $ sabactl kernel-params set "<param0>=<value0> <param1>=<value1> ..."
 ```
 
 `sabactl kernel-params [-os OS] get`
-------------------
+------------------------------------
 
 Get the current kernel parameters.
 
@@ -269,8 +296,8 @@ Get the current kernel parameters.
 $ sabactl kernel-params get
 ```
 
-`sabactl crypts delete`
-------------------
+`sabactl crypts delete SERIAL`
+------------------------------
 
 Deletes all keys of a machine.
 The command fails when the target machine's status is not `retiring`.
@@ -282,7 +309,7 @@ $ sabactl crypts delete -force <serial>
 ```
 
 `sabactl version`
-------------------
+-----------------
 
 Show sabactl version
 

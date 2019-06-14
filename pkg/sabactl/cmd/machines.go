@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -136,6 +137,71 @@ STATE can be one of:
 	},
 }
 
+var machinesGetLabelCmd = &cobra.Command{
+	Use:   "get-label SERIAL NAME",
+	Short: "get the label value of the machine",
+	Long:  `Get the value of the label named NAME of the machine.`,
+	Args:  cobra.ExactArgs(2),
+
+	RunE: func(cmd *cobra.Command, args []string) error {
+		serial, label := args[0], args[1]
+		well.Go(func(ctx context.Context) error {
+			machines, err := api.MachinesGet(ctx, map[string]string{
+				"serial": serial,
+			})
+			if err != nil {
+				return err
+			}
+			if len(machines) == 0 {
+				return errors.New("machine not found")
+			} else if len(machines) > 1 {
+				return errors.New("too many machines found")
+			}
+
+			value, ok := machines[0].Spec.Labels[label]
+			if !ok {
+				return errors.New("label not found")
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), value)
+			return nil
+		})
+		well.Stop()
+		return well.Wait()
+	},
+}
+
+var machinesSetLabelCmd = &cobra.Command{
+	Use:   "set-label SERIAL NAME VALUE",
+	Short: "add or update a label for the machine",
+	Long:  `Add or update a label of "NAME: VALUE" for the machine.`,
+	Args:  cobra.ExactArgs(3),
+
+	RunE: func(cmd *cobra.Command, args []string) error {
+		serial, label, value := args[0], args[1], args[2]
+		well.Go(func(ctx context.Context) error {
+			return api.MachinesSetLabel(ctx, serial, label, value)
+		})
+		well.Stop()
+		return well.Wait()
+	},
+}
+
+var machinesRemoveLabelCmd = &cobra.Command{
+	Use:   "remove-label SERIAL NAME",
+	Short: "remove a label from the machine",
+	Long:  `Remove a label named NAME from the machine.`,
+	Args:  cobra.ExactArgs(2),
+
+	RunE: func(cmd *cobra.Command, args []string) error {
+		serial, label := args[0], args[1]
+		well.Go(func(ctx context.Context) error {
+			return api.MachinesRemoveLabel(ctx, serial, label)
+		})
+		well.Stop()
+		return well.Wait()
+	},
+}
+
 var machinesSetRetireDateCmd = &cobra.Command{
 	Use:   "set-retire-date SERIAL YYYY-MM-DD",
 	Short: "set the retire date of the machine",
@@ -180,6 +246,9 @@ func init() {
 	machinesCmd.AddCommand(machinesRemoveCmd)
 	machinesCmd.AddCommand(machinesGetStateCmd)
 	machinesCmd.AddCommand(machinesSetStateCmd)
+	machinesCmd.AddCommand(machinesGetLabelCmd)
+	machinesCmd.AddCommand(machinesSetLabelCmd)
+	machinesCmd.AddCommand(machinesRemoveLabelCmd)
 	machinesCmd.AddCommand(machinesSetRetireDateCmd)
 	rootCmd.AddCommand(machinesCmd)
 }

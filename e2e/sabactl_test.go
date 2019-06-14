@@ -251,6 +251,39 @@ func testSabactlMachines(t *testing.T) {
 		t.Fatal("machine not found")
 	}
 
+	stdout, stderr, err = runSabactl("machines", "set-label", "12345678", "model", "1984")
+	code = exitCode(err)
+	if code != ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+	stdout, stderr, err = runSabactl("machines", "get-label", "12345678", "model")
+	code = exitCode(err)
+	if code != ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+	gotLabel := strings.TrimSpace(stdout.String())
+	if gotLabel != "1984" {
+		t.Fatal("unexpected label: ", gotLabel)
+	}
+	stdout, stderr, err = runSabactl("machines", "remove-label", "12345678", "model")
+	code = exitCode(err)
+	if code != ExitSuccess {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+	stdout, stderr, err = runSabactl("machines", "get-label", "12345678", "model")
+	code = exitCode(err)
+	if code != ExitNotFound {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
 	stdout, stderr, err = runSabactl("machines", "get-state", "12345678")
 	code = exitCode(err)
 	if code != ExitSuccess {
@@ -259,9 +292,6 @@ func testSabactlMachines(t *testing.T) {
 		t.Fatal("exit code:", code)
 	}
 	gotState := sabakan.MachineState(strings.TrimSpace(stdout.String()))
-	if err != nil {
-		t.Fatal(err)
-	}
 	if gotState != sabakan.StateUninitialized {
 		t.Fatal("unexpected machine state: ", gotState)
 	}
