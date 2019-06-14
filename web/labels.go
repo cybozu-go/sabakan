@@ -10,8 +10,12 @@ import (
 
 func (s Server) handleLabels(w http.ResponseWriter, r *http.Request) {
 	args := strings.SplitN(r.URL.Path[len("/api/v1/labels/"):], "/", 2)
-	if len(args) != 2 || !sabakan.IsValidLabelName(args[1]) {
+	if len(args) != 2 {
 		renderError(r.Context(), w, APIErrBadRequest)
+		return
+	}
+	if !sabakan.IsValidLabelName(args[1]) {
+		renderError(r.Context(), w, BadRequest("invalid label name"))
 		return
 	}
 
@@ -34,7 +38,7 @@ func (s Server) handleLabelsPut(w http.ResponseWriter, r *http.Request, serial, 
 		return
 	}
 	if !sabakan.IsValidLabelValue(string(value)) {
-		renderError(r.Context(), w, APIErrBadRequest)
+		renderError(r.Context(), w, BadRequest("invalid label value"))
 		return
 	}
 
