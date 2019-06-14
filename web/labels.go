@@ -1,7 +1,7 @@
 package web
 
 import (
-	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -10,34 +10,39 @@ import (
 
 func (s Server) handleLabels(w http.ResponseWriter, r *http.Request) {
 	args := strings.SplitN(r.URL.Path[len("/api/v1/labels/"):], "/", 2)
-	if len(args) == 0 || len(args[0]) == 0 {
+	if len(args) != 2 {
 		renderError(r.Context(), w, APIErrBadRequest)
+		return
+	}
+	if !sabakan.IsValidLabelName(args[1]) {
+		renderError(r.Context(), w, BadRequest("invalid label name"))
 		return
 	}
 
 	switch r.Method {
 	case "PUT":
-		s.handleLabelsPut(w, r, args[0])
+		s.handleLabelsPut(w, r, args[0], args[1])
 		return
 	case "DELETE":
-		if len(args) != 2 {
-			renderError(r.Context(), w, APIErrBadRequest)
-			return
-		}
 		s.handleLabelsDelete(w, r, args[0], args[1])
 		return
 	}
+
+	renderError(r.Context(), w, APIErrBadMethod)
 }
 
-func (s Server) handleLabelsPut(w http.ResponseWriter, r *http.Request, serial string) {
-	var labels map[string]string
-	err := json.NewDecoder(r.Body).Decode(&labels)
+func (s Server) handleLabelsPut(w http.ResponseWriter, r *http.Request, serial, label string) {
+	value, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 1024))
 	if err != nil {
-		renderError(r.Context(), w, APIErrBadRequest)
+		renderError(r.Context(), w, InternalServerError(err))
+		return
+	}
+	if !sabakan.IsValidLabelValue(string(value)) {
+		renderError(r.Context(), w, BadRequest("invalid label value"))
 		return
 	}
 
-	err = s.Model.Machine.AddLabels(r.Context(), serial, labels)
+	err = s.Model.Machine.PutLabel(r.Context(), serial, label, string(value))
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return

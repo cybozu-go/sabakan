@@ -17,6 +17,8 @@ func (s Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 
 		healthStatus := map[string]string{"health": "unhealthy"}
 		renderJSON(w, healthStatus, http.StatusInternalServerError)
-
+		return
 	}
+
+	renderError(r.Context(), w, APIErrBadMethod)
 }

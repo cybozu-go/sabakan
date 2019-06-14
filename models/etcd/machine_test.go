@@ -214,7 +214,7 @@ func testSetState(t *testing.T) {
 	}
 }
 
-func testAddLabels(t *testing.T) {
+func testPutLabel(t *testing.T) {
 	t.Parallel()
 
 	d, ch := testNewDriver(t)
@@ -223,7 +223,7 @@ func testAddLabels(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = d.machineAddLabels(context.Background(), "12345678", map[string]string{"datacenter": "heaven"})
+	err = d.machinePutLabel(context.Background(), "12345678", "datacenter", "heaven")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -236,12 +236,12 @@ func testAddLabels(t *testing.T) {
 		t.Error("wrong labels:", m.Spec.Labels)
 	}
 
-	err = d.machineAddLabels(context.Background(), "1111", map[string]string{"datacenter": "heaven"})
+	err = d.machinePutLabel(context.Background(), "1111", "datacenter", "heaven")
 	if err != sabakan.ErrNotFound {
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Error("AddLabels succeeded for non-existing machine")
+		t.Error("PutLabel succeeded for non-existing machine")
 	}
 }
 
@@ -428,7 +428,7 @@ func TestMachine(t *testing.T) {
 	t.Run("Get", testGet)
 	t.Run("Query", testQuery)
 	t.Run("SetState", testSetState)
-	t.Run("AddLabels", testAddLabels)
+	t.Run("PutLabel", testPutLabel)
 	t.Run("DeleteLabel", testDeleteLabel)
 	t.Run("SetRetireDate", testSetRetireDate)
 	t.Run("Delete", testDelete)

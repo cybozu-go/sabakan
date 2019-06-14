@@ -159,7 +159,7 @@ RETRY:
 	return nil
 }
 
-func (d *driver) machineAddLabels(ctx context.Context, serial string, labels map[string]string) error {
+func (d *driver) machinePutLabel(ctx context.Context, serial string, label, value string) error {
 	key := KeyMachines + serial
 
 RETRY:
@@ -168,7 +168,7 @@ RETRY:
 		return err
 	}
 
-	m.AddLabels(labels)
+	m.PutLabel(label, value)
 	data, err := json.Marshal(m)
 	if err != nil {
 		return err
@@ -185,14 +185,8 @@ RETRY:
 		goto RETRY
 	}
 
-	labelKeys := make([]string, len(labels))
-	i := 0
-	for k := range labels {
-		labelKeys[i] = k
-		i++
-	}
 	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditMachines, serial,
-		"add-labels", strings.Join(labelKeys, ","))
+		"put-label", label+"/"+value)
 	return nil
 }
 
@@ -389,9 +383,9 @@ func (d machineDriver) SetState(ctx context.Context, serial string, state sabaka
 	return d.machineSetState(ctx, serial, state)
 }
 
-// AddLabels implements sabakan.MachineModel
-func (d machineDriver) AddLabels(ctx context.Context, serial string, labels map[string]string) error {
-	return d.machineAddLabels(ctx, serial, labels)
+// PutLabel implements sabakan.MachineModel
+func (d machineDriver) PutLabel(ctx context.Context, serial string, label, value string) error {
+	return d.machinePutLabel(ctx, serial, label, value)
 }
 
 // DeleteLabel implements sabakan.MachineModel

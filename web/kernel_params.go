@@ -31,6 +31,8 @@ func (s Server) handleKernelParams(w http.ResponseWriter, r *http.Request) {
 		s.handleKernelParamsPut(w, r, os)
 		return
 	}
+
+	renderError(r.Context(), w, APIErrBadMethod)
 }
 
 func (s Server) handleKernelParamsGet(w http.ResponseWriter, r *http.Request, os string) {

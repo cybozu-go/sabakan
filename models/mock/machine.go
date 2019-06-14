@@ -56,7 +56,7 @@ func (d *driver) machineSetState(ctx context.Context, serial string, state sabak
 	return m.SetState(state)
 }
 
-func (d *driver) machineAddLabels(ctx context.Context, serial string, labels map[string]string) error {
+func (d *driver) machinePutLabel(ctx context.Context, serial string, label, value string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -64,7 +64,7 @@ func (d *driver) machineAddLabels(ctx context.Context, serial string, labels map
 	if !ok {
 		return sabakan.ErrNotFound
 	}
-	m.AddLabels(labels)
+	m.PutLabel(label, value)
 	return nil
 }
 
@@ -137,8 +137,8 @@ func (d machineDriver) SetState(ctx context.Context, serial string, state sabaka
 	return d.machineSetState(ctx, serial, state)
 }
 
-func (d machineDriver) AddLabels(ctx context.Context, serial string, labels map[string]string) error {
-	return d.machineAddLabels(ctx, serial, labels)
+func (d machineDriver) PutLabel(ctx context.Context, serial string, label, value string) error {
+	return d.machinePutLabel(ctx, serial, label, value)
 }
 
 func (d machineDriver) DeleteLabel(ctx context.Context, serial string, label string) error {
