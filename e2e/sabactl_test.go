@@ -265,6 +265,7 @@ func testSabactlMachines(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
+	gotMachines = nil
 	err = json.Unmarshal(stdout.Bytes(), &gotMachines)
 	if err != nil {
 		t.Fatal(err)
@@ -293,7 +294,7 @@ func testSabactlMachines(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
 	}
-	gotMachines = []sabakan.Machine{}
+	gotMachines = nil
 	err = json.Unmarshal(stdout.Bytes(), &gotMachines)
 	if err != nil {
 		t.Fatal(err)
