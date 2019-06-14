@@ -95,15 +95,6 @@ Add or update a label for a machine.
 $ sabactl machines set-label <serial> <name> <value>
 ```
 
-`sabactl machines get-label SERIAL NAME`
-----------------------------------------
-
-Get the value of a label of a machine.
-
-```console
-$ sabactl machines get-label <serial> <name>
-```
-
 `sabactl machines remove-label SERIAL NAME`
 -------------------------------------------
 
