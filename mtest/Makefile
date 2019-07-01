@@ -94,9 +94,9 @@ $(OUTPUT)/sabakan.img:
 	GOBIN=$(shell pwd)/../docker go install ../pkg/sabakan-cryptsetup
 	GOBIN=$(shell pwd)/../docker go install ../pkg/sabactl
 	cp ../LICENSE $(shell pwd)/../docker
-	sudo podman build --no-cache --rm=false -t $(SABAKAN_IMAGE_URL) ../docker/
+	sudo docker build --no-cache --rm=false -t $(SABAKAN_IMAGE_URL) ../docker/
 	mkdir -p $(OUTPUT)
-	sudo podman save -o $@ $(SABAKAN_IMAGE_URL)
+	sudo docker save -o $@ $(SABAKAN_IMAGE_URL)
 
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)
