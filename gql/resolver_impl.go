@@ -181,6 +181,11 @@ type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) Machine(ctx context.Context, serial string) (*sabakan.Machine, error) {
 	now := time.Now()
+
+	log.Info("Machine is called", map[string]interface{}{
+		"serial": serial,
+	})
+
 	machine, err := r.Model.Machine.Get(ctx, serial)
 	if err != nil {
 		return &sabakan.Machine{}, err
@@ -193,7 +198,7 @@ func (r *queryResolver) SearchMachines(ctx context.Context, having, notHaving *M
 
 	log.Info("SearchMachines is called", map[string]interface{}{
 		"having":    having,
-		"notHaving": notHaving,
+		"nothaving": notHaving,
 	})
 
 	machines, err := r.Model.Machine.Query(ctx, sabakan.Query{})
