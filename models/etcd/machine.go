@@ -154,8 +154,6 @@ RETRY:
 		}
 	}
 
-	d.addLog(ctx, time.Now(), tresp.Header.Revision, sabakan.AuditMachines, serial,
-		"state", state.String())
 	return nil
 }
 

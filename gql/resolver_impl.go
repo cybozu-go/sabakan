@@ -9,6 +9,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/vektah/gqlparser/gqlerror"
 )
@@ -110,6 +111,11 @@ type mutationResolver struct{ *Resolver }
 func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, state sabakan.MachineState) (*sabakan.MachineStatus, error) {
 	now := time.Now()
 
+	log.Info("SetMachineState is called", map[string]interface{}{
+		"serial": serial,
+		"state":  state,
+	})
+
 	err := r.Model.Machine.SetState(ctx, serial, state)
 	if err != nil {
 		switch err {
@@ -184,6 +190,12 @@ func (r *queryResolver) Machine(ctx context.Context, serial string) (*sabakan.Ma
 }
 func (r *queryResolver) SearchMachines(ctx context.Context, having, notHaving *MachineParams) ([]sabakan.Machine, error) {
 	now := time.Now()
+
+	log.Info("SearchMachines is called", map[string]interface{}{
+		"having":    having,
+		"notHaving": notHaving,
+	})
+
 	machines, err := r.Model.Machine.Query(ctx, sabakan.Query{})
 	if err != nil {
 		return nil, err
