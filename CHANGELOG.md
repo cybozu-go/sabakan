@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.4.3] - 2019-07-04
+
+### Changed
+- No longer record state transition in audit (#163).
+
 ## [2.4.2] - 2019-06-03
 
 ### Changed
@@ -117,7 +122,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.4.2...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.4.3...HEAD
+[2.4.3]: https://github.com/cybozu-go/sabakan/compare/v2.4.2...v2.4.3
 [2.4.2]: https://github.com/cybozu-go/sabakan/compare/v2.4.1...v2.4.2
 [2.4.1]: https://github.com/cybozu-go/sabakan/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/cybozu-go/sabakan/compare/v2.3.0...v2.4.0
