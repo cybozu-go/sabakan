@@ -59,7 +59,7 @@ Bump version
     $ VERSION=x.y.z
     $ git commit -a -m "Bump version to $VERSION"
     $ git tag v$VERSION
-    $ git push origin master --tags
+    $ git push origin master v$VERSION
     ```
 
 Now the version is bumped up and the latest container image is uploaded to [quay.io](https://quay.io/cybozu/sabakan).
