@@ -9,6 +9,9 @@ The generated encryption key is encrypted with another key and sent to sabakan s
 At the next boot, `sabakan-cryptsetup` will download the encrypted disk encryption key
 from sabakan, decrypt it, and setup encrypted disks automatically.
 
+If `sabakan-cryptsetup` server supports [TPM] 2.0, `sabakan-cryptsetup` uses `/dev/tpm0`
+as a key for generating disk encryption key.
+
 Usage
 -----
 
@@ -22,6 +25,7 @@ $ sabakan-cryptsetup [flags]
 | `--excludes` | ""                       | Disk name patterns to be ignored |
 | `--keysize`  | 512                      | Key size in bits                 |
 | `--server`   | `http://localhost:10080` | URL of sabakan                   |
+| `--tpmdev`   | `/dev/tpm0`              | TPM character device file        |
 
 | Environment variable | Default value | Description                                  |
 | -------------------- | ------------- | -------------------------------------------- |
@@ -66,3 +70,5 @@ The meta data itself is not encrypted.  The format of meta data is as follows:
 * The maximum length of cipher name is 106.
 * Unused areas are filled with `0x88`.
 * The size of key encryption key (KEK) is the same as the key size at 0x0014.
+
+[TPM]: https://en.wikipedia.org/wiki/Trusted_Computing
