@@ -16,6 +16,7 @@ require (
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20181024230925-c65c006176ff // indirect
 	github.com/google/go-cmp v0.2.0
+	github.com/google/go-tpm v0.1.1
 	github.com/google/subcommands v0.0.0-20181012225330-46f0354f6315
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.0.0

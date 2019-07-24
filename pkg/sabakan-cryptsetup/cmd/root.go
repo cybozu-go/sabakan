@@ -11,6 +11,7 @@ import (
 
 const (
 	defaultSabakanURL = "http://localhost:10080"
+	defaultTPMDev     = "/dev/tpm0"
 	defaultCipher     = "aes-xts-plain64"
 	defaultKeySize    = 512
 )
@@ -18,6 +19,7 @@ const (
 var opts struct {
 	sabakanURL string
 	cipher     string
+	tpmdev     string
 	keySize    int
 	excludes   []string
 }
@@ -45,7 +47,7 @@ decrypt it, and setup encrypted disks automatically.`,
 		if err != nil {
 			return err
 		}
-		driver, err := NewDriver(opts.sabakanURL, opts.cipher, opts.keySize/8, disks)
+		driver, err := NewDriver(opts.sabakanURL, opts.cipher, opts.keySize/8, opts.tpmdev, disks)
 		if err != nil {
 			return err
 		}
@@ -70,6 +72,7 @@ func init() {
 		sabaURL = defaultSabakanURL
 	}
 	rootCmd.Flags().StringVar(&opts.sabakanURL, "server", sabaURL, "URL of sabakan server")
+	rootCmd.Flags().StringVar(&opts.tpmdev, "tpmdev", defaultTPMDev, "device file path of tpm")
 	rootCmd.Flags().StringVar(&opts.cipher, "cipher", defaultCipher, "cipher specification")
 	rootCmd.Flags().IntVar(&opts.keySize, "keysize", defaultKeySize, "key size in bits")
 	rootCmd.Flags().StringArrayVar(&opts.excludes, "excludes", nil, `disk name patterns to be excluded, e.g. "nvme*"`)
