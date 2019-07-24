@@ -120,11 +120,6 @@ func (d *Driver) allocateNVRAM(ctx context.Context) error {
 	}
 	err = defineNVSpace(rw, kek)
 	if err != nil {
-		return err
-	}
-
-	err = tpm2.NVWrite(rw, tpm2.HandleOwner, tpmOffset, "", kek, 0)
-	if err != nil {
 		e, ok := err.(tpm2.Error)
 		if !ok {
 			return err
@@ -164,7 +159,7 @@ func defineNVSpace(rw io.ReadWriteCloser, kek []byte) error {
 			return err
 		}
 	}
-	return nil
+	return tpm2.NVWrite(rw, tpm2.HandleOwner, tpmOffset, "", kek, 0)
 }
 
 func undefineNVSpace(rw io.ReadWriteCloser) error {
