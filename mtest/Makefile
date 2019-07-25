@@ -5,7 +5,8 @@ BRIDGE_ADDRESS = 10.0.0.1
 HOST1 = 10.0.0.101
 HOST2 = 10.0.0.102
 HOST3 = 10.0.0.103
-WORKER = 10.0.0.104
+WORKER1 = 10.0.0.104
+WORKER2 = 10.0.0.105
 PLACEMAT = /usr/bin/placemat
 GINKGO = env GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo
 ETCD_VERSION = 3.3.12
@@ -23,7 +24,7 @@ else
   SUITE_PACKAGE = $(SUITE)
 endif
 
-export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER PLACEMAT GINKGO SUITE_PACKAGE
+export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER1 WORKER2 PLACEMAT GINKGO SUITE_PACKAGE
 export COREOS_VERSION COREOS_KERNEL COREOS_INITRD
 
 ### for Go
@@ -43,8 +44,9 @@ MACHINES_JSON := $(abspath $(OUTPUT))/machines.json
 IPAM_JSON := $(abspath $(OUTPUT))/ipam.json
 DHCP_JSON := $(abspath $(OUTPUT))/dhcp.json
 IGNITIONS := $(abspath $(OUTPUT))/ignitions
+READ_NVRAM := $(abspath $(OUTPUT))/readnvram
 
-export SSH_PRIVKEY SABAKAN_IMAGE SABAKAN_IMAGE_URL ETCD ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS
+export SSH_PRIVKEY SABAKAN_IMAGE SABAKAN_IMAGE_URL ETCD ETCDCTL MACHINES_JSON IPAM_JSON DHCP_JSON IGNITIONS READ_NVRAM
 
 TEST_DEPS = \
 	$(COREOS_INITRD) \
@@ -52,7 +54,8 @@ TEST_DEPS = \
 	$(OUTPUT)/dhcp.json \
 	$(OUTPUT)/ipam.json \
 	$(OUTPUT)/machines.json \
-	$(OUTPUT)/sabakan.img
+	$(OUTPUT)/sabakan.img \
+	$(OUTPUT)/readnvram
 
 PLACEMAT_DEPS = \
 	$(COREOS_IMAGE) \
@@ -108,8 +111,7 @@ $(OUTPUT)/dhcp.json $(OUTPUT)/ipam.json $(OUTPUT)/machines.json:
 
 $(OUTPUT)/ignitions:
 	cp -r ignitions $@
-	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' \
-			-e 's/@WORKER@/$(WORKER)/' $@/networkd/10-eth0.network
+	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' $@/networkd/10-eth0.network
 
 $(CT):
 	curl -fsSL -o ct https://github.com/coreos/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
@@ -141,6 +143,9 @@ $(OUTPUT)/host3.ign: $(OUTPUT)/host.ign
 		-e 's/__HOST1__/$(HOST1)/' \
 		-e 's/__HOST__/$(HOST3)/' \
 		-e 's/__HOST_ADDRESS__/$(HOST3)/' $< > $@
+
+$(OUTPUT)/readnvram:
+	go build -o $@ ./readnvram/main.go
 
 # Targets
 test: $(TEST_DEPS)

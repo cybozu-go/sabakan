@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
@@ -48,21 +49,41 @@ func TestNetboot() {
 		}).Should(Succeed())
 
 		By("Waiting worker to boot")
-		Expect(prepareSSHClients(worker)).NotTo(HaveOccurred())
+		Expect(prepareSSHClients(worker1, worker2)).NotTo(HaveOccurred())
 
-		By("Checking kernel boot parameter")
-		stdout, stderr, err := execAt(worker, "cat", "/proc/cmdline")
-		Expect(err).NotTo(HaveOccurred(), "stderr=%s", stderr)
-		Expect(string(stdout)).To(ContainSubstring("coreos.autologin=ttyS0"))
+		for _, worker := range []string{worker1, worker2} {
+			By("Checking kernel boot parameter")
+			stdout, stderr, err := execAt(worker, "cat", "/proc/cmdline")
+			Expect(err).NotTo(HaveOccurred(), "stderr=%s", stderr)
+			Expect(string(stdout)).To(ContainSubstring("coreos.autologin=ttyS0"))
 
-		By("Checking encrypted disks")
-		Eventually(func() error {
-			_, stderr, err := execAt(worker, "ls", "/dev/mapper/crypt-*")
-			if err != nil {
-				return fmt.Errorf("%v: stderr=%s", err, stderr)
-			}
-			return nil
-		}).Should(Succeed())
+			By("Checking encrypted disks")
+			Eventually(func() error {
+				_, stderr, err := execAt(worker, "ls", "/dev/mapper/crypt-*")
+				if err != nil {
+					return fmt.Errorf("%v: stderr=%s", err, stderr)
+				}
+				return nil
+			}).Should(Succeed())
+		}
+
+		By("Copying readnvram binary")
+		remoteFilename := filepath.Join("/var/tmp", filepath.Base(readNVRAM))
+		copyReadNVRAM(worker2, remoteFilename)
+
+		By("Reading encryption key from NVRAM")
+		ekHexBefore, stderr, err := execAt(worker2, remoteFilename)
+		Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", ekHexBefore, stderr)
+
+		By("Checking encryption key is kept after reboot")
+		// Exit code is 255 when ssh is disconnected
+		execAt(worker2, "sudo", "reboot")
+		Expect(prepareSSHClients(worker2)).NotTo(HaveOccurred())
+		copyReadNVRAM(worker2, remoteFilename)
+
+		ekHexAfter, stderr, err := execAt(worker2, remoteFilename)
+		Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", ekHexAfter, stderr)
+		Expect(ekHexAfter).To(Equal(ekHexBefore))
 
 		By("Removing the image from the index")
 		sabactlSafe("images", "delete", coreosVersion)
@@ -78,4 +99,15 @@ func TestNetboot() {
 			return nil
 		}).Should(Succeed())
 	})
+}
+
+func copyReadNVRAM(worker, remoteFilename string) {
+	f, err := os.Open(readNVRAM)
+	Expect(err).NotTo(HaveOccurred())
+	defer f.Close()
+
+	_, err = f.Seek(0, os.SEEK_SET)
+	Expect(err).NotTo(HaveOccurred())
+	stdout, stderr, err := execAtWithStream(worker, f, "dd", "of="+remoteFilename)
+	Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 }

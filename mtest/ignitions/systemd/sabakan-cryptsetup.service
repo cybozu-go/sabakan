@@ -1,5 +1,5 @@
 [Unit]
-Description=foo
+Description=sabakan-cryptsetup
 After=network-online.target
 Wants=network-online.target
 

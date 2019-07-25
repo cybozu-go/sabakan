@@ -9,7 +9,8 @@ var (
 	host1         = os.Getenv("HOST1")
 	host2         = os.Getenv("HOST2")
 	host3         = os.Getenv("HOST3")
-	worker        = os.Getenv("WORKER")
+	worker1       = os.Getenv("WORKER1")
+	worker2       = os.Getenv("WORKER2")
 
 	coreosInitrd     = os.Getenv("COREOS_INITRD")
 	coreosKernel     = os.Getenv("COREOS_KERNEL")
@@ -24,4 +25,6 @@ var (
 	sabakanImageURL  = os.Getenv("SABAKAN_IMAGE_URL")
 
 	sshKeyFile = os.Getenv("SSH_PRIVKEY")
+
+	readNVRAM = os.Getenv("READ_NVRAM")
 )
