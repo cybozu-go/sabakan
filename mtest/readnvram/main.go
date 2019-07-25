@@ -8,6 +8,7 @@ import (
 )
 
 const tpmOffsetHex = 0x01000000
+
 var tpmOffset = tpmutil.Handle(tpmOffsetHex)
 
 func main() {
