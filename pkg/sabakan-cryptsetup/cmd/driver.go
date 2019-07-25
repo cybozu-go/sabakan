@@ -65,7 +65,7 @@ func NewDriver(sabakanURL, cipher string, keySize int, tpmdev string, disks []Di
 
 // Setup setup crypt devices.
 func (d *Driver) Setup(ctx context.Context) error {
-	kek := []byte("")
+	var kek []byte
 
 	_, err := os.Stat(d.tpmdev)
 	switch {
