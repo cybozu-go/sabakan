@@ -12,9 +12,9 @@ In order to mount encrypted disk, Sabakan provides `sabakan-cryptsetup` as follo
 
     `sabakan-cryptsetup` requests `/api/v1/crypts` to manage keys. See details [API](api.md).
 
-    If the server supports [TPM][] 2.0, Another `encryption key` is stored in `/dev/tpm0` for more secure encryption.
+    If the server supports [TPM][] 2.0, Another `encryption key` is stored in `/dev/tpm0` for more secure disk encryption.
 
-* Calculation of the `encryption key` for [cryptsetup][].
+* How to calculate the `encryption key` for [cryptsetup][].
 
     If the server does not support TPM 2.0:
 
@@ -59,7 +59,7 @@ In order to mount encrypted disk, Sabakan provides `sabakan-cryptsetup` as follo
 2. Read `one-time pad` and `ID`, and send HTTP request to `sabakan` whether an `encryption key` and `ID` of its disk are registered, and read another `one-time pad` from `/dev/tpm0` if exists. If not, `sabakan-cryptsetup` re-encrypts the disk.
     1. Generate `one-time pad`, a pair of `key` and `ID`.
     2. Write `magic`, `one-time pad` and `ID` to metadata partition.
-    3. If `/dev/tpm0` exists, write `one-time pad` to the TPM device.
+    3. If TPM 2.0 supported `/dev/tpm0` exists, write `one-time pad` to the TPM device.
     4. Register XOR value between `one-time pad` as an `encryption key` to `sabakan` with `ID`.
 3. Execute `cryptsetup` to create `/dev/mapper/crypt-BYPATH` of each disk as decryption. `BYPATH` is the name of the device, shown in `/dev/disk/by-path`.
 4. Setup md device and/or initialize filesystem.

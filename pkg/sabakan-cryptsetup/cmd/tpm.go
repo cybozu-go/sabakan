@@ -52,7 +52,7 @@ func (t *tpmDriver) checkTPMVersion20() error {
 	return nil
 }
 
-func (t *tpmDriver) getKEKFromTPM() ([]byte, error) {
+func (t *tpmDriver) readKEKFromTPM() ([]byte, error) {
 	return tpm2.NVReadEx(t.device, tpmOffset, tpm2.HandleOwner, "", 0)
 }
 

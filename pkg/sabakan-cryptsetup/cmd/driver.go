@@ -97,7 +97,7 @@ func (d *Driver) Setup(ctx context.Context) error {
 			break
 		}
 
-		kek, err = t.getKEKFromTPM()
+		kek, err = t.readKEKFromTPM()
 		if err != nil {
 			log.Info("no TPM key encryption key was found", map[string]interface{}{
 				log.FnError: err,
@@ -106,7 +106,7 @@ func (d *Driver) Setup(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			kek, err = t.getKEKFromTPM()
+			kek, err = t.readKEKFromTPM()
 			if err != nil {
 				panic(err)
 			}
