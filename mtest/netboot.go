@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -64,7 +65,7 @@ func TestNetboot() {
 					return fmt.Errorf("%v: stderr=%s", err, stderr)
 				}
 				return nil
-			}).Should(Succeed())
+			}, 6*time.Minute).Should(Succeed())
 		}
 
 		By("Copying readnvram binary")
@@ -72,7 +73,7 @@ func TestNetboot() {
 		copyReadNVRAM(worker2, remoteFilename)
 
 		By("Reading encryption key from NVRAM")
-		ekHexBefore, stderr, err := execAt(worker2, remoteFilename)
+		ekHexBefore, stderr, err := execAt(worker2, "sudo", remoteFilename)
 		Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", ekHexBefore, stderr)
 
 		By("Checking encryption key is kept after reboot")
@@ -81,9 +82,18 @@ func TestNetboot() {
 		Expect(prepareSSHClients(worker2)).NotTo(HaveOccurred())
 		copyReadNVRAM(worker2, remoteFilename)
 
-		ekHexAfter, stderr, err := execAt(worker2, remoteFilename)
+		ekHexAfter, stderr, err := execAt(worker2, "sudo", remoteFilename)
 		Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", ekHexAfter, stderr)
 		Expect(ekHexAfter).To(Equal(ekHexBefore))
+
+		By("Checking encrypted disks")
+		Eventually(func() error {
+			_, stderr, err := execAt(worker2, "ls", "/dev/mapper/crypt-*")
+			if err != nil {
+				return fmt.Errorf("%v: stderr=%s", err, stderr)
+			}
+			return nil
+		}, 6*time.Minute).Should(Succeed())
 
 		By("Removing the image from the index")
 		sabactlSafe("images", "delete", coreosVersion)
@@ -109,5 +119,7 @@ func copyReadNVRAM(worker, remoteFilename string) {
 	_, err = f.Seek(0, os.SEEK_SET)
 	Expect(err).NotTo(HaveOccurred())
 	stdout, stderr, err := execAtWithStream(worker, f, "dd", "of="+remoteFilename)
+	Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+	stdout, stderr, err = execAt(worker, "chmod", "755", remoteFilename)
 	Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 }

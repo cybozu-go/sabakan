@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -92,6 +93,8 @@ func (d *Driver) Setup(ctx context.Context) error {
 				"device":    d.tpmdev,
 				log.FnError: err,
 			})
+			t.device.Close()
+			break
 		}
 
 		kek, err = t.getKEKFromTPM()
@@ -107,6 +110,7 @@ func (d *Driver) Setup(ctx context.Context) error {
 			if err != nil {
 				panic(err)
 			}
+			t.device.Close()
 		}
 	}
 
@@ -115,6 +119,9 @@ func (d *Driver) Setup(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		log.Info("encrypted disk is ready", map[string]interface{}{
+			"path": filepath.Join("/dev/mapper", disk.CryptName()),
+		})
 	}
 	return nil
 }

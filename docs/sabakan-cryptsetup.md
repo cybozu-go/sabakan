@@ -9,7 +9,7 @@ The generated encryption key is encrypted with another key and sent to sabakan s
 At the next boot, `sabakan-cryptsetup` will download the encrypted disk encryption key
 from sabakan, decrypt it, and setup encrypted disks automatically.
 
-If `sabakan-cryptsetup` server supports [TPM] 2.0, `sabakan-cryptsetup` uses `/dev/tpm0`
+If the server supports [TPM] 2.0, `sabakan-cryptsetup` uses `/dev/tpm0`
 as a key for generating disk encryption key.
 
 Usage
