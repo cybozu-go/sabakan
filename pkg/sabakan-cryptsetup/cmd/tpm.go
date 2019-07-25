@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"io"
 
+	"github.com/cybozu-go/log"
 	"github.com/google/go-tpm/tpm2"
 	"github.com/google/go-tpm/tpmutil"
 )
@@ -13,7 +14,7 @@ import (
 const manufacturer = 0x105
 
 const (
-	tpmKeyLength = 64
+	tpmKekLength = 64
 	tpmOffsetHex = 0x01000000
 )
 
@@ -63,6 +64,9 @@ func (t *tpmDriver) allocateNVRAM() error {
 			return err
 		}
 		if e.Code != tpm2.RCNVRange {
+			log.Warn("out of range key encryption key, so re-define NV space", map[string]interface{}{
+				log.FnError: err,
+			})
 			err := t.undefineNVSpace()
 			if err != nil {
 				return err
@@ -86,7 +90,7 @@ func (t *tpmDriver) defineNVSpace() error {
 		"",
 		nil,
 		attr,
-		uint16(tpmKeyLength),
+		uint16(tpmKekLength),
 	)
 	if err != nil {
 		e, ok := err.(tpm2.Error)
@@ -99,7 +103,7 @@ func (t *tpmDriver) defineNVSpace() error {
 	}
 
 	// Prepare encryption key
-	kek := make([]byte, tpmKeyLength)
+	kek := make([]byte, tpmKekLength)
 	_, err = rand.Read(kek)
 	if err != nil {
 		return err

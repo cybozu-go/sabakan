@@ -31,8 +31,8 @@ func InitModules() {
 
 // Cryptsetup invokes cryptsetup to open crypt device.
 // ek is the encrypted encryption key.
-func Cryptsetup(d Disk, md *Metadata, ek []byte) error {
-	key, err := md.DecryptKey(ek)
+func Cryptsetup(d Disk, md *Metadata, ek, tpmKek []byte) error {
+	key, err := md.DecryptKey(ek, tpmKek)
 	if err != nil {
 		return err
 	}
