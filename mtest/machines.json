@@ -6,6 +6,7 @@
       "product": "vm"
     },
     "rack": 0,
+    "index-in-rack": 104,
     "role": "worker",
     "bmc": {
       "ipv4": "",
@@ -19,7 +20,8 @@
       "datacenter": "dc1",
       "product": "vm"
     },
-    "rack": 1,
+    "rack": 0,
+    "index-in-rack": 105,
     "role": "worker",
     "bmc": {
       "ipv4": "",
