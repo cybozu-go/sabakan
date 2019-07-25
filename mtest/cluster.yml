@@ -79,7 +79,6 @@ cpu: 1
 memory: 3G
 smbios:
   serial: 00000004
-tpm: true
 ---
 kind: Node
 name: worker2
@@ -93,4 +92,4 @@ cpu: 1
 memory: 3G
 smbios:
   serial: 00000005
-
+tpm: true

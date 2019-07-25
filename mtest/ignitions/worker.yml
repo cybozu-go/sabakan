@@ -6,3 +6,5 @@ networkd:
 systemd:
   - name: sabakan-cryptsetup.service
     enabled: true
+  - name: tcsd.service
+    enabled: false
