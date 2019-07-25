@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"crypto/rand"
-	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -13,20 +12,7 @@ import (
 
 	"github.com/cybozu-go/log"
 	sabakan "github.com/cybozu-go/sabakan/v2/client"
-	"github.com/google/go-tpm/tpm2"
-	"github.com/google/go-tpm/tpmutil"
 )
-
-// The value "0x105" represents Manufacturer of a TPM Properties defined below:
-// https://github.com/google/go-tpm/blob/d6d17943421ff5e8991df2cea58480079d3a3c36/tpm2/constants.go#L168
-const manufacturer = 0x105
-
-const (
-	tpmKeyLength = 64
-	tpmOffsetHex = 0x01000000
-)
-
-var tpmOffset = tpmutil.Handle(tpmOffsetHex)
 
 // Driver setup crypt devices.
 type Driver struct {
@@ -78,13 +64,47 @@ func NewDriver(sabakanURL, cipher string, keySize int, tpmdev string, disks []Di
 
 // Setup setup crypt devices.
 func (d *Driver) Setup(ctx context.Context) error {
-	err := d.allocateNVRAM(ctx)
-	if err != nil {
+	kek := []byte("")
+
+	_, err := os.Stat(d.tpmdev)
+	switch {
+	case !os.IsNotExist(err):
 		return err
+	case os.IsNotExist(err):
+		log.Info("no TPM is found. disk encryption proceeds without TPM", map[string]interface{}{
+			"device":    d.tpmdev,
+			log.FnError: err,
+		})
+	default:
+		t, err := newTPMDriver(d.tpmdev)
+		if err != nil {
+			return err
+		}
+		defer t.device.Close()
+
+		err = t.checkTPMVersion20()
+		if err != nil {
+			log.Info("device is not TPM 2.0. disk encryption proceeds without TPM", map[string]interface{}{
+				"device":    d.tpmdev,
+				log.FnError: err,
+			})
+		}
+
+		kek, err = t.getKEKFromTPM()
+		if err != nil {
+			err = t.allocateNVRAM()
+			if err != nil {
+				return err
+			}
+			kek, err = t.getKEKFromTPM()
+			if err != nil {
+				panic(err)
+			}
+		}
 	}
 
 	for _, disk := range d.disks {
-		err := d.setupDisk(ctx, disk)
+		err := d.setupDisk(ctx, disk, kek)
 		if err != nil {
 			return err
 		}
@@ -92,81 +112,7 @@ func (d *Driver) Setup(ctx context.Context) error {
 	return nil
 }
 
-func (d *Driver) allocateNVRAM(ctx context.Context) error {
-	rw, err := tpm2.OpenTPM(d.tpmdev)
-	if err != nil {
-		return err
-	}
-	defer rw.Close()
-
-	// Make sure this is a TPM 2.0
-	// https://github.com/google/go-tpm/blob/30f8389f7afbbd553e969bf7c59c54e0a83a3373/tpm2/open_other.go#L35-L40
-	caps, _, err := tpm2.GetCapability(rw, tpm2.CapabilityTPMProperties, 1, uint32(manufacturer))
-	if err != nil {
-		return err
-	}
-
-	prop := caps[0].(tpm2.TaggedProperty)
-	_, err = tpmutil.Pack(prop.Value)
-	if err != nil {
-		return err
-	}
-
-	// Prepare encryption key
-	kek := make([]byte, tpmKeyLength)
-	_, err = rand.Read(kek)
-	if err != nil {
-		return err
-	}
-	err = defineNVSpace(rw, kek)
-	if err != nil {
-		e, ok := err.(tpm2.Error)
-		if !ok {
-			return err
-		}
-		if e.Code != tpm2.RCNVRange {
-			err := undefineNVSpace(rw)
-			if err != nil {
-				return err
-			}
-			err = defineNVSpace(rw, kek)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func defineNVSpace(rw io.ReadWriteCloser, kek []byte) error {
-	attr := tpm2.AttrOwnerWrite | tpm2.AttrOwnerRead
-	err := tpm2.NVDefineSpace(
-		rw,
-		tpm2.HandleOwner,
-		tpmOffset,
-		"",
-		"",
-		nil,
-		attr,
-		uint16(len(kek)),
-	)
-	if err != nil {
-		e, ok := err.(tpm2.Error)
-		if !ok {
-			return err
-		}
-		if e.Code != tpm2.RCNVDefined {
-			return err
-		}
-	}
-	return tpm2.NVWrite(rw, tpm2.HandleOwner, tpmOffset, "", kek, 0)
-}
-
-func undefineNVSpace(rw io.ReadWriteCloser) error {
-	return tpm2.NVUndefineSpace(rw, "", tpm2.HandleOwner, tpmOffset)
-}
-
-func (d *Driver) setupDisk(ctx context.Context, disk Disk) error {
+func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKey []byte) error {
 	log.Info("setting up full disk encryption", map[string]interface{}{
 		"disk": disk.Name(),
 	})
@@ -181,7 +127,7 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk) error {
 		log.Info("disk is not formatted", map[string]interface{}{
 			"disk": disk.Name(),
 		})
-		return d.formatDisk(ctx, disk, f)
+		return d.formatDisk(ctx, disk, f, tpmKey)
 	}
 	if err != nil {
 		return err
@@ -198,12 +144,12 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk) error {
 		log.Info("encryption key is not found in sabakan", map[string]interface{}{
 			"disk": disk.Name(),
 		})
-		return d.formatDisk(ctx, disk, f)
+		return d.formatDisk(ctx, disk, f, tpmKey)
 	}
 	return err
 }
 
-func (d *Driver) formatDisk(ctx context.Context, disk Disk, f *os.File) error {
+func (d *Driver) formatDisk(ctx context.Context, disk Disk, f *os.File, tpmKey []byte) error {
 	md, err := NewMetadata(d.cipher, d.keySize)
 	if err != nil {
 		return err
@@ -215,7 +161,7 @@ func (d *Driver) formatDisk(ctx context.Context, disk Disk, f *os.File) error {
 		return err
 	}
 
-	ek, err := md.EncryptKey(key)
+	ek, err := md.EncryptKey(key, tpmKey)
 	if err != nil {
 		return err
 	}
