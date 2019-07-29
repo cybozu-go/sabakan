@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.4.4] - 2019-07-29
+
+### Added
+
+- [sabakan-cryptsetup] TPM 2.0 support (#164).
+
 ## [2.4.3] - 2019-07-04
 
 ### Changed
@@ -122,7 +128,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.4.3...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.4.4...HEAD
+[2.4.4]: https://github.com/cybozu-go/sabakan/compare/v2.4.3...v2.4.4
 [2.4.3]: https://github.com/cybozu-go/sabakan/compare/v2.4.2...v2.4.3
 [2.4.2]: https://github.com/cybozu-go/sabakan/compare/v2.4.1...v2.4.2
 [2.4.1]: https://github.com/cybozu-go/sabakan/compare/v2.4.0...v2.4.1
