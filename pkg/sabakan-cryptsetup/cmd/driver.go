@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -21,13 +22,14 @@ type Driver struct {
 	disks   []Disk
 	cipher  string
 	keySize int
+	tpmdev  string
 }
 
 // NewDriver creates Driver.
 //
 // It may return nil when the serial code of the machine cannot be identified,
 // or sabakanURL is not valid.
-func NewDriver(sabakanURL, cipher string, keySize int, disks []Disk) (*Driver, error) {
+func NewDriver(sabakanURL, cipher string, keySize int, tpmdev string, disks []Disk) (*Driver, error) {
 	hc := &http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
@@ -57,23 +59,77 @@ func NewDriver(sabakanURL, cipher string, keySize int, disks []Disk) (*Driver, e
 		disks:   disks,
 		cipher:  cipher,
 		keySize: keySize,
+		tpmdev:  tpmdev,
 	}, nil
 }
 
 // Setup setup crypt devices.
 func (d *Driver) Setup(ctx context.Context) error {
-	for _, disk := range d.disks {
-		err := d.setupDisk(ctx, disk)
+	var kek []byte
+
+	_, err := os.Stat(d.tpmdev)
+	switch {
+	case err != nil && !os.IsNotExist(err):
+		return err
+	case os.IsNotExist(err):
+		log.Info("no TPM is found. disk encryption proceeds without TPM", map[string]interface{}{
+			"device":    d.tpmdev,
+			log.FnError: err,
+		})
+	default:
+		log.Info("TPM is found. disk encryption proceeds with TPM", map[string]interface{}{
+			"device": d.tpmdev,
+		})
+
+		t, err := newTPMDriver(d.tpmdev)
 		if err != nil {
 			return err
 		}
+		defer t.device.Close()
+
+		err = t.checkTPMVersion20()
+		if err != nil {
+			log.Warn("device is not TPM 2.0. disk encryption proceeds without TPM", map[string]interface{}{
+				"device":    d.tpmdev,
+				log.FnError: err,
+			})
+			t.device.Close()
+			break
+		}
+
+		kek, err = t.readKEKFromTPM()
+		if err != nil {
+			log.Info("no TPM key encryption key was found", map[string]interface{}{
+				log.FnError: err,
+			})
+			err := t.allocateNVRAM()
+			if err != nil {
+				return err
+			}
+			kek, err = t.readKEKFromTPM()
+			if err != nil {
+				panic(err)
+			}
+			t.device.Close()
+		}
+	}
+
+	for _, disk := range d.disks {
+		err := d.setupDisk(ctx, disk, kek)
+		if err != nil {
+			return err
+		}
+		log.Info("encrypted disk is ready", map[string]interface{}{
+			"path": filepath.Join("/dev/mapper", disk.CryptName()),
+		})
 	}
 	return nil
 }
 
-func (d *Driver) setupDisk(ctx context.Context, disk Disk) error {
+func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKek []byte) error {
 	log.Info("setting up full disk encryption", map[string]interface{}{
-		"disk": disk.Name(),
+		"disk":           disk.Name(),
+		"tpm_kek_length": len(tpmKek),
 	})
 	f, err := os.OpenFile(disk.Device(), os.O_RDWR, 0660)
 	if err != nil {
@@ -83,10 +139,10 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk) error {
 
 	md, err := ReadMetadata(f)
 	if err == ErrNotFound {
-		log.Info("disk is not formatted", map[string]interface{}{
+		log.Info("disk is not formatted. format disk", map[string]interface{}{
 			"disk": disk.Name(),
 		})
-		return d.formatDisk(ctx, disk, f)
+		return d.formatDisk(ctx, disk, f, tpmKek)
 	}
 	if err != nil {
 		return err
@@ -94,21 +150,21 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk) error {
 
 	ek, err := d.sabakan.CryptsGet(ctx, d.serial, md.HexID())
 	if err == nil {
-		log.Info("encryption key is found", map[string]interface{}{
+		log.Info("encryption key is found. run cryptsetup", map[string]interface{}{
 			"disk": disk.Name(),
 		})
-		return Cryptsetup(disk, md, ek)
+		return Cryptsetup(disk, md, ek, tpmKek)
 	}
 	if sabakan.IsNotFound(err) {
-		log.Info("encryption key is not found in sabakan", map[string]interface{}{
+		log.Info("encryption key is not found in sabakan. format disk", map[string]interface{}{
 			"disk": disk.Name(),
 		})
-		return d.formatDisk(ctx, disk, f)
+		return d.formatDisk(ctx, disk, f, tpmKek)
 	}
 	return err
 }
 
-func (d *Driver) formatDisk(ctx context.Context, disk Disk, f *os.File) error {
+func (d *Driver) formatDisk(ctx context.Context, disk Disk, f *os.File, tpmKek []byte) error {
 	md, err := NewMetadata(d.cipher, d.keySize)
 	if err != nil {
 		return err
@@ -120,12 +176,12 @@ func (d *Driver) formatDisk(ctx context.Context, disk Disk, f *os.File) error {
 		return err
 	}
 
-	ek, err := md.EncryptKey(key)
+	ek, err := md.EncryptKey(key, tpmKek)
 	if err != nil {
 		return err
 	}
 
-	err = Cryptsetup(disk, md, ek)
+	err = Cryptsetup(disk, md, ek, tpmKek)
 	if err != nil {
 		return err
 	}

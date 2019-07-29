@@ -68,7 +68,7 @@ smbios:
   serial: 00000003
 ---
 kind: Node
-name: worker
+name: worker1
 interfaces:
 - ext-net
 volumes:
@@ -80,3 +80,16 @@ memory: 3G
 smbios:
   serial: 00000004
 ---
+kind: Node
+name: worker2
+interfaces:
+- ext-net
+volumes:
+- kind: raw
+  name: data
+  size: 10G
+cpu: 1
+memory: 3G
+smbios:
+  serial: 00000005
+tpm: true

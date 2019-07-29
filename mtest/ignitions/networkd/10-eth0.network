@@ -2,6 +2,6 @@
 Name=eth0
 
 [Network]
-Address=@WORKER@/24
+Address={{ index .Spec.IPv4 0 }}/{{ (index .Info.Network.IPv4 0).MaskBits }}
 Gateway=@BRIDGE_ADDRESS@
 DNS=8.8.8.8

@@ -128,19 +128,23 @@ func (m *Metadata) Kek() string {
 }
 
 // DecryptKey decrypts encrypted key.
-func (m *Metadata) DecryptKey(ek []byte) ([]byte, error) {
+func (m *Metadata) DecryptKey(ek, tpmKek []byte) ([]byte, error) {
 	if len(ek) != len(m.kek) {
 		return nil, fmt.Errorf("key length mismatch: expected=%d, actual=%d", len(m.kek), len(ek))
 	}
 
 	key := make([]byte, len(ek))
 	for i := range ek {
-		key[i] = m.kek[i] ^ ek[i]
+		if len(tpmKek) != 0 {
+			key[i] = m.kek[i] ^ ek[i] ^ tpmKek[i]
+		} else {
+			key[i] = m.kek[i] ^ ek[i]
+		}
 	}
 	return key, nil
 }
 
 // EncryptKey encrypts key.
-func (m *Metadata) EncryptKey(key []byte) ([]byte, error) {
-	return m.DecryptKey(key)
+func (m *Metadata) EncryptKey(key, tpmKek []byte) ([]byte, error) {
+	return m.DecryptKey(key, tpmKek)
 }

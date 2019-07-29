@@ -14,5 +14,8 @@ HostName 10.0.0.102
 Host host3
 HostName 10.0.0.103
 
-Host worker
+Host worker1
 HostName 10.0.0.104
+
+Host worker2
+HostName 10.0.0.105

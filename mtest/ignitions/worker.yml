@@ -4,5 +4,7 @@ files:
 networkd:
   - 10-eth0.network
 systemd:
-  - name: foo.service
+  - name: tcsd.service
+    mask: true
+  - name: sabakan-cryptsetup.service
     enabled: true

@@ -6,6 +6,22 @@
       "product": "vm"
     },
     "rack": 0,
+    "index-in-rack": 104,
+    "role": "worker",
+    "bmc": {
+      "ipv4": "",
+      "ipv6": "",
+      "type": "IPMI-2.0"
+    }
+  },
+  {
+    "serial": "00000005",
+    "labels": {
+      "datacenter": "dc1",
+      "product": "vm"
+    },
+    "rack": 0,
+    "index-in-rack": 105,
     "role": "worker",
     "bmc": {
       "ipv4": "",
