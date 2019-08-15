@@ -21,8 +21,8 @@ import (
 	"github.com/cybozu-go/sabakan/v2/models/etcd"
 	"github.com/cybozu-go/sabakan/v2/web"
 	"github.com/cybozu-go/well"
-	"github.com/ghodss/yaml"
 	"go.universe.tf/netboot/dhcp4"
+	"sigs.k8s.io/yaml"
 )
 
 const (
