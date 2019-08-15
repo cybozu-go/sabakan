@@ -12,7 +12,6 @@ require (
 	github.com/cybozu-go/log v1.5.0
 	github.com/cybozu-go/netutil v1.2.0
 	github.com/cybozu-go/well v1.8.1
-	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20181024230925-c65c006176ff // indirect
 	github.com/google/go-cmp v0.2.0
@@ -45,4 +44,5 @@ require (
 	golang.org/x/sys v0.0.0-20190419153524-e8e3143a4f4a // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/genproto v0.0.0-20181127195345-31ac5d88444a // indirect
+	sigs.k8s.io/yaml v1.1.0
 )
