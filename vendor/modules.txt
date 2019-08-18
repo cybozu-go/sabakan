@@ -1,4 +1,4 @@
-# github.com/99designs/gqlgen v0.8.3
+# github.com/99designs/gqlgen v0.9.3
 github.com/99designs/gqlgen/graphql
 github.com/99designs/gqlgen/graphql/introspection
 github.com/99designs/gqlgen/handler

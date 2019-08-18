@@ -41,7 +41,7 @@ func TestMatchMachine(t *testing.T) {
 				Status: sabakan.MachineStatus{},
 			},
 			having: &MachineParams{
-				Labels: []LabelInput{{"foo", "bar"}},
+				Labels: []*LabelInput{{"foo", "bar"}},
 			},
 			notHaving: &MachineParams{},
 			now:       now,
@@ -58,7 +58,7 @@ func TestMatchMachine(t *testing.T) {
 				Status: sabakan.MachineStatus{},
 			},
 			having: &MachineParams{
-				Labels: []LabelInput{{"foo", "bar"}},
+				Labels: []*LabelInput{{"foo", "bar"}},
 			},
 			notHaving: &MachineParams{},
 			now:       now,
@@ -76,7 +76,7 @@ func TestMatchMachine(t *testing.T) {
 				Status: sabakan.MachineStatus{},
 			},
 			having: &MachineParams{
-				Labels: []LabelInput{{"foo", "bar"}},
+				Labels: []*LabelInput{{"foo", "bar"}},
 			},
 			notHaving: &MachineParams{},
 			now:       now,
@@ -94,10 +94,10 @@ func TestMatchMachine(t *testing.T) {
 				Status: sabakan.MachineStatus{},
 			},
 			having: &MachineParams{
-				Labels: []LabelInput{{"foo", "bar"}},
+				Labels: []*LabelInput{{"foo", "bar"}},
 			},
 			notHaving: &MachineParams{
-				Labels: []LabelInput{{"foo3", "bar3"}},
+				Labels: []*LabelInput{{"foo3", "bar3"}},
 			},
 			now:    now,
 			expect: true,
@@ -114,10 +114,10 @@ func TestMatchMachine(t *testing.T) {
 				Status: sabakan.MachineStatus{},
 			},
 			having: &MachineParams{
-				Labels: []LabelInput{{"foo", "bar"}},
+				Labels: []*LabelInput{{"foo", "bar"}},
 			},
 			notHaving: &MachineParams{
-				Labels: []LabelInput{{"foo2", "bar2"}},
+				Labels: []*LabelInput{{"foo2", "bar2"}},
 			},
 			now:    now,
 			expect: false,

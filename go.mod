@@ -1,7 +1,7 @@
 module github.com/cybozu-go/sabakan/v2
 
 require (
-	github.com/99designs/gqlgen v0.8.3
+	github.com/99designs/gqlgen v0.9.3
 	github.com/agnivade/levenshtein v1.0.2 // indirect
 	github.com/ajeddeloh/go-json v0.0.0-20170920214419-6a2fe990e083 // indirect
 	github.com/coreos/bbolt v1.3.1-coreos.6 // indirect
@@ -40,7 +40,6 @@ require (
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
 	golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480
 	golang.org/x/net v0.0.0-20190420063019-afa5a82059c6 // indirect
-	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
 	golang.org/x/sys v0.0.0-20190419153524-e8e3143a4f4a // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/genproto v0.0.0-20181127195345-31ac5d88444a // indirect
