@@ -12,7 +12,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gorilla/websocket"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/vektah/gqlparser"
 	"github.com/vektah/gqlparser/ast"
 	"github.com/vektah/gqlparser/gqlerror"
@@ -94,7 +94,16 @@ func (c *wsConnection) init() bool {
 			}
 		}
 
+		if c.cfg.websocketInitFunc != nil {
+			if err := c.cfg.websocketInitFunc(c.ctx, c.initPayload); err != nil {
+				c.sendConnectionError(err.Error())
+				c.close(websocket.CloseNormalClosure, "terminated")
+				return false
+			}
+		}
+
 		c.write(&operationMessage{Type: connectionAckMsg})
+		c.write(&operationMessage{Type: connectionKeepAliveMsg})
 	case connectionTerminateMsg:
 		c.close(websocket.CloseNormalClosure, "terminated")
 		return false
@@ -271,9 +280,9 @@ func (c *wsConnection) sendData(id string, response *graphql.Response) {
 }
 
 func (c *wsConnection) sendError(id string, errors ...*gqlerror.Error) {
-	var errs []error
-	for _, err := range errors {
-		errs = append(errs, err)
+	errs := make([]error, len(errors))
+	for i, err := range errors {
+		errs[i] = err
 	}
 	b, err := json.Marshal(errs)
 	if err != nil {
