@@ -14,14 +14,14 @@ import (
 const manufacturer = 0x105
 
 const (
-	tpmKekLength = 64
+	tpmKekLength = 256
 	tpmOffsetHex = 0x01000000
 )
 
 var tpmOffset = tpmutil.Handle(tpmOffsetHex)
 
 type tpmDriver struct {
-	device io.ReadWriteCloser
+	io.ReadWriteCloser
 }
 
 func newTPMDriver(device string) (*tpmDriver, error) {
@@ -30,15 +30,13 @@ func newTPMDriver(device string) (*tpmDriver, error) {
 		return nil, err
 	}
 
-	return &tpmDriver{
-		device: rw,
-	}, nil
+	return &tpmDriver{rw}, nil
 }
 
 func (t *tpmDriver) checkTPMVersion20() error {
 	// Make sure this is a TPM 2.0
 	// https://github.com/google/go-tpm/blob/30f8389f7afbbd553e969bf7c59c54e0a83a3373/tpm2/open_other.go#L35-L40
-	caps, _, err := tpm2.GetCapability(t.device, tpm2.CapabilityTPMProperties, 1, uint32(manufacturer))
+	caps, _, err := tpm2.GetCapability(t, tpm2.CapabilityTPMProperties, 1, uint32(manufacturer))
 	if err != nil {
 		return err
 	}
@@ -53,7 +51,7 @@ func (t *tpmDriver) checkTPMVersion20() error {
 }
 
 func (t *tpmDriver) readKEKFromTPM() ([]byte, error) {
-	return tpm2.NVReadEx(t.device, tpmOffset, tpm2.HandleOwner, "", 0)
+	return tpm2.NVReadEx(t, tpmOffset, tpm2.HandleOwner, "", 0)
 }
 
 func (t *tpmDriver) allocateNVRAM() error {
@@ -83,7 +81,7 @@ func (t *tpmDriver) allocateNVRAM() error {
 func (t *tpmDriver) defineNVSpace() error {
 	attr := tpm2.AttrOwnerWrite | tpm2.AttrOwnerRead
 	err := tpm2.NVDefineSpace(
-		t.device,
+		t,
 		tpm2.HandleOwner,
 		tpmOffset,
 		"",
@@ -109,9 +107,44 @@ func (t *tpmDriver) defineNVSpace() error {
 		return err
 	}
 
-	return tpm2.NVWrite(t.device, tpm2.HandleOwner, tpmOffset, "", kek, 0)
+	return tpm2.NVWrite(t, tpm2.HandleOwner, tpmOffset, "", kek, 0)
 }
 
 func (t *tpmDriver) undefineNVSpace() error {
-	return tpm2.NVUndefineSpace(t.device, "", tpm2.HandleOwner, tpmOffset)
+	return tpm2.NVUndefineSpace(t, "", tpm2.HandleOwner, tpmOffset)
+}
+
+func readKeyFromTPM(device string) ([]byte, TpmVersionID, error) {
+	t, err := newTPMDriver(device)
+	if err != nil {
+		return nil, TpmNone, err
+	}
+	defer t.Close()
+
+	err = t.checkTPMVersion20()
+	if err != nil {
+		log.Warn("device is not TPM 2.0. disk encryption proceeds without TPM", map[string]interface{}{
+			"device":    device,
+			log.FnError: err,
+		})
+		return nil, TpmNone, nil
+	}
+
+	kek, err := t.readKEKFromTPM()
+	if err == nil {
+		return kek, Tpm20, nil
+	}
+
+	log.Info("TPM key encryption key was not found", map[string]interface{}{
+		log.FnError: err,
+	})
+	err = t.allocateNVRAM()
+	if err != nil {
+		return nil, TpmNone, err
+	}
+	kek, err = t.readKEKFromTPM()
+	if err != nil {
+		panic(err)
+	}
+	return kek, Tpm20, nil
 }
