@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.4.5] - 2019-08-19
+
+### Changed
+- Update etcd to 3.3.14 and etcdutil to 1.3.2 (#168).
+- sabakan-cryptsetup: reformat when TPM is enabled (#169).
+
 ## [2.4.4] - 2019-07-29
 
 ### Added
@@ -128,7 +134,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.4.4...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.4.5...HEAD
+[2.4.5]: https://github.com/cybozu-go/sabakan/compare/v2.4.4...v2.4.5
 [2.4.4]: https://github.com/cybozu-go/sabakan/compare/v2.4.3...v2.4.4
 [2.4.3]: https://github.com/cybozu-go/sabakan/compare/v2.4.2...v2.4.3
 [2.4.2]: https://github.com/cybozu-go/sabakan/compare/v2.4.1...v2.4.2
