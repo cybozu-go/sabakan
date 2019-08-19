@@ -25,7 +25,7 @@ func TestMetadata(t *testing.T) {
 		t.Error("metadata should not be found")
 	}
 
-	md, err := NewMetadata("aes-xts-plain64", 64)
+	md, err := NewMetadata("aes-xts-plain64", 64, Tpm20)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,6 +41,9 @@ func TestMetadata(t *testing.T) {
 		t.Error(`len(m.Kek()) != 64`, len(md.Kek()))
 	} else {
 		t.Log(hex.EncodeToString([]byte(md.Kek())))
+	}
+	if md.TpmVersion() != Tpm20 {
+		t.Error(`md.TpmVersion() != Tpm20`, md.TpmVersion().String())
 	}
 
 	err = md.Write(f)

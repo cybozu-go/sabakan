@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -23,6 +24,9 @@ type Driver struct {
 	cipher  string
 	keySize int
 	tpmdev  string
+
+	// status variables
+	tpmVersion TpmVersionID
 }
 
 // NewDriver creates Driver.
@@ -60,6 +64,8 @@ func NewDriver(sabakanURL, cipher string, keySize int, tpmdev string, disks []Di
 		cipher:  cipher,
 		keySize: keySize,
 		tpmdev:  tpmdev,
+
+		tpmVersion: TpmNone,
 	}, nil
 }
 
@@ -69,49 +75,21 @@ func (d *Driver) Setup(ctx context.Context) error {
 
 	_, err := os.Stat(d.tpmdev)
 	switch {
-	case err != nil && !os.IsNotExist(err):
-		return err
+	case err == nil:
+		log.Info("TPM is found. disk encryption proceeds with TPM", map[string]interface{}{
+			"device": d.tpmdev,
+		})
+		kek, d.tpmVersion, err = readKeyFromTPM(d.tpmdev)
+		if err != nil {
+			return err
+		}
 	case os.IsNotExist(err):
 		log.Info("no TPM is found. disk encryption proceeds without TPM", map[string]interface{}{
 			"device":    d.tpmdev,
 			log.FnError: err,
 		})
 	default:
-		log.Info("TPM is found. disk encryption proceeds with TPM", map[string]interface{}{
-			"device": d.tpmdev,
-		})
-
-		t, err := newTPMDriver(d.tpmdev)
-		if err != nil {
-			return err
-		}
-		defer t.device.Close()
-
-		err = t.checkTPMVersion20()
-		if err != nil {
-			log.Warn("device is not TPM 2.0. disk encryption proceeds without TPM", map[string]interface{}{
-				"device":    d.tpmdev,
-				log.FnError: err,
-			})
-			t.device.Close()
-			break
-		}
-
-		kek, err = t.readKEKFromTPM()
-		if err != nil {
-			log.Info("no TPM key encryption key was found", map[string]interface{}{
-				log.FnError: err,
-			})
-			err := t.allocateNVRAM()
-			if err != nil {
-				return err
-			}
-			kek, err = t.readKEKFromTPM()
-			if err != nil {
-				panic(err)
-			}
-			t.device.Close()
-		}
+		return err
 	}
 
 	for _, disk := range d.disks {
@@ -147,6 +125,19 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKek []byte) error 
 	if err != nil {
 		return err
 	}
+	if md.tpmVersion != d.tpmVersion {
+		if d.tpmVersion == 0 {
+			log.Error("TPM becomes unavailable", map[string]interface{}{
+				"tpmversion": md.tpmVersion.String(),
+			})
+			return errors.New("TPM unavailable")
+		}
+		log.Info("reformat disk because TPM is now available", map[string]interface{}{
+			"disk":       disk.Name(),
+			"tpmversion": d.tpmVersion.String(),
+		})
+		return d.formatDisk(ctx, disk, f, tpmKek)
+	}
 
 	ek, err := d.sabakan.CryptsGet(ctx, d.serial, md.HexID())
 	if err == nil {
@@ -165,7 +156,7 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKek []byte) error 
 }
 
 func (d *Driver) formatDisk(ctx context.Context, disk Disk, f *os.File, tpmKek []byte) error {
-	md, err := NewMetadata(d.cipher, d.keySize)
+	md, err := NewMetadata(d.cipher, d.keySize, d.tpmVersion)
 	if err != nil {
 		return err
 	}
