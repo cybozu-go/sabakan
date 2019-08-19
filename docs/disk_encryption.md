@@ -1,75 +1,81 @@
 Disk encryption
 ===============
 
-In order to mount encrypted disk, Sabakan provides `sabakan-cryptsetup` as follows.
+This document describes how a physical block device is encrypted
+with [`sabakan-cryptsetup`](./sabakan-cryptsetup.md).
 
-* Sabakan keeps an `encryption key` for each disk which is specified by `sabakan-cryptsetup` argument.
+## Steps to encrypt a block device
 
-    Each node generates a pair of `64 byte` random keys. One is for [cryptsetup][], and another is to encrypt
-    the other by [one-time pad][]. The node keeps this latter key in the first sector of the metadata partition.
+1. `sabakan-cryptsetup` tries to detect [TPM][] 2.0.
+    If TPM 2.0 is available, it generates a random key and stores it into TPM.
+    The length of the key is the same as `--keysize` given for `sabakan-cryptsetup`.
+2. `sabakan-cryptsetup` reads meta data from the head of the block device.
+3. If meta data is _not_ found:
+   1. Generate two random keys of the specified length.
+   2. Call [`cryptsetup`][cryptsetup] to setup an encrypted block device using the calculated key.
+   3. Format the disk using one of the two keys as described in the next section.
+   4. Store the other key in sabakan.
+   5. Done.
+4. If meta data _is_ found:
+   1. If meta data indicates that it is formatted w/o TPM:
+      1. If TPM 2.0 becomes available now, goto 3.
+      2. If TPM 2.0 remains unavailable, goto 5.
+5. Read key ID from the meta data to retrieve key-encryption-key from sabakan.
+6. Calculate the disk encryption key with the retrieved key and key stored in meta data, and optionally in TPM.
+7. Use the encryption key to call `cryptsetup`.
+8. Done.
 
-    The `encryption key` is stored `sabakan`. Hence, the node cannot decrypt its own storage data without `sabakan`, and vice versa.
+## Disk encryption keys
 
-    `sabakan-cryptsetup` requests `/api/v1/crypts` to manage keys. See details [API](api.md).
+`sabakan-cryptsetup` uses bitwise-XOR to calculate the disk encryption key from divided keys.
+This is called [one-time pad][].
 
-    If the server supports [TPM][] 2.0, Another `encryption key` is stored in `/dev/tpm0` for more secure disk encryption.
+When TPM 2.0 is available, the keys are divided into three.
+When not, the keys are divided into two.
 
-* How to calculate the `encryption key` for [cryptsetup][].
+Two keys are generated for a block device.  A key in TPM is shared among all block devices.
+One of the two keys is stored in the meta data in the block device.
+Another key is stored in sabakan using its REST API.
 
-    If the server does not support TPM 2.0:
+## Disk layout
 
-    `encryption key` in `sabakan` ^ `encryption key` in the disk
+Disks encrypted with `sabakan-cryptsetup` have 2 MiB of meta data at the beginning.
+The meta data itself is not encrypted.  The format of meta data is as follows:
 
-    If the server supports TPM 2.0:
+| Offset | Length (bytes) | Value                     |
+| ------ | -------------: | ------------------------- |
+| 0x0000 |             20 | "\x80sabakan-cryptsetup3" |
+| 0x0014 |              1 | Key size (bytes)          |
+| 0x0015 |              1 | TPM version ID            |
+| 0x0016 |              1 | Length of cipher name     |
+| 0x0017 |            105 | cipher name               |
+| 0x0080 |             16 | Random ID                 |
+| 0x0090 |           vary | Key encryption key        |
 
-    `encryption key` in `sabakan` ^ `encryption key` in the disk ^ `encryption key` in the TPM
+* The maximum length of cipher name is 105.
+* Unused areas are filled with `0x88`.
+* The size of key encryption key (KEK) is the same as the key size at 0x0014.
 
-* Operators need to setup RAID, format filesystem, and mount disk after decrypt disks.
+### TPM version IDs
 
-    Operators needs to prepare own scripts or systemd units to mount disks.
+|   ID | Version             |
+| ---: | ------------------- |
+|    0 | Not exist           |
+|    1 | 1.2 (not supported) |
+|    2 | 2.0                 |
 
-## Crypt specs
+### Conversion from old layouts
 
-`sabakan-cryptsetup` uses [cryptsetup][] in plain mode, therefore, it is mostly raw dm-crypt.
+If the meta data has `\x80sabakan-cryptsetup2` in its first 20 bytes, the meta data
+will be automatically converted to the current disk layout without TPM information.
 
-| Parameter    | Value                          |
-| ------------ | ------------------------------ |
-| Cipher       | AES                            |
-| Chain Mode   | XTS                            |
-| IV generator | plain64                        |
-| Key bits     | 512 (256 for AES, 256 for XTS) |
-
-`sabakan-cryptsetup` writes/reads from the disk as metadata. Space for metadata keeps `2 MiB` by `--offset` option of the `cryptsetup`.
-
-| Name           | Size(byte) | Description                                                                                                                             |
-| -------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `magic`        | 8          | A magic number to detect if disk is encrypted by `sabakan-crypsetup`.                                                                   |
-| `one-time pad` | 64         | An one-time pad as a pair of XOR. It is generated by `crypto/rand` of Go.                                                               |
-| `ID`           | 16         | An unique identifier like an UUID to detect if `encryption key` is registered on the `sabakan`. It is generated by `crypto/rand` of Go. |
+## TPM 2.0
 
 `sabakan-cryptsetup` writes/reads from the `/dev/tpm0` if the server supports [TPM] 2.0.
 
-| Name           | Offset       | Size(byte) | Description                                                               |
-| -------------- | ------------ | ---------- | ------------------------------------------------------------------------- |
-| `one-time pad` | `0x01000000` | 64         | An one-time pad as a pair of XOR. It is generated by `crypto/rand` of Go. |
-
-## Procedure of the disk encryption and decryption
-
-1. `sabakan-cryptsetup` detect storage devices on the `/dev/disk/by-path` using a glob which is specified as an argument.
-2. Read `one-time pad` and `ID`, and send HTTP request to `sabakan` whether an `encryption key` and `ID` of its disk are registered, and read another `one-time pad` from `/dev/tpm0` if exists. If not, `sabakan-cryptsetup` re-encrypts the disk.
-    1. Generate `one-time pad`, a pair of `key` and `ID`.
-    2. Write `magic`, `one-time pad` and `ID` to metadata partition.
-    3. If TPM 2.0 supported `/dev/tpm0` exists, write `one-time pad` to the TPM device.
-    4. Register XOR value between `one-time pad` as an `encryption key` to `sabakan` with `ID`.
-3. Execute `cryptsetup` to create `/dev/mapper/crypt-BYPATH` of each disk as decryption. `BYPATH` is the name of the device, shown in `/dev/disk/by-path`.
-4. Setup md device and/or initialize filesystem.
-5. Mount filesystem.
-6. Ready for apps!
-
-To deploy above procedure for nodes, Operator needs to prepare systemd unit files by Ignition. For example,
-
-- `sabakan-cryptsetup.service` ... An oneshot service executes `sabakan-cryptsetup` to create a device mapper.
-- `setup-disk.service` ... Create a filesystem, then mount a device mapper.
+| Name | Offset       | Size(byte) | Description                                           |
+| ---- | ------------ | ---------- | ----------------------------------------------------- |
+| Key  | `0x01000000` | vary       | A random key. It is generated by `crypto/rand` of Go. |
 
 [dm-crypt]: https://gitlab.com/cryptsetup/cryptsetup/wikis/DMCrypt
 [one-time pad]: https://en.wikipedia.org/wiki/One-time_pad

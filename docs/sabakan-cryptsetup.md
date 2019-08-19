@@ -10,7 +10,11 @@ At the next boot, `sabakan-cryptsetup` will download the encrypted disk encrypti
 from sabakan, decrypt it, and setup encrypted disks automatically.
 
 If the server supports [TPM] 2.0, `sabakan-cryptsetup` uses `/dev/tpm0`
-as a key for generating disk encryption key.
+to store divided disk encryption key.
+
+If `sabakan-cryptsetup` finds that the disk has been encrypted without TPM information
+while the server supports TPM 2.0, it reformats the disk.
+When you start using a server, you should enable the TPM of that server at the very beginning.
 
 Usage
 -----
@@ -34,7 +38,7 @@ $ sabakan-cryptsetup [flags]
 Target disks
 ------------
 
-`sabakan-cryptsetup` scans `/sys/block` directory and encrypt all disks excluding:
+`sabakan-cryptsetup` scans `/sys/block` directory and encrypts all disks excluding:
 
 * Virtual devices (devices not having `/sys/block/*/device`)
 * Removable devices (devices whose `/sys/block/*/removable` are not `0`)
@@ -51,24 +55,5 @@ Crypt device name
 -----------------
 
 For each `/sys/block/<NAME>` device, a dm-crypt device is created as `/dev/mapper/crypt-<NAME>`.
-
-Disk layout
------------
-
-Disks encrypted with `sabakan-cryptsetup` have 2 MiB of meta data at the beginning.
-The meta data itself is not encrypted.  The format of meta data is as follows:
-
-| Offset | Length (bytes) | Value                     |
-| ------ | -------------: | ------------------------- |
-| 0x0000 |             20 | "\x80sabakan-cryptsetup2" |
-| 0x0014 |              1 | Key size (bytes)          |
-| 0x0015 |              1 | Length of cipher name     |
-| 0x0016 |            106 | cipher name               |
-| 0x0080 |             16 | Random ID                 |
-| 0x0090 |           vary | Key encryption key        |
-
-* The maximum length of cipher name is 106.
-* Unused areas are filled with `0x88`.
-* The size of key encryption key (KEK) is the same as the key size at 0x0014.
 
 [TPM]: https://en.wikipedia.org/wiki/Trusted_Computing
