@@ -4,10 +4,10 @@ require (
 	github.com/99designs/gqlgen v0.9.3
 	github.com/agnivade/levenshtein v1.0.2 // indirect
 	github.com/ajeddeloh/go-json v0.0.0-20170920214419-6a2fe990e083 // indirect
-	github.com/coreos/etcd v0.0.0-20190816232144-5cf5d88a18ae
+	github.com/coreos/etcd v3.3.15+incompatible
 	github.com/coreos/go-systemd v0.0.0-20181031085051-9002847aa142 // indirect
 	github.com/coreos/ignition v0.30.0
-	github.com/cybozu-go/etcdutil v1.3.2
+	github.com/cybozu-go/etcdutil v1.3.3
 	github.com/cybozu-go/log v1.5.0
 	github.com/cybozu-go/netutil v1.2.0
 	github.com/cybozu-go/well v1.8.1
@@ -17,6 +17,7 @@ require (
 	github.com/google/subcommands v0.0.0-20181012225330-46f0354f6315
 	github.com/hashicorp/go-version v1.0.0
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
