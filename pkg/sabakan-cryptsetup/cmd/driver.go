@@ -16,6 +16,8 @@ import (
 	sabakan "github.com/cybozu-go/sabakan/v2/client"
 )
 
+const maxRetry = 10
+
 // Driver setup crypt devices.
 type Driver struct {
 	serial  string
@@ -139,6 +141,8 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKek []byte) error 
 		return d.formatDisk(ctx, disk, f, tpmKek)
 	}
 
+	var retries int
+RETRY:
 	ek, err := d.sabakan.CryptsGet(ctx, d.serial, md.HexID())
 	if err == nil {
 		log.Info("encryption key is found. run cryptsetup", map[string]interface{}{
@@ -152,7 +156,18 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKek []byte) error 
 		})
 		return d.formatDisk(ctx, disk, f, tpmKek)
 	}
-	return err
+
+	log.Error("failed to retrieve key from sabakan", map[string]interface{}{
+		log.FnError: err,
+		"disk":      disk.Name(),
+		"try":       retries + 1,
+	})
+	if retries == maxRetry {
+		return err
+	}
+	retries++
+	time.Sleep(time.Duration(retries) * time.Second * 2)
+	goto RETRY
 }
 
 func (d *Driver) formatDisk(ctx context.Context, disk Disk, f *os.File, tpmKek []byte) error {
@@ -183,5 +198,21 @@ func (d *Driver) formatDisk(ctx context.Context, disk Disk, f *os.File, tpmKek [
 		return err
 	}
 
-	return d.sabakan.CryptsPut(ctx, d.serial, md.HexID(), ek)
+	var retries int
+RETRY:
+	err = d.sabakan.CryptsPut(ctx, d.serial, md.HexID(), ek)
+	if err == nil {
+		return nil
+	}
+	log.Error("failed to send key to sabakan", map[string]interface{}{
+		log.FnError: err,
+		"disk":      disk.Name(),
+		"try":       retries + 1,
+	})
+	if retries == maxRetry {
+		return err
+	}
+	retries++
+	time.Sleep(time.Duration(retries) * time.Second * 2)
+	goto RETRY
 }
