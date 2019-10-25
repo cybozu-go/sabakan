@@ -29,7 +29,7 @@ volumes:
     name: ignitions
     folder: ignitions
 smbios:
-  serial: 00000001
+  serial: "00000001"
 ---
 kind: Node
 name: host2
@@ -47,7 +47,7 @@ volumes:
     name: ignitions
     folder: ignitions
 smbios:
-  serial: 00000002
+  serial: "00000002"
 ---
 kind: Node
 name: host3
@@ -65,7 +65,7 @@ volumes:
     name: ignitions
     folder: ignitions
 smbios:
-  serial: 00000003
+  serial: "00000003"
 ---
 kind: Node
 name: worker1
@@ -78,7 +78,7 @@ volumes:
 cpu: 1
 memory: 3G
 smbios:
-  serial: 00000004
+  serial: "00000004"
 ---
 kind: Node
 name: worker2
@@ -91,5 +91,5 @@ volumes:
 cpu: 1
 memory: 3G
 smbios:
-  serial: 00000005
+  serial: "00000005"
 tpm: true
