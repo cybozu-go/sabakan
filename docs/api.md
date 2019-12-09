@@ -12,7 +12,7 @@ For GraphQL API, see [graphql.md](graphql.md).
 * [DELETE /api/v1/machines](#deletemachines)
 * [PUT /api/v1/state/\<serial\>](#putstate)
 * [GET /api/v1/state/\<serial\>](#getstate)
-* [PUT /api/v1/labels/\<serial\>/\<label\>] (#putlabels)
+* [PUT /api/v1/labels/\<serial\>/\<label\>](#putlabels)
 * [DELETE /api/v1/labels/\<serial\>/\<label\>](#deletelabels)
 * [PUT /api/v1/retire-date/\<serial\>](#putretiredate)
 * [GET /api/v1/images/coreos](#getimageindex)
