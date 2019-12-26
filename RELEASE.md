@@ -51,7 +51,7 @@ Bump version
 
 1. Determine a new API/program version number.  Let it write `$VERSION` as `VERSION=x.y.z`.
 2. Checkout `master` branch.
-3. Make a branch to release, for example by `git neco dev "$VERSION"`
+3. Make a branch to release, for example by `git neco dev bump-$VERSION`
 4. Edit `CHANGELOG.md` for the new version ([example][]).
 5. Update `Version` constant in [version.go](./version.go).
 6. Commit the change and push it.
