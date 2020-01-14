@@ -31,18 +31,23 @@ Usage of sabakan:
         Log format [plain,logfmt,json]
   -loglevel string
         Log level [critical,error,warning,info,debug]
+  -metrics string
+        <Listen IP>:<Port number> (default "0.0.0.0:10081")
+  -metrics-interval string
 ```
 
-| Option              | Default value            | Description                                      |
-| ------------------- | ------------------------ | ------------------------------------------------ |
-| `advertise-url`     | ""                       | Public URL to access this server.  Required.     |
-| `allow-ips`         | `127.0.0.1,::1`          | Comma-separated IPs allowed to change resources. |
-| `config-file`       | ""                       | If given, configurations are read from the file. |
-| `data-dir`          | `/var/lib/sabakan`       | Directory to store files.                        |
-| `dhcp-bind`         | `0.0.0.0:10067`          | IP address and port number of DHCP server.       |
-| `enable-playground` | false                    | Enable GraphQL playground service.               |
-| `http`              | `0.0.0.0:10080`          | IP address and port number of HTTP server.       |
-| `ipxe-efi-path`     | `/usr/lib/ipxe/ipxe.efi` | Path to ipxe.efi .                               |
+| Option              | Default value            | Description                                        |
+| ------------------- | ------------------------ | -------------------------------------------------- |
+| `advertise-url`     | ""                       | Public URL to access this server.  Required.       |
+| `allow-ips`         | `127.0.0.1,::1`          | Comma-separated IPs allowed to change resources.   |
+| `config-file`       | ""                       | If given, configurations are read from the file.   |
+| `data-dir`          | `/var/lib/sabakan`       | Directory to store files.                          |
+| `dhcp-bind`         | `0.0.0.0:10067`          | IP address and port number of DHCP server.         |
+| `enable-playground` | false                    | Enable GraphQL playground service.                 |
+| `http`              | `0.0.0.0:10080`          | IP address and port number of HTTP server.         |
+| `ipxe-efi-path`     | `/usr/lib/ipxe/ipxe.efi` | Path to ipxe.efi .                                 |
+| `metrics`           | `0.0.0.0:10081`          | IP address and port number of metrics HTTP server. |
+| `metrics-interval`  | `30s`                    | Update interval of metrics.                        |
 
 Config file
 -----------
