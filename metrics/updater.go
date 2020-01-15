@@ -17,7 +17,6 @@ const (
 	namespace = "sabakan"
 )
 
-
 type logger struct{}
 
 func (l logger) Println(v ...interface{}) {
@@ -106,6 +105,9 @@ func (u *Updater) updateMachineStatus(ctx context.Context) error {
 		return err
 	}
 	for _, m := range machines {
+		if len(m.Spec.IPv4) == 0 {
+			return fmt.Errorf("unable to expose metrics, because machine have no IPv4 address; serial: %s", m.Spec.Serial)
+		}
 		for _, st := range sabakan.StateList {
 			labelValues := []string{st.String(), m.Spec.IPv4[0], m.Spec.Serial, fmt.Sprint(m.Spec.Rack), fmt.Sprint(m.Spec.IndexInRack)}
 			if st == m.Status.State {
