@@ -86,6 +86,8 @@ var (
 		StateRetiring:      {StateRetired},
 		StateRetired:       {StateUninitialized},
 	}
+
+	// StateList is the list of possible machine states
 	StateList = []MachineState{
 		StateUninitialized,
 		StateHealthy,

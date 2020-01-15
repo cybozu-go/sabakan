@@ -77,6 +77,29 @@ func (d *driver) assetGetIndex(ctx context.Context) ([]string, error) {
 	return ret, nil
 }
 
+func (d *driver) assetGetInfoAll(ctx context.Context) ([]*sabakan.Asset, error) {
+	var assets []*sabakan.Asset
+
+	resp, err := d.client.Get(ctx, KeyMachines, clientv3.WithPrefix(), clientv3.WithKeysOnly())
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, resp.Count)
+	for i, kv := range resp.Kvs {
+		ids[i] = string(kv.Key[len(KeyMachines):])
+	}
+
+	for _, id := range ids {
+		asset, err := d.assetGetInfo(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, asset)
+	}
+
+	return assets, nil
+}
+
 func (d *driver) assetGetInfoWithRev(ctx context.Context, name string) (*sabakan.Asset, int64, error) {
 	key := KeyAssets + name
 	resp, err := d.client.Get(ctx, key)
@@ -118,12 +141,18 @@ func (d *driver) assetPut(ctx context.Context, name, contentType string,
 		return nil, err
 	}
 
+	size, err := dir.Size(id)
+	if err != nil {
+		return nil, err
+	}
+
 	hsumString := hex.EncodeToString(hsum)
 	a := &sabakan.Asset{
 		Name:        name,
 		ID:          id,
 		ContentType: contentType,
 		Date:        time.Now().UTC(),
+		Size:        size,
 		Sha256:      hsumString,
 		Options:     options,
 		URLs:        []string{d.myURL("/api/v1/assets", name)},
@@ -231,6 +260,10 @@ func (d assetDriver) GetIndex(ctx context.Context) ([]string, error) {
 
 func (d assetDriver) GetInfo(ctx context.Context, name string) (*sabakan.Asset, error) {
 	return d.assetGetInfo(ctx, name)
+}
+
+func (d assetDriver) GetInfoAll(ctx context.Context) ([]*sabakan.Asset, error) {
+	return d.assetGetInfoAll(ctx)
 }
 
 func (d assetDriver) Put(ctx context.Context, name, contentType string,

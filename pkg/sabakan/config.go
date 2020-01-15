@@ -28,14 +28,14 @@ func newConfig() *config {
 }
 
 type config struct {
-	ListenHTTP    string           `json:"http"`
-	ListenMetrics string           `json:"metrics"`
-	DHCPBind      string           `json:"dhcp-bind"`
-	IPXEPath      string           `json:"ipxe-efi-path"`
-	DataDir       string           `json:"data-dir"`
-	AdvertiseURL  string           `json:"advertise-url"`
-	AllowIPs      []string         `json:"allow-ips"`
+	ListenHTTP      string           `json:"http"`
+	ListenMetrics   string           `json:"metrics"`
+	DHCPBind        string           `json:"dhcp-bind"`
+	IPXEPath        string           `json:"ipxe-efi-path"`
+	DataDir         string           `json:"data-dir"`
+	AdvertiseURL    string           `json:"advertise-url"`
+	AllowIPs        []string         `json:"allow-ips"`
 	MetricsInterval string           `json:"metrics-interval"`
-	Playground    bool             `json:"enable-playground"`
-	Etcd          *etcdutil.Config `json:"etcd"`
+	Playground      bool             `json:"enable-playground"`
+	Etcd            *etcdutil.Config `json:"etcd"`
 }

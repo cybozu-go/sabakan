@@ -42,6 +42,18 @@ func (d *assetDriver) GetIndex(ctx context.Context) ([]string, error) {
 	return ret, nil
 }
 
+func (d *assetDriver) GetInfoAll(ctx context.Context) ([]*sabakan.Asset, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	var assets []*sabakan.Asset
+	for _, a := range d.assets {
+		assets = append(assets, a)
+	}
+
+	return assets, nil
+}
+
 func (d *assetDriver) GetInfo(ctx context.Context, name string) (*sabakan.Asset, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()

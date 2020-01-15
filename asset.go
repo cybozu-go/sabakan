@@ -8,6 +8,7 @@ type Asset struct {
 	ID          int               `json:"id,string"`
 	ContentType string            `json:"content-type"`
 	Date        time.Time         `json:"date"`
+	Size        int64             `json:"size"`
 	Sha256      string            `json:"sha256"`
 	URLs        []string          `json:"urls"`
 	Exists      bool              `json:"exists"`

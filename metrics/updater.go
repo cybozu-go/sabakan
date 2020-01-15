@@ -52,6 +52,7 @@ func NewUpdater(interval time.Duration, model *sabakan.Model) *Updater {
 	return &Updater{interval, model}
 }
 
+// UpdateLoop is the func to update all metrics continuously
 func (u *Updater) UpdateLoop(ctx context.Context) error {
 	err := u.updateAllMetrics(ctx)
 	if err != nil {
@@ -79,6 +80,7 @@ func (u *Updater) updateAllMetrics(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 	tasks := map[string]func(ctx context.Context) error{
 		"updateMachineStatus": u.updateMachineStatus,
+		"updateAssetMetrics":  u.updateAssetMetrics,
 	}
 	for key, task := range tasks {
 		key, task := key, task
@@ -117,5 +119,21 @@ func (u *Updater) updateMachineStatus(ctx context.Context) error {
 			}
 		}
 	}
+	return nil
+}
+
+func (u *Updater) updateAssetMetrics(ctx context.Context) error {
+	assets, err := u.model.Asset.GetInfoAll(ctx)
+	if err != nil {
+		return err
+	}
+	var totalSize int64
+	for _, a := range assets {
+		totalSize += a.Size
+	}
+
+	AssetsBytesTotal.WithLabelValues().Set(float64(totalSize))
+	AssetsItemsTotal.WithLabelValues().Set(float64(len(assets)))
+
 	return nil
 }
