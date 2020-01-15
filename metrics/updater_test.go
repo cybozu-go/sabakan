@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -50,6 +49,7 @@ func testMachineStatus(t *testing.T) {
 			defer ctx.Done()
 
 			go updater.UpdateLoop(ctx)
+			time.Sleep(11 * time.Millisecond)
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", "/metrics", nil)
@@ -78,8 +78,6 @@ func testMachineStatus(t *testing.T) {
 }
 
 func testAssetMetrics(t *testing.T) {
-	fmt.Println("hoge1")
-
 	testCases := []gaugeTestCase{
 		{
 			name:  "get total size of assets",
@@ -102,6 +100,7 @@ func testAssetMetrics(t *testing.T) {
 			defer ctx.Done()
 
 			go updater.UpdateLoop(ctx)
+			time.Sleep(11 * time.Millisecond)
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", "/metrics", nil)

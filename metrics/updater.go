@@ -39,6 +39,8 @@ func GetHandler() http.Handler {
 
 func registerMetrics(registry *prometheus.Registry) {
 	registry.MustRegister(MachineStatus)
+	registry.MustRegister(AssetsBytesTotal)
+	registry.MustRegister(AssetsItemsTotal)
 }
 
 // Updater updates Prometheus metrics periodically
@@ -127,13 +129,17 @@ func (u *Updater) updateAssetMetrics(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	if len(assets) == 0 {
+		return nil
+	}
+
 	var totalSize int64
 	for _, a := range assets {
 		totalSize += a.Size
 	}
 
-	AssetsBytesTotal.WithLabelValues().Set(float64(totalSize))
-	AssetsItemsTotal.WithLabelValues().Set(float64(len(assets)))
+	AssetsBytesTotal.WithLabelValues("fuga").Set(float64(totalSize))
+	AssetsItemsTotal.WithLabelValues("fuga").Set(float64(len(assets)))
 
 	return nil
 }
