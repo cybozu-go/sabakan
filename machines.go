@@ -86,6 +86,15 @@ var (
 		StateRetiring:      {StateRetired},
 		StateRetired:       {StateUninitialized},
 	}
+	StateList = []MachineState{
+		StateUninitialized,
+		StateHealthy,
+		StateUnhealthy,
+		StateUnreachable,
+		StateUpdating,
+		StateRetiring,
+		StateRetired,
+	}
 )
 
 // IsValidRole returns true if role is valid as machine role
