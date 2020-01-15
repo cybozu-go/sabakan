@@ -39,7 +39,7 @@ var (
 	flagDataDir         = flag.String("data-dir", defaultDataDir, "directory to store files")
 	flagAdvertiseURL    = flag.String("advertise-url", "", "public URL of this server")
 	flagAllowIPs        = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
-	flagMetricsInterval = flag.String("metrics-interval", "30s", "interval duration to collect metrics data")
+	flagMetricsInterval = flag.String("metrics-interval", defaultMetricsInterval, "interval duration to collect metrics data, default=30s")
 	flagPlayground      = flag.Bool("enable-playground", false, "enable GraphQL playground")
 
 	flagEtcdEndpoints = flag.String("etcd-endpoints", strings.Join(etcdutil.DefaultEndpoints, ","), "comma-separated URLs of the backend etcd endpoints")

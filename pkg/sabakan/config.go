@@ -3,12 +3,13 @@ package main
 import "github.com/cybozu-go/etcdutil"
 
 const (
-	defaultListenHTTP    = "0.0.0.0:10080"
-	defaultListenMetrics = "0.0.0.0:10081"
-	defaultEtcdPrefix    = "/sabakan/"
-	defaultDHCPBind      = "0.0.0.0:10067"
-	defaultIPXEPath      = "/usr/lib/ipxe/ipxe.efi"
-	defaultDataDir       = "/var/lib/sabakan"
+	defaultListenHTTP      = "0.0.0.0:10080"
+	defaultListenMetrics   = "0.0.0.0:10081"
+	defaultEtcdPrefix      = "/sabakan/"
+	defaultDHCPBind        = "0.0.0.0:10067"
+	defaultIPXEPath        = "/usr/lib/ipxe/ipxe.efi"
+	defaultDataDir         = "/var/lib/sabakan"
+	defaultMetricsInterval = "30s"
 )
 
 var (
@@ -17,13 +18,14 @@ var (
 
 func newConfig() *config {
 	return &config{
-		ListenHTTP:    defaultListenHTTP,
-		ListenMetrics: defaultListenMetrics,
-		DHCPBind:      defaultDHCPBind,
-		IPXEPath:      defaultIPXEPath,
-		DataDir:       defaultDataDir,
-		AllowIPs:      defaultAllowIPs,
-		Etcd:          etcdutil.NewConfig(defaultEtcdPrefix),
+		ListenHTTP:      defaultListenHTTP,
+		ListenMetrics:   defaultListenMetrics,
+		DHCPBind:        defaultDHCPBind,
+		IPXEPath:        defaultIPXEPath,
+		DataDir:         defaultDataDir,
+		AllowIPs:        defaultAllowIPs,
+		Etcd:            etcdutil.NewConfig(defaultEtcdPrefix),
+		MetricsInterval: defaultMetricsInterval,
 	}
 }
 
