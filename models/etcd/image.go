@@ -6,6 +6,7 @@ import (
 	"io"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
@@ -73,6 +74,33 @@ func (d *driver) imageGetIndex(ctx context.Context, os string) (sabakan.ImageInd
 	return index, err
 }
 
+func (d *driver) imageGetInfoAll(ctx context.Context) ([]*sabakan.Image, error) {
+	var images []*sabakan.Image
+
+	resp, err := d.client.Get(ctx, KeyImages, clientv3.WithPrefix(), clientv3.WithKeysOnly())
+	if err != nil {
+		return nil, err
+	}
+
+	var ids []string
+	for _, kv := range resp.Kvs {
+		id := string(kv.Key[len(KeyAssets):])
+		if !strings.HasSuffix(id, "/deleted") {
+			ids = append(ids, id)
+		}
+	}
+
+	for _, id := range ids {
+		idx, err := d.imageGetIndex(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		images = append(images, idx...)
+	}
+
+	return images, nil
+}
+
 func (d *driver) imageCASIndex(ctx context.Context, os string,
 	index sabakan.ImageIndex, indexRev int64,
 	deleted []string, delRev int64) (*clientv3.TxnResponse, error) {
@@ -122,10 +150,15 @@ RETRY:
 	if err != nil {
 		return err
 	}
+	size, err := dir.Size(id)
+	if err != nil {
+		return err
+	}
 
 	index, dels := index.Append(&sabakan.Image{
 		ID:   id,
 		Date: time.Now().UTC(),
+		Size: size,
 		URLs: []string{d.myURL("/api/v1/images", os, id)},
 	})
 	deleted = append(deleted, dels...)
@@ -252,6 +285,10 @@ type imageDriver struct {
 
 func (d imageDriver) GetIndex(ctx context.Context, os string) (sabakan.ImageIndex, error) {
 	return d.imageGetIndex(ctx, os)
+}
+
+func (d imageDriver) GetInfoAll(ctx context.Context) ([]*sabakan.Image, error) {
+	return d.imageGetInfoAll(ctx)
 }
 
 func (d imageDriver) Upload(ctx context.Context, os, id string, r io.Reader) error {

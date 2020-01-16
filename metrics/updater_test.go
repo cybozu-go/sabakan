@@ -134,7 +134,7 @@ func testAssetsMetrics(t *testing.T) {
 			name:          "get total size of images",
 			input:         threeImages,
 			expectedName:  "sabakan_images_bytes_total",
-			expectedValue: 18,
+			expectedValue: 36,
 		},
 		{
 			name:          "get total item numbers of images",

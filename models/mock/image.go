@@ -42,6 +42,18 @@ func (d *imageDriver) GetIndex(ctx context.Context, os string) (sabakan.ImageInd
 	return copied, nil
 }
 
+func (d *imageDriver) GetInfoAll(ctx context.Context) ([]*sabakan.Image, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	images := make([]*sabakan.Image, len(d.index))
+	for i := range d.index {
+		images[i] = d.index[i]
+	}
+
+	return images, nil
+}
+
 func (d *imageDriver) Upload(ctx context.Context, os, id string, r io.Reader) error {
 	d.mu.Lock()
 	defer func() {
@@ -100,6 +112,7 @@ func (d *imageDriver) Upload(ctx context.Context, os, id string, r io.Reader) er
 	d.index, _ = d.index.Append(&sabakan.Image{
 		ID:   id,
 		Date: time.Now().UTC(),
+		Size: int64(len(kernel) + len(initrd)),
 	})
 
 	return nil

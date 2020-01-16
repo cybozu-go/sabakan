@@ -63,6 +63,7 @@ type DHCPModel interface {
 type ImageModel interface {
 	// These are for /api/v1/images
 	GetIndex(ctx context.Context, os string) (ImageIndex, error)
+	GetInfoAll(ctx context.Context) ([]*Image, error)
 	Upload(ctx context.Context, os, id string, r io.Reader) error
 	Download(ctx context.Context, os, id string, out io.Writer) error
 	Delete(ctx context.Context, os, id string) error

@@ -80,7 +80,7 @@ func (u *Updater) UpdateAllMetrics(ctx context.Context) error {
 	tasks := map[string]func(ctx context.Context) error{
 		"updateMachineStatus": u.updateMachineStatus,
 		"updateAssetMetrics":  u.updateAssetMetrics,
-		// "updateImageMetrics":  u.updateImageMetrics,
+		"updateImageMetrics":  u.updateImageMetrics,
 	}
 	for key, task := range tasks {
 		key, task := key, task
@@ -138,6 +138,26 @@ func (u *Updater) updateAssetMetrics(ctx context.Context) error {
 
 	AssetsBytesTotal.WithLabelValues("byte").Set(float64(totalSize))
 	AssetsItemsTotal.WithLabelValues("file").Set(float64(len(assets)))
+
+	return nil
+}
+
+func (u *Updater) updateImageMetrics(ctx context.Context) error {
+	images, err := u.model.Image.GetInfoAll(ctx)
+	if err != nil {
+		return err
+	}
+	if len(images) == 0 {
+		return nil
+	}
+
+	var totalSize int64
+	for _, i := range images {
+		totalSize += i.Size
+	}
+
+	ImagesBytesTotal.WithLabelValues("byte").Set(float64(totalSize))
+	ImagesItemsTotal.WithLabelValues("file").Set(float64(len(images)))
 
 	return nil
 }
