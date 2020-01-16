@@ -136,8 +136,8 @@ func (u *Updater) updateAssetMetrics(ctx context.Context) error {
 		totalSize += a.Size
 	}
 
-	AssetsBytesTotal.WithLabelValues("byte").Set(float64(totalSize))
-	AssetsItemsTotal.WithLabelValues("file").Set(float64(len(assets)))
+	AssetsBytesTotal.Set(float64(totalSize))
+	AssetsItemsTotal.Set(float64(len(assets)))
 
 	return nil
 }
@@ -156,8 +156,8 @@ func (u *Updater) updateImageMetrics(ctx context.Context) error {
 		totalSize += i.Size
 	}
 
-	ImagesBytesTotal.WithLabelValues("byte").Set(float64(totalSize))
-	ImagesItemsTotal.WithLabelValues("file").Set(float64(len(images)))
+	ImagesBytesTotal.Set(float64(totalSize))
+	ImagesItemsTotal.Set(float64(len(images)))
 
 	return nil
 }

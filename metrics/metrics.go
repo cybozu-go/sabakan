@@ -23,41 +23,37 @@ var APIRequestTotal = prometheus.NewCounterVec(
 )
 
 // AssetsBytesTotal returns the total bytes of assets
-var AssetsBytesTotal = prometheus.NewGaugeVec(
+var AssetsBytesTotal = prometheus.NewGauge(
 	prometheus.GaugeOpts{
 		Namespace: namespace,
 		Name:      "assets_bytes_total",
 		Help:      "The total bytes of assets.",
 	},
-	[]string{"unit"},
 )
 
 // AssetsItemsTotal returns the total Items of assets
-var AssetsItemsTotal = prometheus.NewGaugeVec(
+var AssetsItemsTotal = prometheus.NewGauge(
 	prometheus.GaugeOpts{
 		Namespace: namespace,
 		Name:      "assets_items_total",
 		Help:      "The total items of assets.",
 	},
-	[]string{"unit"},
 )
 
 // ImagesBytesTotal returns the total bytes of Images
-var ImagesBytesTotal = prometheus.NewGaugeVec(
+var ImagesBytesTotal = prometheus.NewGauge(
 	prometheus.GaugeOpts{
 		Namespace: namespace,
 		Name:      "images_bytes_total",
 		Help:      "The total bytes of Images.",
 	},
-	[]string{"unit"},
 )
 
 // ImagesItemsTotal returns the total Items of Images
-var ImagesItemsTotal = prometheus.NewGaugeVec(
+var ImagesItemsTotal = prometheus.NewGauge(
 	prometheus.GaugeOpts{
 		Namespace: namespace,
 		Name:      "images_items_total",
 		Help:      "The total items of Images.",
 	},
-	[]string{"unit"},
 )
