@@ -1,7 +1,10 @@
 package metrics
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -46,7 +49,7 @@ func testMachineStatus(t *testing.T) {
 						"serial":       "001",
 						"rack":         "1",
 						"role":         "cs",
-						"machine-type": "cray-1",
+						"machine_type": "cray-1",
 					},
 				},
 				{
@@ -56,7 +59,7 @@ func testMachineStatus(t *testing.T) {
 						"serial":       "002",
 						"rack":         "2",
 						"role":         "ss",
-						"machine-type": "cray-2",
+						"machine_type": "cray-2",
 					},
 				},
 			},
@@ -66,7 +69,7 @@ func testMachineStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			model, err := tt.input()
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			updater := NewUpdater(10*time.Millisecond, model)
 
@@ -79,7 +82,7 @@ func testMachineStatus(t *testing.T) {
 			GetHandler().ServeHTTP(w, req)
 			metricsFamily, err := parseMetrics(w.Result())
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			for _, mf := range metricsFamily {
 				switch *mf.Name {
@@ -145,7 +148,7 @@ func testAssetsMetrics(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			model, err := tt.input()
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			updater := NewUpdater(10*time.Millisecond, model)
 
@@ -158,7 +161,7 @@ func testAssetsMetrics(t *testing.T) {
 			GetHandler().ServeHTTP(w, req)
 			metricsFamily, err := parseMetrics(w.Result())
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 
 			found := false
@@ -228,13 +231,45 @@ func threeImages() (*sabakan.Model, error) {
 	model := mock.NewModel()
 
 	for i := 0; i < 3; i++ {
-		err := model.Image.Upload(context.Background(), "ubuntu", "image"+strconv.Itoa(i), strings.NewReader("foobar"))
+		r, err := newTestImage("kernel", "initrd")
+		if err != nil {
+			return nil, err
+		}
+		err = model.Image.Upload(context.Background(), "coreos", "image"+strconv.Itoa(i), r)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return &model, nil
+}
+
+func newTestImage(kernel, initrd string) (io.Reader, error) {
+	buf := new(bytes.Buffer)
+	tw := tar.NewWriter(buf)
+	hdr := &tar.Header{
+		Name: sabakan.ImageKernelFilename,
+		Mode: 0644,
+		Size: int64(len(kernel)),
+	}
+	err := tw.WriteHeader(hdr)
+	if err != nil {
+		return nil, err
+	}
+	tw.Write([]byte(kernel))
+
+	hdr = &tar.Header{
+		Name: sabakan.ImageInitrdFilename,
+		Mode: 0644,
+		Size: int64(len(initrd)),
+	}
+	err = tw.WriteHeader(hdr)
+	if err != nil {
+		return nil, err
+	}
+	tw.Write([]byte(initrd))
+	tw.Close()
+	return buf, nil
 }
 
 func labelToMap(labelPair []*dto.LabelPair) map[string]string {
