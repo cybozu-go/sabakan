@@ -85,7 +85,7 @@ func testAssetGetInfoAll(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(assets) != 2 {
-		t.Error("len(assets) != 2")
+		t.Fatal("len(assets) != 2")
 	}
 	if assets[0].Name != "foo" {
 		t.Error("assets[0].Name != foo")

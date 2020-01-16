@@ -80,13 +80,13 @@ func (d *driver) assetGetIndex(ctx context.Context) ([]string, error) {
 func (d *driver) assetGetInfoAll(ctx context.Context) ([]*sabakan.Asset, error) {
 	var assets []*sabakan.Asset
 
-	resp, err := d.client.Get(ctx, KeyMachines, clientv3.WithPrefix(), clientv3.WithKeysOnly())
+	resp, err := d.client.Get(ctx, KeyAssets, clientv3.WithPrefix(), clientv3.WithKeysOnly())
 	if err != nil {
 		return nil, err
 	}
 	ids := make([]string, resp.Count)
 	for i, kv := range resp.Kvs {
-		ids[i] = string(kv.Key[len(KeyMachines):])
+		ids[i] = string(kv.Key[len(KeyAssets):])
 	}
 
 	for _, id := range ids {
