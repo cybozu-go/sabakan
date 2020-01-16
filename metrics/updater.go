@@ -56,19 +56,13 @@ func NewUpdater(interval time.Duration, model *sabakan.Model) *Updater {
 
 // UpdateLoop is the func to update all metrics continuously
 func (u *Updater) UpdateLoop(ctx context.Context) error {
-	err := u.updateAllMetrics(ctx)
-	if err != nil {
-		log.Warn("failed to update metrics", map[string]interface{}{
-			log.FnError: err.Error(),
-		})
-	}
 	ticker := time.NewTicker(u.interval)
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			err := u.updateAllMetrics(ctx)
+			err := u.UpdateAllMetrics(ctx)
 			if err != nil {
 				log.Warn("failed to update metrics", map[string]interface{}{
 					log.FnError: err.Error(),
@@ -78,7 +72,8 @@ func (u *Updater) UpdateLoop(ctx context.Context) error {
 	}
 }
 
-func (u *Updater) updateAllMetrics(ctx context.Context) error {
+// UpdateAllMetrics is the func to update all metrics once
+func (u *Updater) UpdateAllMetrics(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 	tasks := map[string]func(ctx context.Context) error{
 		"updateMachineStatus": u.updateMachineStatus,
@@ -138,8 +133,8 @@ func (u *Updater) updateAssetMetrics(ctx context.Context) error {
 		totalSize += a.Size
 	}
 
-	AssetsBytesTotal.WithLabelValues("fuga").Set(float64(totalSize))
-	AssetsItemsTotal.WithLabelValues("fuga").Set(float64(len(assets)))
+	AssetsBytesTotal.WithLabelValues("byte").Set(float64(totalSize))
+	AssetsItemsTotal.WithLabelValues("file").Set(float64(len(assets)))
 
 	return nil
 }

@@ -47,9 +47,7 @@ func testMachineStatus(t *testing.T) {
 
 			ctx := context.Background()
 			defer ctx.Done()
-
-			go updater.UpdateLoop(ctx)
-			time.Sleep(11 * time.Millisecond)
+			updater.UpdateAllMetrics(ctx)
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", "/metrics", nil)
@@ -98,9 +96,7 @@ func testAssetMetrics(t *testing.T) {
 
 			ctx := context.Background()
 			defer ctx.Done()
-
-			go updater.UpdateLoop(ctx)
-			time.Sleep(11 * time.Millisecond)
+			updater.UpdateAllMetrics(ctx)
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", "/metrics", nil)
@@ -114,7 +110,7 @@ func testAssetMetrics(t *testing.T) {
 				case "sabakan_assets_bytes_total":
 					for _, m := range m.Metric {
 						if *m.Gauge.Value != tt.expectedMetric.expectedValue {
-							t.Error("does not record the correct size")
+							t.Errorf("does not record the correct size. expected: %f, actual: %f", tt.expectedMetric.expectedValue, *m.Gauge.Value)
 						}
 					}
 				}

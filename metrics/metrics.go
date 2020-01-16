@@ -29,7 +29,7 @@ var AssetsBytesTotal = prometheus.NewGaugeVec(
 		Name:      "assets_bytes_total",
 		Help:      "The total bytes of assets.",
 	},
-	[]string{"hoge"},
+	[]string{"unit"},
 )
 
 // AssetsItemsTotal returns the total Items of assets
@@ -39,7 +39,7 @@ var AssetsItemsTotal = prometheus.NewGaugeVec(
 		Name:      "assets_items_total",
 		Help:      "The total items of assets.",
 	},
-	[]string{"hoge"},
+	[]string{"unit"},
 )
 
 // ImagesBytesTotal returns the total bytes of Images
@@ -49,7 +49,7 @@ var ImagesBytesTotal = prometheus.NewGaugeVec(
 		Name:      "images_bytes_total",
 		Help:      "The total bytes of Images.",
 	},
-	[]string{},
+	[]string{"unit"},
 )
 
 // ImagesItemsTotal returns the total Items of Images
@@ -59,5 +59,5 @@ var ImagesItemsTotal = prometheus.NewGaugeVec(
 		Name:      "images_items_total",
 		Help:      "The total items of Images.",
 	},
-	[]string{},
+	[]string{"unit"},
 )
