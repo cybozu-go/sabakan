@@ -41,6 +41,8 @@ func registerMetrics(registry *prometheus.Registry) {
 	registry.MustRegister(MachineStatus)
 	registry.MustRegister(AssetsBytesTotal)
 	registry.MustRegister(AssetsItemsTotal)
+	registry.MustRegister(ImagesBytesTotal)
+	registry.MustRegister(ImagesItemsTotal)
 }
 
 // Updater updates Prometheus metrics periodically
@@ -78,6 +80,7 @@ func (u *Updater) UpdateAllMetrics(ctx context.Context) error {
 	tasks := map[string]func(ctx context.Context) error{
 		"updateMachineStatus": u.updateMachineStatus,
 		"updateAssetMetrics":  u.updateAssetMetrics,
+		// "updateImageMetrics":  u.updateImageMetrics,
 	}
 	for key, task := range tasks {
 		key, task := key, task
@@ -108,7 +111,7 @@ func (u *Updater) updateMachineStatus(ctx context.Context) error {
 			return fmt.Errorf("unable to expose metrics, because machine have no IPv4 address; serial: %s", m.Spec.Serial)
 		}
 		for _, st := range sabakan.StateList {
-			labelValues := []string{st.String(), m.Spec.IPv4[0], m.Spec.Serial, fmt.Sprint(m.Spec.Rack), fmt.Sprint(m.Spec.IndexInRack)}
+			labelValues := []string{st.String(), m.Spec.IPv4[0], m.Spec.Serial, fmt.Sprint(m.Spec.Rack), m.Spec.Role, m.Spec.Labels["machine-type"]}
 			if st == m.Status.State {
 				MachineStatus.WithLabelValues(labelValues...).Set(1)
 			} else {

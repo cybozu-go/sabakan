@@ -15,25 +15,50 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
-type gaugeStatus struct {
-	expectedLabels map[string]string
-	expectedValue  float64
-	otherwise      float64
+type expectedMachineStatus struct {
+	status string
+	labels map[string]string
 }
 
-type gaugeTestCase struct {
-	name           string
-	input          func() (*sabakan.Model, error)
-	expectedMetric gaugeStatus
+type machineStatusTestCase struct {
+	name            string
+	input           func() (*sabakan.Model, error)
+	expectedMetrics []expectedMachineStatus
+}
+
+type assetsTestCase struct {
+	name          string
+	input         func() (*sabakan.Model, error)
+	expectedName  string
+	expectedValue float64
 }
 
 func testMachineStatus(t *testing.T) {
-	testCases := []gaugeTestCase{
+	testCases := []machineStatusTestCase{
 		{
-			name:  "all machines is uninitialized",
-			input: twoMachinesWithUninitialized,
-			expectedMetric: gaugeStatus{
-				map[string]string{"status": sabakan.StateUninitialized.String()}, 1, 0,
+			name:  "1 uninitialized, 1 healthy",
+			input: twoMachines,
+			expectedMetrics: []expectedMachineStatus{
+				{
+					status: sabakan.StateUninitialized.String(),
+					labels: map[string]string{
+						"address":      "10.0.0.1",
+						"serial":       "001",
+						"rack":         "1",
+						"role":         "cs",
+						"machine-type": "cray-1",
+					},
+				},
+				{
+					status: sabakan.StateHealthy.String(),
+					labels: map[string]string{
+						"address":      "10.0.0.2",
+						"serial":       "002",
+						"rack":         "2",
+						"role":         "ss",
+						"machine-type": "cray-2",
+					},
+				},
 			},
 		},
 	}
@@ -56,17 +81,30 @@ func testMachineStatus(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			for _, m := range metricsFamily {
-				switch *m.Name {
+			for _, mf := range metricsFamily {
+				switch *mf.Name {
 				case "sabakan_machine_status":
-					for _, m := range m.Metric {
-						lm := labelToMap(m.Label)
-						if hasLabels(lm, tt.expectedMetric.expectedLabels) {
-							if *m.Gauge.Value != tt.expectedMetric.expectedValue {
-								t.Error("not uninitialized")
+					for _, em := range tt.expectedMetrics {
+						states := make(map[string]bool)
+						for _, m := range mf.Metric {
+							lm := labelToMap(m.Label)
+							if hasLabels(lm, em.labels) {
+								states[lm["status"]] = true
+								if lm["status"] == em.status {
+									if *m.Gauge.Value != 1 {
+										t.Errorf("value of expected status %q of %q must be 1 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
+									}
+								} else {
+									if *m.Gauge.Value != 0 {
+										t.Errorf("value of unexpected status %q of %q must be 0 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
+									}
+								}
 							}
-						} else if *m.Gauge.Value != tt.expectedMetric.otherwise {
-							t.Errorf("%v has unexpected value; %f", m, tt.expectedMetric.otherwise)
+						}
+						for _, s := range sabakan.StateList {
+							if !states[s.String()] {
+								t.Errorf("metrics for %q was not found", em.labels["serial"])
+							}
 						}
 					}
 				}
@@ -75,14 +113,31 @@ func testMachineStatus(t *testing.T) {
 	}
 }
 
-func testAssetMetrics(t *testing.T) {
-	testCases := []gaugeTestCase{
+func testAssetsMetrics(t *testing.T) {
+	testCases := []assetsTestCase{
 		{
-			name:  "get total size of assets",
-			input: twoAssets,
-			expectedMetric: gaugeStatus{
-				nil, 6, 0,
-			},
+			name:          "get total size of assets",
+			input:         twoAssets,
+			expectedName:  "sabakan_assets_bytes_total",
+			expectedValue: 6,
+		},
+		{
+			name:          "get total item numbers of assets",
+			input:         twoAssets,
+			expectedName:  "sabakan_assets_items_total",
+			expectedValue: 2,
+		},
+		{
+			name:          "get total size of images",
+			input:         threeImages,
+			expectedName:  "sabakan_images_bytes_total",
+			expectedValue: 18,
+		},
+		{
+			name:          "get total item numbers of images",
+			input:         threeImages,
+			expectedName:  "sabakan_images_items_total",
+			expectedValue: 3,
 		},
 	}
 
@@ -105,27 +160,52 @@ func testAssetMetrics(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			for _, m := range metricsFamily {
-				switch *m.Name {
-				case "sabakan_assets_bytes_total":
-					for _, m := range m.Metric {
-						if *m.Gauge.Value != tt.expectedMetric.expectedValue {
-							t.Errorf("does not record the correct size. expected: %f, actual: %f", tt.expectedMetric.expectedValue, *m.Gauge.Value)
+
+			found := false
+			for _, mf := range metricsFamily {
+				if *mf.Name == tt.expectedName {
+					found = true
+					for _, m := range mf.Metric {
+						if *m.Gauge.Value != tt.expectedValue {
+							t.Errorf("value for %q is wrong.  expected: %f, actual: %f", tt.expectedName, tt.expectedValue, *m.Gauge.Value)
 						}
 					}
 				}
+			}
+			if !found {
+				t.Errorf("metrics %q was not found", tt.expectedName)
 			}
 		})
 	}
 }
 
-func twoMachinesWithUninitialized() (*sabakan.Model, error) {
+func twoMachines() (*sabakan.Model, error) {
 	model := mock.NewModel()
-	var machines []*sabakan.Machine
-	for i := 0; i < 2; i++ {
-		machines = append(machines, &sabakan.Machine{
-			Spec:   sabakan.MachineSpec{Serial: "001", Rack: 1, IndexInRack: 1, IPv4: []string{"10.0.0.1"}},
-			Status: sabakan.MachineStatus{State: sabakan.StateUninitialized}})
+	machines := []*sabakan.Machine{
+		{
+			Spec: sabakan.MachineSpec{
+				Serial: "001",
+				Rack:   1,
+				Role:   "cs",
+				Labels: map[string]string{"machine-type": "cray-1"},
+				IPv4:   []string{"10.0.0.1"},
+			},
+			Status: sabakan.MachineStatus{
+				State: sabakan.StateUninitialized,
+			},
+		},
+		{
+			Spec: sabakan.MachineSpec{
+				Serial: "002",
+				Rack:   2,
+				Role:   "ss",
+				Labels: map[string]string{"machine-type": "cray-2"},
+				IPv4:   []string{"10.0.0.2"},
+			},
+			Status: sabakan.MachineStatus{
+				State: sabakan.StateHealthy,
+			},
+		},
 	}
 	err := model.Machine.Register(context.Background(), machines)
 	return &model, err
@@ -136,6 +216,19 @@ func twoAssets() (*sabakan.Model, error) {
 
 	for i := 0; i < 2; i++ {
 		_, err := model.Asset.Put(context.Background(), "asset"+strconv.Itoa(i), "ctype"+strconv.Itoa(i), nil, nil, strings.NewReader("bar"))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &model, nil
+}
+
+func threeImages() (*sabakan.Model, error) {
+	model := mock.NewModel()
+
+	for i := 0; i < 3; i++ {
+		err := model.Image.Upload(context.Background(), "ubuntu", "image"+strconv.Itoa(i), strings.NewReader("foobar"))
 		if err != nil {
 			return nil, err
 		}
@@ -182,6 +275,6 @@ func parseMetrics(resp *http.Response) ([]*dto.MetricFamily, error) {
 }
 
 func TestMetrics(t *testing.T) {
-	t.Run("machine status", testMachineStatus)
-	t.Run("asset metrics", testAssetMetrics)
+	t.Run("MachineStatus", testMachineStatus)
+	t.Run("AssetsImagesMetrics", testAssetsMetrics)
 }

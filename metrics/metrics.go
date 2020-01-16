@@ -9,7 +9,7 @@ var MachineStatus = prometheus.NewGaugeVec(
 		Name:      "machine_status",
 		Help:      "The machine status set by HTTP API.",
 	},
-	[]string{"status", "address", "serial", "rack", "index"},
+	[]string{"status", "address", "serial", "rack", "role", "machine_type"},
 )
 
 // APIRequestTotal returns the total count of API calls
