@@ -29,6 +29,14 @@ type machineStatusTestCase struct {
 	expectedMetrics []expectedMachineStatus
 }
 
+type apiTestCase struct {
+	name           string
+	statusCode     int
+	path           string
+	verb           string
+	expectedLabels map[string]string
+}
+
 type assetsTestCase struct {
 	name          string
 	input         func() (*sabakan.Model, error)
@@ -111,6 +119,57 @@ func testMachineStatus(t *testing.T) {
 						}
 					}
 				}
+			}
+		})
+	}
+}
+
+func testAPIMetrics(t *testing.T) {
+	testCases := []apiTestCase{
+		{
+			name:       "get version",
+			statusCode: 200,
+			path:       "/version",
+			verb:       "GET",
+			expectedLabels: map[string]string{
+				"code": "200",
+				"path": "/version",
+				"verb": "GET",
+			},
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			handler := GetHandler()
+
+			UpdateAPICounter(tt.statusCode, tt.path, tt.verb)
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("GET", "/metrics", nil)
+			handler.ServeHTTP(w, req)
+			metricsFamily, err := parseMetrics(w.Result())
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			found := false
+			for _, mf := range metricsFamily {
+				if *mf.Name != "sabakan_api_request_count" {
+					continue
+				}
+				for _, m := range mf.Metric {
+					lm := labelToMap(m.Label)
+					if hasLabels(lm, tt.expectedLabels) {
+						found = true
+						if *m.Counter.Value != 1 {
+							t.Errorf("counter value must be 1 but %f", *m.Counter.Value)
+						}
+					}
+				}
+			}
+			if !found {
+				t.Errorf("metrics sabakan_api_request_count with labels %#v not found", tt.expectedLabels)
 			}
 		})
 	}
@@ -311,5 +370,6 @@ func parseMetrics(resp *http.Response) ([]*dto.MetricFamily, error) {
 
 func TestMetrics(t *testing.T) {
 	t.Run("MachineStatus", testMachineStatus)
+	t.Run("APIMetrics", testAPIMetrics)
 	t.Run("AssetsImagesMetrics", testAssetsMetrics)
 }

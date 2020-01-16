@@ -39,10 +39,16 @@ func GetHandler() http.Handler {
 
 func registerMetrics(registry *prometheus.Registry) {
 	registry.MustRegister(MachineStatus)
+	registry.MustRegister(APIRequestTotal)
 	registry.MustRegister(AssetsBytesTotal)
 	registry.MustRegister(AssetsItemsTotal)
 	registry.MustRegister(ImagesBytesTotal)
 	registry.MustRegister(ImagesItemsTotal)
+}
+
+// UpdateAPICounter increments APIRequestTotal counter
+func UpdateAPICounter(statusCode int, path, verb string) {
+	APIRequestTotal.WithLabelValues(fmt.Sprint(statusCode), path, verb).Inc()
 }
 
 // Updater updates Prometheus metrics periodically

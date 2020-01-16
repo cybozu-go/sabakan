@@ -19,7 +19,7 @@ var APIRequestTotal = prometheus.NewCounterVec(
 		Name:      "api_request_count",
 		Help:      "The total count of API calls.",
 	},
-	[]string{},
+	[]string{"code", "path", "verb"},
 )
 
 // AssetsBytesTotal returns the total bytes of assets
