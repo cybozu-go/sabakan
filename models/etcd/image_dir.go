@@ -198,3 +198,16 @@ func (d ImageDir) GC(ids []string) error {
 	}
 	return nil
 }
+
+// Size returns byte size of the image
+func (d ImageDir) Size(id string) (int64, error) {
+	var imageSize int64
+	files, err := ioutil.ReadDir(filepath.Join(d.Dir, id))
+	if err != nil {
+		return 0, err
+	}
+	for _, file := range files {
+		imageSize += file.Size()
+	}
+	return imageSize, nil
+}

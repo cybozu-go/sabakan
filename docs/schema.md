@@ -17,9 +17,9 @@ Before version 1.2, sabakan did not have this key.
 `<prefix>/machines/<serial>`
 ----------------------------
 
-Name   | Description
-----   | -----------
-serial | Serial number of a machine
+| Name   | Description                |
+| ------ | -------------------------- |
+| serial | Serial number of a machine |
 
 This type of key holds the information of a machine.
 The value is formatted in JSON as defined in [Machine](machine.md).
@@ -27,10 +27,10 @@ The value is formatted in JSON as defined in [Machine](machine.md).
 `<prefix>/crypts/<serial>/<path>`
 ---------------------------------
 
-Name   | Description
-----   | -----------
-serial | Serial number of a machine
-path   | Name of an encrypted disk, in the format shown in `/dev/disk/by-path`
+| Name   | Description                                                           |
+| ------ | --------------------------------------------------------------------- |
+| serial | Serial number of a machine                                            |
+| path   | Name of an encrypted disk, in the format shown in `/dev/disk/by-path` |
 
 These keys hold the encryption key of a disk.
 The value is a raw binary key.
@@ -90,9 +90,9 @@ The value is [DHCPConfig](dhcp.md#dhcpconfig) formatted in JSON.
 `<prefix>/lease-usages/<ip>`
 ----------------------------
 
-Name | Description
----- | -----------
-ip   | The first IP address of the lease range.
+| Name | Description                              |
+| ---- | ---------------------------------------- |
+| ip   | The first IP address of the lease range. |
 
 These keys hold lease address usages for a range of IP addresses.
 The value is a mapping between hardware address and (`index`, `expire`)
@@ -102,9 +102,9 @@ and `expire` is the Go's `time.Time` when the lease expires.
 `<prefix>/node-indices/<rack>`
 ------------------------------
 
-Name | Description
----- | -----------
-rack | Rack nubmer
+| Name | Description |
+| ---- | ----------- |
+| rack | Rack nubmer |
 
 This type of key holds assignment of node indices per rack.
 The value is a list of assigned indices formatted in JSON.

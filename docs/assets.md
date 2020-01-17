@@ -21,6 +21,7 @@ Meta data of assets are stored in etcd as follows:
     "content-type": "application/tar",
     "date": "2017-12-02T15:04:05Z",
     "sha256": "2e0390eb024a52963db7b95e84a9c2b12c004054a7bad9a97ec0c7c89d4681d2",
+    "size": 1002567,
     "urls": [
         "http://10.1.2.3:10080/api/v1/assets/hoge.tar.gz",
         "http://10.98.76.54:10080/api/v1/assets/hoge.tar.gz"

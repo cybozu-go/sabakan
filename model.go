@@ -63,6 +63,7 @@ type DHCPModel interface {
 type ImageModel interface {
 	// These are for /api/v1/images
 	GetIndex(ctx context.Context, os string) (ImageIndex, error)
+	GetInfoAll(ctx context.Context) ([]*Image, error)
 	Upload(ctx context.Context, os, id string, r io.Reader) error
 	Download(ctx context.Context, os, id string, out io.Writer) error
 	Delete(ctx context.Context, os, id string) error
@@ -83,6 +84,7 @@ type AssetHandler interface {
 type AssetModel interface {
 	GetIndex(ctx context.Context) ([]string, error)
 	GetInfo(ctx context.Context, name string) (*Asset, error)
+	GetInfoAll(ctx context.Context) ([]*Asset, error)
 	Put(ctx context.Context, name, contentType string, csum []byte, options map[string]string, r io.Reader) (*AssetStatus, error)
 	Get(ctx context.Context, name string, h AssetHandler) error
 	Delete(ctx context.Context, name string) error

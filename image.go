@@ -35,6 +35,7 @@ func IsValidImageOS(os string) bool {
 type Image struct {
 	ID     string    `json:"id"`
 	Date   time.Time `json:"date"`
+	Size   int64     `json:"size"`
 	URLs   []string  `json:"urls"`
 	Exists bool      `json:"exists"`
 }

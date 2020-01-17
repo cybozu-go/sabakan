@@ -21,8 +21,9 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
-	github.com/prometheus/client_golang v0.9.1 // indirect
-	github.com/prometheus/common v0.0.0-20181126121408-4724e9255275 // indirect
+	github.com/prometheus/client_golang v0.9.1
+	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910
+	github.com/prometheus/common v0.0.0-20181126121408-4724e9255275
 	github.com/prometheus/procfs v0.0.0-20181126161756-619930b0b471 // indirect
 	github.com/sirupsen/logrus v1.2.0 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
@@ -32,6 +33,7 @@ require (
 	go.universe.tf/netboot v0.0.0-20181010164912-24067fad46fd
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
 	golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	golang.org/x/sys v0.0.0-20190419153524-e8e3143a4f4a // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/genproto v0.0.0-20181127195345-31ac5d88444a // indirect

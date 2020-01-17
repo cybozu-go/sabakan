@@ -58,6 +58,43 @@ func testAssetGetIndex(t *testing.T) {
 	}
 }
 
+func testAssetGetInfoAll(t *testing.T) {
+	t.Parallel()
+	d, _ := testNewDriver(t)
+
+	tempdir, err := ioutil.TempDir("", "sabakan-asset-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.dataDir = tempdir
+	defer os.RemoveAll(tempdir)
+
+	options := map[string]string{"version": "1.0.0"}
+	_, err = d.assetPut(context.Background(), "foo", "text/plain",
+		nil, options, strings.NewReader("bar"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = d.assetPut(context.Background(), "hoge", "application/json",
+		nil, options, strings.NewReader("fuga"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assets, err := d.assetGetInfoAll(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assets) != 2 {
+		t.Fatal("len(assets) != 2")
+	}
+	if assets[0].Name != "foo" {
+		t.Error("assets[0].Name != foo")
+	}
+	if assets[1].Name != "hoge" {
+		t.Error("assets[1].Name != hoge")
+	}
+}
+
 func testAssetGetInfo(t *testing.T) {
 	t.Parallel()
 
@@ -100,6 +137,9 @@ func testAssetGetInfo(t *testing.T) {
 	}
 	if asset.Sha256 != "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9" {
 		t.Error("wrong Sha256:", asset.Sha256)
+	}
+	if asset.Size != 3 {
+		t.Error("wrong size:", asset.Size)
 	}
 	if asset.Options["version"] != "1.0.0" {
 		t.Error("wrong version:", asset.Options)
@@ -425,6 +465,7 @@ func testAssetDelete(t *testing.T) {
 func TestAsset(t *testing.T) {
 	t.Run("GetIndex", testAssetGetIndex)
 	t.Run("GetInfo", testAssetGetInfo)
+	t.Run("GetInfoAll", testAssetGetInfoAll)
 	t.Run("Put", testAssetPut)
 	t.Run("Get", testAssetGet)
 	t.Run("Delete", testAssetDelete)

@@ -31,6 +31,7 @@ The structure of the index is a JSON like this:
     {
         "id": "1688.5.3",
         "date": "2017-12-02T15:04:05Z",
+        "size": 10000000,
         "urls": [
             "http://10.1.2.3:10080/api/v1/images/coreos/1688.5.3", 
             "http://10.98.76.54:10080/api/v1/images/coreos/1688.5.3"
@@ -40,6 +41,7 @@ The structure of the index is a JSON like this:
     {
         "id": "1745.4.0",
         "date": "2018-05-29T01:23:45Z",
+        "size": 10000000,
         "urls": [
             "http://10.1.2.3:10080/api/v1/images/coreos/1745.4.0"
         ],

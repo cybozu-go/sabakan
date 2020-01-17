@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 	"github.com/99designs/gqlgen/handler"
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/cybozu-go/sabakan/v2/gql"
+	"github.com/cybozu-go/sabakan/v2/metrics"
 )
 
 const (
@@ -26,6 +28,16 @@ func init() {
 	hostnameAtStartup, _ = os.Hostname()
 }
 
+type recorderWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (w *recorderWriter) WriteHeader(statusCode int) {
+	w.statusCode = statusCode
+	w.ResponseWriter.WriteHeader(statusCode)
+}
+
 // Server is the sabakan server.
 type Server struct {
 	Model          sabakan.Model
@@ -33,6 +45,7 @@ type Server struct {
 	IPXEFirmware   string
 	CryptSetup     string
 	AllowedRemotes []*net.IPNet
+	Counter        *metrics.APICounter
 
 	graphQL    http.HandlerFunc
 	playground http.HandlerFunc
@@ -40,7 +53,7 @@ type Server struct {
 
 // NewServer constructs Server instance
 func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
-	advertiseURL *url.URL, allowedIPs []*net.IPNet, playground bool) *Server {
+	advertiseURL *url.URL, allowedIPs []*net.IPNet, playground bool, counter *metrics.APICounter) *Server {
 	graphQL := handler.GraphQL(gql.NewExecutableSchema(
 		gql.Config{Resolvers: &gql.Resolver{
 			Model: model,
@@ -51,6 +64,7 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 		CryptSetup:     cryptsetupPath,
 		MyURL:          advertiseURL,
 		AllowedRemotes: allowedIPs,
+		Counter:        counter,
 		graphQL:        graphQL,
 	}
 
@@ -62,6 +76,15 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 
 // Handler implements http.Handler
 func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w2 := &recorderWriter{ResponseWriter: w}
+	s.serveHTTP(w2, r)
+	fmt.Printf("updateapicounter %d, %s, %s", w2.statusCode, r.URL.Path, r.Method)
+	if s.Counter != nil {
+		s.Counter.Inc(w2.statusCode, r.URL.Path, r.Method)
+	}
+}
+
+func (s Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/v1/") {
 		s.handleAPIV1(w, r)
 		return

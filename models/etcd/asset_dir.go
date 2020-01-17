@@ -29,6 +29,15 @@ func (d AssetDir) Exists(id int) bool {
 	return err == nil
 }
 
+// Size returns byte size of the asset
+func (d AssetDir) Size(id int) (int64, error) {
+	file, err := os.Stat(d.Path(id))
+	if err != nil {
+		return 0, err
+	}
+	return file.Size(), nil
+}
+
 // Remove removes an asset.
 func (d AssetDir) Remove(id int) error {
 	return os.Remove(d.Path(id))
