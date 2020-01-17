@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -44,6 +45,7 @@ type Server struct {
 	IPXEFirmware   string
 	CryptSetup     string
 	AllowedRemotes []*net.IPNet
+	Counter        *metrics.APICounter
 
 	graphQL    http.HandlerFunc
 	playground http.HandlerFunc
@@ -51,7 +53,7 @@ type Server struct {
 
 // NewServer constructs Server instance
 func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
-	advertiseURL *url.URL, allowedIPs []*net.IPNet, playground bool) *Server {
+	advertiseURL *url.URL, allowedIPs []*net.IPNet, playground bool, counter *metrics.APICounter) *Server {
 	graphQL := handler.GraphQL(gql.NewExecutableSchema(
 		gql.Config{Resolvers: &gql.Resolver{
 			Model: model,
@@ -62,6 +64,7 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 		CryptSetup:     cryptsetupPath,
 		MyURL:          advertiseURL,
 		AllowedRemotes: allowedIPs,
+		Counter:        counter,
 		graphQL:        graphQL,
 	}
 
@@ -75,7 +78,10 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w2 := &recorderWriter{ResponseWriter: w}
 	s.serveHTTP(w2, r)
-	metrics.UpdateAPICounter(w2.statusCode, r.URL.Path, r.Method)
+	fmt.Printf("updateapicounter %d, %s, %s", w2.statusCode, r.URL.Path, r.Method)
+	if s.Counter != nil {
+		s.Counter.Inc(w2.statusCode, r.URL.Path, r.Method)
+	}
 }
 
 func (s Server) serveHTTP(w http.ResponseWriter, r *http.Request) {

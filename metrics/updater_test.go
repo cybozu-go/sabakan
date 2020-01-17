@@ -139,37 +139,25 @@ func testAPIMetrics(t *testing.T) {
 		},
 	}
 
+	handler := GetHandler()
+	counter := NewCounter()
+
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			handler := GetHandler()
-
-			UpdateAPICounter(tt.statusCode, tt.path, tt.verb)
-
-			w := httptest.NewRecorder()
-			req := httptest.NewRequest("GET", "/metrics", nil)
-			handler.ServeHTTP(w, req)
-			metricsFamily, err := parseMetrics(w.Result())
+			oldValue, err := getCounterValue(handler, "sabakan_api_request_count", tt.expectedLabels)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			found := false
-			for _, mf := range metricsFamily {
-				if *mf.Name != "sabakan_api_request_count" {
-					continue
-				}
-				for _, m := range mf.Metric {
-					lm := labelToMap(m.Label)
-					if hasLabels(lm, tt.expectedLabels) {
-						found = true
-						if *m.Counter.Value != 1 {
-							t.Errorf("counter value must be 1 but %f", *m.Counter.Value)
-						}
-					}
-				}
+			counter.Inc(tt.statusCode, tt.path, tt.verb)
+
+			newValue, err := getCounterValue(handler, "sabakan_api_request_count", tt.expectedLabels)
+			if err != nil {
+				t.Fatal(err)
 			}
-			if !found {
-				t.Errorf("metrics sabakan_api_request_count with labels %#v not found", tt.expectedLabels)
+
+			if (newValue - oldValue) != 1 {
+				t.Errorf("counter value difference must be 1 but %f", newValue-oldValue)
 			}
 		})
 	}
@@ -366,6 +354,31 @@ func parseMetrics(resp *http.Response) ([]*dto.MetricFamily, error) {
 		result = append(result, mf)
 	}
 	return result, nil
+}
+
+func getCounterValue(handler http.Handler, name string, labels map[string]string) (float64, error) {
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/metrics", nil)
+	handler.ServeHTTP(w, req)
+	metricsFamily, err := parseMetrics(w.Result())
+	if err != nil {
+		return 0, err
+	}
+
+	for _, mf := range metricsFamily {
+		if *mf.Name != name {
+			continue
+		}
+		for _, m := range mf.Metric {
+			lm := labelToMap(m.Label)
+			if hasLabels(lm, labels) {
+				return *m.Counter.Value, nil
+			}
+		}
+	}
+
+	// not found
+	return 0, nil
 }
 
 func TestMetrics(t *testing.T) {

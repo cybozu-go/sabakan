@@ -46,13 +46,13 @@ func newTestImage(kernel, initrd string) io.Reader {
 	return buf
 }
 
-func testImagePutIndex(t *testing.T, d *driver, index sabakan.ImageIndex) {
+func testImagePutIndex(t *testing.T, d *driver, index sabakan.ImageIndex, osName string) {
 	data, err := json.Marshal(index)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	key := path.Join(KeyImages, "coreos")
+	key := path.Join(KeyImages, osName)
 	_, err = d.client.Put(context.Background(), key, string(data))
 	if err != nil {
 		t.Fatal(err)
@@ -90,7 +90,7 @@ func testImageGetIndex(t *testing.T) {
 			ID: "2234.6",
 		},
 	}
-	testImagePutIndex(t, d, testIndex)
+	testImagePutIndex(t, d, testIndex, "coreos")
 
 	index, err = d.imageGetIndex(context.Background(), "coreos")
 	if err != nil {
@@ -124,6 +124,36 @@ func testImageGetIndex(t *testing.T) {
 	}
 	if index[1].Exists != false {
 		t.Error("exists should be false")
+	}
+}
+
+func testImageGetInfoAll(t *testing.T) {
+	t.Parallel()
+
+	d, _ := testNewDriver(t)
+
+	testIndex := sabakan.ImageIndex{
+		&sabakan.Image{
+			ID: "1234.5",
+		},
+		&sabakan.Image{
+			ID: "2234.6",
+		},
+	}
+	testImagePutIndex(t, d, testIndex, "coreos")
+	testImagePutIndex(t, d, testIndex, "ubuntu")
+
+	images, err := d.imageGetInfoAll(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := make(map[string]int)
+	for _, image := range images {
+		found[image.ID]++
+	}
+	if found["1234.5"] != 2 || found["2234.6"] != 2 {
+		t.Errorf("unexpected result from imageGetInfoAll(): %v", images)
 	}
 }
 
@@ -224,7 +254,7 @@ func testImageDownload(t *testing.T) {
 			ID: "2234.6",
 		},
 	}
-	testImagePutIndex(t, d, index)
+	testImagePutIndex(t, d, index, "coreos")
 
 	// case 1. ID is not in the index, no local copy.
 	err = d.imageDownload(context.Background(), "coreos", "1234.5", ioutil.Discard)
@@ -241,7 +271,7 @@ func testImageDownload(t *testing.T) {
 			ID: "2234.6",
 		},
 	}
-	testImagePutIndex(t, d, index)
+	testImagePutIndex(t, d, index, "coreos")
 	err = d.imageDownload(context.Background(), "coreos", "1234.5", ioutil.Discard)
 	if err != sabakan.ErrNotFound {
 		t.Error(`err != sabakan.ErrNotFound`)
@@ -302,7 +332,7 @@ func testImageDownload(t *testing.T) {
 			ID: "2234.6",
 		},
 	}
-	testImagePutIndex(t, d, index)
+	testImagePutIndex(t, d, index, "coreos")
 	err = d.imageDownload(context.Background(), "coreos", "1234.5", ioutil.Discard)
 	if err != sabakan.ErrNotFound {
 		t.Error(`err != sabakan.ErrNotFound`)
@@ -329,7 +359,7 @@ func testImageDelete(t *testing.T) {
 			ID: "2234.6",
 		},
 	}
-	testImagePutIndex(t, d, index)
+	testImagePutIndex(t, d, index, "coreos")
 
 	err = d.imageDelete(context.Background(), "coreos", "hoge")
 	if err != sabakan.ErrNotFound {
@@ -369,7 +399,7 @@ func testImageDelete(t *testing.T) {
 			ID: fmt.Sprint(i),
 		})
 	}
-	testImagePutIndex(t, d, index)
+	testImagePutIndex(t, d, index, "coreos")
 
 	for i := 0; i < MaxDeleted; i++ {
 		err = d.imageDelete(context.Background(), "coreos", fmt.Sprint(i))
@@ -410,7 +440,7 @@ func testImageServeFile(t *testing.T) {
 			ID: "2234.6",
 		},
 	}
-	testImagePutIndex(t, d, index)
+	testImagePutIndex(t, d, index, "coreos")
 
 	buf := new(bytes.Buffer)
 	f := func(mt time.Time, content io.ReadSeeker) {
@@ -480,6 +510,7 @@ func testImageServeFile(t *testing.T) {
 
 func TestImage(t *testing.T) {
 	t.Run("GetIndex", testImageGetIndex)
+	t.Run("GetInfoAll", testImageGetInfoAll)
 	t.Run("Upload", testImageUpload)
 	t.Run("Download", testImageDownload)
 	t.Run("Delete", testImageDelete)

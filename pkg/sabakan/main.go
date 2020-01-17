@@ -174,7 +174,8 @@ func subMain(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	webServer := web.NewServer(model, cfg.IPXEPath, cryptsetupPath, advertiseURL, allowedIPs, cfg.Playground)
+	counter := metrics.NewCounter()
+	webServer := web.NewServer(model, cfg.IPXEPath, cryptsetupPath, advertiseURL, allowedIPs, cfg.Playground, counter)
 	s := &well.HTTPServer{
 		Server: &http.Server{
 			Addr:    cfg.ListenHTTP,

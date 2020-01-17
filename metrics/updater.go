@@ -46,11 +46,6 @@ func registerMetrics(registry *prometheus.Registry) {
 	registry.MustRegister(ImagesItemsTotal)
 }
 
-// UpdateAPICounter increments APIRequestTotal counter
-func UpdateAPICounter(statusCode int, path, verb string) {
-	APIRequestTotal.WithLabelValues(fmt.Sprint(statusCode), path, verb).Inc()
-}
-
 // Updater updates Prometheus metrics periodically
 type Updater struct {
 	interval time.Duration

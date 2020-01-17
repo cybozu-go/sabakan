@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -13,7 +14,9 @@ import (
 	"time"
 
 	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v2/metrics"
 	"github.com/cybozu-go/sabakan/v2/models/mock"
+	dto "github.com/prometheus/client_model/go"
 )
 
 func testHandleAPIV1(t *testing.T) {
@@ -153,8 +156,34 @@ func testAuditContext(t *testing.T) {
 	}
 }
 
+func testAPICounter(t *testing.T) {
+	t.Parallel()
+
+	m := mock.NewModel()
+	handler := Server{Model: m, Counter: metrics.NewCounter()}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST", "/api/v1/config/ipam", nil)
+	handler.ServeHTTP(w, r)
+
+	metric, err := metrics.APIRequestTotal.GetMetricWithLabelValues(fmt.Sprint(http.StatusForbidden), "/api/v1/config/ipam", "POST")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var data dto.Metric
+	err = metric.Write(&data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if *data.Counter.Value != 1 {
+		t.Error("failed to count API call")
+	}
+}
+
 func TestServeHTTP(t *testing.T) {
 	t.Run("APIV1", testHandleAPIV1)
 	t.Run("Permission", testHandlePermission)
 	t.Run("AuditContext", testAuditContext)
+	t.Run("APICounter", testAPICounter)
 }
