@@ -93,29 +93,27 @@ func testMachineStatus(t *testing.T) {
 				t.Fatal(err)
 			}
 			for _, mf := range metricsFamily {
-				switch *mf.Name {
-				case "sabakan_machine_status":
-					for _, em := range tt.expectedMetrics {
-						states := make(map[string]bool)
-						for _, m := range mf.Metric {
-							lm := labelToMap(m.Label)
-							if hasLabels(lm, em.labels) {
-								states[lm["status"]] = true
-								if lm["status"] == em.status {
-									if *m.Gauge.Value != 1 {
-										t.Errorf("value of expected status %q of %q must be 1 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
-									}
-								} else {
-									if *m.Gauge.Value != 0 {
-										t.Errorf("value of unexpected status %q of %q must be 0 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
-									}
-								}
-							}
+				if *mf.Name != "sabakan_machine_status" {
+					continue
+				}
+				for _, em := range tt.expectedMetrics {
+					states := make(map[string]bool)
+					for _, m := range mf.Metric {
+						lm := labelToMap(m.Label)
+						if !hasLabels(lm, em.labels) {
+							continue
 						}
-						for _, s := range sabakan.StateList {
-							if !states[s.String()] {
-								t.Errorf("metrics for %q was not found", em.labels["serial"])
-							}
+						states[lm["status"]] = true
+						if lm["status"] == em.status && *m.Gauge.Value != 1 {
+							t.Errorf("expected status %q of %q must be 1 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
+						}
+						if lm["status"] != em.status && *m.Gauge.Value != 0 {
+							t.Errorf("unexpected status %q of %q must be 0 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
+						}
+					}
+					for _, s := range sabakan.StateList {
+						if !states[s.String()] {
+							t.Errorf("metrics for %q was not found", em.labels["serial"])
 						}
 					}
 				}
@@ -213,12 +211,13 @@ func testAssetsMetrics(t *testing.T) {
 
 			found := false
 			for _, mf := range metricsFamily {
-				if *mf.Name == tt.expectedName {
-					found = true
-					for _, m := range mf.Metric {
-						if *m.Gauge.Value != tt.expectedValue {
-							t.Errorf("value for %q is wrong.  expected: %f, actual: %f", tt.expectedName, tt.expectedValue, *m.Gauge.Value)
-						}
+				if *mf.Name != tt.expectedName {
+					continue
+				}
+				found = true
+				for _, m := range mf.Metric {
+					if *m.Gauge.Value != tt.expectedValue {
+						t.Errorf("value for %q is wrong.  expected: %f, actual: %f", tt.expectedName, tt.expectedValue, *m.Gauge.Value)
 					}
 				}
 			}

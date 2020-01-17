@@ -96,10 +96,7 @@ func (u *Updater) UpdateAllMetrics(ctx context.Context) error {
 			return err
 		})
 	}
-	if err := g.Wait(); err != nil {
-		return err
-	}
-	return nil
+	return g.Wait()
 }
 
 func (u *Updater) updateMachineStatus(ctx context.Context) error {
