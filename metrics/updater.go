@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/well"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -23,10 +22,47 @@ func (l logger) Println(v ...interface{}) {
 	log.Error(fmt.Sprint(v...), nil)
 }
 
+// Metric represents collectors and updater of metric.
+type Metric struct {
+	collectors []prometheus.Collector
+	updater    func(context.Context, *sabakan.Model) error
+}
+
+// Collector is a metrics collector for Sabakan.
+type Collector struct {
+	metrics map[string]Metric
+	model   *sabakan.Model
+}
+
+// NewCollector returns a new Collector.
+func NewCollector(model *sabakan.Model) *Collector {
+	return &Collector{
+		metrics: map[string]Metric{
+			"machine_status": {
+				collectors: []prometheus.Collector{MachineStatus},
+				updater:    updateMachineStatus,
+			},
+			"api_request_count": {
+				collectors: []prometheus.Collector{APIRequestTotal},
+				updater:    updateNop,
+			},
+			"assets_total": {
+				collectors: []prometheus.Collector{AssetsBytesTotal, AssetsItemsTotal},
+				updater:    updateAssetMetrics,
+			},
+			"images_total": {
+				collectors: []prometheus.Collector{ImagesBytesTotal, ImagesItemsTotal},
+				updater:    updateImageMetrics,
+			},
+		},
+		model: model,
+	}
+}
+
 // GetHandler return http.Handler for prometheus metrics
-func GetHandler() http.Handler {
+func GetHandler(collector *Collector) http.Handler {
 	registry := prometheus.NewRegistry()
-	registerMetrics(registry)
+	registry.MustRegister(collector)
 
 	handler := promhttp.HandlerFor(registry,
 		promhttp.HandlerOpts{
@@ -37,73 +73,47 @@ func GetHandler() http.Handler {
 	return handler
 }
 
-func registerMetrics(registry *prometheus.Registry) {
-	registry.MustRegister(MachineStatus)
-	registry.MustRegister(APIRequestTotal)
-	registry.MustRegister(AssetsBytesTotal)
-	registry.MustRegister(AssetsItemsTotal)
-	registry.MustRegister(ImagesBytesTotal)
-	registry.MustRegister(ImagesItemsTotal)
-}
-
-// Updater updates Prometheus metrics periodically
-type Updater struct {
-	interval time.Duration
-	model    *sabakan.Model
-}
-
-// NewUpdater is the constructor for Updater
-func NewUpdater(interval time.Duration, model *sabakan.Model) *Updater {
-	return &Updater{interval, model}
-}
-
-// UpdateLoop is the func to update all metrics continuously
-func (u *Updater) UpdateLoop(ctx context.Context) error {
-	ticker := time.NewTicker(u.interval)
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-ticker.C:
-			err := u.UpdateAllMetrics(ctx)
-			if err != nil {
-				log.Warn("failed to update metrics", map[string]interface{}{
-					log.FnError: err.Error(),
-				})
-			}
+// Describe implements prometheus.Collector.Describe().
+func (c Collector) Describe(ch chan<- *prometheus.Desc) {
+	for _, metric := range c.metrics {
+		for _, col := range metric.collectors {
+			col.Describe(ch)
 		}
 	}
 }
 
-// UpdateAllMetrics is the func to update all metrics once
-func (u *Updater) UpdateAllMetrics(ctx context.Context) error {
-	g, ctx := errgroup.WithContext(ctx)
-	tasks := map[string]func(ctx context.Context) error{
-		"updateMachineStatus": u.updateMachineStatus,
-		"updateAssetMetrics":  u.updateAssetMetrics,
-		"updateImageMetrics":  u.updateImageMetrics,
-	}
-	for key, task := range tasks {
-		key, task := key, task
-		g.Go(func() error {
-			err := task(ctx)
+// Collect implements prometheus.Collector.Collect().
+func (c Collector) Collect(ch chan<- prometheus.Metric) {
+	env := well.NewEnvironment(context.Background())
+	for key, metric := range c.metrics {
+		key, metric := key, metric
+		env.Go(func(ctx context.Context) error {
+			err := metric.updater(ctx, c.model)
 			if err != nil {
 				log.Warn("unable to update metrics", map[string]interface{}{
-					"funcname":  key,
+					"name":      key,
 					log.FnError: err,
 				})
+				// return nil not to disturb collection of other metrics
+				return nil
 			}
-			return err
+
+			for _, col := range metric.collectors {
+				col.Collect(ch)
+			}
+			return nil
 		})
 	}
-	return g.Wait()
+	env.Stop()
+	env.Wait()
 }
 
-func (u *Updater) updateMachineStatus(ctx context.Context) error {
-	machines, err := u.model.Machine.Query(ctx, nil)
+func updateMachineStatus(ctx context.Context, model *sabakan.Model) error {
+	machines, err := model.Machine.Query(ctx, nil)
 	if err != nil {
 		return err
 	}
+
 	for _, m := range machines {
 		if len(m.Spec.IPv4) == 0 {
 			return fmt.Errorf("unable to expose metrics, because machine have no IPv4 address; serial: %s", m.Spec.Serial)
@@ -117,11 +127,12 @@ func (u *Updater) updateMachineStatus(ctx context.Context) error {
 			}
 		}
 	}
+
 	return nil
 }
 
-func (u *Updater) updateAssetMetrics(ctx context.Context) error {
-	assets, err := u.model.Asset.GetInfoAll(ctx)
+func updateAssetMetrics(ctx context.Context, model *sabakan.Model) error {
+	assets, err := model.Asset.GetInfoAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -140,8 +151,8 @@ func (u *Updater) updateAssetMetrics(ctx context.Context) error {
 	return nil
 }
 
-func (u *Updater) updateImageMetrics(ctx context.Context) error {
-	images, err := u.model.Image.GetInfoAll(ctx)
+func updateImageMetrics(ctx context.Context, model *sabakan.Model) error {
+	images, err := model.Image.GetInfoAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -157,5 +168,9 @@ func (u *Updater) updateImageMetrics(ctx context.Context) error {
 	ImagesBytesTotal.Set(float64(totalSize))
 	ImagesItemsTotal.Set(float64(len(images)))
 
+	return nil
+}
+
+func updateNop(_ context.Context, _ *sabakan.Model) error {
 	return nil
 }

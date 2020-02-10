@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/cybozu-go/sabakan/v2/models/mock"
@@ -79,23 +78,24 @@ func testMachineStatus(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			updater := NewUpdater(10*time.Millisecond, model)
 
-			ctx := context.Background()
-			defer ctx.Done()
-			updater.UpdateAllMetrics(ctx)
+			collector := NewCollector(model)
+			handler := GetHandler(collector)
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", "/metrics", nil)
-			GetHandler().ServeHTTP(w, req)
+			handler.ServeHTTP(w, req)
 			metricsFamily, err := parseMetrics(w.Result())
 			if err != nil {
 				t.Fatal(err)
 			}
+
+			found := false
 			for _, mf := range metricsFamily {
 				if *mf.Name != "sabakan_machine_status" {
 					continue
 				}
+				found = true
 				for _, em := range tt.expectedMetrics {
 					states := make(map[string]bool)
 					for _, m := range mf.Metric {
@@ -118,6 +118,9 @@ func testMachineStatus(t *testing.T) {
 					}
 				}
 			}
+			if !found {
+				t.Error("metrics sabakan_machine_status was not found")
+			}
 		})
 	}
 }
@@ -137,11 +140,13 @@ func testAPIMetrics(t *testing.T) {
 		},
 	}
 
-	handler := GetHandler()
-	counter := NewCounter()
-
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
+			counter := NewCounter()
+			model := mock.NewModel()
+			collector := NewCollector(&model)
+			handler := GetHandler(collector)
+
 			oldValue, err := getCounterValue(handler, "sabakan_api_request_count", tt.expectedLabels)
 			if err != nil {
 				t.Fatal(err)
@@ -195,15 +200,13 @@ func testAssetsMetrics(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			updater := NewUpdater(10*time.Millisecond, model)
 
-			ctx := context.Background()
-			defer ctx.Done()
-			updater.UpdateAllMetrics(ctx)
+			collector := NewCollector(model)
+			handler := GetHandler(collector)
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", "/metrics", nil)
-			GetHandler().ServeHTTP(w, req)
+			handler.ServeHTTP(w, req)
 			metricsFamily, err := parseMetrics(w.Result())
 			if err != nil {
 				t.Fatal(err)

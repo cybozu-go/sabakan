@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -32,15 +31,14 @@ const (
 )
 
 var (
-	flagHTTP            = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
-	flagMetrics         = flag.String("metrics", defaultListenMetrics, "<Listen IP>:<Port number>")
-	flagDHCPBind        = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
-	flagIPXEPath        = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
-	flagDataDir         = flag.String("data-dir", defaultDataDir, "directory to store files")
-	flagAdvertiseURL    = flag.String("advertise-url", "", "public URL of this server")
-	flagAllowIPs        = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
-	flagMetricsInterval = flag.String("metrics-interval", defaultMetricsInterval, "interval duration to collect metrics data, default=30s")
-	flagPlayground      = flag.Bool("enable-playground", false, "enable GraphQL playground")
+	flagHTTP         = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
+	flagMetrics      = flag.String("metrics", defaultListenMetrics, "<Listen IP>:<Port number>")
+	flagDHCPBind     = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
+	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
+	flagDataDir      = flag.String("data-dir", defaultDataDir, "directory to store files")
+	flagAdvertiseURL = flag.String("advertise-url", "", "public URL of this server")
+	flagAllowIPs     = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
+	flagPlayground   = flag.Bool("enable-playground", false, "enable GraphQL playground")
 
 	flagEtcdEndpoints = flag.String("etcd-endpoints", strings.Join(etcdutil.DefaultEndpoints, ","), "comma-separated URLs of the backend etcd endpoints")
 	flagEtcdPrefix    = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
@@ -96,7 +94,6 @@ func subMain(ctx context.Context) error {
 		cfg.ListenHTTP = *flagHTTP
 		cfg.Playground = *flagPlayground
 		cfg.ListenMetrics = *flagMetrics
-		cfg.MetricsInterval = *flagMetricsInterval
 
 		cfg.Etcd.Endpoints = strings.Split(*flagEtcdEndpoints, ",")
 		cfg.Etcd.Prefix = *flagEtcdPrefix
@@ -187,14 +184,8 @@ func subMain(ctx context.Context) error {
 	s.ListenAndServe()
 
 	// Metrics
-	interval, err := time.ParseDuration(cfg.MetricsInterval)
-	if err != nil {
-		return fmt.Errorf("unable to parse duration; %w", err)
-	}
-	metricsUpdater := metrics.NewUpdater(interval, &model)
-	env.Go(metricsUpdater.UpdateLoop)
-
-	metricsHandler := metrics.GetHandler()
+	collector := metrics.NewCollector(&model)
+	metricsHandler := metrics.GetHandler(collector)
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", metricsHandler)
 	ms := &well.HTTPServer{
