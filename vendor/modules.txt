@@ -222,8 +222,6 @@ golang.org/x/net/internal/timeseries
 golang.org/x/net/ipv4
 golang.org/x/net/netutil
 golang.org/x/net/trace
-# golang.org/x/sync v0.0.0-20190423024810-112230192c58
-golang.org/x/sync/errgroup
 # golang.org/x/sys v0.0.0-20190419153524-e8e3143a4f4a
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
