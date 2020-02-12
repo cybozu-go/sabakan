@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
@@ -13,7 +14,8 @@ import (
 )
 
 const (
-	namespace = "sabakan"
+	namespace     = "sabakan"
+	scrapeTimeout = time.Second * 10
 )
 
 type logger struct{}
@@ -84,7 +86,9 @@ func (c Collector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements prometheus.Collector.Collect().
 func (c Collector) Collect(ch chan<- prometheus.Metric) {
-	env := well.NewEnvironment(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), scrapeTimeout)
+	defer cancel()
+	env := well.NewEnvironment(ctx)
 	for key, metric := range c.metrics {
 		key, metric := key, metric
 		env.Go(func(ctx context.Context) error {
