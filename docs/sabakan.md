@@ -33,7 +33,6 @@ Usage of sabakan:
         Log level [critical,error,warning,info,debug]
   -metrics string
         <Listen IP>:<Port number> (default "0.0.0.0:10081")
-  -metrics-interval string
 ```
 
 | Option              | Default value            | Description                                        |
@@ -47,7 +46,6 @@ Usage of sabakan:
 | `http`              | `0.0.0.0:10080`          | IP address and port number of HTTP server.         |
 | `ipxe-efi-path`     | `/usr/lib/ipxe/ipxe.efi` | Path to ipxe.efi .                                 |
 | `metrics`           | `0.0.0.0:10081`          | IP address and port number of metrics HTTP server. |
-| `metrics-interval`  | `30s`                    | Update interval of metrics.                        |
 
 Config file
 -----------

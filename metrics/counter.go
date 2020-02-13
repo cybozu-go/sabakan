@@ -8,17 +8,17 @@ import (
 
 // APICounter represents API counter.
 type APICounter struct {
-	Counter *prometheus.CounterVec
+	counter *prometheus.CounterVec
 }
 
 // NewCounter returns a new APICounter.
 func NewCounter() *APICounter {
 	return &APICounter{
-		Counter: APIRequestTotal,
+		counter: APIRequestTotal,
 	}
 }
 
-// Inc increments APIRequestTotal counter
+// Inc increments the counter.
 func (c *APICounter) Inc(statusCode int, path, verb string) {
-	c.Counter.WithLabelValues(fmt.Sprint(statusCode), path, verb).Inc()
+	c.counter.WithLabelValues(fmt.Sprint(statusCode), path, verb).Inc()
 }

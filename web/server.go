@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -28,6 +27,8 @@ func init() {
 	hostnameAtStartup, _ = os.Hostname()
 }
 
+// recorderWriter extends http.ReponseWrite to log the status code in WriteHeader().
+// The status code is used later for logging.
 type recorderWriter struct {
 	http.ResponseWriter
 	statusCode int
@@ -74,11 +75,10 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 	return s
 }
 
-// Handler implements http.Handler
+// ServeHTTP implements http.Handler.ServeHTTP
 func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w2 := &recorderWriter{ResponseWriter: w}
 	s.serveHTTP(w2, r)
-	fmt.Printf("updateapicounter %d, %s, %s", w2.statusCode, r.URL.Path, r.Method)
 	if s.Counter != nil {
 		s.Counter.Inc(w2.statusCode, r.URL.Path, r.Method)
 	}
