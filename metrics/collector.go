@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
-	"github.com/cybozu-go/well"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -88,28 +88,27 @@ func (c Collector) Describe(ch chan<- *prometheus.Desc) {
 func (c Collector) Collect(ch chan<- prometheus.Metric) {
 	ctx, cancel := context.WithTimeout(context.Background(), scrapeTimeout)
 	defer cancel()
-	env := well.NewEnvironment(ctx)
+
+	var wg sync.WaitGroup
 	for key, metric := range c.metrics {
-		key, metric := key, metric
-		env.Go(func(ctx context.Context) error {
+		wg.Add(1)
+		go func(key string, metric Metric) {
+			defer wg.Done()
 			err := metric.updater(ctx, c.model)
 			if err != nil {
 				log.Warn("unable to update metrics", map[string]interface{}{
 					"name":      key,
 					log.FnError: err,
 				})
-				// return nil not to disturb collection of other metrics
-				return nil
+				return
 			}
 
 			for _, col := range metric.collectors {
 				col.Collect(ch)
 			}
-			return nil
-		})
+		}(key, metric)
 	}
-	env.Stop()
-	env.Wait()
+	wg.Wait()
 }
 
 func updateMachineStatus(ctx context.Context, model *sabakan.Model) error {
