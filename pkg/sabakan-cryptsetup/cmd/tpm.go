@@ -127,6 +127,7 @@ func readKeyFromTPM(device string) ([]byte, TpmVersionID, error) {
 			"device":    device,
 			log.FnError: err,
 		})
+		// return nil (annotation for nilerr)
 		return nil, TpmNone, nil
 	}
 

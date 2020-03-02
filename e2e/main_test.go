@@ -3,12 +3,13 @@ package e2e
 import (
 	"bytes"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
+
+	"github.com/cybozu-go/log"
 )
 
 const (
@@ -45,7 +46,7 @@ func testMain(m *testing.M) (int, error) {
 func runEtcd() func() {
 	etcdPath, err := ioutil.TempDir("", "sabakan-test")
 	if err != nil {
-		log.Fatal(err)
+		log.ErrorExit(err)
 	}
 	command := exec.Command("etcd",
 		"--data-dir", etcdPath,
@@ -65,7 +66,7 @@ func runEtcd() func() {
 	command.Stderr = os.Stderr
 	err = command.Start()
 	if err != nil {
-		log.Fatal(err)
+		log.ErrorExit(err)
 	}
 
 	return func() {
@@ -87,7 +88,7 @@ func TestMain(m *testing.M) {
 
 	status, err := testMain(m)
 	if err != nil {
-		log.Fatal(err)
+		log.ErrorExit(err)
 	}
 
 	os.Exit(status)

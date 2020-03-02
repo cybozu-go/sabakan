@@ -32,7 +32,7 @@ require (
 	github.com/vincent-petithory/dataurl v0.0.0-20160330182126-9a301d65acbb
 	go.universe.tf/netboot v0.0.0-20181010164912-24067fad46fd
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
-	golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480
+	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d
 	golang.org/x/sys v0.0.0-20190419153524-e8e3143a4f4a // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/genproto v0.0.0-20181127195345-31ac5d88444a // indirect

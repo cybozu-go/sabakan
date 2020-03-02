@@ -3,7 +3,6 @@ package etcd
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/etcdutil"
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/cybozu-go/well"
 )
@@ -31,7 +31,7 @@ func testMain(m *testing.M) int {
 
 	etcdPath, err := ioutil.TempDir("", "sabakan-test")
 	if err != nil {
-		log.Fatal(err)
+		log.ErrorExit(err)
 	}
 
 	cmd := exec.Command("etcd",
@@ -45,7 +45,7 @@ func testMain(m *testing.M) int {
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()
 	if err != nil {
-		log.Fatal(err)
+		log.ErrorExit(err)
 	}
 	defer func() {
 		cmd.Process.Kill()
