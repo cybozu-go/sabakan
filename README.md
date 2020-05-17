@@ -121,6 +121,11 @@ License
 
 Sabakan is licensed under MIT license.
 
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/sabakan)
+
 [releases]: https://github.com/cybozu-go/sabakan/releases
 [godoc]: https://godoc.org/github.com/cybozu-go/sabakan
 [etcd]: https://coreos.com/etcd/
