@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.5.2] - 2020-06-08
+
+No changes.  Only for updating Docker base image.
+
 ## [2.5.1] - 2020-04-07
 
 ### Changed
@@ -165,7 +169,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.5.1...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.5.2...HEAD
+[2.5.2]: https://github.com/cybozu-go/sabakan/compare/v2.5.1...v2.5.2
 [2.5.1]: https://github.com/cybozu-go/sabakan/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/cybozu-go/sabakan/compare/v2.4.9...v2.5.0
 [2.4.9]: https://github.com/cybozu-go/sabakan/compare/v2.4.8...v2.4.9
