@@ -34,6 +34,7 @@ require (
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
 	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d
 	golang.org/x/sys v0.0.0-20190419153524-e8e3143a4f4a // indirect
+	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/genproto v0.0.0-20181127195345-31ac5d88444a // indirect
 	sigs.k8s.io/yaml v1.1.0
