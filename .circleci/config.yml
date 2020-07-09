@@ -30,11 +30,11 @@ commands:
             . ./bin/env
             $GCLOUD compute instances delete ${INSTANCE_NAME} --zone ${ZONE}
       - run:
-          name: Set the instance lifetime to 10 minutes
+          name: Set the instance lifetime
           command: |
             . ./bin/env
             $GCLOUD compute instances add-metadata ${INSTANCE_NAME} --zone ${ZONE} \
-              --metadata shutdown-at=$(date -Iseconds -d+10minutes)
+              --metadata shutdown-at=$(date -Iseconds -d+30minutes)
           when: on_fail
       - run:
           name: Notify to Slack
