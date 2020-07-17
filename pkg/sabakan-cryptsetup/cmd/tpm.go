@@ -127,7 +127,7 @@ func readKeyFromTPM(device string) ([]byte, TpmVersionID, error) {
 			"device":    device,
 			log.FnError: err,
 		})
-		// return nil (annotation for nilerr)
+		// lint:ignore nilerr  sabakan allows to proceed without TPM 2.0
 		return nil, TpmNone, nil
 	}
 
