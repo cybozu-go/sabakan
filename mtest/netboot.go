@@ -68,32 +68,35 @@ func TestNetboot() {
 			}, 6*time.Minute).Should(Succeed())
 		}
 
-		By("Copying readnvram binary")
-		remoteFilename := filepath.Join("/var/tmp", filepath.Base(readNVRAM))
-		copyReadNVRAM(worker2, remoteFilename)
+		// disable vTPM temporarily (see cluster.yaml)
+		if false {
+			By("Copying readnvram binary")
+			remoteFilename := filepath.Join("/var/tmp", filepath.Base(readNVRAM))
+			copyReadNVRAM(worker2, remoteFilename)
 
-		By("Reading encryption key from NVRAM")
-		ekHexBefore, stderr, err := execAt(worker2, "sudo", remoteFilename)
-		Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", ekHexBefore, stderr)
+			By("Reading encryption key from NVRAM")
+			ekHexBefore, stderr, err := execAt(worker2, "sudo", remoteFilename)
+			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", ekHexBefore, stderr)
 
-		By("Checking encryption key is kept after reboot")
-		// Exit code is 255 when ssh is disconnected
-		execAt(worker2, "sudo", "reboot")
-		Expect(prepareSSHClients(worker2)).NotTo(HaveOccurred())
-		copyReadNVRAM(worker2, remoteFilename)
+			By("Checking encryption key is kept after reboot")
+			// Exit code is 255 when ssh is disconnected
+			execAt(worker2, "sudo", "reboot")
+			Expect(prepareSSHClients(worker2)).NotTo(HaveOccurred())
+			copyReadNVRAM(worker2, remoteFilename)
 
-		ekHexAfter, stderr, err := execAt(worker2, "sudo", remoteFilename)
-		Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", ekHexAfter, stderr)
-		Expect(ekHexAfter).To(Equal(ekHexBefore))
+			ekHexAfter, stderr, err := execAt(worker2, "sudo", remoteFilename)
+			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", ekHexAfter, stderr)
+			Expect(ekHexAfter).To(Equal(ekHexBefore))
 
-		By("Checking encrypted disks")
-		Eventually(func() error {
-			_, stderr, err := execAt(worker2, "ls", "/dev/mapper/crypt-*")
-			if err != nil {
-				return fmt.Errorf("%v: stderr=%s", err, stderr)
-			}
-			return nil
-		}, 6*time.Minute).Should(Succeed())
+			By("Checking encrypted disks")
+			Eventually(func() error {
+				_, stderr, err := execAt(worker2, "ls", "/dev/mapper/crypt-*")
+				if err != nil {
+					return fmt.Errorf("%v: stderr=%s", err, stderr)
+				}
+				return nil
+			}, 6*time.Minute).Should(Succeed())
+		}
 
 		By("Removing the image from the index")
 		sabactlSafe("images", "delete", coreosVersion)
