@@ -11,9 +11,9 @@ PLACEMAT = /usr/bin/placemat
 GINKGO = env GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo
 ETCD_VERSION = 3.3.12
 PLACEMAT_DATADIR = /var/scratch/placemat
-COREOS_VERSION := 2023.5.0
-COREOS_KERNEL := $(abspath .)/coreos_production_pxe.vmlinuz
-COREOS_INITRD := $(abspath .)/coreos_production_pxe_image.cpio.gz
+COREOS_VERSION := 2605.5.0
+COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
+COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
 CT_VERSION = 0.9.0
 CT = /usr/local/bin/ct
 SUDO = sudo
@@ -35,7 +35,7 @@ export GOFLAGS
 ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
 SSH_PRIVKEY = $(realpath ./mtest_key)
 OUTPUT := ./output
-COREOS_IMAGE := coreos_production_qemu_image.img
+COREOS_IMAGE := flatcar_production_qemu_image.img
 SABAKAN_IMAGE := $(abspath $(OUTPUT))/sabakan.img
 SABAKAN_IMAGE_URL := quay.io/cybozu/sabakan:dev
 ETCD := $(abspath $(OUTPUT))/etcd
@@ -81,11 +81,11 @@ $(ETCD_ARCHIVE):
 	curl -sSLf -o $@ https://github.com/coreos/etcd/releases/download/v$(ETCD_VERSION)/etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
 
 $(COREOS_IMAGE):
-	curl -sSLf -o $@.bz2 https://stable.release.core-os.net/amd64-usr/current/$@.bz2
+	curl -sSLf -o $@.bz2 https://stable.release.flatcar-linux.net/amd64-usr/current/$@.bz2
 	bunzip2 -q $@.bz2
 
 $(COREOS_KERNEL) $(COREOS_INITRD):
-	curl -fSL -o $@ http://stable.release.core-os.net/amd64-usr/$(COREOS_VERSION)/$(notdir $@)
+	curl -fSL -o $@ http://stable.release.flatcar-linux.net/amd64-usr/$(COREOS_VERSION)/$(notdir $@)
 
 $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	mkdir -p $(OUTPUT)
@@ -99,7 +99,7 @@ $(OUTPUT)/sabakan.img:
 	cp ../LICENSE $(shell pwd)/../docker
 	sudo docker build --no-cache --rm=false -t $(SABAKAN_IMAGE_URL) ../docker/
 	mkdir -p $(OUTPUT)
-	sudo docker save -o $@ $(SABAKAN_IMAGE_URL)
+	sudo docker save $(SABAKAN_IMAGE_URL) > $@
 
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)

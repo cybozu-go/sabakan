@@ -3,4 +3,7 @@
 /coreos_*.vmlinuz
 /coreos_*.cpio.gz
 /coreos_*.img
+/flatcar_*.vmlinuz
+/flatcar_*.cpio.gz
+/flatcar_*.img
 /etcd-*.tar.gz
