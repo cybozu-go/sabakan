@@ -114,7 +114,7 @@ $(OUTPUT)/ignitions:
 	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' $@/networkd/10-eth0.network
 
 $(CT):
-	curl -fsSL -o ct https://github.com/flatcar-linux/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
+	curl -fsSL -o ct https://github.com/coreos/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
 	chmod +x ct
 	$(SUDO) mv ct $@
 
