@@ -14,7 +14,7 @@ PLACEMAT_DATADIR = /var/scratch/placemat
 COREOS_VERSION := 2605.5.0
 COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
 COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
-CT_VERSION = 0.9.0
+CT_VERSION = 0.6.1
 CT = /usr/local/bin/ct
 SUDO = sudo
 SUITE = ./functions
@@ -114,7 +114,7 @@ $(OUTPUT)/ignitions:
 	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' $@/networkd/10-eth0.network
 
 $(CT):
-	curl -fsSL -o ct https://github.com/coreos/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
+	curl -fsSL -o ct https://github.com/flatcar-linux/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
 	chmod +x ct
 	$(SUDO) mv ct $@
 
