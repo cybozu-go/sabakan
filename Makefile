@@ -4,10 +4,6 @@ GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 ETCD_DIR = /tmp/neco-etcd
 
-# for Go
-GOFLAGS = -mod=vendor
-export GOFLAGS
-
 all: test
 
 build: $(BUILT_TARGET)
@@ -21,10 +17,10 @@ stop-etcd:
 	systemctl --user stop neco-etcd.service
 
 test: build
-	test -z "$$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
-	test -z "$$(golint $$(go list ./... | grep -v /vendor/) | grep -v '/mtest/.*: should not use dot imports' | tee /dev/stderr)"
+	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
+	test -z "$$(golint $$(go list ./...) | grep -v '/mtest/.*: should not use dot imports' | tee /dev/stderr)"
 	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./... | grep -v /vendor/) 2>&1 | tee /dev/stderr)"
+	test -z "$$(custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
 	ineffassign .
 	go test -race -v ./...
 	go vet ./...
@@ -34,8 +30,6 @@ e2e: build
 
 mod:
 	go mod tidy
-	go mod vendor
-	git add -f vendor
 	git add go.mod
 
 clean:
