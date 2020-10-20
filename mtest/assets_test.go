@@ -10,8 +10,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// TestAssets tests sabakan assets
-func TestAssets() {
+// testAssets tests sabakan assets
+func testAssets() {
 	It("should work as expected", func() {
 		By("Uploading an asset")
 		execSafeAt(host1, "echo", "test", ">", "asset.txt")

@@ -18,7 +18,7 @@ stop-etcd:
 
 test: build
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	test -z "$$(golint $$(go list ./...) | grep -v '/mtest/.*: should not use dot imports' | tee /dev/stderr)"
+	staticcheck ./...
 	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
 	ineffassign .

@@ -3,8 +3,6 @@ commands:
   run-mtest:
     description: "multi-host test"
     parameters:
-      suite:
-        type: string
       target:
         type: string
         default: ""
@@ -22,7 +20,7 @@ commands:
           background: true
       - run:
           command: |
-            ./bin/run-mtest.sh <<parameters.suite>> <<parameters.target>>
+            ./bin/run-mtest.sh <<parameters.target>>
           no_output_timeout: 20m
       - run:
           name: delete instance
@@ -149,8 +147,7 @@ jobs:
       - image: google/cloud-sdk
     steps:
       - checkout
-      - run-mtest:
-          suite: ./functions
+      - run-mtest
 
 workflows:
   version: 2

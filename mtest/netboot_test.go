@@ -12,8 +12,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// TestNetboot tests iPXE boot
-func TestNetboot() {
+// testNetboot tests iPXE boot
+func testNetboot() {
 	It("is achieved", func() {
 		By("Set-up kernel params")
 		sabactlSafe("kernel-params", "set", "\"coreos.autologin=ttyS0 console=ttyS0\"")

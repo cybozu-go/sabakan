@@ -4,7 +4,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cybozu-go/sabakan/v2/mtest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -18,11 +17,12 @@ func TestMtest(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	mtest.RunBeforeSuite()
+	RunBeforeSuite()
 })
 
 // This must be the only top-level test container.
 // Other tests and test containers must be listed in this.
 var _ = Describe("Test Sabakan functions", func() {
-	mtest.FunctionsSuite()
+	Context("assets", testAssets)
+	Context("netboot", testNetboot)
 })
