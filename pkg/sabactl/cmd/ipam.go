@@ -16,6 +16,7 @@ var ipamCmd = &cobra.Command{
 	Use:   "ipam",
 	Short: "managa IPAM configurations",
 	Long:  `Get and set IPAM configurations.`,
+	RunE:  dummyRunFunc,
 }
 
 var ipamGetCmd = &cobra.Command{

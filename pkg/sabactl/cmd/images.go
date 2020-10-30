@@ -15,6 +15,7 @@ var imagesCmd = &cobra.Command{
 	Use:   "images",
 	Short: "manage OS images",
 	Long:  `Manage OS registered in sabakan.`,
+	RunE:  dummyRunFunc,
 }
 
 var imagesIndexCmd = &cobra.Command{

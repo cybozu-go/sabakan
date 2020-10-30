@@ -16,6 +16,7 @@ var dhcpCmd = &cobra.Command{
 	Use:   "dhcp",
 	Short: "manage DHCP configurations",
 	Long:  `Get and set DHCP configurations in sabakan.`,
+	RunE:  dummyRunFunc,
 }
 
 var dhcpGetCmd = &cobra.Command{

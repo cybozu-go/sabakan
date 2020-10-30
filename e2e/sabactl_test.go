@@ -19,7 +19,7 @@ import (
 
 const (
 	// ExitSuccess represents no error.
-	ExitSuccess subcommands.ExitStatus = subcommands.ExitSuccess
+	ExitSuccess = subcommands.ExitSuccess
 	// ExitFailure represents general error.
 	ExitFailure = subcommands.ExitFailure
 	// ExitUsageError represents bad usage of command.
@@ -69,6 +69,16 @@ func runSabactlWithFile(t *testing.T, data interface{}, args ...string) (*bytes.
 	return runSabactl(args...)
 }
 
+func testSabactlRoot(t *testing.T) {
+	stdout, stderr, err := runSabactl("invalid")
+	code := exitCode(err)
+	if code != ExitUsageError {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+}
+
 func testSabactlDHCP(t *testing.T) {
 	var conf = sabakan.DHCPConfig{
 		DNSServers: []string{"1.1.1.1", "8.8.8.8"},
@@ -104,6 +114,14 @@ func testSabactlDHCP(t *testing.T) {
 	stdout, stderr, err = runSabactlWithFile(t, &badConf, "dhcp", "set")
 	code = exitCode(err)
 	if code != ExitResponse4xx {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
+	stdout, stderr, err = runSabactl("dhcp", "invalid")
+	code = exitCode(err)
+	if code != ExitUsageError {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -171,6 +189,14 @@ func testSabactlIPAM(t *testing.T) {
 	stdout, stderr, err = runSabactlWithFile(t, &badConf, "ipam", "set")
 	code = exitCode(err)
 	if code != ExitResponse4xx {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
+
+	stdout, stderr, err = runSabactl("ipam", "invalid")
+	code = exitCode(err)
+	if code != ExitUsageError {
 		t.Log("stdout:", stdout.String())
 		t.Log("stderr:", stderr.String())
 		t.Fatal("exit code:", code)
@@ -393,6 +419,14 @@ func testSabactlMachines(t *testing.T) {
 		t.Log("stderr:", stderr.String())
 		t.Fatal("machine not removed", code)
 	}
+
+	stdout, stderr, err = runSabactl("machines", "invalid")
+	code = exitCode(err)
+	if code != ExitUsageError {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
 }
 
 func testSabactlImages(t *testing.T) {
@@ -470,6 +504,14 @@ func testSabactlImages(t *testing.T) {
 	}
 	if len(got) != 0 {
 		t.Error("index was not empty")
+	}
+
+	stdout, stderr, err = runSabactl("images", "invalid")
+	code = exitCode(err)
+	if code != ExitUsageError {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
 	}
 }
 
@@ -573,6 +615,14 @@ func testSabactlAssets(t *testing.T) {
 	if len(index) != 0 {
 		t.Error("index was not empty")
 	}
+
+	stdout, stderr, err = runSabactl("assets", "invalid")
+	code = exitCode(err)
+	if code != ExitUsageError {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
 }
 
 func testSabactlIgnitions(t *testing.T) {
@@ -655,6 +705,14 @@ func testSabactlIgnitions(t *testing.T) {
 	if !cmp.Equal(expectedIDs, ids) {
 		t.Error("unmatched template IDs:", cmp.Diff(expectedIDs, ids))
 	}
+
+	stdout, stderr, err = runSabactl("ignitions", "invalid")
+	code = exitCode(err)
+	if code != ExitUsageError {
+		t.Log("stdout:", stdout.String())
+		t.Log("stderr:", stderr.String())
+		t.Fatal("exit code:", code)
+	}
 }
 
 func testSabactlLogs(t *testing.T) {
@@ -729,6 +787,7 @@ func TestSabactl(t *testing.T) {
 	if err != nil {
 		t.Skip("sabactl executable not found")
 	}
+	t.Run("root", testSabactlRoot)
 	t.Run("DHCP", testSabactlDHCP)
 	t.Run("IPAM", testSabactlIPAM)
 	t.Run("Machines", testSabactlMachines)

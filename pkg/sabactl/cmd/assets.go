@@ -14,6 +14,7 @@ var assetsCmd = &cobra.Command{
 	Use:   "assets",
 	Short: "manage assets",
 	Long:  `Get, add, update and delete assets in sabakan.`,
+	RunE:  dummyRunFunc,
 }
 
 var assetsIndexCmd = &cobra.Command{

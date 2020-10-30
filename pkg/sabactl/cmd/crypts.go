@@ -14,6 +14,7 @@ var cryptsCmd = &cobra.Command{
 	Use:   "crypts delete",
 	Short: "manage disk encryption key",
 	Long:  `Manage disk encryption key of the machines.`,
+	RunE:  dummyRunFunc,
 }
 
 var cryptsDeleteCmd = &cobra.Command{

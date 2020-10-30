@@ -15,6 +15,7 @@ var kernelParamsCmd = &cobra.Command{
 	Use:   "kernel-params",
 	Short: "manage kernel parameters",
 	Long:  `Manage kernel parameters in sabakan.`,
+	RunE:  dummyRunFunc,
 }
 
 var kernelParamsGetCmd = &cobra.Command{

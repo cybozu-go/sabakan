@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/cybozu-go/sabakan/v2/client"
@@ -34,6 +36,21 @@ const (
 	// ExitConflicted represents HTTP status 409.
 	ExitConflicted = 19
 )
+
+// dummyRunFunc is used for subcommands which need not have Run or RunE.
+func dummyRunFunc(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return cmd.Help()
+	}
+	return fmt.Errorf("unknown command %q for %q\n\nRun '%s --help' for usage.", args[0], cmd.CommandPath(), cmd.CommandPath())
+}
+
+// isInvalidUsage is used to check for subcommand errors.
+func isInvalidUsage(err error) bool {
+	// "spf13/cobra" may return "unknown command" errors, so checking by a forward match of the error message.
+	// ref: https://github.com/spf13/cobra/blob/v1.1.1/args.go#L22
+	return strings.HasPrefix(err.Error(), "unknown command ")
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -77,6 +94,8 @@ func Execute() {
 		code = ExitResponse4xx
 	case client.Is5xx(err):
 		code = ExitResponse5xx
+	case isInvalidUsage(err):
+		code = ExitUsageError
 	default:
 		code = ExitFailure
 	}
