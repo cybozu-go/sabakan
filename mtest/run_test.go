@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,9 +30,7 @@ const (
 )
 
 var (
-	sshClients = make(map[string]*sshAgent)
-	httpClient = &well.HTTPClient{Client: &http.Client{}}
-
+	sshClients  = make(map[string]*sshAgent)
 	agentDialer = &net.Dialer{
 		Timeout:   defaultDialTimeout,
 		KeepAlive: defaultKeepAlive,
