@@ -8,7 +8,7 @@ HOST3 = 10.0.0.103
 WORKER1 = 10.0.0.104
 WORKER2 = 10.0.0.105
 PLACEMAT = /usr/bin/placemat
-GINKGO = env GOFLAGS=-mod=vendor $(GOPATH)/bin/ginkgo
+GINKGO = $(GOPATH)/bin/ginkgo
 ETCD_VERSION = 3.3.12
 PLACEMAT_DATADIR = /var/scratch/placemat
 COREOS_VERSION := 2605.5.0
@@ -26,10 +26,6 @@ endif
 
 export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER1 WORKER2 PLACEMAT GINKGO SUITE_PACKAGE
 export COREOS_VERSION COREOS_KERNEL COREOS_INITRD
-
-### for Go
-GOFLAGS = -mod=vendor
-export GOFLAGS
 
 # non-configuration variables
 ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
