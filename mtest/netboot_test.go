@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -119,7 +120,7 @@ func copyReadNVRAM(worker, remoteFilename string) {
 	Expect(err).NotTo(HaveOccurred())
 	defer f.Close()
 
-	_, err = f.Seek(0, os.SEEK_SET)
+	_, err = f.Seek(0, io.SeekStart)
 	Expect(err).NotTo(HaveOccurred())
 	stdout, stderr, err := execAtWithStream(worker, f, "dd", "of="+remoteFilename)
 	Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)

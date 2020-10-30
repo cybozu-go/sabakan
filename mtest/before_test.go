@@ -2,6 +2,7 @@ package mtest
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -33,7 +34,7 @@ func RunBeforeSuite() {
 		defer f.Close()
 		remoteFilename := filepath.Join("/var/tmp", filepath.Base(testFile))
 		for _, host := range []string{host1, host2, host3} {
-			_, err := f.Seek(0, os.SEEK_SET)
+			_, err := f.Seek(0, io.SeekStart)
 			Expect(err).NotTo(HaveOccurred())
 			stdout, stderr, err := execAtWithStream(host, f, "dd", "of="+remoteFilename)
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
@@ -49,7 +50,7 @@ func RunBeforeSuite() {
 		defer f.Close()
 		remoteFilename := filepath.Join("/var/tmp", filepath.Base(testFile))
 		for _, host := range []string{host1, host2, host3} {
-			_, err := f.Seek(0, os.SEEK_SET)
+			_, err := f.Seek(0, io.SeekStart)
 			Expect(err).NotTo(HaveOccurred())
 			stdout, stderr, err := execAtWithStream(host, f, "dd", "of="+remoteFilename)
 			Expect(err).NotTo(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)

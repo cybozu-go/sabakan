@@ -305,7 +305,7 @@ func remoteTempFile(body string) string {
 	defer f.Close()
 	_, err = f.WriteString(body)
 	Expect(err).NotTo(HaveOccurred())
-	_, err = f.Seek(0, os.SEEK_SET)
+	_, err = f.Seek(0, io.SeekStart)
 	Expect(err).NotTo(HaveOccurred())
 	remoteFile := filepath.Join("/tmp", filepath.Base(f.Name()))
 	_, _, err = execAtWithStream(host1, f, "dd", "of="+f.Name())
