@@ -9,13 +9,11 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/cybozu-go/well"
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/crypto/ssh"
 )
@@ -229,15 +227,6 @@ func execAt(host string, args ...string) (stdout, stderr []byte, e error) {
 }
 
 // WARNING: `input` can contain secret data.  Never output `input` to console.
-func execAtWithInput(host string, input []byte, args ...string) (stdout, stderr []byte, e error) {
-	var r io.Reader
-	if input != nil {
-		r = bytes.NewReader(input)
-	}
-	return execAtWithStream(host, r, args...)
-}
-
-// WARNING: `input` can contain secret data.  Never output `input` to console.
 func execAtWithStream(host string, input io.Reader, args ...string) (stdout, stderr []byte, e error) {
 	agent := sshClients[host]
 	return doExec(agent, input, args...)
@@ -272,28 +261,6 @@ func execSafeAt(host string, args ...string) []byte {
 	stdout, stderr, err := execAt(host, args...)
 	ExpectWithOffset(1, err).To(Succeed(), "[%s] %v: %s", host, args, stderr)
 	return stdout
-}
-
-func execAtLocal(cmd string, args ...string) ([]byte, error) {
-	var stdout bytes.Buffer
-	command := exec.Command(cmd, args...)
-	command.Stdout = &stdout
-	command.Stderr = GinkgoWriter
-	err := command.Run()
-	if err != nil {
-		return nil, err
-	}
-	return stdout.Bytes(), nil
-}
-
-func localTempFile(body string) *os.File {
-	f, err := ioutil.TempFile("", "mtest")
-	Expect(err).NotTo(HaveOccurred())
-	_, err = f.WriteString(body)
-	Expect(err).NotTo(HaveOccurred())
-	err = f.Close()
-	Expect(err).NotTo(HaveOccurred())
-	return f
 }
 
 func remoteTempFile(body string) string {
