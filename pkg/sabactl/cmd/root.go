@@ -25,8 +25,6 @@ const (
 	ExitFailure = 1
 	// ExitUsageError represents bad usage of command.
 	ExitUsageError = 2
-	// ExitInvalidParams represents invalid input parameters for command.
-	ExitInvalidParams = 3
 	// ExitResponse4xx represents HTTP status 4xx.
 	ExitResponse4xx = 4
 	// ExitResponse5xx represents HTTP status 5xx.
@@ -42,7 +40,7 @@ func dummyRunFunc(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return cmd.Help()
 	}
-	return fmt.Errorf("unknown command %q for %q\n\nRun '%s --help' for usage.", args[0], cmd.CommandPath(), cmd.CommandPath())
+	return fmt.Errorf("unknown command %q for %q\n\nRun '%s --help' for usage", args[0], cmd.CommandPath(), cmd.CommandPath())
 }
 
 // isInvalidUsage is used to check for subcommand errors.

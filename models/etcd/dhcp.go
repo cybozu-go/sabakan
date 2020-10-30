@@ -67,6 +67,9 @@ type leaseUsage struct {
 }
 
 func (l *leaseUsage) MarshalJSON() ([]byte, error) {
+	if l.hwMap == nil {
+		return json.Marshal(make(map[string]leaseInfo))
+	}
 	return json.Marshal(l.hwMap)
 }
 
@@ -196,7 +199,7 @@ func (d *driver) leaseUsageKey(lrkey string) string {
 
 func (d *driver) initializeLeaseUsage(ctx context.Context, lrkey string) error {
 	var usage leaseUsage
-	j, err := json.Marshal(usage)
+	j, err := json.Marshal(&usage)
 	if err != nil {
 		return err
 	}

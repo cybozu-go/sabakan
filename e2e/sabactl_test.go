@@ -20,20 +20,14 @@ import (
 const (
 	// ExitSuccess represents no error.
 	ExitSuccess = subcommands.ExitSuccess
-	// ExitFailure represents general error.
-	ExitFailure = subcommands.ExitFailure
 	// ExitUsageError represents bad usage of command.
 	ExitUsageError = subcommands.ExitUsageError
-	// ExitInvalidParams represents invalid input parameters for command.
-	ExitInvalidParams = 3
 	// ExitResponse4xx represents HTTP status 4xx.
 	ExitResponse4xx = 4
 	// ExitResponse5xx represents HTTP status 5xx.
 	ExitResponse5xx = 5
 	// ExitNotFound represents HTTP status 404.
 	ExitNotFound = 14
-	// ExitConflicted represents HTTP status 409.
-	ExitConflicted = 19
 )
 
 func exitCode(err error) subcommands.ExitStatus {

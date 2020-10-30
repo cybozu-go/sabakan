@@ -1,6 +1,8 @@
 package web
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -8,7 +10,7 @@ import (
 	"github.com/cybozu-go/sabakan/v2/models/mock"
 )
 
-func testHandleHealth(t *testing.T) {
+func TestHandleHealth(t *testing.T) {
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
@@ -21,4 +23,18 @@ func testHandleHealth(t *testing.T) {
 		t.Fatal("resp.StatuCode != http.StatusOK:", resp.StatusCode)
 	}
 
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal("failed to read response body", err)
+	}
+
+	body := make(map[string]string)
+	err = json.Unmarshal(b, &body)
+	if err != nil {
+		t.Fatal("failed to unmarshal response body", err)
+	}
+
+	if body["health"] != "healthy" {
+		t.Fatal("body[\"health\"] != \"healthy\":", body["health"])
+	}
 }
