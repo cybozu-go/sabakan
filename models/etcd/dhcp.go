@@ -76,6 +76,10 @@ func (l *leaseUsage) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	if l.hwMap == nil {
+		l.hwMap = make(map[string]leaseInfo)
+	}
+
 	um := make(map[int]bool)
 	for _, v := range l.hwMap {
 		um[v.Index] = true
