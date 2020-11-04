@@ -29,8 +29,8 @@ type TpmVersionID int
 // TPM versions.
 const (
 	TpmNone TpmVersionID = 0
-	Tpm12                = 1
-	Tpm20                = 2
+	Tpm12   TpmVersionID = 1
+	Tpm20   TpmVersionID = 2
 )
 
 func (v TpmVersionID) String() string {

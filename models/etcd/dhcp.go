@@ -196,7 +196,7 @@ func (d *driver) leaseUsageKey(lrkey string) string {
 
 func (d *driver) initializeLeaseUsage(ctx context.Context, lrkey string) error {
 	var usage leaseUsage
-	j, err := json.Marshal(usage)
+	j, err := json.Marshal(&usage)
 	if err != nil {
 		return err
 	}
@@ -231,6 +231,10 @@ RETRY:
 	err = json.Unmarshal(kv.Value, usage)
 	if err != nil {
 		return nil, err
+	}
+
+	if usage.hwMap == nil {
+		usage.hwMap = make(map[string]leaseInfo)
 	}
 
 	usage.revision = kv.ModRevision

@@ -20,6 +20,7 @@ var ignitionsCmd = &cobra.Command{
 	Use:   "ignitions",
 	Short: "manage ignitions",
 	Long:  `Get and update ignitions in sabakan.`,
+	RunE:  dummyRunFunc,
 }
 
 var ignitionsGetCmd = &cobra.Command{

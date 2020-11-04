@@ -313,11 +313,20 @@ func testAssetPut(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	if status.Status != http.StatusOK {
+		t.Error("status.Status != http.StatusOK:", status.Status)
+	}
+	if status.ID != 3 {
+		t.Error("status.ID != 3:", status.ID)
+	}
 
 	// case 4. checksum mismatch
 	status, err = d.assetPut(context.Background(), "foo", "text/plain", csum, nil, strings.NewReader("zot"))
 	if err == nil {
 		t.Error("checksum mismatch should have been detected")
+	}
+	if status != nil {
+		t.Error("should not return status:", status.Status)
 	}
 }
 

@@ -22,6 +22,7 @@ var machinesCmd = &cobra.Command{
 	Use:   "machines action",
 	Short: "manage machines",
 	Long:  `Manage machines registered in sabakan.`,
+	RunE:  dummyRunFunc,
 }
 
 var machinesGetCmd = &cobra.Command{

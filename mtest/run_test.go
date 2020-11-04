@@ -8,15 +8,12 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
-	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/cybozu-go/well"
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/crypto/ssh"
 )
@@ -31,9 +28,7 @@ const (
 )
 
 var (
-	sshClients = make(map[string]*sshAgent)
-	httpClient = &well.HTTPClient{Client: &http.Client{}}
-
+	sshClients  = make(map[string]*sshAgent)
 	agentDialer = &net.Dialer{
 		Timeout:   defaultDialTimeout,
 		KeepAlive: defaultKeepAlive,
@@ -232,15 +227,6 @@ func execAt(host string, args ...string) (stdout, stderr []byte, e error) {
 }
 
 // WARNING: `input` can contain secret data.  Never output `input` to console.
-func execAtWithInput(host string, input []byte, args ...string) (stdout, stderr []byte, e error) {
-	var r io.Reader
-	if input != nil {
-		r = bytes.NewReader(input)
-	}
-	return execAtWithStream(host, r, args...)
-}
-
-// WARNING: `input` can contain secret data.  Never output `input` to console.
 func execAtWithStream(host string, input io.Reader, args ...string) (stdout, stderr []byte, e error) {
 	agent := sshClients[host]
 	return doExec(agent, input, args...)
@@ -277,35 +263,13 @@ func execSafeAt(host string, args ...string) []byte {
 	return stdout
 }
 
-func execAtLocal(cmd string, args ...string) ([]byte, error) {
-	var stdout bytes.Buffer
-	command := exec.Command(cmd, args...)
-	command.Stdout = &stdout
-	command.Stderr = GinkgoWriter
-	err := command.Run()
-	if err != nil {
-		return nil, err
-	}
-	return stdout.Bytes(), nil
-}
-
-func localTempFile(body string) *os.File {
-	f, err := ioutil.TempFile("", "mtest")
-	Expect(err).NotTo(HaveOccurred())
-	_, err = f.WriteString(body)
-	Expect(err).NotTo(HaveOccurred())
-	err = f.Close()
-	Expect(err).NotTo(HaveOccurred())
-	return f
-}
-
 func remoteTempFile(body string) string {
 	f, err := ioutil.TempFile("", "mtest")
 	Expect(err).NotTo(HaveOccurred())
 	defer f.Close()
 	_, err = f.WriteString(body)
 	Expect(err).NotTo(HaveOccurred())
-	_, err = f.Seek(0, os.SEEK_SET)
+	_, err = f.Seek(0, io.SeekStart)
 	Expect(err).NotTo(HaveOccurred())
 	remoteFile := filepath.Join("/tmp", filepath.Base(f.Name()))
 	_, _, err = execAtWithStream(host1, f, "dd", "of="+f.Name())

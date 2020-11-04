@@ -17,14 +17,8 @@ COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
 CT_VERSION = 0.6.1
 CT = /usr/local/bin/ct
 SUDO = sudo
-SUITE = ./functions
-ifeq ($(findstring /,$(SUITE)),)
-  SUITE_PACKAGE = ./$(SUITE)
-else
-  SUITE_PACKAGE = $(SUITE)
-endif
 
-export BRIDGE_ADDRESS HOST1 HOST2 HOST3 WORKER1 WORKER2 PLACEMAT GINKGO SUITE_PACKAGE
+export HOST1 HOST2 HOST3 WORKER1 WORKER2 PLACEMAT GINKGO
 export COREOS_VERSION COREOS_KERNEL COREOS_INITRD
 
 # non-configuration variables

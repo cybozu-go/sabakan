@@ -1,7 +1,6 @@
 #!/bin/sh -ex
 
-SUITE=$1
-TARGET=$2
+TARGET=$1
 
 . $(dirname $0)/env
 
@@ -51,7 +50,7 @@ cp /assets/ubuntu-*.img .
 make setup
 make placemat
 sleep 3
-exec make test SUITE=${SUITE} TARGET="${TARGET}"
+exec make test TARGET="${TARGET}"
 EOF
 chmod +x run.sh
 
