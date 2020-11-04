@@ -20,15 +20,18 @@ start-etcd:
 stop-etcd:
 	systemctl --user stop neco-etcd.service
 
-.PHONY: test
-test: build
+.PHONY: code-check
+code-check:
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
 	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
 	ineffassign .
-	go test -race -v ./...
 	go vet ./...
+
+.PHONY: test
+test: build code-check
+	go test -race -v ./...
 
 .PHONY: e2e
 e2e: build
