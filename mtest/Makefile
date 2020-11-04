@@ -15,7 +15,6 @@ COREOS_VERSION := 2605.5.0
 COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
 COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
 CT_VERSION = 0.6.1
-CT = /usr/local/bin/ct
 SUDO = sudo
 
 export HOST1 HOST2 HOST3 WORKER1 WORKER2 PLACEMAT GINKGO
@@ -28,6 +27,7 @@ OUTPUT := ./output
 COREOS_IMAGE := flatcar_production_qemu_image.img
 SABAKAN_IMAGE := $(abspath $(OUTPUT))/sabakan.img
 SABAKAN_IMAGE_URL := quay.io/cybozu/sabakan:dev
+CT := $(abspath $(OUTPUT))/ct
 ETCD := $(abspath $(OUTPUT))/etcd
 ETCDCTL := $(abspath $(OUTPUT))/etcdctl
 MACHINES_JSON := $(abspath $(OUTPUT))/machines.json
@@ -57,6 +57,7 @@ PLACEMAT_DEPS = \
 	$(OUTPUT)/host3.ign \
 	$(OUTPUT)/ignitions
 
+.PHONY: all
 all:
 	@echo "Specify one of these targets:"
 	@echo
@@ -64,8 +65,7 @@ all:
 	@echo "    stop     - stop placemat."
 	@echo "    test     - run test in placemat env."
 	@echo "    setup    - install dependencies."
-	@echo
-	@echo "'make test' accepts SUITE."
+	@echo "    clean    - clean temporary files."
 
 $(ETCD_ARCHIVE):
 	curl -sSLf -o $@ https://github.com/coreos/etcd/releases/download/v$(ETCD_VERSION)/etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
@@ -104,9 +104,8 @@ $(OUTPUT)/ignitions:
 	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' $@/networkd/10-eth0.network
 
 $(CT):
-	curl -fsSL -o ct https://github.com/coreos/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
-	chmod +x ct
-	$(SUDO) mv ct $@
+	curl -fsSL -o $@ https://github.com/coreos/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
+	chmod +x $@
 
 $(OUTPUT)/host.ign: host-ign.yml $(CT)
 	mkdir -p $(OUTPUT)
@@ -126,7 +125,6 @@ $(OUTPUT)/host2.ign: $(OUTPUT)/host.ign
 		-e 's/__HOST__/$(HOST2)/' \
 		-e 's/__HOST_ADDRESS__/$(HOST2)/' $< > $@
 
-
 $(OUTPUT)/host3.ign: $(OUTPUT)/host.ign
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
 		-e 's/__HOST_NAME__/host3/' \
@@ -138,15 +136,18 @@ $(OUTPUT)/readnvram:
 	go build -o $@ ./readnvram/main.go
 
 # Targets
+.PHONY: test
 test: $(TEST_DEPS)
 	./test.sh "$(TARGET)"
 
+.PHONY: placemat
 placemat: $(PLACEMAT_DEPS)
 	sudo rm -rf $(PLACEMAT_DATADIR)
 	sudo rm -rf $(VM_SHARED_DIR)
 	sudo systemd-run --unit=placemat.service $(PLACEMAT) -enable-virtfs $(abspath output/cluster.yml)
 	@echo 'Placemat is running.  To kill it, do "make stop".'
 
+.PHONY: stop
 stop:
 	sudo systemctl stop placemat.service
 	sudo systemctl disable placemat.service
@@ -154,10 +155,10 @@ stop:
 	sudo systemctl daemon-reload
 	sudo systemctl reset-failed placemat.service
 
+.PHONY: clean
 clean:
 	rm -rf $(OUTPUT)
 
+.PHONY: setup
 setup:
 	go install github.com/onsi/ginkgo/ginkgo
-
-.PHONY: all test placemat stop clean setup
