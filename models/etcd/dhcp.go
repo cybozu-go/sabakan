@@ -76,10 +76,6 @@ func (l *leaseUsage) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if l.hwMap == nil {
-		l.hwMap = make(map[string]leaseInfo)
-	}
-
 	um := make(map[int]bool)
 	for _, v := range l.hwMap {
 		um[v.Index] = true
@@ -235,6 +231,10 @@ RETRY:
 	err = json.Unmarshal(kv.Value, usage)
 	if err != nil {
 		return nil, err
+	}
+
+	if usage.hwMap == nil {
+		usage.hwMap = make(map[string]leaseInfo)
 	}
 
 	usage.revision = kv.ModRevision
