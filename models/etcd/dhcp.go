@@ -67,9 +67,6 @@ type leaseUsage struct {
 }
 
 func (l *leaseUsage) MarshalJSON() ([]byte, error) {
-	if l.hwMap == nil {
-		return json.Marshal(make(map[string]leaseInfo))
-	}
 	return json.Marshal(l.hwMap)
 }
 

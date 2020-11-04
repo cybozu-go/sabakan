@@ -14,14 +14,13 @@ import (
 
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/subcommands"
 )
 
 const (
 	// ExitSuccess represents no error.
-	ExitSuccess = subcommands.ExitSuccess
+	ExitSuccess = 0
 	// ExitUsageError represents bad usage of command.
-	ExitUsageError = subcommands.ExitUsageError
+	ExitUsageError = 2
 	// ExitResponse4xx represents HTTP status 4xx.
 	ExitResponse4xx = 4
 	// ExitResponse5xx represents HTTP status 5xx.
@@ -30,11 +29,11 @@ const (
 	ExitNotFound = 14
 )
 
-func exitCode(err error) subcommands.ExitStatus {
+func exitCode(err error) int {
 	if err != nil {
 		if e2, ok := err.(*exec.ExitError); ok {
 			if s, ok := e2.Sys().(syscall.WaitStatus); ok {
-				return subcommands.ExitStatus(s.ExitStatus())
+				return s.ExitStatus()
 			}
 			// unexpected error; not Unix?
 			panic(err)
