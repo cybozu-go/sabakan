@@ -29,13 +29,13 @@ func testMain(m *testing.M) int {
 		os.Exit(code)
 	}
 
-	etcdPath, err := ioutil.TempDir("", "sabakan-test")
+	etcdDataDir, err := ioutil.TempDir("", "sabakan-test")
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
 	cmd := exec.Command("etcd",
-		"--data-dir", etcdPath,
+		"--data-dir", etcdDataDir,
 		"--initial-cluster", "default="+etcdPeerURL,
 		"--listen-peer-urls", etcdPeerURL,
 		"--initial-advertise-peer-urls", etcdPeerURL,
@@ -50,7 +50,7 @@ func testMain(m *testing.M) int {
 	defer func() {
 		cmd.Process.Kill()
 		cmd.Wait()
-		os.RemoveAll(etcdPath)
+		os.RemoveAll(etcdDataDir)
 	}()
 
 	return m.Run()

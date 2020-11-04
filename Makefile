@@ -2,7 +2,6 @@
 
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
-ETCD_DIR = /tmp/neco-etcd
 
 .PHONY: all
 all: test
@@ -11,14 +10,6 @@ all: test
 build: $(BUILT_TARGET)
 $(BUILT_TARGET): $(GO_FILES)
 	go build ./pkg/$@
-
-.PHONY: start-etcd
-start-etcd:
-	systemd-run --user --unit neco-etcd.service etcd --data-dir $(ETCD_DIR)
-
-.PHONY: stop-etcd
-stop-etcd:
-	systemctl --user stop neco-etcd.service
 
 .PHONY: code-check
 code-check:

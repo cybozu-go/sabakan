@@ -23,7 +23,5 @@
 \#*#
 .vscode/
 
-default.etcd
-
 # ignore go.sum
 /go.sum

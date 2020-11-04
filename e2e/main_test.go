@@ -44,12 +44,12 @@ func testMain(m *testing.M) (int, error) {
 }
 
 func runEtcd() func() {
-	etcdPath, err := ioutil.TempDir("", "sabakan-test")
+	etcdDataDir, err := ioutil.TempDir("", "sabakan-test")
 	if err != nil {
 		log.ErrorExit(err)
 	}
 	command := exec.Command("etcd",
-		"--data-dir", etcdPath,
+		"--data-dir", etcdDataDir,
 		"--client-cert-auth",
 		"--trusted-ca-file", etcdCA,
 		"--cert-file", etcdCert,
@@ -72,7 +72,7 @@ func runEtcd() func() {
 	return func() {
 		command.Process.Kill()
 		command.Wait()
-		os.RemoveAll(etcdPath)
+		os.RemoveAll(etcdDataDir)
 	}
 }
 
