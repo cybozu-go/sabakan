@@ -2,7 +2,7 @@ Getting started
 ===============
 
 This document quickly guides you to configure sabakan and netboot
-your servers with CoreOS Container Linux.
+your servers with Flatcar Container Linux.
 
 * [Setup sabakan](#setup)
   * [Prepare etcd](#etcd)
@@ -12,7 +12,7 @@ your servers with CoreOS Container Linux.
 * [Netboot](#netboot)
   * [Configure IPAM](#ipam)
   * [Configure DHCP (option)](#dhcp)
-  * [Upload CoreOS Container Linux](#upload)
+  * [Upload Flatcar Container Linux](#upload)
   * [Register machines](#register)
   * [Register kernel parameters](#kernelparams)
 * [What's next](#whatsnext)
@@ -114,12 +114,12 @@ If you want to customize DHCP options as described in [dhcp.md](./dhcp.md),
     $ sabactl dhcp set -f dhcp.json
     ```
 
-### <a name="upload" />Upload CoreOS Container Linux
+### <a name="upload" />Upload Flatcar Container Linux
 
-Download CoreOS PXE boot images:
+Download Flatcar PXE boot images:
 ```console
-$ curl -o kernel -Lf http://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz
-$ curl -o initrd.gz -Lf http://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz
+$ curl -o kernel -Lf http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe.vmlinuz
+$ curl -o initrd.gz -Lf http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe_image.cpio.gz
 ```
 
 Upload them to sabakan as follows:
@@ -160,9 +160,9 @@ Each object in the array is [`MachineSpec`](machine.md#machinespec-struct).
 Sabakan identifies physical servers by `serial`.
 
 Once machines are properly registered with sabakan, they can netboot
-CoreOS Container Linux using [UEFI HTTP Boot][HTTPBoot].
+Flatcar Container Linux using [UEFI HTTP Boot][HTTPBoot].
 
-CoreOS can be initialized at first boot by [ignition][].
+Flatcar can be initialized at first boot by [ignition][].
 Sabakan can generate ignition configuration from templates.
 Read [ignition_template.md](ignition_template.md) for details.
 
