@@ -66,6 +66,7 @@ all:
 	@echo "    test     - run test in placemat env."
 	@echo "    setup    - install dependencies."
 	@echo "    clean    - clean temporary files."
+	@echo
 
 $(ETCD_ARCHIVE):
 	curl -sSLf -o $@ https://github.com/coreos/etcd/releases/download/v$(ETCD_VERSION)/etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
