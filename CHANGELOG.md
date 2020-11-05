@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.5.3] - 2020-11-05
+
+### Changed
+- sabactl: Return an error when an invalid subcommand is executed (#201).
+
 ## [2.5.2] - 2020-06-08
 
 No changes.  Only for updating Docker base image.
@@ -38,8 +43,6 @@ No changes.  Only for updating Docker base image.
 - Update etcd to 3.3.15 and etcdutil to 1.3.3 (#171).
 - sabakan-cryptsetup: retry sabakan API calls (#171).
 
-### Changed
-
 ## [2.4.5] - 2019-08-19
 
 ### Changed
@@ -49,7 +52,6 @@ No changes.  Only for updating Docker base image.
 ## [2.4.4] - 2019-07-29
 
 ### Added
-
 - sabakan-cryptsetup: TPM 2.0 support (#164).
 
 ## [2.4.3] - 2019-07-04
@@ -169,7 +171,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.5.2...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.5.3...HEAD
+[2.5.3]: https://github.com/cybozu-go/sabakan/compare/v2.5.2...v2.5.3
 [2.5.2]: https://github.com/cybozu-go/sabakan/compare/v2.5.1...v2.5.2
 [2.5.1]: https://github.com/cybozu-go/sabakan/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/cybozu-go/sabakan/compare/v2.4.9...v2.5.0
