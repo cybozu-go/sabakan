@@ -104,6 +104,9 @@ $(OUTPUT)/ignitions:
 	cp -r ignitions $@
 	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' $@/networkd/10-eth0.network
 
+# Still use the CoreOS Config Transpiler ("ct") instead of the Flatcar's one.
+# Because the "ct" binary is not released from the Flatcar.
+# ref: https://github.com/flatcar-linux/container-linux-config-transpiler/releases
 $(CT):
 	curl -fsSL -o $@ https://github.com/coreos/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
 	chmod +x $@
