@@ -55,7 +55,7 @@ not speak TFTP.
 Ignition
 --------
 
-[Ignition][] is a provisioning utility for [CoreOS Container Linux][CoreOS].
+[Ignition][] is a provisioning utility for [Flatcar Container Linux][Flatcar].
 Its configuration is just a plain JSON.
 
 Sabakan provides a versatile template system to generate Ignition configuration
@@ -64,4 +64,4 @@ for each machine.
 [BMC]: https://en.wikipedia.org/wiki/Intelligent_Platform_Management_Interface#Baseboard_management_controller
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
 [Ignition]: https://coreos.com/ignition/docs/latest/
-[CoreOS]: https://coreos.com/os/docs/latest/
+[Flatcar]: https://docs.flatcar-linux.org/

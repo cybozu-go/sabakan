@@ -10,7 +10,7 @@ Sabakan
 <!-- go to http://www.plantuml.com/plantuml/ and enter the above URL to edit the diagram. -->
 
 Sabakan is a versatile network boot server designed for large on-premise data centers.
-Currently, it is made only for [CoreOS Container Linux](https://coreos.com/os/docs/latest/).
+Currently, it is made only for [Flatcar Container Linux](https://www.flatcar-linux.org/).
 
 **Project Status**: GA (General Availability)
 
@@ -43,7 +43,7 @@ Features
 
 * Template system for Ignition
 
-    [Ignition][] is a boot provisioning system for CoreOS Container Linux.
+    [Ignition][] is a boot provisioning system for Flatcar Container Linux.
     Ignition configuration is not friendly for operators as it is written in a plain JSON.
 
     Sabakan provides a friendly and super versatile template system for Ignition configurations.

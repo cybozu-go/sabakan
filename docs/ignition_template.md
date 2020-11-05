@@ -1,9 +1,9 @@
 Ignition Templates
 ==================
 
-[Ignition][] is a provisioning tool for CoreOS Container Linux.
+[Ignition][] is a provisioning tool for Flatcar Container Linux.
 
-As a network boot server for CoreOS Container Linux, sabakan provides a template
+As a network boot server for Flatcar Container Linux, sabakan provides a template
 system for Ignition.  For each machine `role`, administrator can upload Ignition
 template to sabakan.
 
