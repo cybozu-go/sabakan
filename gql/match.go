@@ -4,9 +4,11 @@ import (
 	"time"
 
 	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v2/gql/graph/model"
 )
 
-func matchMachine(m *sabakan.Machine, h, nh *MachineParams, now time.Time) bool {
+// MatchMachine tests if a machine matches the given conditions
+func MatchMachine(m *sabakan.Machine, h, nh *model.MachineParams, now time.Time) bool {
 	if !containsAllLabels(h, m.Spec.Labels) {
 		return false
 	}
@@ -50,7 +52,7 @@ func matchMachine(m *sabakan.Machine, h, nh *MachineParams, now time.Time) bool 
 	return true
 }
 
-func containsAllLabels(h *MachineParams, labels map[string]string) bool {
+func containsAllLabels(h *model.MachineParams, labels map[string]string) bool {
 	if h == nil {
 		return true
 	}
@@ -66,7 +68,7 @@ func containsAllLabels(h *MachineParams, labels map[string]string) bool {
 	return true
 }
 
-func containsAnyLabel(h *MachineParams, labels map[string]string) bool {
+func containsAnyLabel(h *model.MachineParams, labels map[string]string) bool {
 	if h == nil {
 		return false
 	}
@@ -82,7 +84,7 @@ func containsAnyLabel(h *MachineParams, labels map[string]string) bool {
 	return false
 }
 
-func containsRack(h *MachineParams, target int, base bool) bool {
+func containsRack(h *model.MachineParams, target int, base bool) bool {
 	if h == nil || len(h.Racks) == 0 {
 		return base
 	}
@@ -94,7 +96,7 @@ func containsRack(h *MachineParams, target int, base bool) bool {
 	return false
 }
 
-func containsRole(h *MachineParams, target string, base bool) bool {
+func containsRole(h *model.MachineParams, target string, base bool) bool {
 	if h == nil || len(h.Roles) == 0 {
 		return base
 	}
@@ -106,7 +108,7 @@ func containsRole(h *MachineParams, target string, base bool) bool {
 	return false
 }
 
-func containsState(h *MachineParams, target sabakan.MachineState, base bool) bool {
+func containsState(h *model.MachineParams, target sabakan.MachineState, base bool) bool {
 	if h == nil || len(h.States) == 0 {
 		return base
 	}

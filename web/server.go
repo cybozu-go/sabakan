@@ -8,9 +8,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/99designs/gqlgen/handler"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/cybozu-go/sabakan/v2"
-	"github.com/cybozu-go/sabakan/v2/gql"
+	"github.com/cybozu-go/sabakan/v2/gql/graph"
+	"github.com/cybozu-go/sabakan/v2/gql/graph/generated"
 	"github.com/cybozu-go/sabakan/v2/metrics"
 )
 
@@ -48,17 +50,18 @@ type Server struct {
 	AllowedRemotes []*net.IPNet
 	Counter        *metrics.APICounter
 
-	graphQL    http.HandlerFunc
+	graphQL    http.Handler
 	playground http.HandlerFunc
 }
 
 // NewServer constructs Server instance
 func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
-	advertiseURL *url.URL, allowedIPs []*net.IPNet, playground bool, counter *metrics.APICounter) *Server {
-	graphQL := handler.GraphQL(gql.NewExecutableSchema(
-		gql.Config{Resolvers: &gql.Resolver{
-			Model: model,
-		}}))
+	advertiseURL *url.URL, allowedIPs []*net.IPNet, enablePlayground bool, counter *metrics.APICounter) *Server {
+	graphQL := handler.NewDefaultServer(generated.NewExecutableSchema(
+		generated.Config{
+			Resolvers: &graph.Resolver{Model: model},
+		},
+	))
 	s := &Server{
 		Model:          model,
 		IPXEFirmware:   ipxePath,
@@ -69,8 +72,8 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 		graphQL:        graphQL,
 	}
 
-	if playground {
-		s.playground = handler.Playground("GraphQL playground", "/graphql")
+	if enablePlayground {
+		s.playground = playground.Handler("GraphQL playground", "/graphql")
 	}
 	return s
 }
