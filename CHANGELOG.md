@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.5.5] - 2021-02-01
+
+### Changed
+- Update dependencies
+- Docker image is now built with Go 1.15 and based on Ubuntu 20.04
+
 ## [2.5.4] - 2021-01-28
 
 ### Changed
@@ -176,7 +182,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.5.4...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.5.5...HEAD
+[2.5.5]: https://github.com/cybozu-go/sabakan/compare/v2.5.4...v2.5.5
 [2.5.4]: https://github.com/cybozu-go/sabakan/compare/v2.5.3...v2.5.4
 [2.5.3]: https://github.com/cybozu-go/sabakan/compare/v2.5.2...v2.5.3
 [2.5.2]: https://github.com/cybozu-go/sabakan/compare/v2.5.1...v2.5.2
