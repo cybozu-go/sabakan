@@ -4,7 +4,7 @@ sabakan
 Usage
 -----
 
-See [specification of etcdutil](https://github.com/cybozu-go/etcdutil/blob/master/README.md#specifications) for etcd connection flags and parameters. 
+See [specification of etcdutil](https://github.com/cybozu-go/etcdutil/blob/main/README.md#specifications) for etcd connection flags and parameters. 
 
 ```console
 $ sabakan -h
