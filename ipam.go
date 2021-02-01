@@ -82,10 +82,8 @@ func (c *IPAMConfig) Validate() error {
 
 // GatewayAddress returns a gateway address for the given node address
 func (c *IPAMConfig) GatewayAddress(addr *net.IPNet) *net.IPNet {
-	a := netutil.IP4ToInt(addr.IP.Mask(addr.Mask))
-	a += uint32(c.NodeGatewayOffset)
 	return &net.IPNet{
-		IP:   netutil.IntToIP4(a),
+		IP:   netutil.IPAdd(addr.IP.Mask(addr.Mask), int64(c.NodeGatewayOffset)),
 		Mask: addr.Mask,
 	}
 }
@@ -103,15 +101,17 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 		result := make([]net.IP, numip)
 
 		poolIP, _, _ := net.ParseCIDR(pool)
-		noffset := uint32(0)
+		var noffset int64
 		if len(offset) > 0 {
-			noffset = netutil.IP4ToInt(net.ParseIP(offset))
+			for _, b := range []byte(net.ParseIP(offset).To4()) {
+				noffset <<= 8
+				noffset |= int64(b)
+			}
 		}
-		a := netutil.IP4ToInt(poolIP) + noffset
+		a := netutil.IPAdd(poolIP, noffset)
 		su := uint(1) << shift
 		for i := uint(0); i < numip; i++ {
-			ip := netutil.IntToIP4(a + uint32(su*numip*lrn+idx+i*su))
-			result[i] = ip
+			result[i] = netutil.IPAdd(a, int64(su*numip*lrn+idx+i*su))
 		}
 		return result
 	}
@@ -144,7 +144,7 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 	mc.Info.BMC.IPv4.Address = mc.Spec.BMC.IPv4
 	mc.Info.BMC.IPv4.Netmask = net.IP(bmcMask).String()
 	mc.Info.BMC.IPv4.MaskBits = int(c.BMCRangeMask)
-	bmcGW := netutil.IntToIP4(netutil.IP4ToInt(bmcIPs[0].Mask(bmcMask)) + uint32(c.BMCGatewayOffset))
+	bmcGW := netutil.IPAdd(bmcIPs[0].Mask(bmcMask), int64(c.BMCGatewayOffset))
 	mc.Info.BMC.IPv4.Gateway = bmcGW.String()
 }
 
@@ -157,8 +157,7 @@ type LeaseRange struct {
 
 // IP returns n-th IP address in the range.
 func (l *LeaseRange) IP(n int) net.IP {
-	naddr := netutil.IP4ToInt(l.BeginAddress) + uint32(n)
-	return netutil.IntToIP4(naddr)
+	return netutil.IPAdd(l.BeginAddress, int64(n))
 }
 
 // Key return key string.
@@ -173,13 +172,16 @@ func (l *LeaseRange) Key() string {
 // If no range can be assigned, this returns nil.
 func (c *IPAMConfig) LeaseRange(ifaddr net.IP) *LeaseRange {
 	ip1, _, _ := net.ParseCIDR(c.NodeIPv4Pool)
-	noffset1 := uint32(0)
+	var noffset1 int64
 	if len(c.NodeIPv4Offset) > 0 {
-		noffset1 = netutil.IP4ToInt(net.ParseIP(c.NodeIPv4Offset))
+		for _, b := range []byte(net.ParseIP(c.NodeIPv4Offset).To4()) {
+			noffset1 <<= 8
+			noffset1 |= int64(b)
+		}
 	}
-	nip1 := netutil.IP4ToInt(ip1) + noffset1
-	nip2 := netutil.IP4ToInt(ifaddr)
-	if nip2 <= nip1 {
+
+	diff := netutil.IPDiff(netutil.IPAdd(ip1, noffset1), ifaddr)
+	if diff <= 0 {
 		return nil
 	}
 
@@ -194,9 +196,8 @@ func (c *IPAMConfig) LeaseRange(ifaddr net.IP) *LeaseRange {
 	rangeSize := uint32(1 << c.NodeRangeSize)
 	offset := uint32(c.NodeIndexOffset + c.MaxNodesInRack + 1)
 
-	ranges := (nip2 - nip1) / rangeSize
-	rangeStart := nip1 + rangeSize*ranges + uint32(c.NodeIndexOffset+c.MaxNodesInRack+1)
-	startIP := netutil.IntToIP4(rangeStart)
+	ranges := diff / int64(rangeSize)
+	startIP := netutil.IPAdd(ip1, int64(int64(rangeSize)*ranges+int64(c.NodeIndexOffset+c.MaxNodesInRack+1)+noffset1))
 	count := (rangeSize - 2) - offset + 1
 	return &LeaseRange{
 		BeginAddress: startIP,

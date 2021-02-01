@@ -13,7 +13,7 @@ import (
 
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/cybozu-go/sabakan/v2/models/mock"
-	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 type setStateResponse struct {

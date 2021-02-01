@@ -38,7 +38,7 @@ It should look like:
 Increment schema version
 ------------------------
 
-When a backward-incompatible change is to be merged to `master`, the schema version must be incremented
+When a backward-incompatible change is to be merged to `main`, the schema version must be incremented
 and conversion from old schema need to be implemented.
 
 1. Increment `SchemaVersion` in [version.go](./version.go) by 1.
@@ -50,7 +50,7 @@ Bump version
 ------------
 
 1. Determine a new API/program version number.  Let it write `$VERSION` as `VERSION=x.y.z`.
-2. Checkout `master` branch.
+2. Checkout `main` branch.
 3. Make a branch to release, for example by `git neco dev bump-$VERSION`
 4. Edit `CHANGELOG.md` for the new version ([example][]).
 5. Update `Version` constant in [version.go](./version.go).
@@ -62,7 +62,7 @@ Bump version
     ```
 
 7. Merge this branch.
-8. Checkout `master` branch.
+8. Checkout `main` branch.
 9. Add a git tag, then push it.
 
     ```console

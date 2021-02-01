@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v2/gql/graph/model"
 )
 
 func testInt(i int) *int {
@@ -18,8 +19,8 @@ func TestMatchMachine(t *testing.T) {
 	testCases := []struct {
 		name      string
 		machine   *sabakan.Machine
-		having    *MachineParams
-		notHaving *MachineParams
+		having    *model.MachineParams
+		notHaving *model.MachineParams
 		now       time.Time
 		expect    bool
 	}{
@@ -29,8 +30,8 @@ func TestMatchMachine(t *testing.T) {
 				Spec:   sabakan.MachineSpec{},
 				Status: sabakan.MachineStatus{},
 			},
-			having:    &MachineParams{},
-			notHaving: &MachineParams{},
+			having:    &model.MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    true,
 		},
@@ -40,10 +41,10 @@ func TestMatchMachine(t *testing.T) {
 				Spec:   sabakan.MachineSpec{},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
-				Labels: []*LabelInput{{"foo", "bar"}},
+			having: &model.MachineParams{
+				Labels: []*model.LabelInput{{Name: "foo", Value: "bar"}},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    false,
 		},
@@ -57,10 +58,10 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
-				Labels: []*LabelInput{{"foo", "bar"}},
+			having: &model.MachineParams{
+				Labels: []*model.LabelInput{{Name: "foo", Value: "bar"}},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    false,
 		},
@@ -75,10 +76,10 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
-				Labels: []*LabelInput{{"foo", "bar"}},
+			having: &model.MachineParams{
+				Labels: []*model.LabelInput{{Name: "foo", Value: "bar"}},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    true,
 		},
@@ -93,11 +94,11 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
-				Labels: []*LabelInput{{"foo", "bar"}},
+			having: &model.MachineParams{
+				Labels: []*model.LabelInput{{Name: "foo", Value: "bar"}},
 			},
-			notHaving: &MachineParams{
-				Labels: []*LabelInput{{"foo3", "bar3"}},
+			notHaving: &model.MachineParams{
+				Labels: []*model.LabelInput{{Name: "foo3", Value: "bar3"}},
 			},
 			now:    now,
 			expect: true,
@@ -113,11 +114,11 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
-				Labels: []*LabelInput{{"foo", "bar"}},
+			having: &model.MachineParams{
+				Labels: []*model.LabelInput{{Name: "foo", Value: "bar"}},
 			},
-			notHaving: &MachineParams{
-				Labels: []*LabelInput{{"foo2", "bar2"}},
+			notHaving: &model.MachineParams{
+				Labels: []*model.LabelInput{{Name: "foo2", Value: "bar2"}},
 			},
 			now:    now,
 			expect: false,
@@ -130,10 +131,10 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
+			having: &model.MachineParams{
 				Racks: []int{0, 2},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    false,
 		},
@@ -145,10 +146,10 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
+			having: &model.MachineParams{
 				Racks: []int{0, 2},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    true,
 		},
@@ -160,8 +161,8 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{},
-			notHaving: &MachineParams{
+			having: &model.MachineParams{},
+			notHaving: &model.MachineParams{
 				Racks: []int{0, 2},
 			},
 			now:    now,
@@ -175,10 +176,10 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
+			having: &model.MachineParams{
 				Roles: []string{"boot"},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    false,
 		},
@@ -190,10 +191,10 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
+			having: &model.MachineParams{
 				Roles: []string{"boot", "worker"},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    true,
 		},
@@ -205,8 +206,8 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{},
-			notHaving: &MachineParams{
+			having: &model.MachineParams{},
+			notHaving: &model.MachineParams{
 				Roles: []string{"boot", "worker"},
 			},
 			now:    now,
@@ -220,10 +221,10 @@ func TestMatchMachine(t *testing.T) {
 					State: sabakan.StateHealthy,
 				},
 			},
-			having: &MachineParams{
+			having: &model.MachineParams{
 				States: []sabakan.MachineState{sabakan.StateUninitialized},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    false,
 		},
@@ -235,10 +236,10 @@ func TestMatchMachine(t *testing.T) {
 					State: sabakan.StateHealthy,
 				},
 			},
-			having: &MachineParams{
+			having: &model.MachineParams{
 				States: []sabakan.MachineState{sabakan.StateUninitialized, sabakan.StateHealthy},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    true,
 		},
@@ -250,8 +251,8 @@ func TestMatchMachine(t *testing.T) {
 					State: sabakan.StateHealthy,
 				},
 			},
-			having: &MachineParams{},
-			notHaving: &MachineParams{
+			having: &model.MachineParams{},
+			notHaving: &model.MachineParams{
 				States: []sabakan.MachineState{sabakan.StateHealthy},
 			},
 			now:    now,
@@ -265,10 +266,10 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
+			having: &model.MachineParams{
 				MinDaysBeforeRetire: testInt(90),
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    false,
 		},
@@ -280,10 +281,10 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{
+			having: &model.MachineParams{
 				MinDaysBeforeRetire: testInt(50),
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    true,
 		},
@@ -295,8 +296,8 @@ func TestMatchMachine(t *testing.T) {
 				},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{},
-			notHaving: &MachineParams{
+			having: &model.MachineParams{},
+			notHaving: &model.MachineParams{
 				MinDaysBeforeRetire: testInt(50),
 			},
 			now:    now,
@@ -308,7 +309,7 @@ func TestMatchMachine(t *testing.T) {
 				Spec:   sabakan.MachineSpec{},
 				Status: sabakan.MachineStatus{},
 			},
-			notHaving: &MachineParams{},
+			notHaving: &model.MachineParams{},
 			now:       now,
 			expect:    true,
 		},
@@ -318,7 +319,7 @@ func TestMatchMachine(t *testing.T) {
 				Spec:   sabakan.MachineSpec{},
 				Status: sabakan.MachineStatus{},
 			},
-			having: &MachineParams{},
+			having: &model.MachineParams{},
 			now:    now,
 			expect: true,
 		},
@@ -329,7 +330,7 @@ func TestMatchMachine(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			if matchMachine(c.machine, c.having, c.notHaving, c.now) != c.expect {
+			if MatchMachine(c.machine, c.having, c.notHaving, c.now) != c.expect {
 				t.Error("unexpected result")
 			}
 		})
