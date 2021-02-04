@@ -5,13 +5,10 @@ import (
 	"io"
 
 	"github.com/cybozu-go/log"
+	"github.com/google/go-tpm/tpm"
 	"github.com/google/go-tpm/tpm2"
 	"github.com/google/go-tpm/tpmutil"
 )
-
-// The value "0x105" represents Manufacturer of a TPM Properties defined below:
-// https://github.com/google/go-tpm/blob/d6d17943421ff5e8991df2cea58480079d3a3c36/tpm2/constants.go#L168
-const manufacturer = 0x105
 
 const (
 	tpmKekLength = 256
@@ -22,32 +19,6 @@ var tpmOffset = tpmutil.Handle(tpmOffsetHex)
 
 type tpmDriver struct {
 	io.ReadWriteCloser
-}
-
-func newTPMDriver(device string) (*tpmDriver, error) {
-	rw, err := tpm2.OpenTPM(device)
-	if err != nil {
-		return nil, err
-	}
-
-	return &tpmDriver{rw}, nil
-}
-
-func (t *tpmDriver) checkTPMVersion20() error {
-	// Make sure this is a TPM 2.0
-	// https://github.com/google/go-tpm/blob/30f8389f7afbbd553e969bf7c59c54e0a83a3373/tpm2/open_other.go#L35-L40
-	caps, _, err := tpm2.GetCapability(t, tpm2.CapabilityTPMProperties, 1, uint32(manufacturer))
-	if err != nil {
-		return err
-	}
-
-	prop := caps[0].(tpm2.TaggedProperty)
-	_, err = tpmutil.Pack(prop.Value)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (t *tpmDriver) readKEKFromTPM() ([]byte, error) {
@@ -115,21 +86,21 @@ func (t *tpmDriver) undefineNVSpace() error {
 }
 
 func readKeyFromTPM(device string) ([]byte, TpmVersionID, error) {
-	t, err := newTPMDriver(device)
+	rw, err := tpm2.OpenTPM(device)
 	if err != nil {
+		t2, err2 := tpm.OpenTPM(device)
+		if err2 == nil {
+			t2.Close()
+			log.Warn("device is not TPM 2.0. disk encryption proceeds without TPM", map[string]interface{}{
+				"device": device,
+			})
+			return nil, TpmNone, nil
+		}
 		return nil, TpmNone, err
 	}
-	defer t.Close()
 
-	err = t.checkTPMVersion20()
-	if err != nil {
-		log.Warn("device is not TPM 2.0. disk encryption proceeds without TPM", map[string]interface{}{
-			"device":    device,
-			log.FnError: err,
-		})
-		// lint:ignore nilerr  sabakan allows to proceed without TPM 2.0
-		return nil, TpmNone, nil
-	}
+	t := &tpmDriver{rw}
+	defer t.Close()
 
 	kek, err := t.readKEKFromTPM()
 	if err == nil {
