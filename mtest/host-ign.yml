@@ -66,9 +66,9 @@ systemd:
       enable: true
       contents: |
         [Mount]
-        What=/dev/vdb1
+        What=ignitions
         Where=/ignitions
-        Type=vfat
+        Type=9p
         Options=ro
 
         [Install]

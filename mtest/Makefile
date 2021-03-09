@@ -7,7 +7,7 @@ HOST2 = 10.0.0.102
 HOST3 = 10.0.0.103
 WORKER1 = 10.0.0.104
 WORKER2 = 10.0.0.105
-PLACEMAT = /usr/bin/placemat
+PLACEMAT = /usr/bin/placemat2
 GINKGO = $(GOPATH)/bin/ginkgo
 ETCD_VERSION = 3.3.12
 PLACEMAT_DATADIR = /var/scratch/placemat
@@ -94,6 +94,7 @@ $(OUTPUT)/sabakan.img:
 $(OUTPUT)/cluster.yml: cluster.yml
 	mkdir -p $(OUTPUT)
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
+		-e 's#__IGNITIONS_FOLDER__#$(IGNITIONS)#' \
 		-e 's/__COREOS_IMAGE__/$(COREOS_IMAGE)/' $< > $@
 
 $(OUTPUT)/dhcp.json $(OUTPUT)/ipam.json $(OUTPUT)/machines.json:
@@ -144,7 +145,7 @@ test: $(TEST_DEPS)
 placemat: $(PLACEMAT_DEPS)
 	sudo rm -rf $(PLACEMAT_DATADIR)
 	sudo rm -rf $(VM_SHARED_DIR)
-	sudo systemd-run --unit=placemat.service $(PLACEMAT) -enable-virtfs $(abspath output/cluster.yml)
+	sudo systemd-run --unit=placemat.service $(PLACEMAT) $(abspath output/cluster.yml)
 	@echo 'Placemat is running.  To kill it, do "make stop".'
 
 .PHONY: stop
