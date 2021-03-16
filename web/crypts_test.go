@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http/httptest"
 	"path"
 	"reflect"
@@ -54,7 +54,7 @@ func testCryptsGet(t *testing.T) {
 		if resp.StatusCode != td.status {
 			t.Error("wrong status code, expects:", td.status, ", actual:", resp.StatusCode)
 		}
-		data, err := ioutil.ReadAll(resp.Body)
+		data, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
 			t.Fatal(err)
@@ -101,7 +101,7 @@ func testCryptsPut(t *testing.T) {
 		if resp.StatusCode != td.status {
 			t.Error("wrong status code, expects:", td.status, ", actual:", resp.StatusCode)
 		}
-		data, err := ioutil.ReadAll(resp.Body)
+		data, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
 			t.Fatal(err)

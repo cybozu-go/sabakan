@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,7 +48,7 @@ func loadSource(sourceFile, baseDir string) (*TemplateSource, string, error) {
 		return nil, "", err
 	}
 
-	data, err := ioutil.ReadFile(sourceFile)
+	data, err := os.ReadFile(sourceFile)
 	if err != nil {
 		return nil, "", err
 	}
@@ -133,7 +132,7 @@ func buildTemplate2_2(src *TemplateSource, baseDir string) (*ign22.Config, error
 			passwdFile = filepath.Join(baseDir, passwdFile)
 		}
 
-		data, err := ioutil.ReadFile(passwdFile)
+		data, err := os.ReadFile(passwdFile)
 		if err != nil {
 			return nil, err
 		}
@@ -152,7 +151,7 @@ func buildTemplate2_2(src *TemplateSource, baseDir string) (*ign22.Config, error
 			return nil, errors.New("non-absolute filename: " + fname)
 		}
 		target := filepath.Join(baseDir, "files", fname)
-		data, err := ioutil.ReadFile(target)
+		data, err := os.ReadFile(target)
 		if err != nil {
 			return nil, err
 		}
@@ -185,7 +184,7 @@ func buildTemplate2_2(src *TemplateSource, baseDir string) (*ign22.Config, error
 
 	for _, netunit := range src.Networkd {
 		target := filepath.Join(baseDir, "networkd", netunit)
-		data, err := ioutil.ReadFile(target)
+		data, err := os.ReadFile(target)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +202,7 @@ func buildTemplate2_2(src *TemplateSource, baseDir string) (*ign22.Config, error
 			unit.Mask = true
 		} else {
 			target := filepath.Join(baseDir, "systemd", sysunit.Name)
-			data, err := ioutil.ReadFile(target)
+			data, err := os.ReadFile(target)
 			if err != nil {
 				return nil, err
 			}
@@ -243,7 +242,7 @@ func buildTemplate2_3(src *TemplateSource, baseDir string) (*ign23.Config, error
 			passwdFile = filepath.Join(baseDir, passwdFile)
 		}
 
-		data, err := ioutil.ReadFile(passwdFile)
+		data, err := os.ReadFile(passwdFile)
 		if err != nil {
 			return nil, err
 		}
@@ -262,7 +261,7 @@ func buildTemplate2_3(src *TemplateSource, baseDir string) (*ign23.Config, error
 			return nil, errors.New("non-absolute filename: " + fname)
 		}
 		target := filepath.Join(baseDir, "files", fname)
-		data, err := ioutil.ReadFile(target)
+		data, err := os.ReadFile(target)
 		if err != nil {
 			return nil, err
 		}
@@ -295,7 +294,7 @@ func buildTemplate2_3(src *TemplateSource, baseDir string) (*ign23.Config, error
 
 	for _, netunit := range src.Networkd {
 		target := filepath.Join(baseDir, "networkd", netunit)
-		data, err := ioutil.ReadFile(target)
+		data, err := os.ReadFile(target)
 		if err != nil {
 			return nil, err
 		}
@@ -313,7 +312,7 @@ func buildTemplate2_3(src *TemplateSource, baseDir string) (*ign23.Config, error
 			unit.Mask = true
 		} else {
 			target := filepath.Join(baseDir, "systemd", sysunit.Name)
-			data, err := ioutil.ReadFile(target)
+			data, err := os.ReadFile(target)
 			if err != nil {
 				return nil, err
 			}

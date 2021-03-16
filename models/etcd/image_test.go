@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -64,7 +63,7 @@ func testImageGetIndex(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-image-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +163,7 @@ func testImageUpload(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-image-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -242,7 +241,7 @@ func testImageDownload(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-image-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -257,7 +256,7 @@ func testImageDownload(t *testing.T) {
 	testImagePutIndex(t, d, index, "coreos")
 
 	// case 1. ID is not in the index, no local copy.
-	err = d.imageDownload(context.Background(), "coreos", "1234.5", ioutil.Discard)
+	err = d.imageDownload(context.Background(), "coreos", "1234.5", io.Discard)
 	if err != sabakan.ErrNotFound {
 		t.Error(`err != sabakan.ErrNotFound`)
 	}
@@ -272,7 +271,7 @@ func testImageDownload(t *testing.T) {
 		},
 	}
 	testImagePutIndex(t, d, index, "coreos")
-	err = d.imageDownload(context.Background(), "coreos", "1234.5", ioutil.Discard)
+	err = d.imageDownload(context.Background(), "coreos", "1234.5", io.Discard)
 	if err != sabakan.ErrNotFound {
 		t.Error(`err != sabakan.ErrNotFound`)
 	}
@@ -314,7 +313,7 @@ func testImageDownload(t *testing.T) {
 			t.Error("unexpected file in tar:", hdr.Name)
 		}
 
-		data, err := ioutil.ReadAll(tr)
+		data, err := io.ReadAll(tr)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -333,7 +332,7 @@ func testImageDownload(t *testing.T) {
 		},
 	}
 	testImagePutIndex(t, d, index, "coreos")
-	err = d.imageDownload(context.Background(), "coreos", "1234.5", ioutil.Discard)
+	err = d.imageDownload(context.Background(), "coreos", "1234.5", io.Discard)
 	if err != sabakan.ErrNotFound {
 		t.Error(`err != sabakan.ErrNotFound`)
 	}
@@ -344,7 +343,7 @@ func testImageDelete(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-image-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -425,7 +424,7 @@ func testImageServeFile(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-image-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-image-test")
 	if err != nil {
 		t.Fatal(err)
 	}

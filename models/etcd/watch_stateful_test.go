@@ -1,7 +1,6 @@
 package etcd
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -11,7 +10,7 @@ func TestLastRev(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	dirName, err := ioutil.TempDir("", "sabakan-test")
+	dirName, err := os.MkdirTemp("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2,7 +2,6 @@ package web
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cybozu-go/sabakan/v2"
@@ -44,7 +43,7 @@ func (s Server) handleStateGet(w http.ResponseWriter, r *http.Request, serial st
 }
 
 func (s Server) handleStatePut(w http.ResponseWriter, r *http.Request, serial string) {
-	state, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 128))
+	state, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 128))
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/hex"
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -10,7 +9,7 @@ import (
 func TestMetadata(t *testing.T) {
 	t.Parallel()
 
-	f, err := ioutil.TempFile("", "gotest.")
+	f, err := os.CreateTemp("", "gotest.")
 	if err != nil {
 		t.Fatal(err)
 	}

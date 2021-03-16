@@ -3,7 +3,6 @@ package etcd
 import (
 	"archive/tar"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -70,7 +69,7 @@ func writeToFile(p string, r io.Reader) error {
 // archive lacks a file in "members", this function returns sabakan.ErrBadRequest.
 func (d ImageDir) Extract(r io.Reader, id string, members []string) error {
 	defer func() {
-		io.Copy(ioutil.Discard, r)
+		io.Copy(io.Discard, r)
 	}()
 
 	err := os.MkdirAll(d.Dir, 0755)
@@ -78,7 +77,7 @@ func (d ImageDir) Extract(r io.Reader, id string, members []string) error {
 		return err
 	}
 
-	tmpdir, err := ioutil.TempDir(d.Dir, "_tmp")
+	tmpdir, err := os.MkdirTemp(d.Dir, "_tmp")
 	if err != nil {
 		return err
 	}
@@ -140,7 +139,7 @@ func copyFile(w io.Writer, p string) error {
 
 // Download writes files in a directory specified by "id" as a tar archive.
 func (d ImageDir) Download(w io.Writer, id string) error {
-	files, err := ioutil.ReadDir(filepath.Join(d.Dir, id))
+	files, err := os.ReadDir(filepath.Join(d.Dir, id))
 	if err != nil {
 		return err
 	}
@@ -148,7 +147,7 @@ func (d ImageDir) Download(w io.Writer, id string) error {
 	tw := tar.NewWriter(w)
 
 	for _, fi := range files {
-		if !fi.Mode().IsRegular() {
+		if !fi.Type().IsRegular() {
 			log.Warn("non-regular file in image dir", map[string]interface{}{
 				"dir":  filepath.Join(d.Dir, id),
 				"name": fi.Name(),
@@ -156,9 +155,14 @@ func (d ImageDir) Download(w io.Writer, id string) error {
 			continue
 		}
 
+		info, err := fi.Info()
+		if err != nil {
+			return err
+		}
+
 		hdr := &tar.Header{
 			Name: fi.Name(),
-			Size: fi.Size(),
+			Size: info.Size(),
 			Mode: 0644,
 		}
 		err = tw.WriteHeader(hdr)
@@ -202,12 +206,16 @@ func (d ImageDir) GC(ids []string) error {
 // Size returns byte size of the image
 func (d ImageDir) Size(id string) (int64, error) {
 	var imageSize int64
-	files, err := ioutil.ReadDir(filepath.Join(d.Dir, id))
+	files, err := os.ReadDir(filepath.Join(d.Dir, id))
 	if err != nil {
 		return 0, err
 	}
 	for _, file := range files {
-		imageSize += file.Size()
+		fi, err := file.Info()
+		if err != nil {
+			return 0, err
+		}
+		imageSize += fi.Size()
 	}
 	return imageSize, nil
 }

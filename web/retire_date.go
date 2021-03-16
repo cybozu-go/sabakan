@@ -2,7 +2,7 @@ package web
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -21,7 +21,7 @@ func (s Server) handleRetireDate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 1024))
+	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1024))
 	if err != nil {
 		renderError(r.Context(), w, APIErrBadRequest)
 		return

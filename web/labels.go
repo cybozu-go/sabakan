@@ -1,7 +1,7 @@
 package web
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -32,7 +32,7 @@ func (s Server) handleLabels(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) handleLabelsPut(w http.ResponseWriter, r *http.Request, serial, label string) {
-	value, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 1024))
+	value, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1024))
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return

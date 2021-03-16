@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"reflect"
@@ -20,7 +19,7 @@ func testAssetGetIndex(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-asset-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-asset-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +61,7 @@ func testAssetGetInfoAll(t *testing.T) {
 	t.Parallel()
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-asset-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-asset-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +99,7 @@ func testAssetGetInfo(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-asset-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-asset-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -172,7 +171,7 @@ func testAssetPut(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-asset-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-asset-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,7 +236,7 @@ func testAssetPut(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer f1.Close()
-	buf, err := ioutil.ReadAll(f1)
+	buf, err := io.ReadAll(f1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -295,7 +294,7 @@ func testAssetPut(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer f2.Close()
-	buf, err = ioutil.ReadAll(f2)
+	buf, err = io.ReadAll(f2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -342,7 +341,7 @@ type mockHandler struct {
 func (h *mockHandler) ServeContent(asset *sabakan.Asset, content io.ReadSeeker) {
 	h.calledServeContent = true
 	h.asset = asset
-	buf, err := ioutil.ReadAll(content)
+	buf, err := io.ReadAll(content)
 	if err != nil {
 		h.err = err
 		return
@@ -360,7 +359,7 @@ func testAssetGet(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-asset-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-asset-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -426,7 +425,7 @@ func testAssetDelete(t *testing.T) {
 
 	d, _ := testNewDriver(t)
 
-	tempdir, err := ioutil.TempDir("", "sabakan-asset-test")
+	tempdir, err := os.MkdirTemp("", "sabakan-asset-test")
 	if err != nil {
 		t.Fatal(err)
 	}
