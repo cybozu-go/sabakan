@@ -1,7 +1,7 @@
 package web
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -41,7 +41,7 @@ func TestKernelParams(t *testing.T) {
 		t.Fatal("resp.StatusCode != http.StatusOK:", resp.StatusCode)
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

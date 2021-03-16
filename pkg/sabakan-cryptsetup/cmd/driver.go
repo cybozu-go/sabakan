@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -53,7 +52,7 @@ func NewDriver(sabakanURL, cipher string, keySize int, tpmdev string, disks []Di
 		return nil, err
 	}
 
-	data, err := ioutil.ReadFile("/sys/devices/virtual/dmi/id/product_serial")
+	data, err := os.ReadFile("/sys/devices/virtual/dmi/id/product_serial")
 	if err != nil {
 		return nil, err
 	}

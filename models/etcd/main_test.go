@@ -2,7 +2,6 @@ package etcd
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -29,7 +28,7 @@ func testMain(m *testing.M) int {
 		os.Exit(code)
 	}
 
-	etcdDataDir, err := ioutil.TempDir("", "sabakan-test")
+	etcdDataDir, err := os.MkdirTemp("", "sabakan-test")
 	if err != nil {
 		log.ErrorExit(err)
 	}

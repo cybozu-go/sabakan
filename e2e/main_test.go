@@ -2,7 +2,6 @@ package e2e
 
 import (
 	"bytes"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -44,7 +43,7 @@ func testMain(m *testing.M) (int, error) {
 }
 
 func runEtcd() func() {
-	etcdDataDir, err := ioutil.TempDir("", "sabakan-test")
+	etcdDataDir, err := os.MkdirTemp("", "sabakan-test")
 	if err != nil {
 		log.ErrorExit(err)
 	}
@@ -95,7 +94,7 @@ func TestMain(m *testing.M) {
 }
 
 func runSabakan() (func(), error) {
-	dataDir, err := ioutil.TempDir("", "")
+	dataDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 	"sync"
 	"time"
 
@@ -58,7 +57,7 @@ func (d *imageDriver) Upload(ctx context.Context, os, id string, r io.Reader) er
 	d.mu.Lock()
 	defer func() {
 		d.mu.Unlock()
-		io.Copy(ioutil.Discard, r)
+		io.Copy(io.Discard, r)
 	}()
 
 	if os != "coreos" {

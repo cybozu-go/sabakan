@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os/user"
@@ -64,7 +63,7 @@ func (c *Client) do(req *http.Request) (*http.Response, error) {
 	switch {
 	case 200 <= resp.StatusCode && resp.StatusCode < 400:
 	case 400 <= resp.StatusCode && resp.StatusCode < 600:
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
 			return nil, err
@@ -112,7 +111,7 @@ func (c *Client) getBytes(ctx context.Context, p string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

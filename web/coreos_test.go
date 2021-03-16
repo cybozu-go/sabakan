@@ -2,7 +2,7 @@ package web
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -26,7 +26,7 @@ func testHandleiPXE(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Error("resp.StatusCode != http.StatusOK:", resp.StatusCode)
 	}
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	if !strings.Contains(string(body), "chain") {
 		t.Error("unexpected ipxe script:", string(body))
 	}
@@ -89,7 +89,7 @@ func testHandleiPXEWithSerial(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Error("resp.StatusCode != http.StatusOK:", resp.StatusCode)
 	}
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	if !strings.Contains(string(body), "kernel") {
 		t.Error("unexpected ipxe script:", string(body))
 	}
@@ -151,7 +151,7 @@ func testHandleCoreOSKernel(t *testing.T) {
 		t.Fatal("resp.StatusCore != http.StatusOK:", resp.StatusCode)
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +204,7 @@ func testHandleCoreOSInitRD(t *testing.T) {
 		t.Fatal("resp.StatusCore != http.StatusOK:", resp.StatusCode)
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

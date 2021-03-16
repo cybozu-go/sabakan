@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -41,7 +40,7 @@ func findDisks(excludes []string, base string) ([]Disk, error) {
 	}
 
 	hasFlag := func(name, flag string) (bool, error) {
-		data, err := ioutil.ReadFile(filepath.Join(base, name, flag))
+		data, err := os.ReadFile(filepath.Join(base, name, flag))
 		if err != nil {
 			if os.IsNotExist(err) {
 				return false, nil
@@ -55,7 +54,7 @@ func findDisks(excludes []string, base string) ([]Disk, error) {
 	}
 
 	readInt64 := func(name, flag string) (int64, error) {
-		data, err := ioutil.ReadFile(filepath.Join(base, name, flag))
+		data, err := os.ReadFile(filepath.Join(base, name, flag))
 		if err != nil {
 			return 0, err
 		}

@@ -17,7 +17,6 @@ code-check:
 	staticcheck ./...
 	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
-	ineffassign .
 	go vet ./...
 
 .PHONY: test
@@ -31,35 +30,29 @@ e2e: build
 .PHONY: mod
 mod:
 	go mod tidy
-	git add go.mod
+	git add go.mod go.sum
 
 .PHONY: clean
 clean:
 	rm -f $(BUILT_TARGET)
 
 .PHONY: test-tools
-test-tools: custom-checker staticcheck nilerr ineffassign
+test-tools: custom-checker staticcheck nilerr
 
 .PHONY: custom-checker
 custom-checker:
 	if ! which custom-checker >/dev/null; then \
-		cd /tmp; env GOFLAGS= GO111MODULE=on go get github.com/cybozu/neco-containers/golang/analyzer/cmd/custom-checker; \
+		env GOFLAGS= go install github.com/cybozu/neco-containers/golang/analyzer/cmd/custom-checker@latest; \
 	fi
 
 .PHONY: staticcheck
 staticcheck:
 	if ! which staticcheck >/dev/null; then \
-		cd /tmp; env GOFLAGS= GO111MODULE=on go get honnef.co/go/tools/cmd/staticcheck; \
+		env GOFLAGS= go install honnef.co/go/tools/cmd/staticcheck@latest; \
 	fi
 
 .PHONY: nilerr
 nilerr:
 	if ! which nilerr >/dev/null; then \
-		cd /tmp; env GOFLAGS= GO111MODULE=on go get github.com/gostaticanalysis/nilerr/cmd/nilerr; \
-	fi
-
-.PHONY: ineffassign
-ineffassign:
-	if ! which ineffassign >/dev/null; then \
-		cd /tmp; env GOFLAGS= GO111MODULE=on go get github.com/gordonklaus/ineffassign; \
+		env GOFLAGS= go install github.com/gostaticanalysis/nilerr/cmd/nilerr@latest; \
 	fi

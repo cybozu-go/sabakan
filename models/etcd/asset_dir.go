@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -51,7 +50,7 @@ func (d AssetDir) Save(id int, r io.Reader, csum []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	f, err := ioutil.TempFile(d.Dir, ".tmp")
+	f, err := os.CreateTemp(d.Dir, ".tmp")
 	if err != nil {
 		return nil, err
 	}
@@ -86,13 +85,13 @@ func (d AssetDir) Save(id int, r io.Reader, csum []byte) ([]byte, error) {
 
 // GC removes garbage, that is, files whose names are not in ids.
 func (d AssetDir) GC(ids map[int]bool) error {
-	fil, err := ioutil.ReadDir(d.Dir)
+	fil, err := os.ReadDir(d.Dir)
 	if err != nil {
 		return err
 	}
 
 	for _, fi := range fil {
-		if !fi.Mode().IsRegular() {
+		if !fi.Type().IsRegular() {
 			continue
 		}
 

@@ -3,7 +3,6 @@ package e2e
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"reflect"
@@ -45,7 +44,7 @@ func exitCode(err error) int {
 }
 
 func runSabactlWithFile(t *testing.T, data interface{}, args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
-	f, err := ioutil.TempFile("", "sabakan-test")
+	f, err := os.CreateTemp("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -424,14 +423,14 @@ func testSabactlMachines(t *testing.T) {
 
 func testSabactlImages(t *testing.T) {
 	// upload image
-	kernelFile, err := ioutil.TempFile("", "sabakan-test")
+	kernelFile, err := os.CreateTemp("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(kernelFile.Name())
 	kernelFile.Close()
 
-	initrdFile, err := ioutil.TempFile("", "sabakan-test")
+	initrdFile, err := os.CreateTemp("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -510,7 +509,7 @@ func testSabactlImages(t *testing.T) {
 
 func testSabactlAssets(t *testing.T) {
 	// upload asset
-	file, err := ioutil.TempFile("", "sabakan-test")
+	file, err := os.CreateTemp("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -665,7 +664,7 @@ func testSabactlIgnitions(t *testing.T) {
 		t.Fatal("failed to delete an ignition template", code)
 	}
 
-	f, err := ioutil.TempFile("", "sabakan-test")
+	f, err := os.CreateTemp("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)
 	}

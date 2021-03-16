@@ -2,7 +2,7 @@ package etcd
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -24,7 +24,7 @@ func (d *driver) loadLastRev() int64 {
 	}
 	defer f.Close()
 
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	if err != nil {
 		log.Warn("failed to read lastrev file", map[string]interface{}{
 			log.FnError: err,

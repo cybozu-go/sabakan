@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -104,7 +103,7 @@ func subMain(ctx context.Context) error {
 		cfg.Etcd.TLSCertFile = *flagEtcdTLSCert
 		cfg.Etcd.TLSKeyFile = *flagEtcdTLSKey
 	} else {
-		data, err := ioutil.ReadFile(*flagConfigFile)
+		data, err := os.ReadFile(*flagConfigFile)
 		if err != nil {
 			return err
 		}

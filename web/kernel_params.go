@@ -1,7 +1,7 @@
 package web
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -59,7 +59,7 @@ func (s Server) handleKernelParamsGet(w http.ResponseWriter, r *http.Request, os
 func (s Server) handleKernelParamsPut(w http.ResponseWriter, r *http.Request, os string) {
 	ctx := r.Context()
 
-	kp, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 4096))
+	kp, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 4096))
 	if err != nil {
 		renderError(ctx, w, BadRequest(err.Error()))
 		return

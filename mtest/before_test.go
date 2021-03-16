@@ -3,7 +3,6 @@ package mtest
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -87,19 +86,19 @@ func RunBeforeSuite() {
 
 	By("configuring sabakan")
 	// register ipam.json, dhcp.json, machines.json, and ignitions
-	ipam, err := ioutil.ReadFile(ipamJSONPath)
+	ipam, err := os.ReadFile(ipamJSONPath)
 	Expect(err).NotTo(HaveOccurred())
 	ipamFile := remoteTempFile(string(ipam))
 	sabactlSafe("ipam", "set", "-f", ipamFile)
 
-	dhcp, err := ioutil.ReadFile(dhcpJSONPath)
+	dhcp, err := os.ReadFile(dhcpJSONPath)
 	Expect(err).NotTo(HaveOccurred())
 	dhcpFile := remoteTempFile(string(dhcp))
 	sabactlSafe("dhcp", "set", "-f", dhcpFile)
 
 	sabactlSafe("ignitions", "set", "-f", "/ignitions/worker.yml", "worker", "1.0.0")
 
-	machines, err := ioutil.ReadFile(machinesJSONPath)
+	machines, err := os.ReadFile(machinesJSONPath)
 	Expect(err).NotTo(HaveOccurred())
 	machinesFile := remoteTempFile(string(machines))
 	sabactlSafe("machines", "create", "-f", machinesFile)

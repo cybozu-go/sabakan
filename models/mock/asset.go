@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"sort"
 	"sync"
@@ -111,7 +110,7 @@ func (d *assetDriver) Delete(ctx context.Context, name string) error {
 func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
 	csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
 
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +151,7 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
 func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
 	contentType string, csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
 
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,7 @@ package web
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"path"
@@ -49,7 +49,7 @@ func testStateGet(t *testing.T) {
 		if resp.StatusCode != td.status {
 			t.Error("wrong status code, expects:", td.status, ", actual:", resp.StatusCode)
 		}
-		data, err := ioutil.ReadAll(resp.Body)
+		data, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
 			t.Fatal(err)

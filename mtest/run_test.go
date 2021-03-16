@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -108,7 +107,7 @@ func parsePrivateKey(keyPath string) (ssh.Signer, error) {
 	}
 	defer f.Close()
 
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +263,7 @@ func execSafeAt(host string, args ...string) []byte {
 }
 
 func remoteTempFile(body string) string {
-	f, err := ioutil.TempFile("", "mtest")
+	f, err := os.CreateTemp("", "mtest")
 	Expect(err).NotTo(HaveOccurred())
 	defer f.Close()
 	_, err = f.WriteString(body)

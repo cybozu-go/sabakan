@@ -1,7 +1,7 @@
 package web
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -73,7 +73,7 @@ func (s Server) handleCryptsPut(w http.ResponseWriter, r *http.Request, params [
 	serial := params[0]
 	p := params[1]
 
-	keyData, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 4096))
+	keyData, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 4096))
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 		return
