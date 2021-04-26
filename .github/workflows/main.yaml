@@ -1,0 +1,162 @@
+name: main
+on:
+  pull_request:
+  push:
+    branches:
+      - 'main'
+env:
+  go-version: 1.16
+  filename: 'main.yaml'
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    services:
+      etcd:
+        image: quay.io/cybozu/etcd:3.3
+        ports:
+        - 2379:2379
+        - 2380:2379
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.go-version }}
+
+      - name: Build binaries
+        run: make build
+
+      - name: Start sanakan
+        run: |
+          ./sabakan -dhcp-bind 0.0.0.0:10067 \
+          -etcd-endpoints http://localhost:2379 \
+          -advertise-url http://localhost:10080 &
+
+      - name: Install test tools
+        run: make SUDO="sudo" test-tools
+
+      - name: Run test
+        run: make test
+
+      - name: Prepare for uploading sabakan binaries
+        run: |
+          mkdir /tmp/workspace
+          cp ./sabakan ./sabactl ./sabakan-cryptsetup /tmp/workspace
+          cp LICENSE /tmp/workspace
+
+      - name: Upload sabakan binaries
+        uses: actions/upload-artifact@v2
+        with:
+          name: sabakan-binaries
+          path: /tmp/workspace
+          retention-days: 1
+
+  build-image:
+    name: Build Images
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.go-version }}
+
+      - name: Download sabakan binaries
+        uses: actions/download-artifact@v2
+        with:
+          name: sabakan-binaries
+          path: ./docker
+
+      - name: Build sabakan image
+        run: docker build -t quay.io/cybozu/sabakan:latest ./docker
+
+      - name: Save Image
+        run: |
+            mkdir -p /tmp/docker
+            docker save quay.io/cybozu/sabakan:latest -o /tmp/docker/image
+
+  mtest:
+    name: Multi-host test
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - name: Set up Cloud SDK for sabakan
+        uses: google-github-actions/setup-gcloud@v0.2.1
+        with:
+          project_id: ${{ secrets.NECO_TEST_PROJECT_ID }}
+          service_account_key: ${{ secrets.NECO_TEST_SERVICE_ACCOUNT }}
+          export_default_credentials: true
+
+      - name: Set GCP instance name
+        run: echo "INSTANCE_NAME=sabakan-${{ github.run_number }}-$(TZ=Asia/Tokyo date +%H%M%S)" >> $GITHUB_ENV
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.go-version }}
+
+      - name: Watch sabakan logs
+        run: ./bin/watch_service sabakan > sabakan-service.log &
+
+      - name: Run mtest
+        run: |
+          if [ ${{ github.event_name }} = "pull_request" ]; then
+            GITHUB_SHA=$(cat ${GITHUB_EVENT_PATH} | jq -r '.pull_request.head.sha')
+          fi
+          ./bin/run-mtest.sh
+
+      - name: Show sabakan logs
+        if: ${{ always() }}
+        run: cat sabakan-service.log
+
+      - name: Set the GCP instance lifetime
+        if: ${{ failure() ||  cancelled() }}
+        run: |
+          . ./bin/env
+          $GCLOUD compute instances add-metadata ${INSTANCE_NAME} --zone ${ZONE} \
+          --metadata shutdown-at=$(date -Iseconds -d+30minutes)
+
+      - name: Notify to Slack if failed or cancelled
+        if: ${{ failure() ||  cancelled() }}
+        run: |
+          . ./bin/env
+          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+              BRANCH_NAME=${GITHUB_HEAD_REF}
+          else
+              BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          fi
+          curl -X POST -H 'Content-type: application/json' --data "{
+            \"blocks\": [
+              {
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"Failed: ${{ github.actor }}'s workflow (${{ github.workflow }}) in <https://github.com/${{ github.repository }}/actions/workflows/${{ env.filename }}|${{ github.repository }}> (<https://github.com/${{ github.repository }}/actions/workflows/${{ env.filename }}?query=branch%3A${BRANCH_NAME}|${BRANCH_NAME}>) \n Do you extend the lifetime of ${INSTANCE_NAME}?\"
+                },
+                \"accessory\": {
+                  \"type\": \"button\",
+                  \"text\": {
+                    \"type\": \"plain_text\",
+                    \"text\": \"Extend\",
+                    \"emoji\": true
+                  },
+                  \"value\": \"${INSTANCE_NAME}\"
+                }
+              }
+            ]
+          }" ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Delete CI instance if succeeded
+        if: ${{ success() }}
+        run: |
+          . ./bin/env
+          $GCLOUD compute instances delete ${INSTANCE_NAME} --zone ${ZONE}

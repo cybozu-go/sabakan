@@ -1,0 +1,59 @@
+name: release
+on:
+  push:
+    tags:
+      - 'v*'
+env:
+  go-version: 1.16
+  tag: ${GITHUB_REF#refs/tags/v}
+  prerelease: ${{ contains(github.ref, '-') }}
+jobs:
+  release-image:
+    name: Release Sabakan Image
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.go-version }}
+
+      - name: Build Binaries
+        run: |
+          make build
+          cp LICENSE ./docker
+          cp ./sabakan ./sabactl ./sabakan-cryptsetup ./docker
+
+      - name: Build image
+        run: docker build -t quay.io/cybozu/sabakan:latest ./docker
+
+      - name: Push docker image to Quay.io
+        run: |
+          echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USER }} --password-stdin quay.io
+          echo "pushing Sabakan image ..."
+          docker tag quay.io/cybozu/sabakan:latest quay.io/cybozu/sabakan:${{ env.tag }}
+          docker push quay.io/cybozu/sabakan:${{ env.tag }}
+          if ${{ env.prerelease }} ; then
+              echo ===== Skip pushing branch tags for pre-release ${{ env.tag }} =====
+              exit 0
+          fi
+          BRANCH=$(echo ${{ env.tag }} | cut -d "." -f 1-2)
+          docker tag quay.io/cybozu/sabakan:latest quay.io/cybozu/sabakan:$BRANCH
+          docker push quay.io/cybozu/sabakan:$BRANCH
+
+  release-github:
+    name: Release GitHub
+    runs-on: ubuntu-20.04
+    container:
+      image: quay.io/cybozu/golang:1.16-focal
+    steps:
+      - name: Create GitHub release
+        run: |
+          OWNER=$(echo ${{ github.repository }} | cut -d '/' -f 1)
+          REPOSITORY=$(echo ${{ github.repository }} | cut -d '/' -f 2)
+          if ${{ env.prerelease }}; then
+            PRERELEASE="-prerelease"
+          fi
+          echo 'ghr -t ${{ secrets.GITHUB_TOKEN }} -u ${OWNER} -r ${REPOSITORY} -n v${{ env.tag }} ${PRERELEASE} -b "See [CHANGELOG.md](./CHANGELOG.md) for details." v${{ env.tag }}'

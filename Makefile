@@ -1,5 +1,7 @@
 # Makefile for sabakan
 
+# configuration variables
+ETCD_VERSION = 3.3.25
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 
@@ -37,7 +39,7 @@ clean:
 	rm -f $(BUILT_TARGET)
 
 .PHONY: test-tools
-test-tools: custom-checker staticcheck nilerr
+test-tools: custom-checker staticcheck nilerr etcd
 
 .PHONY: custom-checker
 custom-checker:
@@ -55,4 +57,14 @@ staticcheck:
 nilerr:
 	if ! which nilerr >/dev/null; then \
 		env GOFLAGS= go install github.com/gostaticanalysis/nilerr/cmd/nilerr@latest; \
+	fi
+
+.PHONY: etcd
+etcd:
+	if ! which etcd >/dev/null; then \
+		curl -L https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -o /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz; \
+		mkdir /tmp/etcd; \
+		tar xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/etcd --strip-components=1; \
+		$(SUDO) mv /tmp/etcd/etcd /usr/local/bin/; \
+		rm -rf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz /tmp/etcd; \
 	fi
