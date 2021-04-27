@@ -19,10 +19,10 @@ const (
 	etcdKey       = "./certs/server.key.insecure"
 )
 
-var circleci = false
+var ci = false
 
 func init() {
-	circleci = os.Getenv("CIRCLECI") == "true"
+	ci = os.Getenv("CI") == "true"
 }
 
 func testMain(m *testing.M) (int, error) {
@@ -76,7 +76,7 @@ func runEtcd() func() {
 }
 
 func TestMain(m *testing.M) {
-	if circleci {
+	if ci {
 		code := m.Run()
 		os.Exit(code)
 	}
