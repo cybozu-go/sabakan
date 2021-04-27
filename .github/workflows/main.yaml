@@ -26,7 +26,7 @@ jobs:
       - name: Build binaries
         run: make build
 
-      - name: Start sanakan
+      - name: Start sabakan
         run: |
           sudo ./sabakan -dhcp-bind 0.0.0.0:10067 \
           -etcd-endpoints http://localhost:2379 \
