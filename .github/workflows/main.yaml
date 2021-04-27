@@ -11,12 +11,6 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-20.04
-    services:
-      etcd:
-        image: quay.io/cybozu/etcd:3.3
-        ports:
-        - 2379:2379
-        - 2380:2379
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -26,12 +20,15 @@ jobs:
         with:
           go-version: ${{ env.go-version }}
 
+      - name: Start etcd container 
+        run: docker run -d --network host quay.io/cybozu/etcd:3.3
+
       - name: Build binaries
         run: make build
 
       - name: Start sanakan
         run: |
-          ./sabakan -dhcp-bind 0.0.0.0:10067 \
+          sudo ./sabakan -dhcp-bind 0.0.0.0:10067 \
           -etcd-endpoints http://localhost:2379 \
           -advertise-url http://localhost:10080 &
 
