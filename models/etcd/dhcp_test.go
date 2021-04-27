@@ -18,8 +18,6 @@ var testDHCPConfig = sabakan.DHCPConfig{
 }
 
 func testDHCPPutConfig(t *testing.T) {
-	t.Parallel()
-
 	d, ch := testNewDriver(t)
 	config := &testDHCPConfig
 	err := d.putDHCPConfig(context.Background(), config)
@@ -48,8 +46,6 @@ func testDHCPPutConfig(t *testing.T) {
 }
 
 func testDHCPGetConfig(t *testing.T) {
-	t.Parallel()
-
 	d, ch := testNewDriver(t)
 	config := &testDHCPConfig
 
@@ -91,8 +87,6 @@ func testSetupConfig(t *testing.T, d *driver, ch <-chan struct{}) {
 }
 
 func testDHCPLease(t *testing.T) {
-	t.Parallel()
-
 	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
@@ -152,8 +146,6 @@ func testDHCPLease(t *testing.T) {
 }
 
 func testDHCPRenew(t *testing.T) {
-	t.Parallel()
-
 	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
@@ -177,8 +169,6 @@ func testDHCPRenew(t *testing.T) {
 }
 
 func testDHCPRelease(t *testing.T) {
-	t.Parallel()
-
 	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
@@ -207,8 +197,6 @@ func testDHCPRelease(t *testing.T) {
 }
 
 func testDHCPDecline(t *testing.T) {
-	t.Parallel()
-
 	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
@@ -236,8 +224,6 @@ func testDHCPDecline(t *testing.T) {
 }
 
 func testDHCPLeaseExpiration(t *testing.T) {
-	t.Parallel()
-
 	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
@@ -289,8 +275,6 @@ RETRY:
 }
 
 func testDHCPLeaseRace(t *testing.T) {
-	t.Parallel()
-
 	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 	ipam, err := d.getIPAMConfig()
