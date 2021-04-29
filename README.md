@@ -1,5 +1,5 @@
 [![GitHub release](https://img.shields.io/github/release/cybozu-go/sabakan.svg?maxAge=60)][releases]
-[![CircleCI](https://circleci.com/gh/cybozu-go/sabakan.svg?style=svg)](https://circleci.com/gh/cybozu-go/sabakan)
+[![CI](https://github.com/cybozu-go/sabakan/workflows/main/badge.svg)](https://github.com/cybozu-go/sabakan/actions)
 [![GoDoc](https://godoc.org/github.com/cybozu-go/sabakan?status.svg)][godoc]
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/sabakan)](https://goreportcard.com/report/github.com/cybozu-go/sabakan)
 
