@@ -1,6 +1,6 @@
 [![GitHub release](https://img.shields.io/github/release/cybozu-go/sabakan.svg?maxAge=60)][releases]
-[![CI](https://github.com/cybozu-go/sabakan/workflows/main/badge.svg)](https://github.com/cybozu-go/sabakan/actions)
-[![GoDoc](https://godoc.org/github.com/cybozu-go/sabakan?status.svg)][godoc]
+[![main](https://github.com/cybozu-go/sabakan/actions/workflows/main.yaml/badge.svg)](https://github.com/cybozu-go/sabakan/actions/workflows/main.yaml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/cybozu-go/sabakan.svg)](https://pkg.go.dev/github.com/cybozu-go/sabakan)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/sabakan)](https://goreportcard.com/report/github.com/cybozu-go/sabakan)
 
 Sabakan
@@ -127,7 +127,6 @@ Docker images
 Docker images are available on [Quay.io](https://quay.io/repository/cybozu/sabakan)
 
 [releases]: https://github.com/cybozu-go/sabakan/releases
-[godoc]: https://godoc.org/github.com/cybozu-go/sabakan
 [etcd]: https://coreos.com/etcd/
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
 [iPXE]: https://ipxe.org/
