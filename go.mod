@@ -9,7 +9,7 @@ require (
 	github.com/ajeddeloh/go-json v0.0.0-20170920214419-6a2fe990e083 // indirect
 	github.com/coreos/etcd v3.3.25+incompatible
 	github.com/coreos/ignition v0.35.0
-	github.com/cybozu-go/etcdutil v1.3.5
+	github.com/cybozu-go/etcdutil v1.3.6
 	github.com/cybozu-go/log v1.6.0
 	github.com/cybozu-go/netutil v1.3.0
 	github.com/cybozu-go/well v1.10.0
