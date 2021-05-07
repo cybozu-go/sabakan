@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.5.7] - 2021-05-07
+
+### Changed
+- Update etcdutil version to v1.3.6 (#215).
+- Build with Go 1.16 (#211).
+
 ## [2.5.6] - 2021-02-04
 
 ### Fixed
@@ -187,7 +193,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.5.6...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.5.7...HEAD
+[2.5.7]: https://github.com/cybozu-go/sabakan/compare/v2.5.6...v2.5.7
 [2.5.6]: https://github.com/cybozu-go/sabakan/compare/v2.5.5...v2.5.6
 [2.5.5]: https://github.com/cybozu-go/sabakan/compare/v2.5.4...v2.5.5
 [2.5.4]: https://github.com/cybozu-go/sabakan/compare/v2.5.3...v2.5.4

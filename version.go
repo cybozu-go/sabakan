@@ -1,7 +1,7 @@
 package sabakan
 
 // Version is sabakan version
-const Version = "2.5.6"
+const Version = "2.5.7"
 
 // SchemaVersion is the schema version
 const SchemaVersion = "3"
