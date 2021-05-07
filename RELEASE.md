@@ -53,7 +53,7 @@ Bump version
 2. Make a branch to release
 
     ```console
-    $ git neco dev "$VERSION"`
+    $ git neco dev "$VERSION"
     ```
 
 3. Edit `CHANGELOG.md` for the new version ([example][]).
@@ -66,7 +66,7 @@ Bump version
     ```
 
 6. Merge this branch.
-6. Add a git tag to the main HEAD, then push it.
+7. Add a git tag to the main HEAD, then push it.
 
     ```console
     $ git checkout main
