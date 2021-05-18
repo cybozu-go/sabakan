@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
+	"go.etcd.io/etcd/etcdserver/api/v3rpc/rpctypes"
 )
 
 func (d *driver) getHealth(ctx context.Context) error {

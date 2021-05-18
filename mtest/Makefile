@@ -9,7 +9,7 @@ WORKER1 = 10.0.0.104
 WORKER2 = 10.0.0.105
 PLACEMAT = /usr/bin/placemat2
 GINKGO = $(GOPATH)/bin/ginkgo
-ETCD_VERSION = 3.3.25
+ETCD_VERSION = 3.4.16
 PLACEMAT_DATADIR = /var/scratch/placemat
 COREOS_VERSION := 2765.2.1
 COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
@@ -68,7 +68,7 @@ all:
 	@echo "    clean    - clean temporary files."
 
 $(ETCD_ARCHIVE):
-	curl -sSLf -o $@ https://github.com/coreos/etcd/releases/download/v$(ETCD_VERSION)/etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
+	curl -sSLf -o $@ https://github.com/etcd-io/etcd/releases/download/v$(ETCD_VERSION)/etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
 
 $(COREOS_IMAGE):
 	curl -sSLf -o $@.bz2 https://stable.release.flatcar-linux.net/amd64-usr/current/$@.bz2

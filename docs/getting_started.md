@@ -25,8 +25,8 @@ Sabakan requires [etcd][].  Install and run it at `localhost`.
 
 You may use docker to run etcd as follows:
 ```console
-$ docker pull quay.io/cybozu/etcd:3.3
-$ docker run -d --rm --name etcd --network=host --uts=host quay.io/cybozu/etcd:3.3
+$ docker pull quay.io/coreos/etcd:v3.4.16
+$ docker run -d --rm --name etcd --network=host --uts=host quay.io/coreos/etcd:v3.4.16
 ```
 
 ### <a name="datadir" />Prepare data directory
@@ -179,6 +179,6 @@ When iPXE script is acquired, this value is passed as the kernel parameter of iP
 
 Learn sabakan [concepts](concepts.md), then read other specifications.
 
-[etcd]: https://github.com/coreos/etcd
+[etcd]: https://github.com/etcd-io/etcd
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
 [ignition]: https://coreos.com/ignition/docs/latest/

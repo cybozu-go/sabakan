@@ -6,10 +6,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/sabakan/v2"
 	version "github.com/hashicorp/go-version"
+	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/clientv3/clientv3util"
 )
 
 func keyIgnitionRolePrefix(role string) string {

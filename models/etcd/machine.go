@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/clientv3/clientv3util"
 	"github.com/cybozu-go/sabakan/v2"
+	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/clientv3/clientv3util"
 )
 
 func (d *driver) machineRegister(ctx context.Context, machines []*sabakan.Machine) error {

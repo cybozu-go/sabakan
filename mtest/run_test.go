@@ -287,7 +287,7 @@ func sabactlSafe(args ...string) []byte {
 }
 
 func etcdctl(args ...string) ([]byte, []byte, error) {
-	args = append([]string{"env", "ETCDCTL_API=3", "/opt/bin/etcdctl", "--endpoints=http://" + host1 + ":2379"}, args...)
+	args = append([]string{"/opt/bin/etcdctl", "--endpoints=http://" + host1 + ":2379"}, args...)
 	return execAt(host1, args...)
 }
 
