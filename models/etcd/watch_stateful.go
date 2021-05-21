@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
+	"go.etcd.io/etcd/clientv3"
 )
 
 func (d *driver) loadLastRev() int64 {
@@ -149,7 +149,7 @@ RETRY:
 			}
 
 			// the watch will be canceled by the server as described in:
-			// https://godoc.org/github.com/coreos/etcd/clientv3#Watcher
+			// https://godoc.org/go.etcd.io/etcd/clientv3#Watcher
 			for range rch {
 			}
 			goto RETRY

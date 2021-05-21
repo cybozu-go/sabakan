@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/etcdutil"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/cybozu-go/well"
+	"go.etcd.io/etcd/clientv3"
 )
 
 const (

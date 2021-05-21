@@ -5,11 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/clientv3/clientv3util"
-	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
+	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/clientv3/clientv3util"
+	"go.etcd.io/etcd/clientv3/concurrency"
 )
 
 const noVersion = "1"

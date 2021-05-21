@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
+	"go.etcd.io/etcd/clientv3"
 )
 
 type updateData struct {

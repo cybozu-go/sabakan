@@ -8,9 +8,9 @@ import (
 	"path"
 	"sync/atomic"
 
-	"github.com/coreos/etcd/clientv3"
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/cybozu-go/well"
+	"go.etcd.io/etcd/clientv3"
 )
 
 type driver struct {
