@@ -24,7 +24,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.2.0
 	github.com/vincent-petithory/dataurl v0.0.0-20191104211930-d1553a71de50
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20210512015243-d19fbe541bf9
-	go.universe.tf/netboot v0.0.0-20181010164912-24067fad46fd
+	go.universe.tf/netboot v0.0.0-20201124111825-bdaec9d82638
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	sigs.k8s.io/yaml v1.2.0
