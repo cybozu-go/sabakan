@@ -140,11 +140,6 @@ RETRY:
 		return err
 	}
 
-	img := index.Find(id)
-	if img != nil {
-		return sabakan.ErrConflicted
-	}
-
 	dir := d.getImageDir(os)
 	err = dir.Extract(r, id, imageMembers[os])
 	if err != nil {

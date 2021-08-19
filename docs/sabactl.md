@@ -168,6 +168,9 @@ Upload a set of boot image files identified by `ID`.
 
 * `--os`: specifies OS of the image.  Default is "coreos"
 
+!!! Note
+    You can execute upload multiple times for a certain ID only with the same set of files.
+
 `sabactl images [-os OS] delete ID`
 ------------------------------------
 

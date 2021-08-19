@@ -48,6 +48,15 @@ type ImageIndex []*Image
 // If the index has MaxImages images, the oldest image will be discarded.
 // ID of discarded images are returned in the second return value.
 func (i ImageIndex) Append(img *Image) (ImageIndex, []string) {
+	for idx, entry := range i {
+		if entry.ID == img.ID {
+			ret := i[:idx]
+			ret = append(ret, i[idx+1:]...)
+			ret = append(ret, entry)
+			return ret, nil
+		}
+	}
+
 	if len(i) < MaxImages {
 		return append(i, img), nil
 	}

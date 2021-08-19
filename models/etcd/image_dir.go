@@ -2,6 +2,8 @@ package etcd
 
 import (
 	"archive/tar"
+	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -26,6 +28,9 @@ Directory structure:
 While extracting the image archive, a temporary directory is created
 under `/var/lib/sabakan/OS/`.  The temporary directory will be renamed
 to `IDxx` once extraction successfully completed.
+If the rename fails due to the existing `IDxx` directory, the contents of
+two directories are compared.  If the two are not equivalent, a conflict
+error will be returned.
 */
 
 // ImageDir is a struct to manage an image directory.
@@ -62,6 +67,58 @@ func writeToFile(p string, r io.Reader) error {
 	return f.Sync()
 }
 
+func equalFileContent(filename0, filename1 string) (bool, error) {
+	f0, err := os.Open(filename0)
+	if err != nil {
+		return false, err
+	}
+	defer f0.Close()
+
+	f1, err := os.Open(filename1)
+	if err != nil {
+		return false, err
+	}
+	defer f1.Close()
+
+	fi0, err := f0.Stat()
+	if err != nil {
+		return false, err
+	}
+	fi1, err := f1.Stat()
+	if err != nil {
+		return false, err
+	}
+	if fi0.Size() != fi1.Size() {
+		return false, nil
+	}
+
+	buf0 := make([]byte, 16*1024)
+	buf1 := make([]byte, 16*1024)
+	for {
+		n0, err := f0.Read(buf0)
+		if err != nil && err != io.EOF {
+			return false, err
+		}
+		buf0 = buf0[0:n0]
+
+		n1, err := f1.Read(buf1)
+		if err != nil && err != io.EOF {
+			return false, err
+		}
+		buf1 = buf1[0:n1]
+
+		if n0 == 0 {
+			break
+		}
+
+		if !bytes.Equal(buf0, buf1) {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
 // Extract reads tar archive from "r" to extract files shown in "members".
 //
 // Extracted files are finally stored under "id" directory.
@@ -76,6 +133,8 @@ func (d ImageDir) Extract(r io.Reader, id string, members []string) error {
 	if err != nil {
 		return err
 	}
+
+	dstdir := filepath.Join(d.Dir, id)
 
 	tmpdir, err := os.MkdirTemp(d.Dir, "_tmp")
 	if err != nil {
@@ -118,11 +177,23 @@ func (d ImageDir) Extract(r io.Reader, id string, members []string) error {
 		return sabakan.ErrBadRequest
 	}
 
-	err = os.Rename(tmpdir, filepath.Join(d.Dir, id))
-	if err != nil {
+	err = os.Rename(tmpdir, dstdir)
+	if err == nil {
+		tmpdir = ""
+		return nil
+	}
+
+	if !os.IsExist(err) {
 		return err
 	}
-	tmpdir = ""
+
+	for _, m := range members {
+		eq, err := equalFileContent(filepath.Join(tmpdir, m), filepath.Join(dstdir, m))
+		if err != nil || !eq {
+			return fmt.Errorf("different content")
+		}
+	}
+
 	return nil
 }
 

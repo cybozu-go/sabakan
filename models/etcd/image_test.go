@@ -159,8 +159,6 @@ func testImageGetInfoAll(t *testing.T) {
 func testImageUpload(t *testing.T) {
 	t.Parallel()
 
-	archive := newTestImage("abcd", "efg")
-
 	d, _ := testNewDriver(t)
 
 	tempdir, err := os.MkdirTemp("", "sabakan-image-test")
@@ -170,9 +168,24 @@ func testImageUpload(t *testing.T) {
 	d.dataDir = tempdir
 	defer os.RemoveAll(tempdir)
 
+	archive := newTestImage("abcd", "efg")
 	err = d.imageUpload(context.Background(), "coreos", "1234.5", archive)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	// same content
+	archive = newTestImage("abcd", "efg")
+	err = d.imageUpload(context.Background(), "coreos", "1234.5", archive)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// different content
+	archive = newTestImage("pqr", "xyz")
+	err = d.imageUpload(context.Background(), "coreos", "1234.5", archive)
+	if err == nil {
+		t.Fatal("should be error")
 	}
 
 	index, err := d.imageGetIndex(context.Background(), "coreos")
@@ -507,6 +520,39 @@ func testImageServeFile(t *testing.T) {
 	}
 }
 
+func testImageExtractOverwrite(t *testing.T) {
+	t.Parallel()
+
+	d, _ := testNewDriver(t)
+	dir := d.getImageDir("coreos")
+
+	err := dir.Extract(newTestImage("abc", "def"), "1234.5", []string{
+		sabakan.ImageKernelFilename,
+		sabakan.ImageInitrdFilename,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// extract same content
+	err = dir.Extract(newTestImage("abc", "def"), "1234.5", []string{
+		sabakan.ImageKernelFilename,
+		sabakan.ImageInitrdFilename,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// extract different content
+	err = dir.Extract(newTestImage("pqr", "xyz"), "1234.5", []string{
+		sabakan.ImageKernelFilename,
+		sabakan.ImageInitrdFilename,
+	})
+	if err == nil {
+		t.Error("should return error in case of different contents")
+	}
+}
+
 func TestImage(t *testing.T) {
 	t.Run("GetIndex", testImageGetIndex)
 	t.Run("GetInfoAll", testImageGetInfoAll)
@@ -514,4 +560,5 @@ func TestImage(t *testing.T) {
 	t.Run("Download", testImageDownload)
 	t.Run("Delete", testImageDelete)
 	t.Run("ServeFile", testImageServeFile)
+	t.Run("ExtractOverwrite", testImageExtractOverwrite)
 }
