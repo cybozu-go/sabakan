@@ -171,6 +171,9 @@ Upload a set of boot image files identified by `ID`.
 !!! Note
     You can execute upload multiple times for a certain ID only with the same set of files.
 
+!!! Note
+    Once the set of boot image files is deleted, no matter if manually or automatically, you cannot upload with the same ID.
+
 `sabactl images [-os OS] delete ID`
 ------------------------------------
 

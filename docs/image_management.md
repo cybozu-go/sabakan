@@ -11,7 +11,8 @@ an image management system as follows.
 * Sabakan keeps some versions of boot images.
 
     In case a new image had fatal defects, the change can be rolled back by
-    simply removing the new image.
+    simply removing the new image or by uploading the previous stable image.
+    Note that once you remove the image, you cannot upload it with the same ID.
 
 How it works
 ------------
@@ -84,7 +85,7 @@ iPXE downloads a kernel and initial root filesystem image from sabakan.
 Sabakan handles these requests from iPXE as follows:
 
 1. Retrieve an image index from etcd.
-2. Choose the newest image in the index.
+2. Choose the most-recently-uploaded image in the index.
 3. Look for the image in the local directory.
 4. If the image is found, then return it in the response.
-5. If not, choose the next newest image in the index.  Go to 3.
+5. If not, choose the next recently-uploaded image in the index.  Go to 3.

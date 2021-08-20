@@ -247,6 +247,12 @@ func testImageUpload(t *testing.T) {
 	if dels[0] != "0" {
 		t.Error("wrong deleted image ID")
 	}
+
+	archive = newTestImage("abcd", "efg")
+	err = d.imageUpload(context.Background(), "coreos", "0", archive)
+	if err != sabakan.ErrConflicted {
+		t.Error("upload with deleted ID should fail in ErrConflicted", err)
+	}
 }
 
 func testImageDownload(t *testing.T) {

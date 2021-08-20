@@ -140,6 +140,12 @@ RETRY:
 		return err
 	}
 
+	for _, d := range deleted {
+		if d == id {
+			return sabakan.ErrConflicted
+		}
+	}
+
 	dir := d.getImageDir(os)
 	err = dir.Extract(r, id, imageMembers[os])
 	if err != nil {
