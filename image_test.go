@@ -51,12 +51,15 @@ func testImageValid(t *testing.T) {
 func testImageIndexAppend(t *testing.T) {
 	t.Parallel()
 
-	idx, _ := ImageIndex{}.Append(nil)
+	idx, _ := ImageIndex{}.Append(&Image{ID: ""})
 	if len(idx) != 1 {
 		t.Fatal(`len(idx) != 1`, len(idx))
 	}
-	if idx[0] != nil {
-		t.Fatal(`idx[0] != nil`, idx[0])
+	if idx[0] == nil {
+		t.Fatal(`idx[0] == nil`)
+	}
+	if idx[0].ID != "" {
+		t.Fatal(`idx[0].ID != ""`, idx[0].ID)
 	}
 
 	idx = ImageIndex{
@@ -100,6 +103,41 @@ func testImageIndexAppend(t *testing.T) {
 	}
 	if !reflect.DeepEqual(dels, []string{"0", "1", "2"}) {
 		t.Error(`dels != {"0", "1", "2"}`)
+	}
+
+	idx = ImageIndex{
+		&Image{ID: "0"},
+		&Image{ID: "1", URLs: []string{"aaa"}},
+		&Image{ID: "2"},
+	}
+	idx, _ = idx.Append(&Image{ID: "1"})
+	if len(idx) != 3 {
+		t.Fatal(`len(idx) != 3`, len(idx))
+	}
+	if idx[0].ID != "0" {
+		t.Error(`idx[0].ID != "0"`, idx[0].ID)
+	}
+	if idx[1].ID != "2" {
+		t.Error(`idx[1].ID != "2"`, idx[1].ID)
+	}
+	if idx[2].ID != "1" {
+		t.Error(`idx[2].ID != "1"`, idx[2].ID)
+	}
+	if len(idx[2].URLs) != 1 {
+		t.Error(`len(idx[2].URLs) != 1`, idx[2].URLs)
+	}
+
+	idx = ImageIndex{
+		&Image{ID: "0"},
+		&Image{ID: "1"},
+		&Image{ID: "2"},
+	}
+	idx, _ = idx.Append(&Image{ID: "2"})
+	if len(idx) != 3 {
+		t.Fatal(`len(idx) != 3`, len(idx))
+	}
+	if idx[2].ID != "2" {
+		t.Error(`idx[2].ID != "2"`, idx[2].ID)
 	}
 }
 

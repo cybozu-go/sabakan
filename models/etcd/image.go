@@ -140,9 +140,10 @@ RETRY:
 		return err
 	}
 
-	img := index.Find(id)
-	if img != nil {
-		return sabakan.ErrConflicted
+	for _, d := range deleted {
+		if d == id {
+			return sabakan.ErrConflicted
+		}
 	}
 
 	dir := d.getImageDir(os)
