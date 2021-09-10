@@ -119,7 +119,7 @@ $ docker run -d --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE \
 License
 -------
 
-Sabakan is licensed under MIT license.
+Sabakan is licensed under the Apache License, Version 2.0.
 
 Docker images
 -------------
