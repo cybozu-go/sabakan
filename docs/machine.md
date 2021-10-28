@@ -30,6 +30,8 @@ Key in `bmc`    | Type     | Auto | Description
 `ipv6`          | `string` | yes  | BMC's IPv6 address
 
 Values for auto fields are filled by sabakan at registration.
+These auto fields are not accepted in [`sabactl machines create`](docs/sabactl.md#sabactl-machines-create--f-file) because they are overwritten by sabakan.
+A partially restricted format of this structure is used for the input values of [`sabactl machines create`](docs/sabactl.md#sabactl-machines-create--f-file).
 
 Machine struct
 --------------
@@ -44,7 +46,7 @@ A JSON representation of `Machine` looks like:
   "spec": {
     "serial": "1234abcd",
     "labels": {
-      "product": "Dell R630",
+      "product": "R630",
       "datacenter": "tokyo1"
     },
     "rack": 1,
