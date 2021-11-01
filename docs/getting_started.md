@@ -135,14 +135,13 @@ Prepare `machines.json` as follows:
   {
     "serial": "1234abcd",
     "labels": {
-      "product": "Dell R640",
+      "product": "R640",
       "datacenter": "tokyo1"
     },
     "rack": 0,
     "role": "boot",
     "bmc": {
-      "type": "IPMI-2.0",
-      "ipv4": "10.72.17.37"
+      "type": "IPMI-2.0"
     }
   },
   {
@@ -156,7 +155,8 @@ Then put the JSON to sabakan:
 $ sabactl machines create -f machines.json
 ```
 
-Each object in the array is [`MachineSpec`](machine.md#machinespec-struct).
+The input format for this command is described in [docs/sabactl.md](docs/sabactl.md#sabactl-machines-create--f-file).
+Note that the input format is restricted compared to [`MachineSpec`](machine.md#machinespec-struct).
 Sabakan identifies physical servers by `serial`.
 
 Once machines are properly registered with sabakan, they can netboot
