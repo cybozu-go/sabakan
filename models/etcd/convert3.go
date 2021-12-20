@@ -9,8 +9,8 @@ import (
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/vincent-petithory/dataurl"
-	"go.etcd.io/etcd/clientv3"
-	"go.etcd.io/etcd/clientv3/concurrency"
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3/concurrency"
 )
 
 func (d *driver) convertTo3(ctx context.Context, mu *concurrency.Mutex) error {

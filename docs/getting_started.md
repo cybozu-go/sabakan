@@ -25,8 +25,8 @@ Sabakan requires [etcd][].  Install and run it at `localhost`.
 
 You may use docker to run etcd as follows:
 ```console
-$ docker pull quay.io/coreos/etcd:v3.4.16
-$ docker run -d --rm --name etcd --network=host --uts=host quay.io/coreos/etcd:v3.4.16
+$ docker pull quay.io/coreos/etcd:v3.5.1
+$ docker run -d --rm --name etcd --network=host --uts=host quay.io/coreos/etcd:v3.5.1
 ```
 
 ### <a name="datadir" />Prepare data directory

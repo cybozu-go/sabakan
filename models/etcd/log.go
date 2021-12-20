@@ -10,8 +10,8 @@ import (
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
-	"go.etcd.io/etcd/clientv3"
-	"go.etcd.io/etcd/clientv3/clientv3util"
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3/clientv3util"
 )
 
 func auditKey(t time.Time) string {
