@@ -7,8 +7,8 @@ import (
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
-	"go.etcd.io/etcd/clientv3"
-	"go.etcd.io/etcd/clientv3/concurrency"
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3/concurrency"
 )
 
 func (d *driver) convertTo2Machines(ctx context.Context, mu *concurrency.Mutex, ipam *sabakan.IPAMConfig) error {
