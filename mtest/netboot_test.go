@@ -1,12 +1,15 @@
 package mtest
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -64,6 +67,29 @@ func testNetboot() {
 				_, stderr, err := execAt(worker, "ls", "/dev/mapper/crypt-*")
 				if err != nil {
 					return fmt.Errorf("%v: stderr=%s", err, stderr)
+				}
+				stdout, stderr, err = execAt(worker, "sudo", "dmsetup", "table", "/dev/mapper/crypt-*")
+				if err != nil {
+					return fmt.Errorf("%v: stderr=%s", err, stderr)
+				}
+				scanner := bufio.NewScanner(bytes.NewReader(stdout))
+				for scanner.Scan() {
+					hasNoReadWorkQueue := false
+					hasNoWriteWorkQueue := false
+					for _, field := range strings.Fields(scanner.Text()) {
+						if field == "no_read_workqueue" {
+							hasNoReadWorkQueue = true
+						}
+						if field == "no_write_workqueue" {
+							hasNoWriteWorkQueue = true
+						}
+					}
+					if !hasNoReadWorkQueue || !hasNoWriteWorkQueue {
+						return fmt.Errorf("no_read_workqueue or no_write_workqueue is not set: %s", scanner.Text())
+					}
+				}
+				if err = scanner.Err(); err != nil {
+					return fmt.Errorf("reading stdout: %w", err)
 				}
 				return nil
 			}, 6*time.Minute).Should(Succeed())

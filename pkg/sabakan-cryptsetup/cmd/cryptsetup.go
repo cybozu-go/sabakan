@@ -45,6 +45,7 @@ func Cryptsetup(d Disk, md *Metadata, ek, tpmKek []byte) error {
 		// https://gitlab.com/cryptsetup/cryptsetup/wikis/DMCrypt
 		//"--sector-size=" + strconv.Itoa(d.SectorSize()),
 		"--allow-discards",
+		"--perf-no_read_workqueue", "--perf-no_write_workqueue",
 		"open", "--type=plain", d.Device(), d.CryptName(),
 	}
 	cmd := exec.Command(cryptsetupCmd, args...)
