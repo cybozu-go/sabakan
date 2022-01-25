@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.9.1] - 2022-01-25
+
+### Changed
+- Increase the maximum size limit of assets to 4GiB. (#232)
+
 ## [2.9.0] - 2022-01-24
 
 ### Added
@@ -221,7 +226,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.9.0...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.9.1...HEAD
+[2.9.1]: https://github.com/cybozu-go/sabakan/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/cybozu-go/sabakan/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/cybozu-go/sabakan/compare/v2.7.1...v2.8.0
 [2.7.1]: https://github.com/cybozu-go/sabakan/compare/v2.7.0...v2.7.1
