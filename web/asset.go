@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	maxAssetSize = 2 << 30
+	maxAssetSize = 2 << 31
 )
 
 func (s Server) handleAssets(w http.ResponseWriter, r *http.Request) {
