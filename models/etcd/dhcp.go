@@ -142,6 +142,7 @@ func (l *leaseUsage) renew(mac net.HardwareAddr, du time.Duration) error {
 		"mac":         hwAddr,
 		"lease_until": leaseUntil,
 	})
+	l.hwMap[hwAddr] = v
 	return nil
 }
 
