@@ -149,9 +149,14 @@ func testDHCPRenew(t *testing.T) {
 	d, ch := testNewDriver(t)
 	testSetupConfig(t, d, ch)
 
+	ipam, err := d.getIPAMConfig()
+	if err != nil {
+		t.Error(err)
+	}
+
 	leasedip := net.ParseIP("10.69.0.224")
 	mac := net.HardwareAddr([]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66})
-	err := d.dhcpRenew(context.Background(), leasedip, mac)
+	err = d.dhcpRenew(context.Background(), leasedip, mac)
 	if err == nil {
 		t.Error("dhcpRenew should fail")
 	}
@@ -161,10 +166,28 @@ func testDHCPRenew(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	lr := ipam.LeaseRange(interfaceip)
+	if lr == nil {
+		t.Error("LeaseRange not found")
+	}
+
+	usage, err := d.getLeaseUsage(context.Background(), lr.Key())
+	if err != nil {
+		t.Error(err)
+	}
 
 	err = d.dhcpRenew(context.Background(), leasedip, mac)
 	if err != nil {
 		t.Error(err)
+	}
+
+	newUsage, err := d.getLeaseUsage(context.Background(), lr.Key())
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !newUsage.hwMap[mac.String()].LeaseUntil.After(usage.hwMap[mac.String()].LeaseUntil) {
+		t.Error("LeaseUsage should be renewed", usage.hwMap[mac.String()].LeaseUntil, newUsage.hwMap[mac.String()].LeaseUntil)
 	}
 }
 
