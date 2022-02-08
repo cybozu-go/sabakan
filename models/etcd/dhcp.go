@@ -105,6 +105,7 @@ func (l *leaseUsage) lease(mac net.HardwareAddr, lr *sabakan.LeaseRange, du time
 	leaseUntil := time.Now().Add(du)
 	if v, ok := l.hwMap[hwAddr]; ok {
 		v.LeaseUntil = leaseUntil
+		l.hwMap[hwAddr] = v
 		return lr.IP(v.Index), nil
 	}
 
