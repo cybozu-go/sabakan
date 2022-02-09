@@ -232,7 +232,7 @@ No changes.  Only for updating Docker base image.
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
 [Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.9.2...HEAD
-[2.9.2]: https://github.com/cybozu-go/sabakan/compare/v2.9.0...v2.9.2
+[2.9.2]: https://github.com/cybozu-go/sabakan/compare/v2.9.1...v2.9.2
 [2.9.1]: https://github.com/cybozu-go/sabakan/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/cybozu-go/sabakan/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/cybozu-go/sabakan/compare/v2.7.1...v2.8.0
