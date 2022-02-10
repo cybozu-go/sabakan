@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/cybozu-go/sabakan/v2"
@@ -32,6 +33,10 @@ var machinesGetCmd = &cobra.Command{
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		params := make(map[string]string)
+		outputFormat, ok := machinesGetParams["output"]
+		if ok {
+			delete(machinesGetParams, "output")
+		}
 		for k, v := range machinesGetParams {
 			params[k] = *v
 		}
@@ -40,9 +45,17 @@ var machinesGetCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			e := json.NewEncoder(cmd.OutOrStdout())
-			e.SetIndent("", "  ")
-			return e.Encode(ms)
+			if *outputFormat == "simple" {
+				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 1, 1, ' ', 0)
+				for _, m := range ms {
+					w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status, m.Spec.IPv4[0], m.Spec.BMC.IPv4)))
+				}
+				return w.Flush()
+			} else {
+				e := json.NewEncoder(cmd.OutOrStdout())
+				e.SetIndent("", "  ")
+				return e.Encode(ms)
+			}
 		})
 		well.Stop()
 		return well.Wait()
@@ -191,14 +204,23 @@ var machinesSetRetireDateCmd = &cobra.Command{
 
 func init() {
 	getOpts := map[string]string{
-		"serial":   "Serial name",
-		"rack":     "Rack name",
-		"role":     "Role name",
-		"labels":   "Label name and value (--labels key=val,...)",
-		"ipv4":     "IPv4 address",
-		"ipv6":     "IPv6 address",
-		"bmc-type": "BMC type",
-		"state":    "State",
+		"serial":           "Serial name",
+		"rack":             "Rack name",
+		"role":             "Role name",
+		"labels":           "Label name and value (--labels key=val,...)",
+		"ipv4":             "IPv4 address",
+		"ipv6":             "IPv6 address",
+		"bmc-type":         "BMC type",
+		"state":            "State",
+		"without-serial":   "without Serial name",
+		"without-rack":     "without Rack name",
+		"without-role":     "without Role name",
+		"without-labels":   "without Label name and value (--labels key=val,...)",
+		"without-ipv4":     "without IPv4 address",
+		"without-ipv6":     "without IPv6 address",
+		"without-bmc-type": "without BMC type",
+		"without-state":    "without State",
+		"o":                "Output format",
 	}
 	for k, v := range getOpts {
 		val := new(string)

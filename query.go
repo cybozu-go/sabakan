@@ -1,8 +1,10 @@
 package sabakan
 
-import "fmt"
-import "net/url"
-import "strings"
+import (
+	"fmt"
+	"net/url"
+	"strings"
+)
 
 // Query is an URL query
 type Query map[string]string
@@ -56,8 +58,18 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 	}
-	if rack := q["rack"]; len(rack) > 0 && rack != fmt.Sprint(m.Spec.Rack) {
-		return false
+	if rack := q["rack"]; len(rack) > 0 {
+		racks := strings.Split(q["rack"], ",")
+		match := false
+		for _, rackname := range racks {
+			if rackname == fmt.Sprint(m.Spec.Rack) {
+				match = true
+				break
+			}
+			if !match {
+				return false
+			}
+		}
 	}
 	if role := q["role"]; len(role) > 0 && role != m.Spec.Role {
 		return false
@@ -66,6 +78,69 @@ func (q Query) Match(m *Machine) bool {
 		return false
 	}
 	if state := q["state"]; len(state) > 0 && state != m.Status.State.String() {
+		return false
+	}
+	if withoutRole := q["without-role"]; len(withoutRole) > 0 && withoutRole == m.Spec.Role {
+		return false
+	}
+	if withoutBmc := q["without-bmc-type"]; len(withoutBmc) > 0 && withoutBmc == m.Spec.BMC.Type {
+		return false
+	}
+	if withoutState := q["without-state"]; len(withoutState) > 0 && withoutState == m.Status.State.String() {
+		return false
+	}
+	if withoutSerial := q["without-serial"]; len(withoutSerial) > 0 && withoutSerial == m.Spec.Serial {
+		return false
+	}
+	if withoutIpv4 := q["without-ipv4"]; len(withoutIpv4) > 0 {
+		for _, ip := range m.Spec.IPv4 {
+			if ip == withoutIpv4 {
+				return false
+			}
+		}
+	}
+	if withoutIpv6 := q["without-ipv6"]; len(withoutIpv6) > 0 {
+		for _, ip := range m.Spec.IPv6 {
+			if ip == withoutIpv6 {
+				return false
+			}
+		}
+	}
+	if withoutLabels := q["without-labels"]; len(withoutLabels) > 0 {
+		// Split into each query
+		rawQueries := strings.Split(withoutLabels, ",")
+		for _, rawQuery := range rawQueries {
+			rawQuery = strings.TrimSpace(rawQuery)
+			query, err := url.ParseQuery(rawQuery)
+			if err != nil {
+				return false
+			}
+			for k, v := range query {
+				if label, exists := m.Spec.Labels[k]; exists {
+					if v[0] == label {
+						return false
+					}
+				} else {
+					return false
+				}
+			}
+		}
+	}
+	if withoutRack := q["without-rack"]; len(withoutRack) > 0 {
+		withoutRacks := strings.Split(q["rack"], ",")
+		for _, rackname := range withoutRacks {
+			if rackname == fmt.Sprint(m.Spec.Rack) {
+				return false
+			}
+		}
+	}
+	if withoutRole := q["without-role"]; len(withoutRole) > 0 && withoutRole == m.Spec.Role {
+		return false
+	}
+	if withoutBmc := q["without-bmc-type"]; len(withoutBmc) > 0 && withoutBmc == m.Spec.BMC.Type {
+		return false
+	}
+	if withoutState := q["without-state"]; len(withoutState) > 0 && withoutState == m.Status.State.String() {
 		return false
 	}
 
