@@ -186,3 +186,15 @@ func (q Query) IsEmpty() bool {
 	}
 	return true
 }
+
+func (q Query) RemoveWithout() Query {
+	removed := Query{}
+	for k, v := range q {
+		if strings.HasPrefix(k, "without") {
+			removed[k] = ""
+		} else {
+			removed[k] = v
+		}
+	}
+	return removed
+}

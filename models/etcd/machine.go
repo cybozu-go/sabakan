@@ -257,9 +257,9 @@ RETRY:
 
 func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
-
+	qRemovedWithout := q.RemoveWithout()
 	switch {
-	case q.IsEmpty():
+	case qRemovedWithout.IsEmpty():
 		resp, err := d.client.Get(ctx, KeyMachines, clientv3.WithPrefix(), clientv3.WithKeysOnly())
 		if err != nil {
 			return nil, err
