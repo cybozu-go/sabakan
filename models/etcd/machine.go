@@ -257,6 +257,7 @@ RETRY:
 
 func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.Machine, error) {
 	var serials []string
+
 	qRemovedWithout := q.RemoveWithout()
 	switch {
 	case qRemovedWithout.IsEmpty():

@@ -49,7 +49,11 @@ var machinesGetCmd = &cobra.Command{
 				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 1, 1, ' ', 0)
 				w.Write([]byte("Serial\tRack\tRole\tState\tIPv4\tBMC\n"))
 				for _, m := range ms {
-					w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv4[0], m.Spec.BMC.IPv4)))
+					if len(m.Spec.IPv4) > 0 {
+						w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv4[0], m.Spec.BMC.Type)))
+					} else {
+						w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv6[0], m.Spec.BMC.Type)))
+					}
 				}
 				return w.Flush()
 			} else {
