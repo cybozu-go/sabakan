@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/cybozu-go/sabakan/v2"
@@ -152,8 +153,10 @@ func (mi *machinesIndex) query(q sabakan.Query) []string {
 
 	res := make(map[string]struct{})
 
-	for _, serial := range mi.Rack[q.Rack()] {
-		res[serial] = struct{}{}
+	for _, rack := range strings.Split(q.Rack(), ",") {
+		for _, serial := range mi.Rack[rack] {
+			res[serial] = struct{}{}
+		}
 	}
 	for _, serial := range mi.Role[q.Role()] {
 		res[serial] = struct{}{}

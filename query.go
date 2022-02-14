@@ -59,7 +59,7 @@ func (q Query) Match(m *Machine) bool {
 		}
 	}
 	if rack := q["rack"]; len(rack) > 0 {
-		racks := strings.Split(q["rack"], ",")
+		racks := strings.Split(rack, ",")
 		match := false
 		for _, rackname := range racks {
 			if rackname == fmt.Sprint(m.Spec.Rack) {

@@ -45,10 +45,11 @@ var machinesGetCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			if *outputFormat == "simple" {
+			if ok && *outputFormat == "simple" {
 				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 1, 1, ' ', 0)
+				w.Write([]byte("Serial\tRack\tRole\tState\tIPv4\tBMC\n"))
 				for _, m := range ms {
-					w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status, m.Spec.IPv4[0], m.Spec.BMC.IPv4)))
+					w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv4[0], m.Spec.BMC.IPv4)))
 				}
 				return w.Flush()
 			} else {
@@ -220,12 +221,16 @@ func init() {
 		"without-ipv6":     "without IPv6 address",
 		"without-bmc-type": "without BMC type",
 		"without-state":    "without State",
-		"o":                "Output format",
+		"output":           "Output format",
 	}
 	for k, v := range getOpts {
 		val := new(string)
 		machinesGetParams[k] = val
-		machinesGetCmd.Flags().StringVar(val, k, "", v)
+		if k == "output" {
+			machinesGetCmd.Flags().StringVarP(val, k, "o", "", v)
+		} else {
+			machinesGetCmd.Flags().StringVar(val, k, "", v)
+		}
 	}
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateFile, "file", "f", "", "machiens in json")
 	machinesCreateCmd.MarkFlagRequired("file")
