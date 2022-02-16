@@ -66,9 +66,9 @@ func (q Query) Match(m *Machine) bool {
 				match = true
 				break
 			}
-			if !match {
-				return false
-			}
+		}
+		if !match {
+			return false
 		}
 	}
 	if role := q["role"]; len(role) > 0 && role != m.Spec.Role {
@@ -127,7 +127,7 @@ func (q Query) Match(m *Machine) bool {
 		}
 	}
 	if withoutRack := q["without-rack"]; len(withoutRack) > 0 {
-		withoutRacks := strings.Split(q["rack"], ",")
+		withoutRacks := strings.Split(withoutRack, ",")
 		for _, rackname := range withoutRacks {
 			if rackname == fmt.Sprint(m.Spec.Rack) {
 				return false
@@ -187,6 +187,7 @@ func (q Query) IsEmpty() bool {
 	return true
 }
 
+// RemoveWithout returns query removed --without key
 func (q Query) RemoveWithout() Query {
 	removed := Query{}
 	for k, v := range q {
@@ -197,4 +198,41 @@ func (q Query) RemoveWithout() Query {
 		}
 	}
 	return removed
+}
+
+// Valid returns true if query isn't conflicted
+func (q Query) Valid() bool {
+	hasWithoutSerial := q["without-serial"]
+	if hasSerial := q["serial"]; len(hasSerial) > 0 && len(hasWithoutSerial) > 0 {
+		return false
+	}
+	hasWithoutRack := q["without-rack"]
+	if hasRack := q["rack"]; len(hasRack) > 0 && len(hasWithoutRack) > 0 {
+		return false
+	}
+	hasWithoutRole := q["without-role"]
+	if hasRole := q["role"]; len(hasRole) > 0 && len(hasWithoutRole) > 0 {
+		return false
+	}
+	hasWithoutIPv4 := q["without-ipv4"]
+	if hasIPv4 := q["ipv4"]; len(hasIPv4) > 0 && len(hasWithoutIPv4) > 0 {
+		return false
+	}
+	hasWithoutIPv6 := q["without-ipv6"]
+	if hasIPv6 := q["ipv6"]; len(hasIPv6) > 0 && len(hasWithoutIPv6) > 0 {
+		return false
+	}
+	hasWithoutBMCType := q["without-bmc-type"]
+	if hasBMCType := q["bmc-type"]; len(hasBMCType) > 0 && len(hasWithoutBMCType) > 0 {
+		return false
+	}
+	hasWithoutState := q["without-state"]
+	if hasState := q["state"]; len(hasState) > 0 && len(hasWithoutState) > 0 {
+		return false
+	}
+	hasWithoutLabels := q["without-labels"]
+	if hasLabels := q["labels"]; len(hasLabels) > 0 && len(hasWithoutLabels) > 0 {
+		return false
+	}
+	return true
 }

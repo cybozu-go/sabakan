@@ -243,6 +243,11 @@ func testMachinesGet(t *testing.T) {
 			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
 		},
 		{
+			query:    map[string][]string{"rack": {"1,2"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true, "1234efgh": true},
+		},
+		{
 			query:    map[string][]string{"role": {"boot"}},
 			status:   http.StatusOK,
 			expected: map[string]bool{"1234abcd": true, "1234efgh": true},
@@ -267,6 +272,46 @@ func testMachinesGet(t *testing.T) {
 			query:    map[string][]string{"state": {"unreachable"}},
 			status:   http.StatusNotFound,
 			expected: nil,
+		},
+		{
+			query:    map[string][]string{"without-serial": {"1234abcd"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"5678abcd": true, "1234efgh": true},
+		},
+		{
+			query:    map[string][]string{"without-labels": {"product=R630"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"5678abcd": true},
+		},
+		{
+			query:    map[string][]string{"without-rack": {"1"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234efgh": true},
+		},
+		{
+			query:    map[string][]string{"without-role": {"boot"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"5678abcd": true},
+		},
+		{
+			query:    map[string][]string{"without-bmc-type": {"iDRAC-9"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234efgh": true},
+		},
+		{
+			query:    map[string][]string{"without-state": {"uninitialized"}},
+			status:   http.StatusNotFound,
+			expected: nil,
+		},
+		{
+			query:    map[string][]string{"without-state": {"uninitialized"}, "state": {"uninitialized"}},
+			status:   http.StatusBadRequest,
+			expected: nil,
+		},
+		{
+			query:    map[string][]string{"without-serial": {"1234abcd"}, "bmc-type": {"iDRAC-9"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"5678abcd": true},
 		},
 	}
 	for _, c := range cases {
