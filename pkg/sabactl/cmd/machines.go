@@ -210,7 +210,7 @@ var machinesSetRetireDateCmd = &cobra.Command{
 func init() {
 	getOpts := map[string]string{
 		"serial":           "Serial name",
-		"rack":             "Rack name",
+		"rack":             "Rack name(s) (--rack 1,2,3...)",
 		"role":             "Role name",
 		"labels":           "Label name and value (--labels key=val,...)",
 		"ipv4":             "IPv4 address",

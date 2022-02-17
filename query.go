@@ -188,16 +188,13 @@ func (q Query) IsEmpty() bool {
 }
 
 // RemoveWithout returns query removed --without key
-func (q Query) RemoveWithout() Query {
-	removed := Query{}
+func (q Query) HasOnlyWithout() bool {
 	for k, v := range q {
-		if strings.HasPrefix(k, "without") {
-			removed[k] = ""
-		} else {
-			removed[k] = v
+		if !strings.HasPrefix(k, "without") && len(v) > 0 {
+			return false
 		}
 	}
-	return removed
+	return true
 }
 
 // Valid returns true if query isn't conflicted
