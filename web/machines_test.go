@@ -228,6 +228,11 @@ func testMachinesGet(t *testing.T) {
 			expected: map[string]bool{"1234abcd": true},
 		},
 		{
+			query:    map[string][]string{"serial": {"1234abcd,5678abcd"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
+		},
+		{
 			query:    map[string][]string{"labels": {"product=R630"}},
 			status:   http.StatusOK,
 			expected: map[string]bool{"1234abcd": true, "1234efgh": true},
@@ -253,9 +258,19 @@ func testMachinesGet(t *testing.T) {
 			expected: map[string]bool{"1234abcd": true, "1234efgh": true},
 		},
 		{
+			query:    map[string][]string{"role": {"boot,worker"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true, "1234efgh": true},
+		},
+		{
 			query:    map[string][]string{"bmc-type": {"iDRAC-9"}},
 			status:   http.StatusOK,
 			expected: map[string]bool{"1234abcd": true, "5678abcd": true},
+		},
+		{
+			query:    map[string][]string{"bmc-type": {"iDRAC-9,IPMI-2.0"}},
+			status:   http.StatusOK,
+			expected: map[string]bool{"1234abcd": true, "5678abcd": true, "1234efgh": true},
 		},
 		{
 			query:    map[string][]string{"state": {"uninitialized"}},
@@ -343,7 +358,7 @@ func testMachinesGet(t *testing.T) {
 			serials[m.Spec.Serial] = true
 		}
 		if !reflect.DeepEqual(serials, c.expected) {
-			t.Errorf("wrong query result: %#v", serials)
+			t.Errorf("wrong query result: %#v,%#v", serials, c.query)
 		}
 	}
 }
