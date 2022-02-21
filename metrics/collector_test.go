@@ -125,6 +125,91 @@ func testMachineStatus(t *testing.T) {
 	}
 }
 
+func MachineStatusWhenMachineDeleted(t *testing.T) {
+	testCases := []machineStatusTestCase{
+		{
+			name:  "1 uninitialized, 1 healthy",
+			input: twoMachines,
+			expectedMetrics: []expectedMachineStatus{
+				{
+					status: sabakan.StateHealthy.String(),
+					labels: map[string]string{
+						"address":      "10.0.0.2",
+						"serial":       "002",
+						"rack":         "2",
+						"role":         "ss",
+						"machine_type": "cray-2",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			model, err := tt.input()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			collector := NewCollector(model)
+			handler := GetHandler(collector)
+			// If machines are deleted, corresponding metrics is also deleted
+			err = model.Machine.SetState(context.Background(), "001", sabakan.StateRetiring)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = model.Machine.SetState(context.Background(), "001", sabakan.StateRetired)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = model.Machine.Delete(context.Background(), "001")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("GET", "/metrics", nil)
+			handler.ServeHTTP(w, req)
+			metricsFamily, err := parseMetrics(w.Result())
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			found := false
+			for _, mf := range metricsFamily {
+				if *mf.Name != "sabakan_machine_status" {
+					continue
+				}
+				for _, em := range tt.expectedMetrics {
+					states := make(map[string]bool)
+					for _, m := range mf.Metric {
+						lm := labelToMap(m.Label)
+						if !hasLabels(lm, em.labels) {
+							continue
+						}
+						states[lm["status"]] = true
+						if lm["status"] == em.status && *m.Gauge.Value != 1 {
+							t.Errorf("expected status %q of %q must be 1 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
+						}
+						if lm["status"] != em.status && *m.Gauge.Value != 0 {
+							t.Errorf("unexpected status %q of %q must be 0 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
+						}
+					}
+					for _, s := range sabakan.StateList {
+						if !states[s.String()] {
+							t.Errorf("metrics for %q was not found", em.labels["serial"])
+						}
+					}
+				}
+			}
+			if found {
+				t.Error("metrics sabakan_machine_status was not deleted")
+			}
+
+		})
+	}
+}
+
 func testAPIMetrics(t *testing.T) {
 	testCases := []apiTestCase{
 		{
@@ -385,6 +470,7 @@ func getCounterValue(handler http.Handler, name string, labels map[string]string
 
 func TestMetrics(t *testing.T) {
 	t.Run("MachineStatus", testMachineStatus)
+	t.Run("MachineStatusWhenMachineDeleted", MachineStatusWhenMachineDeleted)
 	t.Run("APIMetrics", testAPIMetrics)
 	t.Run("AssetsImagesMetrics", testAssetsMetrics)
 }

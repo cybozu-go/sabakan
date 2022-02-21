@@ -112,6 +112,7 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func updateMachineStatus(ctx context.Context, model *sabakan.Model) error {
+	MachineStatus.Reset()
 	machines, err := model.Machine.Query(ctx, nil)
 	if err != nil {
 		return err
