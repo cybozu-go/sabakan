@@ -158,24 +158,30 @@ func (mi *machinesIndex) query(q sabakan.Query) []string {
 			res[serial] = struct{}{}
 		}
 	}
-	for _, serial := range mi.Role[q.Role()] {
-		res[serial] = struct{}{}
-	}
-	if len(q.IPv4()) > 0 {
-		if serial, ok := mi.IPv4[q.IPv4()]; ok {
+	for _, role := range strings.Split(q.Role(), ",") {
+		for _, serial := range mi.Role[role] {
 			res[serial] = struct{}{}
 		}
 	}
-	if len(q.IPv6()) > 0 {
-		if serial, ok := mi.IPv6[q.IPv6()]; ok {
+	for _, ipv4 := range strings.Split(q.IPv4(), ",") {
+		if serial, ok := mi.IPv4[ipv4]; len(ipv4) > 0 && ok {
 			res[serial] = struct{}{}
 		}
 	}
-	for _, serial := range mi.BMCType[q.BMCType()] {
-		res[serial] = struct{}{}
+	for _, ipv6 := range strings.Split(q.IPv6(), ",") {
+		if serial, ok := mi.IPv6[ipv6]; len(ipv6) > 0 && ok {
+			res[serial] = struct{}{}
+		}
 	}
-	for _, serial := range mi.State[sabakan.MachineState(q.State())] {
-		res[serial] = struct{}{}
+	for _, bmcType := range strings.Split(q.BMCType(), ",") {
+		for _, serial := range mi.BMCType[bmcType] {
+			res[serial] = struct{}{}
+		}
+	}
+	for _, state := range strings.Split(q.State(), ",") {
+		for _, serial := range mi.State[sabakan.MachineState(state)] {
+			res[serial] = struct{}{}
+		}
 	}
 	for _, labelKey := range q.Labels() {
 		for _, serial := range mi.Labels[labelKey] {
