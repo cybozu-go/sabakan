@@ -34,6 +34,7 @@ type Metric struct {
 type Collector struct {
 	metrics map[string]Metric
 	model   *sabakan.Model
+	mu      *sync.Mutex
 }
 
 // NewCollector returns a new Collector.
@@ -58,6 +59,7 @@ func NewCollector(model *sabakan.Model) *Collector {
 			},
 		},
 		model: model,
+		mu:    &sync.Mutex{},
 	}
 }
 
@@ -77,6 +79,8 @@ func GetHandler(collector *Collector) http.Handler {
 
 // Describe implements prometheus.Collector.Describe().
 func (c Collector) Describe(ch chan<- *prometheus.Desc) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	for _, metric := range c.metrics {
 		for _, col := range metric.collectors {
 			col.Describe(ch)
@@ -86,6 +90,8 @@ func (c Collector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements prometheus.Collector.Collect().
 func (c Collector) Collect(ch chan<- prometheus.Metric) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	ctx, cancel := context.WithTimeout(context.Background(), scrapeTimeout)
 	defer cancel()
 
