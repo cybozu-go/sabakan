@@ -100,6 +100,10 @@ func getQueryMap(r *http.Request) sabakan.Query {
 func (s Server) handleMachinesGet(w http.ResponseWriter, r *http.Request) {
 	q := getQueryMap(r)
 
+	if !q.Valid() {
+		renderError(r.Context(), w, BadRequest("'with' and 'without' options about the same things are specified."))
+		return
+	}
 	machines, err := s.Model.Machine.Query(r.Context(), q)
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))

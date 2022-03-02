@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/cybozu-go/sabakan/v2"
@@ -32,6 +33,10 @@ var machinesGetCmd = &cobra.Command{
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		params := make(map[string]string)
+		outputFormat, ok := machinesGetParams["output"]
+		if ok {
+			delete(machinesGetParams, "output")
+		}
 		for k, v := range machinesGetParams {
 			params[k] = *v
 		}
@@ -40,9 +45,22 @@ var machinesGetCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			e := json.NewEncoder(cmd.OutOrStdout())
-			e.SetIndent("", "  ")
-			return e.Encode(ms)
+			if ok && *outputFormat == "simple" {
+				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 1, 1, ' ', 0)
+				w.Write([]byte("Serial\tRack\tRole\tState\tIPv4\tBMC\n"))
+				for _, m := range ms {
+					if len(m.Spec.IPv4) > 0 {
+						w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv4[0], m.Spec.BMC.Type)))
+					} else {
+						w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv6[0], m.Spec.BMC.Type)))
+					}
+				}
+				return w.Flush()
+			} else {
+				e := json.NewEncoder(cmd.OutOrStdout())
+				e.SetIndent("", "  ")
+				return e.Encode(ms)
+			}
 		})
 		well.Stop()
 		return well.Wait()
@@ -191,19 +209,32 @@ var machinesSetRetireDateCmd = &cobra.Command{
 
 func init() {
 	getOpts := map[string]string{
-		"serial":   "Serial name",
-		"rack":     "Rack name",
-		"role":     "Role name",
-		"labels":   "Label name and value (--labels key=val,...)",
-		"ipv4":     "IPv4 address",
-		"ipv6":     "IPv6 address",
-		"bmc-type": "BMC type",
-		"state":    "State",
+		"serial":           "Serial name(s) (--serial 001,002,003...)",
+		"rack":             "Rack name(s) (--rack 1,2,3...)",
+		"role":             "Role name(s) (--role boot,worker...)",
+		"labels":           "Label name and value (--labels key=val,...)",
+		"ipv4":             "IPv4 address(s) (--ipv4 10.0.0.1,10.0.0.2,10.0.0.3...)",
+		"ipv6":             "IPv6 address(s) (--ipv6 aa::ff,bb::ff,cc::ff...)",
+		"bmc-type":         "BMC type(s) (--bmc-type iDRAC-9,IPMI-2.0...)",
+		"state":            "State(s) (--state retiring,uninitialized...)",
+		"without-serial":   "without Serial name",
+		"without-rack":     "without Rack name",
+		"without-role":     "without Role name",
+		"without-labels":   "without Label name and value (--labels key=val,...)",
+		"without-ipv4":     "without IPv4 address",
+		"without-ipv6":     "without IPv6 address",
+		"without-bmc-type": "without BMC type",
+		"without-state":    "without State",
+		"output":           "Output format",
 	}
 	for k, v := range getOpts {
 		val := new(string)
 		machinesGetParams[k] = val
-		machinesGetCmd.Flags().StringVar(val, k, "", v)
+		if k == "output" {
+			machinesGetCmd.Flags().StringVarP(val, k, "o", "", v)
+		} else {
+			machinesGetCmd.Flags().StringVar(val, k, "", v)
+		}
 	}
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateFile, "file", "f", "", "machiens in json")
 	machinesCreateCmd.MarkFlagRequired("file")

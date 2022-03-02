@@ -259,7 +259,7 @@ func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.
 	var serials []string
 
 	switch {
-	case q.IsEmpty():
+	case q.IsEmpty() || q.HasOnlyWithout():
 		resp, err := d.client.Get(ctx, KeyMachines, clientv3.WithPrefix(), clientv3.WithKeysOnly())
 		if err != nil {
 			return nil, err

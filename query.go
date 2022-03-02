@@ -1,21 +1,21 @@
 package sabakan
 
-import "fmt"
-import "net/url"
-import "strings"
+import (
+	"fmt"
+	"net/url"
+	"strings"
+)
 
 // Query is an URL query
 type Query map[string]string
 
 // Match returns true if all non-empty fields matches Machine
 func (q Query) Match(m *Machine) bool {
-	if serial := q["serial"]; len(serial) > 0 && serial != m.Spec.Serial {
-		return false
-	}
-	if ipv4 := q["ipv4"]; len(ipv4) > 0 {
+	if serial := q["serial"]; len(serial) > 0 {
 		match := false
-		for _, ip := range m.Spec.IPv4 {
-			if ip == ipv4 {
+		serials := strings.Split(serial, ",")
+		for _, s := range serials {
+			if s == m.Spec.Serial {
 				match = true
 				break
 			}
@@ -24,12 +24,30 @@ func (q Query) Match(m *Machine) bool {
 			return false
 		}
 	}
-	if ipv6 := q["ipv6"]; len(ipv6) > 0 {
+	if ipv4 := q["ipv4"]; len(ipv4) > 0 {
+		ipv4s := strings.Split(ipv4, ",")
 		match := false
-		for _, ip := range m.Spec.IPv6 {
-			if ip == ipv6 {
-				match = true
-				break
+		for _, ipv4address := range ipv4s {
+			for _, ip := range m.Spec.IPv4 {
+				if ip == ipv4address {
+					match = true
+					break
+				}
+			}
+		}
+		if !match {
+			return false
+		}
+	}
+	if ipv6 := q["ipv6"]; len(ipv6) > 0 {
+		ipv6s := strings.Split(ipv6, ",")
+		match := false
+		for _, ipv6address := range ipv6s {
+			for _, ip := range m.Spec.IPv6 {
+				if ip == ipv6address {
+					match = true
+					break
+				}
 			}
 		}
 		if !match {
@@ -56,17 +74,147 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 	}
-	if rack := q["rack"]; len(rack) > 0 && rack != fmt.Sprint(m.Spec.Rack) {
-		return false
+	if rack := q["rack"]; len(rack) > 0 {
+		racks := strings.Split(rack, ",")
+		match := false
+		for _, r := range racks {
+			if r == fmt.Sprint(m.Spec.Rack) {
+				match = true
+				break
+			}
+		}
+		if !match {
+			return false
+		}
 	}
-	if role := q["role"]; len(role) > 0 && role != m.Spec.Role {
-		return false
+	if role := q["role"]; len(role) > 0 {
+		roles := strings.Split(role, ",")
+		match := false
+		for _, r := range roles {
+			if r == m.Spec.Role {
+				match = true
+				break
+			}
+		}
+		if !match {
+			return false
+		}
 	}
-	if bmc := q["bmc-type"]; len(bmc) > 0 && bmc != m.Spec.BMC.Type {
-		return false
+	if bmc := q["bmc-type"]; len(bmc) > 0 {
+		bmcs := strings.Split(bmc, ",")
+		match := false
+		for _, b := range bmcs {
+			if b == m.Spec.BMC.Type {
+				match = true
+				break
+			}
+		}
+		if !match {
+			return false
+		}
 	}
-	if state := q["state"]; len(state) > 0 && state != m.Status.State.String() {
-		return false
+	if state := q["state"]; len(state) > 0 {
+		states := strings.Split(state, ",")
+		match := false
+		for _, s := range states {
+			if s == fmt.Sprint(m.Status.State) {
+				match = true
+				break
+			}
+		}
+		if !match {
+			return false
+		}
+	}
+	if withoutSerial := q["without-serial"]; len(withoutSerial) > 0 {
+		withoutSerials := strings.Split(withoutSerial, ",")
+		for _, wr := range withoutSerials {
+			if wr == fmt.Sprint(m.Spec.Serial) {
+				return false
+			}
+		}
+	}
+	if withoutIPv4 := q["without-ipv4"]; len(withoutIPv4) > 0 {
+		withoutIPv4s := strings.Split(withoutIPv4, ",")
+		match := false
+		for _, wIPv4 := range withoutIPv4s {
+			for _, ip := range m.Spec.IPv4 {
+				if ip == wIPv4 {
+					match = true
+					break
+				}
+			}
+		}
+		if match {
+			return false
+		}
+	}
+	if withoutIPv6 := q["without-ipv6"]; len(withoutIPv6) > 0 {
+		withoutIPv6s := strings.Split(withoutIPv6, ",")
+		match := false
+		for _, wIPv6 := range withoutIPv6s {
+			for _, ip := range m.Spec.IPv6 {
+				if ip == wIPv6 {
+					match = true
+					break
+				}
+			}
+		}
+		if match {
+			return false
+		}
+	}
+	if withoutLabels := q["without-labels"]; len(withoutLabels) > 0 {
+		// Split into each query
+		rawQueries := strings.Split(withoutLabels, ",")
+		for _, rawQuery := range rawQueries {
+			rawQuery = strings.TrimSpace(rawQuery)
+			query, err := url.ParseQuery(rawQuery)
+			if err != nil {
+				return false
+			}
+			for k, v := range query {
+				if label, exists := m.Spec.Labels[k]; exists {
+					if v[0] == label {
+						return false
+					}
+				} else {
+					return false
+				}
+			}
+		}
+	}
+	if withoutRack := q["without-rack"]; len(withoutRack) > 0 {
+		withoutRacks := strings.Split(withoutRack, ",")
+		for _, wr := range withoutRacks {
+			if wr == fmt.Sprint(m.Spec.Rack) {
+				return false
+			}
+		}
+	}
+	if withoutRole := q["without-role"]; len(withoutRole) > 0 {
+		withoutRoles := strings.Split(withoutRole, ",")
+		for _, wr := range withoutRoles {
+			if wr == fmt.Sprint(m.Spec.Role) {
+				return false
+			}
+		}
+	}
+	if withoutBmc := q["without-bmc-type"]; len(withoutBmc) > 0 {
+		withoutBmcs := strings.Split(withoutBmc, ",")
+		for _, wb := range withoutBmcs {
+			if wb == fmt.Sprint(m.Spec.BMC.Type) {
+				return false
+			}
+		}
+	}
+	if withoutState := q["without-state"]; len(withoutState) > 0 {
+		withoutStates := strings.Split(withoutState, ",")
+		for _, ws := range withoutStates {
+			if ws == fmt.Sprint(m.Status.State) {
+				return false
+			}
+		}
 	}
 
 	return true
@@ -108,6 +256,53 @@ func (q Query) IsEmpty() bool {
 		if len(v) > 0 {
 			return false
 		}
+	}
+	return true
+}
+
+// RemoveWithout returns query removed --without key
+func (q Query) HasOnlyWithout() bool {
+	for k, v := range q {
+		if !strings.HasPrefix(k, "without") && len(v) > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// Valid returns true if query isn't conflicted
+func (q Query) Valid() bool {
+	hasWithoutSerial := q["without-serial"]
+	if hasSerial := q["serial"]; len(hasSerial) > 0 && len(hasWithoutSerial) > 0 {
+		return false
+	}
+	hasWithoutRack := q["without-rack"]
+	if hasRack := q["rack"]; len(hasRack) > 0 && len(hasWithoutRack) > 0 {
+		return false
+	}
+	hasWithoutRole := q["without-role"]
+	if hasRole := q["role"]; len(hasRole) > 0 && len(hasWithoutRole) > 0 {
+		return false
+	}
+	hasWithoutIPv4 := q["without-ipv4"]
+	if hasIPv4 := q["ipv4"]; len(hasIPv4) > 0 && len(hasWithoutIPv4) > 0 {
+		return false
+	}
+	hasWithoutIPv6 := q["without-ipv6"]
+	if hasIPv6 := q["ipv6"]; len(hasIPv6) > 0 && len(hasWithoutIPv6) > 0 {
+		return false
+	}
+	hasWithoutBMCType := q["without-bmc-type"]
+	if hasBMCType := q["bmc-type"]; len(hasBMCType) > 0 && len(hasWithoutBMCType) > 0 {
+		return false
+	}
+	hasWithoutState := q["without-state"]
+	if hasState := q["state"]; len(hasState) > 0 && len(hasWithoutState) > 0 {
+		return false
+	}
+	hasWithoutLabels := q["without-labels"]
+	if hasLabels := q["labels"]; len(hasLabels) > 0 && len(hasWithoutLabels) > 0 {
+		return false
 	}
 	return true
 }
