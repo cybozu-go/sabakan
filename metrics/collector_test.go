@@ -126,24 +126,12 @@ func testMachineStatus(t *testing.T) {
 }
 
 func MachineStatusWhenMachineDeleted(t *testing.T) {
-	testCase := machineStatusTestCase{
-		input: twoMachines,
-		expectedMetrics: []expectedMachineStatus{
-			{
-				status: sabakan.StateHealthy.String(),
-				labels: map[string]string{
-					"address":      "10.0.0.2",
-					"serial":       "002",
-					"rack":         "2",
-					"role":         "ss",
-					"machine_type": "cray-2",
-				},
-			},
-		},
-	}
-	model, err := testCase.input()
+	model, err := twoMachines()
 	if err != nil {
 		t.Fatal(err)
+	}
+	expectedLabels := map[string]string{
+		"serial": "002",
 	}
 
 	collector := NewCollector(model)
@@ -175,25 +163,10 @@ func MachineStatusWhenMachineDeleted(t *testing.T) {
 		if *mf.Name != "sabakan_machine_status" {
 			continue
 		}
-		for _, em := range testCase.expectedMetrics {
-			states := make(map[string]bool)
-			for _, m := range mf.Metric {
-				lm := labelToMap(m.Label)
-				if !hasLabels(lm, em.labels) {
-					t.Errorf("expected labels must be %q but %q", em.labels, lm)
-				}
-				states[lm["status"]] = true
-				if lm["status"] == em.status && *m.Gauge.Value != 1 {
-					t.Errorf("expected status %q of %q must be 1 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
-				}
-				if lm["status"] != em.status && *m.Gauge.Value != 0 {
-					t.Errorf("unexpected status %q of %q must be 0 but %f", lm["status"], em.labels["serial"], *m.Gauge.Value)
-				}
-			}
-			for _, s := range sabakan.StateList {
-				if !states[s.String()] {
-					t.Errorf("metrics for %q was not found", em.labels["serial"])
-				}
+		for _, m := range mf.Metric {
+			lm := labelToMap(m.Label)
+			if !hasLabels(lm, expectedLabels) {
+				t.Errorf("expected labels must be %q but %q", expectedLabels, lm)
 			}
 		}
 	}
