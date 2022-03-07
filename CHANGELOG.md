@@ -5,6 +5,18 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.10.0] - 2022-03-07
+
+### Fixed
+- Remove machine status metrics when the machine is removed (#240)
+
+### Changed
+- Make the options of `sabactl machines get` allow multiple values (#239) 
+
+### Added
+- Add '--without' options for `sabactl machines get`  (#239) 
+- Add '-o simple' for `sabactl machines get`  (#239) 
+
 ## [2.9.2] - 2022-02-09
 
 ### Fixed
@@ -231,7 +243,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.9.2...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.10.0...HEAD
+[2.10.0]: https://github.com/cybozu-go/sabakan/compare/v2.9.2...v2.10.0
 [2.9.2]: https://github.com/cybozu-go/sabakan/compare/v2.9.1...v2.9.2
 [2.9.1]: https://github.com/cybozu-go/sabakan/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/cybozu-go/sabakan/compare/v2.8.0...v2.9.0
