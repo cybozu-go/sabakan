@@ -78,10 +78,10 @@ var (
 	reValidLabelName     = regexp.MustCompile(`^[a-z0-9A-Z]([a-z0-9A-Z_.-]{0,61}[a-z0-9A-Z])?$`)
 	reValidLabelVal      = regexp.MustCompile(`^[a-z0-9A-Z]([a-z0-9A-Z_.-]{0,61}[a-z0-9A-Z])?$`)
 	permittedTransitions = map[MachineState][]MachineState{
-		StateUninitialized: {StateHealthy, StateRetiring},
+		StateUninitialized: {StateHealthy, StateUnhealthy, StateUnreachable, StateRetiring},
 		StateHealthy:       {StateUnhealthy, StateUnreachable, StateUpdating, StateRetiring},
-		StateUnhealthy:     {StateHealthy, StateUnreachable, StateRetiring},
-		StateUnreachable:   {StateHealthy, StateRetiring},
+		StateUnhealthy:     {StateHealthy, StateUnreachable, StateUpdating, StateRetiring},
+		StateUnreachable:   {StateHealthy, StateUnhealthy, StateUpdating, StateRetiring},
 		StateUpdating:      {StateUninitialized},
 		StateRetiring:      {StateRetired},
 		StateRetired:       {StateUninitialized},
