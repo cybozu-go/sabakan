@@ -68,8 +68,8 @@ func testStatePutFromUninitialized(t *testing.T) {
 	testData := []testTransition{
 		{"uninitialized", 200},
 		{"healthy", 200},
-		{"unhealthy", 200},
-		{"unreachable", 200},
+		{"unhealthy", 500},
+		{"unreachable", 500},
 		{"updating", 500},
 		{"retiring", 200},
 		{"retired", 500},

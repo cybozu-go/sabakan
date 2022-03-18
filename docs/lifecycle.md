@@ -53,7 +53,7 @@ External controllers are responsible to:
 
 ### Transition constraints
 
-* **Uninitialized** can transition to **Healthy**, **Unhealthy**, **Unreachable** or **Retiring**.
+* **Uninitialized** can transition to **Healthy** or **Retiring**.
 * **Healthy** can transition to **Unhealthy**, **Unreachable**, **Updating** or **Retiring**.
 * **Unhealthy** can transition to **Healthy**, **Unreachable**, **Updating** or **Retiring**.
 * **Unreachable** can transition to **Healthy**, **Unhealthy**, **Updating** or **Retiring**.
@@ -73,4 +73,4 @@ And only such **Retired** machines can be removed from sabakan.
 
 ### Transition diagram
 
-![state transition diagram](https://www.plantuml.com/plantuml/png/bPF1JiCm38RlUGgVaIhkEQ0XE712QD9EY8FNU6lKrgbSZwayFIbqAQacgjtS-8__pwczwHL5JsrZtky-e73XpCK3xDYpLu-D_o9diYyeOlw5iD5gk9BPSVLFJWZB2lSDNSbkIRruFbfufh91BmGo7HcpwnngZA0GVwnqYMZXyQ0a8BGFGOsP-7AYiR1IgJqW0ua4IRe5dOLNqdEG6axpOIPUmFvbJR9J5uKNS9kY--q8EKQW5K4RoticOnBdca4kdEnil566Jn8uI6Zd3fCulTnwexd1BHsa6eifoSzJ_JoprdMIteXbBbLd2t8s1cryh_v7wtnV0t4fGwS-CDGqJDVIw6RJzYRKeL3ca-JJ3iLzil24338QPThVVzJZ7cjaio5sSG6_0G00)
+![state transition diagram](https://www.plantuml.com/plantuml/png/bPEnJiGm38RtF8Ldf8ez0pe40nD29zs46Dp6TusQ9fNhSYfFJ-ZbI8cGgjkS-8l_tt6o6mLPfjwfzxiFg4mu--e13jvwAnQT_IAZ_goWYlaNGYVj_4zcJsBP-fE6PseSMYRWjANKOJ0eCOAAxQcLKaZ3ur68WQaEGPHAAb0jO7jP_HGMQcG4z43CWGkE2PiMQqSQNadEWJkOykOQBiskl6Pi6Y9uDQv_e_lzOZ9682r17yjRJqebdvi21PZaT3pHX4zYE7BeSuSPpZUtqMWXS4C7kKOnwxoV9r9ajhlEw6ssrBLgbY2ZOz37-neNrjYn0_8DpuFOuA6ZEHrBZxDuRMzC0pAjTJAUVaBy5HgUq0ClGclsCgCHQ-pGgnrvC_Nk6m00)
