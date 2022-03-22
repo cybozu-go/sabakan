@@ -55,8 +55,8 @@ External controllers are responsible to:
 
 * **Uninitialized** can transition to **Healthy** or **Retiring**.
 * **Healthy** can transition to **Unhealthy**, **Unreachable**, **Updating** or **Retiring**.
-* **Unhealthy** can transition to **Healthy**, **Unreachable** or **Retiring**.
-* **Unreachable** can transition to **Healthy** or **Retiring**.
+* **Unhealthy** can transition to **Healthy**, **Unreachable**, **Updating** or **Retiring**.
+* **Unreachable** can transition to **Healthy**, **Unhealthy**, **Updating** or **Retiring**.
 * **Updating** can transition to **Uninitialized** after restarting.
 * **Retiring** can transition to **Retired** when it has no disk encryption keys.
 * **Retired** can transition to **Uninitialized**.
@@ -73,4 +73,4 @@ And only such **Retired** machines can be removed from sabakan.
 
 ### Transition diagram
 
-![state transition diagram](http://www.plantuml.com/plantuml/svg/ZPAzQiD0381tFONcWkdkeQIqGwTI0fbA1yMdv0xREYCh3UdJz-mut3K4ckrE-lJ3XrQZaTgXx-3puGih5uzIFU56WWGBr8KVTl3dXrNAlp5rvaytCckse47sDRvoqr5GHbr204lP36x4dtyJQTpOY2J8gb6lE6LgF6qxhl6TxHYrnKCEbl3rz69unWx3r7LmP3DuUJskUHlZz4BpZ7rg7uG1BdcihhtK-BmpLjIvC97Yxrgb1BFBEbKqyPiLTnhxxAA0DUoztQC42gASKSR_MnBWaimaksdBFcqvpf9S65jaQVGqM8Y2BPy05lAMhm_bWPHBmHbVJY-TOOql9AZpe98zcnbfIoq9h5XSkjjV)
+![state transition diagram](https://www.plantuml.com/plantuml/png/bPEnJiGm38RtF8Ldf8ez0pe40nD29zs46Dp6TusQ9fNhSYfFJ-ZbI8cGgjkS-8l_tt6o6mLPfjwfzxiFg4mu--e13jvwAnQT_IAZ_goWYlaNGYVj_4zcJsBP-fE6PseSMYRWjANKOJ0eCOAAxQcLKaZ3ur68WQaEGPHAAb0jO7jP_HGMQcG4z43CWGkE2PiMQqSQNadEWJkOykOQBiskl6Pi6Y9uDQv_e_lzOZ9682r17yjRJqebdvi21PZaT3pHX4zYE7BeSuSPpZUtqMWXS4C7kKOnwxoV9r9ajhlEw6ssrBLgbY2ZOz37-neNrjYn0_8DpuFOuA6ZEHrBZxDuRMzC0pAjTJAUVaBy5HgUq0ClGclsCgCHQ-pGgnrvC_Nk6m00)

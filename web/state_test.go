@@ -134,7 +134,7 @@ func testStatePutFromUnhealthy(t *testing.T) {
 		{"healthy", 200},
 		{"unhealthy", 200},
 		{"unreachable", 200},
-		{"updating", 500},
+		{"updating", 200},
 		{"retiring", 200},
 		{"retired", 500},
 	}
@@ -165,9 +165,9 @@ func testStatePutFromUnreachable(t *testing.T) {
 	testData := []testTransition{
 		{"uninitialized", 500},
 		{"healthy", 200},
-		{"unhealthy", 500},
+		{"unhealthy", 200},
 		{"unreachable", 200},
-		{"updating", 500},
+		{"updating", 200},
 		{"retiring", 200},
 		{"retired", 500},
 	}

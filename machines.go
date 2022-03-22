@@ -80,8 +80,8 @@ var (
 	permittedTransitions = map[MachineState][]MachineState{
 		StateUninitialized: {StateHealthy, StateRetiring},
 		StateHealthy:       {StateUnhealthy, StateUnreachable, StateUpdating, StateRetiring},
-		StateUnhealthy:     {StateHealthy, StateUnreachable, StateRetiring},
-		StateUnreachable:   {StateHealthy, StateRetiring},
+		StateUnhealthy:     {StateHealthy, StateUnreachable, StateUpdating, StateRetiring},
+		StateUnreachable:   {StateHealthy, StateUnhealthy, StateUpdating, StateRetiring},
 		StateUpdating:      {StateUninitialized},
 		StateRetiring:      {StateRetired},
 		StateRetired:       {StateUninitialized},
