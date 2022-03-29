@@ -155,7 +155,7 @@ Then put the JSON to sabakan:
 $ sabactl machines create -f machines.json
 ```
 
-The input format for this command is described in [docs/sabactl.md](docs/sabactl.md#sabactl-machines-create--f-file).
+The input format for this command is described in [docs/sabactl.md](sabactl.md#sabactl-machines-create--f-file).
 Note that the input format is restricted compared to [`MachineSpec`](machine.md#machinespec-struct).
 Sabakan identifies physical servers by `serial`.
 
