@@ -46,9 +46,7 @@ func (d *imageDriver) GetInfoAll(ctx context.Context) ([]*sabakan.Image, error) 
 	defer d.mu.Unlock()
 
 	images := make([]*sabakan.Image, len(d.index))
-	for i := range d.index {
-		images[i] = d.index[i]
-	}
+	copy(images, d.index)
 
 	return images, nil
 }
