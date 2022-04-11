@@ -98,9 +98,6 @@ jobs:
 
       - name: Set up Cloud SDK for sabakan
         uses: google-github-actions/setup-gcloud@v0
-        with:
-          project_id: ${{ secrets.NECO_TEST_PROJECT_ID }}
-          export_default_credentials: true
 
       - name: Set GCP instance name
         run: echo "INSTANCE_NAME=sabakan-${{ github.run_number }}-$(TZ=Asia/Tokyo date +%H%M%S)" >> $GITHUB_ENV
