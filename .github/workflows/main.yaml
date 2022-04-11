@@ -83,6 +83,14 @@ jobs:
     runs-on: ubuntu-20.04
     needs: build
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.go-version }}
+
       - id: auth
         uses: google-github-actions/auth@v0
         with:
@@ -96,14 +104,6 @@ jobs:
 
       - name: Set GCP instance name
         run: echo "INSTANCE_NAME=sabakan-${{ github.run_number }}-$(TZ=Asia/Tokyo date +%H%M%S)" >> $GITHUB_ENV
-
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup golang
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ env.go-version }}
 
       - name: Watch sabakan logs
         run: ./bin/watch_service sabakan > sabakan-service.log &
