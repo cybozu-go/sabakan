@@ -1,17 +1,22 @@
 # Makefile for sabakan
 
 # configuration variables
-ETCD_VERSION = 3.5.1
+ETCD_VERSION = 3.5.3
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 
 .PHONY: all
-all: test
+all: build
 
 .PHONY: build
 build: $(BUILT_TARGET)
 $(BUILT_TARGET): $(GO_FILES)
 	go build ./pkg/$@
+
+.PHONY: check-generate
+check-generate:
+	go mod tidy
+	git diff --exit-code --name-only
 
 .PHONY: code-check
 code-check:
@@ -22,17 +27,12 @@ code-check:
 	go vet ./...
 
 .PHONY: test
-test: build code-check
+test:
 	go test -race -v ./...
 
 .PHONY: e2e
 e2e: build
 	RUN_E2E=1 go test -v -count=1 ./e2e
-
-.PHONY: mod
-mod:
-	go mod tidy
-	git add go.mod go.sum
 
 .PHONY: clean
 clean:

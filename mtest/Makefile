@@ -9,12 +9,12 @@ WORKER1 = 10.0.0.104
 WORKER2 = 10.0.0.105
 PLACEMAT = /usr/bin/placemat2
 GINKGO = $(GOPATH)/bin/ginkgo
-ETCD_VERSION = 3.5.1
+ETCD_VERSION = 3.5.3
 PLACEMAT_DATADIR = /var/scratch/placemat
-COREOS_VERSION := 3033.2.0
+COREOS_VERSION := 3139.2.0
 COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
 COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
-CT_VERSION = 0.6.1
+CT_VERSION = 0.9.0
 SUDO = sudo
 
 export HOST1 HOST2 HOST3 WORKER1 WORKER2 PLACEMAT GINKGO

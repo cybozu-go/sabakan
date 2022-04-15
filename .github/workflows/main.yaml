@@ -21,7 +21,16 @@ jobs:
           go-version: ${{ env.go-version }}
 
       - name: Start etcd container 
-        run: docker run -d --network host gcr.io/etcd-development/etcd:v3.5.1
+        run: docker run -d --network host gcr.io/etcd-development/etcd:v3.5.3
+
+      - name: Install test tools
+        run: make SUDO="sudo" test-tools
+
+      - name: Check auto-generated files
+        run: make check-generate
+
+      - name: Run code check tools
+        run: make code-check
 
       - name: Build binaries
         run: make build
@@ -31,9 +40,6 @@ jobs:
           sudo ./sabakan -dhcp-bind 0.0.0.0:10067 \
           -etcd-endpoints http://localhost:2379 \
           -advertise-url http://localhost:10080 &
-
-      - name: Install test tools
-        run: make SUDO="sudo" test-tools
 
       - name: Run test
         run: make test
@@ -92,12 +98,12 @@ jobs:
           go-version: ${{ env.go-version }}
 
       - id: auth
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v0.7.0
         with:
           credentials_json: '${{ secrets.NECO_TEST_SERVICE_ACCOUNT }}'
 
       - name: Set up Cloud SDK for sabakan
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/setup-gcloud@v0.6.0
 
       - name: Set GCP instance name
         run: echo "INSTANCE_NAME=sabakan-${{ github.run_number }}-$(TZ=Asia/Tokyo date +%H%M%S)" >> $GITHUB_ENV
