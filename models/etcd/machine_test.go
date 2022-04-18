@@ -122,16 +122,16 @@ func testQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	q := sabakan.Query{"serial": "12345678"}
+	q := sabakan.Query{"serial": "12345678,12345679"}
 	resp, err := d.machineQuery(context.Background(), q)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(resp) != 1 {
+	if len(resp) != 2 {
 		t.Fatalf("unexpected query result: %#v", resp)
 	}
-	if !q.Match(resp[0]) {
-		t.Errorf("unexpected responsed machine: %#v", resp[0])
+	if !(q.Match(resp[0]) && q.Match(resp[1])) {
+		t.Errorf("unexpected machines in response: %#v", resp)
 	}
 
 	q = sabakan.Query{"labels": "product=R630"}
@@ -143,7 +143,7 @@ func testQuery(t *testing.T) {
 		t.Fatalf("unexpected query result: %#v", resp)
 	}
 	if !(q.Match(resp[0]) && q.Match(resp[1])) {
-		t.Errorf("unexpected responsed machine: %#v", resp)
+		t.Errorf("unexpected machines in response: %#v", resp)
 	}
 
 	q = sabakan.Query{}

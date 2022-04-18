@@ -269,7 +269,7 @@ func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.
 			serials[i] = string(kv.Key[len(KeyMachines):])
 		}
 	case len(q.Serial()) > 0:
-		serials = []string{q.Serial()}
+		serials = strings.Split(q.Serial(), ",")
 	default:
 		serials = d.mi.query(q)
 	}
