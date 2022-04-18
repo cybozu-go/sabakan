@@ -16,6 +16,7 @@ import (
 
 var (
 	machinesGetParams  = make(map[string]*string)
+	machinesGetOutput  string
 	machinesCreateFile string
 )
 
@@ -32,11 +33,10 @@ var machinesGetCmd = &cobra.Command{
 	Long:  `Get machines from sabakan.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		params := make(map[string]string)
-		outputFormat, ok := machinesGetParams["output"]
-		if ok {
-			delete(machinesGetParams, "output")
+		if machinesGetOutput != "json" && machinesGetOutput != "simple" {
+			return fmt.Errorf("unknown output format %q", machinesGetOutput)
 		}
+		params := make(map[string]string)
 		for k, v := range machinesGetParams {
 			params[k] = *v
 		}
@@ -45,7 +45,7 @@ var machinesGetCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			if ok && *outputFormat == "simple" {
+			if machinesGetOutput == "simple" {
 				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 1, 1, ' ', 0)
 				w.Write([]byte("Serial\tRack\tRole\tState\tIPv4\tBMC\n"))
 				for _, m := range ms {
@@ -225,17 +225,13 @@ func init() {
 		"without-ipv6":     "without IPv6 address",
 		"without-bmc-type": "without BMC type",
 		"without-state":    "without State",
-		"output":           "Output format",
 	}
 	for k, v := range getOpts {
 		val := new(string)
 		machinesGetParams[k] = val
-		if k == "output" {
-			machinesGetCmd.Flags().StringVarP(val, k, "o", "", v)
-		} else {
-			machinesGetCmd.Flags().StringVar(val, k, "", v)
-		}
+		machinesGetCmd.Flags().StringVar(val, k, "", v)
 	}
+	machinesGetCmd.Flags().StringVarP(&machinesGetOutput, "output", "o", "json", "Output format [json,simple]")
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateFile, "file", "f", "", "machiens in json")
 	machinesCreateCmd.MarkFlagRequired("file")
 
