@@ -4,11 +4,11 @@ go 1.17
 
 require (
 	github.com/99designs/gqlgen v0.17.2
-	github.com/coreos/ignition v0.35.0
 	github.com/cybozu-go/etcdutil v1.6.0
 	github.com/cybozu-go/log v1.6.1
 	github.com/cybozu-go/netutil v1.4.2
 	github.com/cybozu-go/well v1.11.0
+	github.com/flatcar-linux/ignition v0.36.1
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-tpm v0.3.3
 	github.com/hashicorp/go-version v1.4.0

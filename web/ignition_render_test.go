@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	ign23 "github.com/coreos/ignition/config/v2_3/types"
 	"github.com/cybozu-go/sabakan/v2"
 	"github.com/cybozu-go/sabakan/v2/models/mock"
+	ign23 "github.com/flatcar-linux/ignition/config/v2_3/types"
 	"github.com/google/go-cmp/cmp"
 )
 
