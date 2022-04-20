@@ -292,7 +292,11 @@ func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.
 			return nil, err
 		}
 
-		if q.Match(m) {
+		matched, err := q.Match(m)
+		if err != nil {
+			return nil, err
+		}
+		if matched {
 			res = append(res, m)
 		}
 	}

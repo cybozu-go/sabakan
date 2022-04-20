@@ -97,7 +97,11 @@ func (d *driver) machineQuery(ctx context.Context, q sabakan.Query) ([]*sabakan.
 
 	res := make([]*sabakan.Machine, 0)
 	for _, m := range d.machines {
-		if q.Match(m) {
+		matched, err := q.Match(m)
+		if err != nil {
+			return nil, err
+		}
+		if matched {
 			res = append(res, m)
 		}
 	}

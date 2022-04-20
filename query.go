@@ -10,7 +10,7 @@ import (
 type Query map[string]string
 
 // Match returns true if all non-empty fields matches Machine
-func (q Query) Match(m *Machine) bool {
+func (q Query) Match(m *Machine) (bool, error) {
 	if serial := q["serial"]; len(serial) > 0 {
 		match := false
 		serials := strings.Split(serial, ",")
@@ -21,7 +21,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if ipv4 := q["ipv4"]; len(ipv4) > 0 {
@@ -36,7 +36,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if ipv6 := q["ipv6"]; len(ipv6) > 0 {
@@ -51,7 +51,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if labels := q["labels"]; len(labels) > 0 {
@@ -61,15 +61,15 @@ func (q Query) Match(m *Machine) bool {
 			rawQuery = strings.TrimSpace(rawQuery)
 			query, err := url.ParseQuery(rawQuery)
 			if err != nil {
-				return false
+				return false, err
 			}
 			for k, v := range query {
 				if label, exists := m.Spec.Labels[k]; exists {
 					if v[0] != label {
-						return false
+						return false, nil
 					}
 				} else {
-					return false
+					return false, nil
 				}
 			}
 		}
@@ -84,7 +84,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if role := q["role"]; len(role) > 0 {
@@ -97,7 +97,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if bmc := q["bmc-type"]; len(bmc) > 0 {
@@ -110,7 +110,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if state := q["state"]; len(state) > 0 {
@@ -123,14 +123,14 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if withoutSerial := q["without-serial"]; len(withoutSerial) > 0 {
 		withoutSerials := strings.Split(withoutSerial, ",")
 		for _, wr := range withoutSerials {
 			if wr == fmt.Sprint(m.Spec.Serial) {
-				return false
+				return false, nil
 			}
 		}
 	}
@@ -146,7 +146,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if match {
-			return false
+			return false, nil
 		}
 	}
 	if withoutIPv6 := q["without-ipv6"]; len(withoutIPv6) > 0 {
@@ -161,7 +161,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if match {
-			return false
+			return false, nil
 		}
 	}
 	if withoutLabels := q["without-labels"]; len(withoutLabels) > 0 {
@@ -171,15 +171,15 @@ func (q Query) Match(m *Machine) bool {
 			rawQuery = strings.TrimSpace(rawQuery)
 			query, err := url.ParseQuery(rawQuery)
 			if err != nil {
-				return false
+				return false, err
 			}
 			for k, v := range query {
 				if label, exists := m.Spec.Labels[k]; exists {
 					if v[0] == label {
-						return false
+						return false, nil
 					}
 				} else {
-					return false
+					return false, nil
 				}
 			}
 		}
@@ -188,7 +188,7 @@ func (q Query) Match(m *Machine) bool {
 		withoutRacks := strings.Split(withoutRack, ",")
 		for _, wr := range withoutRacks {
 			if wr == fmt.Sprint(m.Spec.Rack) {
-				return false
+				return false, nil
 			}
 		}
 	}
@@ -196,7 +196,7 @@ func (q Query) Match(m *Machine) bool {
 		withoutRoles := strings.Split(withoutRole, ",")
 		for _, wr := range withoutRoles {
 			if wr == fmt.Sprint(m.Spec.Role) {
-				return false
+				return false, nil
 			}
 		}
 	}
@@ -204,7 +204,7 @@ func (q Query) Match(m *Machine) bool {
 		withoutBmcs := strings.Split(withoutBmc, ",")
 		for _, wb := range withoutBmcs {
 			if wb == fmt.Sprint(m.Spec.BMC.Type) {
-				return false
+				return false, nil
 			}
 		}
 	}
@@ -212,12 +212,12 @@ func (q Query) Match(m *Machine) bool {
 		withoutStates := strings.Split(withoutState, ",")
 		for _, ws := range withoutStates {
 			if ws == fmt.Sprint(m.Status.State) {
-				return false
+				return false, nil
 			}
 		}
 	}
 
-	return true
+	return true, nil
 }
 
 // Serial returns value of serial in the query

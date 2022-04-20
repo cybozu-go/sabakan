@@ -6,9 +6,9 @@ func TestMatch(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		q Query
-		m *Machine
-		b bool
+		query   Query
+		machine *Machine
+		matched bool
 	}{
 		{Query{"serial": "1234"}, NewMachine(MachineSpec{Serial: "1234"}), true},
 		{Query{"labels": "product=R630"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630"}}), true},
@@ -65,8 +65,11 @@ func TestMatch(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if b := c.q.Match(c.m); b != c.b {
-			t.Errorf("wrong match for %#v", c.q)
+		matched, err := c.query.Match(c.machine)
+		if err != nil {
+			t.Errorf("error returned for %#v: %v", c.query, err)
+		} else if matched != c.matched {
+			t.Errorf("wrong match for %#v", c.query)
 		}
 	}
 }

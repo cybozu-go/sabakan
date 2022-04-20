@@ -130,8 +130,19 @@ func testQuery(t *testing.T) {
 	if len(resp) != 2 {
 		t.Fatalf("unexpected query result: %#v", resp)
 	}
-	if !(q.Match(resp[0]) && q.Match(resp[1])) {
-		t.Errorf("unexpected machines in response: %#v", resp)
+	matched, err := q.Match(resp[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !matched {
+		t.Errorf("unexpected machine in response: %#v", resp[0])
+	}
+	matched, err = q.Match(resp[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !matched {
+		t.Errorf("unexpected machine in response: %#v", resp[1])
 	}
 
 	q = sabakan.Query{"labels": "product=R630"}
@@ -142,8 +153,19 @@ func testQuery(t *testing.T) {
 	if len(resp) != 2 {
 		t.Fatalf("unexpected query result: %#v", resp)
 	}
-	if !(q.Match(resp[0]) && q.Match(resp[1])) {
-		t.Errorf("unexpected machines in response: %#v", resp)
+	matched, err = q.Match(resp[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !matched {
+		t.Errorf("unexpected machine in response: %#v", resp[0])
+	}
+	matched, err = q.Match(resp[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !matched {
+		t.Errorf("unexpected machine in response: %#v", resp[1])
 	}
 
 	q = sabakan.Query{}
