@@ -2,7 +2,6 @@ package sabakan
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 )
 
@@ -55,22 +54,20 @@ func (q Query) Match(m *Machine) (bool, error) {
 		}
 	}
 	if labels := q["labels"]; len(labels) > 0 {
-		// Split into each query
-		rawQueries := strings.Split(labels, ",")
-		for _, rawQuery := range rawQueries {
-			rawQuery = strings.TrimSpace(rawQuery)
-			query, err := url.ParseQuery(rawQuery)
-			if err != nil {
-				return false, err
+		queries := strings.Split(labels, ",")
+		for _, query := range queries {
+			kv := strings.SplitN(query, "=", 2)
+			if len(kv) != 2 {
+				return false, fmt.Errorf("invalid query in labels: %s", query)
 			}
-			for k, v := range query {
-				if label, exists := m.Spec.Labels[k]; exists {
-					if v[0] != label {
-						return false, nil
-					}
-				} else {
+			queryKey := kv[0]
+			queryValue := kv[1]
+			if value, exists := m.Spec.Labels[queryKey]; exists {
+				if value != queryValue {
 					return false, nil
 				}
+			} else {
+				return false, nil
 			}
 		}
 	}
@@ -165,23 +162,27 @@ func (q Query) Match(m *Machine) (bool, error) {
 		}
 	}
 	if withoutLabels := q["without-labels"]; len(withoutLabels) > 0 {
-		// Split into each query
-		rawQueries := strings.Split(withoutLabels, ",")
-		for _, rawQuery := range rawQueries {
-			rawQuery = strings.TrimSpace(rawQuery)
-			query, err := url.ParseQuery(rawQuery)
-			if err != nil {
-				return false, err
+		queries := strings.Split(withoutLabels, ",")
+		excluded := true
+		for _, query := range queries {
+			kv := strings.SplitN(query, "=", 2)
+			if len(kv) != 2 {
+				return false, fmt.Errorf("invalid query in without-labels: %s", query)
 			}
-			for k, v := range query {
-				if label, exists := m.Spec.Labels[k]; exists {
-					if v[0] == label {
-						return false, nil
-					}
-				} else {
-					return false, nil
+			queryKey := kv[0]
+			queryValue := kv[1]
+			if value, exists := m.Spec.Labels[queryKey]; exists {
+				if value != queryValue {
+					excluded = false
+					break
 				}
+			} else {
+				excluded = false
+				break
 			}
+		}
+		if excluded {
+			return false, nil
 		}
 	}
 	if withoutRack := q["without-rack"]; len(withoutRack) > 0 {
