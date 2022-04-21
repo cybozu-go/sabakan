@@ -133,32 +133,22 @@ func (q Query) Match(m *Machine) (bool, error) {
 	}
 	if withoutIPv4 := q["without-ipv4"]; len(withoutIPv4) > 0 {
 		withoutIPv4s := strings.Split(withoutIPv4, ",")
-		match := false
 		for _, wIPv4 := range withoutIPv4s {
 			for _, ip := range m.Spec.IPv4 {
 				if ip == wIPv4 {
-					match = true
-					break
+					return false, nil
 				}
 			}
-		}
-		if match {
-			return false, nil
 		}
 	}
 	if withoutIPv6 := q["without-ipv6"]; len(withoutIPv6) > 0 {
 		withoutIPv6s := strings.Split(withoutIPv6, ",")
-		match := false
 		for _, wIPv6 := range withoutIPv6s {
 			for _, ip := range m.Spec.IPv6 {
 				if ip == wIPv6 {
-					match = true
-					break
+					return false, nil
 				}
 			}
-		}
-		if match {
-			return false, nil
 		}
 	}
 	if withoutLabels := q["without-labels"]; len(withoutLabels) > 0 {
