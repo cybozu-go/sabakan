@@ -14,7 +14,7 @@ PLACEMAT_DATADIR = /var/scratch/placemat
 COREOS_VERSION := 3139.2.0
 COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
 COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
-CT_VERSION = 0.9.0
+CT_VERSION = 0.9.3
 SUDO = sudo
 
 export HOST1 HOST2 HOST3 WORKER1 WORKER2 PLACEMAT GINKGO
@@ -105,7 +105,7 @@ $(OUTPUT)/ignitions:
 	sed -i -e 's/@BRIDGE_ADDRESS@/$(BRIDGE_ADDRESS)/' $@/networkd/10-eth0.network
 
 $(CT):
-	curl -fsSL -o $@ https://github.com/coreos/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
+	curl -fsSL -o $@ https://github.com/flatcar-linux/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
 	chmod +x $@
 
 $(OUTPUT)/host.ign: host-ign.yml $(CT)
