@@ -74,14 +74,23 @@ Show machines filtered by query parameters.
 
 ```console
 $ sabactl machines get \
-    [--serial <serial>] \
-    [--rack <rack>] \
-    [--role <role>] \
+    [--serial <serial>,...] \
+    [--rack <rack>,...] \
+    [--role <role>,...] \
     [--labels <key=value>,...]
-    [--ipv4 <ip address>] \
-    [--ipv6 <ip address>] \
-    [--bmc-type <BMC type>] \
-    [--state <state>]
+    [--ipv4 <ip address>,...] \
+    [--ipv6 <ip address>,...] \
+    [--bmc-type <BMC type>,...] \
+    [--state <state>,...] \
+    [--without-serial <serial>,...] \
+    [--without-rack <rack>,...] \
+    [--without-role <role>,...] \
+    [--without-labels <key=value>,...]
+    [--without-ipv4 <ip address>,...] \
+    [--without-ipv6 <ip address>,...] \
+    [--without-bmc-type <BMC type>,...] \
+    [--without-state <state>,...] \
+    [--output json|simple]
 ```
 
 Detailed specification of the query parameters and the output JSON content is same as those of the [`GET /api/v1/machines` API](api.md#getmachines).

@@ -117,7 +117,8 @@ func initializeTestData(d *driver, ch <-chan struct{}) ([]*sabakan.Machine, erro
 			Role:       "worker",
 			RetireDate: time.Date(2018, time.November, 22, 1, 2, 3, 0, time.UTC),
 		}),
-		sabakan.NewMachine(sabakan.MachineSpec{Serial: "123456789",
+		sabakan.NewMachine(sabakan.MachineSpec{
+			Serial: "123456789",
 			Labels: map[string]string{"product": "R730"},
 			Role:   "worker",
 		}),

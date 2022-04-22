@@ -6,9 +6,9 @@ func TestMatch(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		q Query
-		m *Machine
-		b bool
+		query   Query
+		machine *Machine
+		matched bool
 	}{
 		{Query{"serial": "1234"}, NewMachine(MachineSpec{Serial: "1234"}), true},
 		{Query{"labels": "product=R630"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630"}}), true},
@@ -53,9 +53,9 @@ func TestMatch(t *testing.T) {
 		{Query{"without-bmc-type": "iDRAC-9"}, NewMachine(MachineSpec{BMC: MachineBMC{Type: "iDRAC-9"}}), false},
 		{Query{"without-bmc-type": "iDRAC-9,IPMI-1.0"}, NewMachine(MachineSpec{BMC: MachineBMC{Type: "iDRAC-9"}}), false},
 		{Query{"without-labels": "product=R630"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630", "datacenter": "jp"}}), false},
-		{Query{"without-labels": "product=R630,datacenter=jp"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630"}}), false},
-		{Query{"without-labels": "product=R630,datacenter=jp"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630", "datacenter": "us"}}), false},
-		{Query{"without-labels": "product=R730,datacenter=us"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630", "datacenter": "us"}}), false},
+		{Query{"without-labels": "product=R630,datacenter=jp"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630"}}), true},
+		{Query{"without-labels": "product=R630,datacenter=jp"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630", "datacenter": "us"}}), true},
+		{Query{"without-labels": "product=R730,datacenter=us"}, NewMachine(MachineSpec{Labels: map[string]string{"product": "R630", "datacenter": "us"}}), true},
 		{Query{"without-ipv4": "10.20.30.40"}, NewMachine(MachineSpec{IPv4: []string{"10.21.30.40", "10.22.30.40"}}), true},
 		{Query{"without-ipv6": "aa::ff"}, NewMachine(MachineSpec{IPv6: []string{"bb::ff", "cc::ff"}}), true},
 		{Query{"without-ipv4": "10.20.30.40"}, NewMachine(MachineSpec{}), true},
@@ -65,8 +65,11 @@ func TestMatch(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if b := c.q.Match(c.m); b != c.b {
-			t.Errorf("wrong match for %#v", c.q)
+		matched, err := c.query.Match(c.machine)
+		if err != nil {
+			t.Errorf("error returned for %#v: %v", c.query, err)
+		} else if matched != c.matched {
+			t.Errorf("wrong match for %#v", c.query)
 		}
 	}
 }

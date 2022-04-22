@@ -228,16 +228,35 @@ $ curl -s -X POST 'localhost:10080/api/v1/machines' -d '
 
 Search registered machines. A user can specify the following URL queries.
 
-| Query                    | Description                             |
-| ------------------------ | --------------------------------------- |
-| `serial=<serial>`        | The serial number of the machine        |
-| `labels=<key=value>,...` | The labels of the machine.              |
-| `rack=<rack>`            | The rack number where the machine is in |
-| `role=<role>`            | The role of the machine                 |
-| `ipv4=<ip address>`      | IPv4 address                            |
-| `ipv6=<ip address>`      | IPv6 address                            |
-| `bmc-type=<bmc-type>`    | BMC type                                |
-| `state=<state>`          | The state of the machine                |
+| Query                     | Description                             |
+| ------------------------- | --------------------------------------- |
+| `serial=<serial>,...`     | The serial number of the machine        |
+| `labels=<key=value>,...`  | The labels of the machine.              |
+| `rack=<rack>,...`         | The rack number where the machine is in |
+| `role=<role>,...`         | The role of the machine                 |
+| `ipv4=<ip address>,...`   | IPv4 address                            |
+| `ipv6=<ip address>,...`   | IPv6 address                            |
+| `bmc-type=<bmc-type>,...` | BMC type                                |
+| `state=<state>,...`       | The state of the machine                |
+
+Note that the comma `,` should be encoded as `%2C` and the equals sign `=` of `<key=value>` in the value for the `labels` field should be encoded as `%3D`.
+These encodings are not shown explicitly in the examples.
+
+The comma-separated query values are interpreted as follows.
+
+* For `labels`, the values are interpreted as a sequence of ANDs.
+  E.g. `labels=A=a,B=b` filters machines so that each of the returned machines has labels of `A=a` *and* `B=b`.
+* For the other fields, the values are interpreted as a sequence of ORs.
+  E.g. `serial=AAA,BBB` filters machines so that each of the returned machines has a serial of `AAA` *or* `BBB`.
+
+Each query name can be prefixed with `without-`.
+This prefix negates the condition.
+
+Multiple query parameters are interpreted as a sequence of ANDs.
+E.g. `serial=AAA,BBB&without-rack=1` filters machines so that each of the returned machines has a serial of `AAA` or `BBB` *and* is not placed in the rack #1.
+
+You cannot give multiple values to a single field in the style of `field=value1&field=value2`.
+The result is undefined for that type of query.
 
 **Successful response**
 

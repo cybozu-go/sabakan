@@ -2,7 +2,6 @@ package sabakan
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 )
 
@@ -10,7 +9,7 @@ import (
 type Query map[string]string
 
 // Match returns true if all non-empty fields matches Machine
-func (q Query) Match(m *Machine) bool {
+func (q Query) Match(m *Machine) (bool, error) {
 	if serial := q["serial"]; len(serial) > 0 {
 		match := false
 		serials := strings.Split(serial, ",")
@@ -21,7 +20,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if ipv4 := q["ipv4"]; len(ipv4) > 0 {
@@ -36,7 +35,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if ipv6 := q["ipv6"]; len(ipv6) > 0 {
@@ -51,26 +50,24 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if labels := q["labels"]; len(labels) > 0 {
-		// Split into each query
-		rawQueries := strings.Split(labels, ",")
-		for _, rawQuery := range rawQueries {
-			rawQuery = strings.TrimSpace(rawQuery)
-			query, err := url.ParseQuery(rawQuery)
-			if err != nil {
-				return false
+		queries := strings.Split(labels, ",")
+		for _, query := range queries {
+			kv := strings.SplitN(query, "=", 2)
+			if len(kv) != 2 {
+				return false, fmt.Errorf("invalid query in labels: %s", query)
 			}
-			for k, v := range query {
-				if label, exists := m.Spec.Labels[k]; exists {
-					if v[0] != label {
-						return false
-					}
-				} else {
-					return false
+			queryKey := kv[0]
+			queryValue := kv[1]
+			if value, exists := m.Spec.Labels[queryKey]; exists {
+				if value != queryValue {
+					return false, nil
 				}
+			} else {
+				return false, nil
 			}
 		}
 	}
@@ -84,7 +81,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if role := q["role"]; len(role) > 0 {
@@ -97,7 +94,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if bmc := q["bmc-type"]; len(bmc) > 0 {
@@ -110,7 +107,7 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if state := q["state"]; len(state) > 0 {
@@ -123,72 +120,66 @@ func (q Query) Match(m *Machine) bool {
 			}
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
 	if withoutSerial := q["without-serial"]; len(withoutSerial) > 0 {
 		withoutSerials := strings.Split(withoutSerial, ",")
 		for _, wr := range withoutSerials {
 			if wr == fmt.Sprint(m.Spec.Serial) {
-				return false
+				return false, nil
 			}
 		}
 	}
 	if withoutIPv4 := q["without-ipv4"]; len(withoutIPv4) > 0 {
 		withoutIPv4s := strings.Split(withoutIPv4, ",")
-		match := false
 		for _, wIPv4 := range withoutIPv4s {
 			for _, ip := range m.Spec.IPv4 {
 				if ip == wIPv4 {
-					match = true
-					break
+					return false, nil
 				}
 			}
-		}
-		if match {
-			return false
 		}
 	}
 	if withoutIPv6 := q["without-ipv6"]; len(withoutIPv6) > 0 {
 		withoutIPv6s := strings.Split(withoutIPv6, ",")
-		match := false
 		for _, wIPv6 := range withoutIPv6s {
 			for _, ip := range m.Spec.IPv6 {
 				if ip == wIPv6 {
-					match = true
-					break
+					return false, nil
 				}
 			}
-		}
-		if match {
-			return false
 		}
 	}
 	if withoutLabels := q["without-labels"]; len(withoutLabels) > 0 {
-		// Split into each query
-		rawQueries := strings.Split(withoutLabels, ",")
-		for _, rawQuery := range rawQueries {
-			rawQuery = strings.TrimSpace(rawQuery)
-			query, err := url.ParseQuery(rawQuery)
-			if err != nil {
-				return false
+		queries := strings.Split(withoutLabels, ",")
+		excluded := true
+		for _, query := range queries {
+			kv := strings.SplitN(query, "=", 2)
+			if len(kv) != 2 {
+				return false, fmt.Errorf("invalid query in without-labels: %s", query)
 			}
-			for k, v := range query {
-				if label, exists := m.Spec.Labels[k]; exists {
-					if v[0] == label {
-						return false
-					}
-				} else {
-					return false
+			queryKey := kv[0]
+			queryValue := kv[1]
+			if value, exists := m.Spec.Labels[queryKey]; exists {
+				if value != queryValue {
+					excluded = false
+					break
 				}
+			} else {
+				excluded = false
+				break
 			}
+		}
+		if excluded {
+			return false, nil
 		}
 	}
 	if withoutRack := q["without-rack"]; len(withoutRack) > 0 {
 		withoutRacks := strings.Split(withoutRack, ",")
 		for _, wr := range withoutRacks {
 			if wr == fmt.Sprint(m.Spec.Rack) {
-				return false
+				return false, nil
 			}
 		}
 	}
@@ -196,7 +187,7 @@ func (q Query) Match(m *Machine) bool {
 		withoutRoles := strings.Split(withoutRole, ",")
 		for _, wr := range withoutRoles {
 			if wr == fmt.Sprint(m.Spec.Role) {
-				return false
+				return false, nil
 			}
 		}
 	}
@@ -204,7 +195,7 @@ func (q Query) Match(m *Machine) bool {
 		withoutBmcs := strings.Split(withoutBmc, ",")
 		for _, wb := range withoutBmcs {
 			if wb == fmt.Sprint(m.Spec.BMC.Type) {
-				return false
+				return false, nil
 			}
 		}
 	}
@@ -212,12 +203,12 @@ func (q Query) Match(m *Machine) bool {
 		withoutStates := strings.Split(withoutState, ",")
 		for _, ws := range withoutStates {
 			if ws == fmt.Sprint(m.Status.State) {
-				return false
+				return false, nil
 			}
 		}
 	}
 
-	return true
+	return true, nil
 }
 
 // Serial returns value of serial in the query

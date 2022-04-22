@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Clarify spec of queries in "GET machines" API (#251)
+- Fix "GET machines" API for multiple serials (#251)
+- **Incompatible change**: Fix "without-labels" query of "GET machines" API for clarified spec (#251)
+
+
 ## [2.12.0] - 2022-04-18
 
 ### Changed
