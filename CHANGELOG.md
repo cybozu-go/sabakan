@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.13.0] - 2022-04-25
+
 ### Fixed
 - Clarify spec of queries in "GET machines" API (#251)
 - Fix "GET machines" API for multiple serials (#251)
@@ -264,7 +266,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.12.0...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.13.0...HEAD
+[2.13.0]: https://github.com/cybozu-go/sabakan/compare/v2.12.0...v2.13.0
 [2.12.0]: https://github.com/cybozu-go/sabakan/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/cybozu-go/sabakan/compare/v2.10.0...v2.11.0
 [2.10.0]: https://github.com/cybozu-go/sabakan/compare/v2.9.2...v2.10.0
