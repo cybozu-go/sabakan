@@ -8,7 +8,7 @@ require (
 	github.com/cybozu-go/log v1.6.1
 	github.com/cybozu-go/netutil v1.4.2
 	github.com/cybozu-go/well v1.11.0
-	github.com/flatcar-linux/ignition v0.36.1
+	github.com/flatcar/ignition v0.36.2
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-tpm v0.3.3
 	github.com/hashicorp/go-version v1.4.0

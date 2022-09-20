@@ -10,7 +10,7 @@ Sabakan
 <!-- go to http://www.plantuml.com/plantuml/ and enter the above URL to edit the diagram. -->
 
 Sabakan is a versatile network boot server designed for large on-premise data centers.
-Currently, it is made only for [Flatcar Container Linux](https://www.flatcar-linux.org/).
+Currently, it is made only for [Flatcar Container Linux](https://www.flatcar.org/).
 
 **Project Status**: GA (General Availability)
 

@@ -10,8 +10,8 @@ import (
 	"text/template"
 
 	"github.com/cybozu-go/sabakan/v2"
-	ign22 "github.com/flatcar-linux/ignition/config/v2_2/types"
-	ign23 "github.com/flatcar-linux/ignition/config/v2_3/types"
+	ign22 "github.com/flatcar/ignition/config/v2_2/types"
+	ign23 "github.com/flatcar/ignition/config/v2_3/types"
 	"github.com/vincent-petithory/dataurl"
 )
 
