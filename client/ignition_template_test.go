@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	ign23 "github.com/flatcar-linux/ignition/config/v2_3/types"
+	ign23 "github.com/flatcar/ignition/config/v2_3/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/vincent-petithory/dataurl"
 )

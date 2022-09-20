@@ -7,7 +7,7 @@ import (
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/sabakan/v2"
-	ign22 "github.com/flatcar-linux/ignition/config/v2_2/types"
+	ign22 "github.com/flatcar/ignition/config/v2_2/types"
 	"github.com/vincent-petithory/dataurl"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/concurrency"

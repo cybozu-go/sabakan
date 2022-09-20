@@ -64,4 +64,4 @@ for each machine.
 [BMC]: https://en.wikipedia.org/wiki/Intelligent_Platform_Management_Interface#Baseboard_management_controller
 [HTTPBoot]: https://github.com/tianocore/tianocore.github.io/wiki/HTTP-Boot
 [Ignition]: https://coreos.com/ignition/docs/latest/
-[Flatcar]: https://docs.flatcar-linux.org/
+[Flatcar]: https://docs.flatcar.org/
