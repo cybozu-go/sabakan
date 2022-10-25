@@ -8,9 +8,9 @@ import (
 )
 
 // DHCPREQUEST has three use-cases.
-//   1. accept offer from a server.
-//   2. confirm previously assigned IP address.
-//   3. renew/rebind lease for an already received address.
+//  1. accept offer from a server.
+//  2. confirm previously assigned IP address.
+//  3. renew/rebind lease for an already received address.
 //
 // To distinguish these three, "server identifier" option (54) and
 // "requested IP address" option (50) are used.

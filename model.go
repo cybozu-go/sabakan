@@ -126,11 +126,11 @@ type SchemaModel interface {
 // Receiving a value from the channel effectively guarantees that
 // the driver gets ready.
 //
-//    ch := make(chan struct{})
-//    well.Go(func(ctx context.Context) error {
-//        driver.Run(ctx, ch)
-//    })
-//    <-ch
+//	ch := make(chan struct{})
+//	well.Go(func(ctx context.Context) error {
+//	    driver.Run(ctx, ch)
+//	})
+//	<-ch
 type Runner interface {
 	Run(ctx context.Context, ch chan<- struct{}) error
 }
