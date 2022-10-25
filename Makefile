@@ -1,7 +1,7 @@
 # Makefile for sabakan
 
 # configuration variables
-ETCD_VERSION = 3.5.3
+ETCD_VERSION = 3.5.4
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 
