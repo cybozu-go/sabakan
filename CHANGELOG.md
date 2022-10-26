@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.13.1] - 2022-10-26
+
 ### Changed
 - Update dependencies (#256)
     - Upgrade direct dependencies in go.mod
@@ -273,7 +275,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.13.0...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.13.1...HEAD
+[2.13.1]: https://github.com/cybozu-go/sabakan/compare/v2.13.0...v2.13.1
 [2.13.0]: https://github.com/cybozu-go/sabakan/compare/v2.12.0...v2.13.0
 [2.12.0]: https://github.com/cybozu-go/sabakan/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/cybozu-go/sabakan/compare/v2.10.0...v2.11.0
