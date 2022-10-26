@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Update dependencies (#256)
+    - Upgrade direct dependencies in go.mod
+    - Update Golang to 1.19
+    - Update GitHub Actions
+    - Update etcd to 3.5.4
+
 ## [2.13.0] - 2022-04-25
 
 ### Fixed

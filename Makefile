@@ -1,7 +1,7 @@
 # Makefile for sabakan
 
 # configuration variables
-ETCD_VERSION = 3.5.3
+ETCD_VERSION = 3.5.4
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 
@@ -22,7 +22,6 @@ check-generate:
 code-check:
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
-	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
 	go vet ./...
 
@@ -39,7 +38,7 @@ clean:
 	rm -f $(BUILT_TARGET)
 
 .PHONY: test-tools
-test-tools: custom-checker staticcheck nilerr etcd
+test-tools: custom-checker staticcheck etcd
 
 .PHONY: custom-checker
 custom-checker:
@@ -51,12 +50,6 @@ custom-checker:
 staticcheck:
 	if ! which staticcheck >/dev/null; then \
 		env GOFLAGS= go install honnef.co/go/tools/cmd/staticcheck@latest; \
-	fi
-
-.PHONY: nilerr
-nilerr:
-	if ! which nilerr >/dev/null; then \
-		env GOFLAGS= go install github.com/gostaticanalysis/nilerr/cmd/nilerr@latest; \
 	fi
 
 .PHONY: etcd
