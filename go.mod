@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/99designs/gqlgen v0.17.20
-	github.com/cybozu-go/etcdutil v1.6.1
+	github.com/cybozu-go/etcdutil v1.6.2
 	github.com/cybozu-go/log v1.6.1
 	github.com/cybozu-go/netutil v1.4.3
 	github.com/cybozu-go/well v1.11.1
@@ -20,8 +20,8 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/vektah/gqlparser/v2 v2.5.1
 	github.com/vincent-petithory/dataurl v1.0.0
-	go.etcd.io/etcd/api/v3 v3.5.4
-	go.etcd.io/etcd/client/v3 v3.5.4
+	go.etcd.io/etcd/api/v3 v3.5.5
+	go.etcd.io/etcd/client/v3 v3.5.5
 	go.universe.tf/netboot v0.0.0-20210617221821-fc2840fa7b05
 	golang.org/x/crypto v0.1.0
 	sigs.k8s.io/yaml v1.3.0

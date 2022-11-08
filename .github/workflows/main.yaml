@@ -21,7 +21,7 @@ jobs:
           go-version: ${{ env.go-version }}
 
       - name: Start etcd container 
-        run: docker run -d --network host gcr.io/etcd-development/etcd:v3.5.4
+        run: docker run -d --network host gcr.io/etcd-development/etcd:v3.5.5
 
       - name: Install test tools
         run: make SUDO="sudo" test-tools
