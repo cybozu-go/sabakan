@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Update etcd to 3.5.5 (#258)
+
 ## [2.13.1] - 2022-10-26
 
 ### Changed
