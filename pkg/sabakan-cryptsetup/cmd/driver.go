@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -35,17 +34,13 @@ type Driver struct {
 // It may return nil when the serial code of the machine cannot be identified,
 // or sabakanURL is not valid.
 func NewDriver(sabakanURL, cipher string, keySize int, tpmdev string, disks []Disk) (*Driver, error) {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = nil
+	transport.ForceAttemptHTTP2 = false
+	transport.MaxIdleConns = 1
+
 	hc := &http.Client{
-		Transport: &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
-			MaxIdleConns:          1,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
+		Transport: transport,
 	}
 	saba, err := sabakan.NewClient(sabakanURL, hc)
 	if err != nil {
