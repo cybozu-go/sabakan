@@ -9,11 +9,12 @@ WORKER1 = 10.0.0.104
 WORKER2 = 10.0.0.105
 PLACEMAT = /usr/bin/placemat2
 GINKGO = $(GOPATH)/bin/ginkgo
-ETCD_VERSION = 3.5.5
+ETCD_VERSION = 3.5.7
 PLACEMAT_DATADIR = /var/scratch/placemat
-COREOS_VERSION := 3227.2.3
+COREOS_VERSION := 3374.2.4
 COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
 COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
+# The latest CT is 0.9.4, but it is not distributed as a pre-built binary.
 CT_VERSION = 0.9.3
 SUDO = sudo
 
@@ -162,4 +163,4 @@ clean:
 
 .PHONY: setup
 setup:
-	go install github.com/onsi/ginkgo/ginkgo
+	go install github.com/onsi/ginkgo/v2/ginkgo

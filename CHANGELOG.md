@@ -7,6 +7,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Update etcd to 3.5.5 (#258)
+- Update dependencies in [#263](https://github.com/cybozu-go/sabakan/pull/263)
+    - Upgrade direct dependencies in go.mod
+    - Update testing/building environments
+    - Update etcd to 3.5.7
 
 ## [2.13.1] - 2022-10-26
 
