@@ -11,6 +11,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
     - Upgrade direct dependencies in go.mod
     - Update testing/building environments
     - Update etcd to 3.5.7
+- Fix use of math/rand in [#263](https://github.com/cybozu-go/sabakan/pull/263)
+    - Go 1.20 or later is required
 
 ## [2.13.1] - 2022-10-26
 
