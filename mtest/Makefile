@@ -84,9 +84,9 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	touch $@
 
 $(OUTPUT)/sabakan.img:
-	GOBIN=$(shell pwd)/../docker go install ../pkg/sabakan
-	GOBIN=$(shell pwd)/../docker go install ../pkg/sabakan-cryptsetup
-	GOBIN=$(shell pwd)/../docker go install ../pkg/sabactl
+	GOBIN=$(shell pwd)/../docker CGO_ENABLED=0 go install ../pkg/sabakan
+	GOBIN=$(shell pwd)/../docker CGO_ENABLED=0 go install ../pkg/sabakan-cryptsetup
+	GOBIN=$(shell pwd)/../docker CGO_ENABLED=0 go install ../pkg/sabactl
 	cp ../LICENSE $(shell pwd)/../docker
 	sudo docker build --no-cache --rm=false -t $(SABAKAN_IMAGE_URL) ../docker/
 	mkdir -p $(OUTPUT)

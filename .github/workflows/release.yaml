@@ -47,7 +47,7 @@ jobs:
     name: Release GitHub
     runs-on: ubuntu-22.04
     container:
-      image: quay.io/cybozu/golang:1.20-jammy
+      image: quay.io/cybozu/golang:1.20-jammy # used for ghr, not for go command
     steps:
       - name: Create GitHub release
         run: |

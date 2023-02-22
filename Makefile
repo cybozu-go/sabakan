@@ -11,7 +11,7 @@ all: build
 .PHONY: build
 build: $(BUILT_TARGET)
 $(BUILT_TARGET): $(GO_FILES)
-	go build ./pkg/$@
+	CGO_ENABLED=0 go build -ldflags="-s -w" ./pkg/$@
 
 .PHONY: check-generate
 check-generate:
