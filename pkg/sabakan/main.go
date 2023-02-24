@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -54,9 +53,6 @@ var (
 func main() {
 	flag.Parse()
 	well.LogConfig{}.Apply()
-
-	// seed math/random
-	rand.Seed(time.Now().UnixNano())
 
 	well.Go(subMain)
 	well.Stop()

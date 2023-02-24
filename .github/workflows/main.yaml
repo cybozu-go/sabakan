@@ -5,15 +5,15 @@ on:
     branches:
       - 'main'
 env:
-  go-version: 1.19
+  go-version: "1.20"
   filename: 'main.yaml'
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup golang
         uses: actions/setup-go@v3
@@ -21,7 +21,7 @@ jobs:
           go-version: ${{ env.go-version }}
 
       - name: Start etcd container 
-        run: docker run -d --network host gcr.io/etcd-development/etcd:v3.5.5
+        run: docker run -d --network host gcr.io/etcd-development/etcd:v3.5.7
 
       - name: Install test tools
         run: make SUDO="sudo" test-tools
@@ -59,11 +59,11 @@ jobs:
 
   build-image:
     name: Build Images
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup golang
         uses: actions/setup-go@v3
@@ -86,11 +86,11 @@ jobs:
 
   mtest:
     name: Multi-host test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup golang
         uses: actions/setup-go@v3
@@ -98,12 +98,12 @@ jobs:
           go-version: ${{ env.go-version }}
 
       - id: auth
-        uses: google-github-actions/auth@v0.8.3
+        uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.NECO_TEST_SERVICE_ACCOUNT }}'
 
       - name: Set up Cloud SDK for sabakan
-        uses: google-github-actions/setup-gcloud@v0.6.2
+        uses: google-github-actions/setup-gcloud@v1
 
       - name: Set GCP instance name
         run: echo "INSTANCE_NAME=sabakan-${{ github.run_number }}-$(TZ=Asia/Tokyo date +%H%M%S)" >> $GITHUB_ENV

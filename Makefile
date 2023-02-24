@@ -1,7 +1,7 @@
 # Makefile for sabakan
 
 # configuration variables
-ETCD_VERSION = 3.5.5
+ETCD_VERSION = 3.5.7
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 
@@ -11,7 +11,7 @@ all: build
 .PHONY: build
 build: $(BUILT_TARGET)
 $(BUILT_TARGET): $(GO_FILES)
-	go build ./pkg/$@
+	CGO_ENABLED=0 go build -ldflags="-s -w" ./pkg/$@
 
 .PHONY: check-generate
 check-generate:
