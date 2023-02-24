@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.13.2] - 2023-02-24
+
 ### Changed
 - Update etcd to 3.5.5 ([#258](https://github.com/cybozu-go/sabakan/pull/258))
 - Update dependencies in [#263](https://github.com/cybozu-go/sabakan/pull/263)
@@ -285,7 +287,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.13.1...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.13.2...HEAD
+[2.13.2]: https://github.com/cybozu-go/sabakan/compare/v2.13.1...v2.13.2
 [2.13.1]: https://github.com/cybozu-go/sabakan/compare/v2.13.0...v2.13.1
 [2.13.0]: https://github.com/cybozu-go/sabakan/compare/v2.12.0...v2.13.0
 [2.12.0]: https://github.com/cybozu-go/sabakan/compare/v2.11.0...v2.12.0
