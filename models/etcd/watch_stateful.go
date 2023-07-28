@@ -139,7 +139,12 @@ RETRY:
 	env.Stop()
 
 	for resp := range rch {
-		if resp.CompactRevision != 0 {
+		err := resp.Err()
+		if err != nil {
+			if resp.CompactRevision == 0 {
+				return err
+			}
+
 			log.Warn("database has been compacted; re-initializing", map[string]interface{}{
 				"compactedrev": resp.CompactRevision,
 			})

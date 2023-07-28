@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix to check error of etcd watch response in [#267](https://github.com/cybozu-go/sabakan/pull/267)
+
 ## [2.13.2] - 2023-02-24
 
 ### Changed

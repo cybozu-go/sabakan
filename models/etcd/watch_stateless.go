@@ -94,6 +94,9 @@ func (d *driver) startStatelessWatcher(ctx context.Context, ch, indexCh chan<- s
 		clientv3.WithRev(rev+1),
 	)
 	for wresp := range rch {
+		if err := wresp.Err(); err != nil {
+			return err
+		}
 		for _, ev := range wresp.Events {
 			var err error
 			key := string(ev.Kv.Key)
