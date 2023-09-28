@@ -12,11 +12,13 @@ import (
 )
 
 const (
-	etcdClientURL = "https://localhost:12379"
-	etcdPeerURL   = "https://localhost:12380"
-	etcdCA        = "./certs/ca.crt"
-	etcdCert      = "./certs/server.crt"
-	etcdKey       = "./certs/server.key.insecure"
+	etcdClientURL      = "https://localhost:12379"
+	etcdPeerURL        = "https://localhost:12380"
+	etcdCA             = "./certs/ca.crt"
+	etcdCert           = "./certs/server.crt"
+	etcdKey            = "./certs/server.key.insecure"
+	SabakanTLSCertFile = "./certs/server.crt"
+	SabakanTLSKeyFile  = "./certs/server.key.insecure"
 )
 
 var ci = false
@@ -106,7 +108,10 @@ func runSabakan() (func(), error) {
 		"-etcd-tls-cert", etcdCert,
 		"-etcd-tls-key", etcdKey,
 		"-advertise-url", "http://localhost:10080",
+		"-advertise-url-https", "https://localhost:10443",
 		"-data-dir", dataDir,
+		"-sabakan-tls-cert", SabakanTLSCertFile,
+		"-sabakan-tls-key", SabakanTLSKeyFile,
 	)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr

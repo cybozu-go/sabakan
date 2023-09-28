@@ -4,6 +4,8 @@
 ETCD_VERSION = 3.5.7
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
+IMAGE ?= quay.io/cybozu/sabakan
+TAG ?= latest
 
 .PHONY: all
 all: build
@@ -61,3 +63,9 @@ etcd:
 		$(SUDO) mv /tmp/etcd/etcd /usr/local/bin/; \
 		rm -rf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz /tmp/etcd; \
 	fi
+
+.PHONY: docker-build
+docker-build:build
+	cp sabactl sabakan sabakan-cryptsetup LICENSE ./docker/
+	docker build -t $(IMAGE):$(TAG) ./docker
+	rm ./docker/sabactl ./docker/sabakan ./docker/sabakan-cryptsetup ./docker/LICENSE

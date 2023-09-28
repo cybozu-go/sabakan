@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"net/url"
@@ -29,23 +31,27 @@ const (
 )
 
 var (
-	flagHTTP         = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
-	flagMetrics      = flag.String("metrics", defaultListenMetrics, "<Listen IP>:<Port number>")
-	flagDHCPBind     = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
-	flagIPXEPath     = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
-	flagDataDir      = flag.String("data-dir", defaultDataDir, "directory to store files")
-	flagAdvertiseURL = flag.String("advertise-url", "", "public URL of this server")
-	flagAllowIPs     = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
-	flagPlayground   = flag.Bool("enable-playground", false, "enable GraphQL playground")
+	flagHTTP              = flag.String("http", defaultListenHTTP, "<Listen IP>:<Port number>")
+	flagHTTPS             = flag.String("https", defaultListenHTTPS, "<Listen IP>:<Port number>")
+	flagMetrics           = flag.String("metrics", defaultListenMetrics, "<Listen IP>:<Port number>")
+	flagDHCPBind          = flag.String("dhcp-bind", defaultDHCPBind, "bound ip addresses and port for dhcp server")
+	flagIPXEPath          = flag.String("ipxe-efi-path", defaultIPXEPath, "path to ipxe.efi")
+	flagDataDir           = flag.String("data-dir", defaultDataDir, "directory to store files")
+	flagAdvertiseURL      = flag.String("advertise-url", "", "public URL of this server")
+	flagAdvertiseURLHTTPS = flag.String("advertise-url-https", "", "public URL of this server(https)")
+	flagAllowIPs          = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
+	flagPlayground        = flag.Bool("enable-playground", false, "enable GraphQL playground")
 
-	flagEtcdEndpoints = flag.String("etcd-endpoints", strings.Join(etcdutil.DefaultEndpoints, ","), "comma-separated URLs of the backend etcd endpoints")
-	flagEtcdPrefix    = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
-	flagEtcdTimeout   = flag.String("etcd-timeout", etcdutil.DefaultTimeout, "dial timeout to etcd")
-	flagEtcdUsername  = flag.String("etcd-username", "", "username for etcd authentication")
-	flagEtcdPassword  = flag.String("etcd-password", "", "password for etcd authentication")
-	flagEtcdTLSCA     = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
-	flagEtcdTLSCert   = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
-	flagEtcdTLSKey    = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
+	flagEtcdEndpoints  = flag.String("etcd-endpoints", strings.Join(etcdutil.DefaultEndpoints, ","), "comma-separated URLs of the backend etcd endpoints")
+	flagEtcdPrefix     = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
+	flagEtcdTimeout    = flag.String("etcd-timeout", etcdutil.DefaultTimeout, "dial timeout to etcd")
+	flagEtcdUsername   = flag.String("etcd-username", "", "username for etcd authentication")
+	flagEtcdPassword   = flag.String("etcd-password", "", "password for etcd authentication")
+	flagEtcdTLSCA      = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
+	flagEtcdTLSCert    = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
+	flagEtcdTLSKey     = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
+	flagSabakanTLSCert = flag.String("sabakan-tls-cert", defaultSabakanTLSCertFile, "path to server TLS certificate of sabakan")
+	flagSabakanTLSKey  = flag.String("sabakan-tls-key", defaultSabakanTLSKeyFile, "path to server TLS key of sabakan")
 
 	flagConfigFile = flag.String("config-file", "", "path to configuration file")
 )
@@ -82,11 +88,13 @@ func subMain(ctx context.Context) error {
 	cfg := newConfig()
 	if *flagConfigFile == "" {
 		cfg.AdvertiseURL = *flagAdvertiseURL
+		cfg.AdvertiseURLHTTPS = *flagAdvertiseURLHTTPS
 		cfg.AllowIPs = strings.Split(*flagAllowIPs, ",")
 		cfg.DHCPBind = *flagDHCPBind
 		cfg.DataDir = *flagDataDir
 		cfg.IPXEPath = *flagIPXEPath
 		cfg.ListenHTTP = *flagHTTP
+		cfg.ListenHTTPS = *flagHTTPS
 		cfg.Playground = *flagPlayground
 		cfg.ListenMetrics = *flagMetrics
 
@@ -98,6 +106,8 @@ func subMain(ctx context.Context) error {
 		cfg.Etcd.TLSCAFile = *flagEtcdTLSCA
 		cfg.Etcd.TLSCertFile = *flagEtcdTLSCert
 		cfg.Etcd.TLSKeyFile = *flagEtcdTLSKey
+		cfg.SabakanTLSCertFile = *flagSabakanTLSCert
+		cfg.SabakanTLSKeyFile = *flagSabakanTLSKey
 	} else {
 		data, err := os.ReadFile(*flagConfigFile)
 		if err != nil {
@@ -116,6 +126,13 @@ func subMain(ctx context.Context) error {
 		return errors.New("advertise-url must be specified")
 	}
 	advertiseURL, err := url.Parse(cfg.AdvertiseURL)
+	if err != nil {
+		return err
+	}
+	if cfg.AdvertiseURLHTTPS == "" {
+		return errors.New("advertise-url-http must be specified")
+	}
+	advertiseURLHTTPS, err := url.Parse(cfg.AdvertiseURLHTTPS)
 	if err != nil {
 		return err
 	}
@@ -167,7 +184,7 @@ func subMain(ctx context.Context) error {
 		return err
 	}
 	counter := metrics.NewCounter()
-	webServer := web.NewServer(model, cfg.IPXEPath, cryptsetupPath, advertiseURL, allowedIPs, cfg.Playground, counter)
+	webServer := web.NewServer(model, cfg.IPXEPath, cryptsetupPath, advertiseURL, advertiseURLHTTPS, allowedIPs, cfg.Playground, counter, false)
 	s := &well.HTTPServer{
 		Server: &http.Server{
 			Addr:    cfg.ListenHTTP,
@@ -177,6 +194,25 @@ func subMain(ctx context.Context) error {
 		Env:             env,
 	}
 	s.ListenAndServe()
+
+	//sabakan TLS
+	counter = metrics.NewCounter()
+	webServerHTTPS := web.NewServer(model, cfg.IPXEPath, cryptsetupPath, advertiseURL, advertiseURLHTTPS, allowedIPs, cfg.Playground, counter, true)
+	ss := &well.HTTPServer{
+		Server: &http.Server{
+			Addr:    cfg.ListenHTTPS,
+			Handler: webServerHTTPS,
+		},
+		ShutdownTimeout: 3 * time.Minute,
+		Env:             env,
+	}
+	err = ss.ListenAndServeTLS(cfg.SabakanTLSCertFile, cfg.SabakanTLSKeyFile)
+	if err != nil {
+		if !errors.Is(err, fs.ErrNotExist) {
+			return err
+		}
+		fmt.Fprintln(os.Stderr, "TLS certificate not found.  Starting without serving TLS API server.")
+	}
 
 	// Metrics
 	collector := metrics.NewCollector(&model)

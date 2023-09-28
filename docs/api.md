@@ -3,6 +3,7 @@ REST API
 
 For GraphQL API, see [graphql.md](graphql.md).
 
+## HTTP API
 * [PUT /api/v1/config/ipam](#putipam)
 * [GET /api/v1/config/ipam](#getipam)
 * [PUT /api/v1/config/dhcp](#putdhcp)
@@ -34,15 +35,17 @@ For GraphQL API, see [graphql.md](graphql.md).
 * [GET /api/v1/ignitions/\<role\>/\<id\>](#getignitiontemplate)
 * [PUT /api/v1/ignitions/\<role\>/\<id\>](#putignitiontemplate)
 * [DELETE /api/v1/ignitions/\<role\>/\<id\>](#deleteignitiontemplate)
-* [PUT /api/v1/crypts](#putcrypts)
-* [GET /api/v1/crypts](#getcrypts)
-* [DELETE /api/v1/crypts](#deletecrypts)
 * [GET /api/v1/cryptsetup](#getcryptsetup)
 * [GET /api/v1/logs](#getlogs)
 * [PUT /api/v1/kernel_params/coreos](#putkernelparams)
 * [GET /api/v1/kernel_params/coreos](#getkernelparams)
 * [GET /version](#version)
 * [GET /health](#health)
+
+## HTTPS APIs
+* [PUT /api/v1/crypts](#putcrypts)
+* [GET /api/v1/crypts](#getcrypts)
+* [DELETE /api/v1/crypts](#deletecrypts)
 
 ## Access control
 
@@ -842,101 +845,6 @@ Delete CoreOS ignition by role and id.
 $ curl -s -XDELETE localhost:10080/api/v1/boot/ignitions/worker/1527731687
 ```
 
-## <a name="putcrypts" />`PUT /api/v1/crypts/<serial>/<path>`
-
-Register disk encryption key. The request body is raw binary format of the key.
-
-**Successful response**
-
-- HTTP status code: 201 Created
-- HTTP response header: `Content-Type: application/json`
-- HTTP response body: Registered path of the disk in JSON.
-
-**Failure responses**
-
-- The machine is not found.
-
-    HTTP status code: 404 Not Found
-
-- The state of the machine is `retiring` or `retired`.
-
-    HTTP status code: 500 Internal Server Error
-
-- `/<prefix>/crypts/<serial>/<path>` already exists in etcd.
-
-    HTTP status code: 409 Conflict
-
-- The request body is empty.
-
-  HTTP status code: 400 Bad Request
-
-**Example**
-
-```console
-$ head -c256 /dev/urandom | curl -s -i -X PUT -d - 'localhost:10080/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
-HTTP/1.1 201 Created
-Content-Type: application/json
-Date: Tue, 10 Apr 2018 09:12:12 GMT
-Content-Length: 31
-
-{"status": 201, "path":"pci-0000:00:17.0-ata-1"}
-```
-
-## <a name="getcrypts" />`GET /api/v1/crypts/<serial>/<path>`
-
-Get an encryption key of the particular disk.
-
-**Successful response**
-
-- HTTP status code: 200 OK
-- HTTP response header: `Content-Type: application/octet-stream`
-- HTTP response body: A raw key data
-
-**Failure responses**
-
-- No specified `/<prefix>/crypts/<serial>/<path>` found in etcd in etcd.
-
-  HTTP status code: 404 Not Found
-
-**Example**
-
-```console
-$ curl -s -i 'localhost:10080/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
-HTTP/1.1 200 OK
-Content-Type: application/octet-stream
-Date: Tue, 10 Apr 2018 09:15:59 GMT
-Content-Length: 64
-
-.....
-```
-
-## <a name="deletecrypts" />`DELETE /api/v1/crypts/<serial>`
-
-Delete all disk encryption keys of the specified machine. This request does not delete `/api/v1/machines/<serial>`, User can re-register encryption keys using `<serial>`.
-
-**Successful response**
-
-- HTTP status code: 200 OK
-- HTTP response header: `Content-Type: application/json`
-- HTTP response body: Array of the `<path>` which are deleted successfully in JSON.
-
-**Example**
-
-```console
-$ curl -s -X DELETE 'localhost:10080/api/v1/crypts/1'
-["abdef", "aaaaa"]
-```
-
-**Failure responses**
-
-- The machine's state is not `retiring`.
-
-    HTTP status code: 500 Internal Server Error
-
-- The machine is not found.
-
-    HTTP status code: 404 Not Found
-
 ## <a name="getcryptsetup" />`GET /api/v1/cryptsetup`
 
 Download `sabakan-cryptsetup` utility.
@@ -1067,3 +975,99 @@ get sabakan health status
 $ curl -s -XGET localhost:10080/health
 {"health":"healthy"}
 ```
+
+
+## <a name="putcrypts" />`PUT /api/v1/crypts/<serial>/<path>`
+
+Register disk encryption key. The request body is raw binary format of the key.
+
+**Successful response**
+
+- HTTP status code: 201 Created
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Registered path of the disk in JSON.
+
+**Failure responses**
+
+- The machine is not found.
+
+    HTTP status code: 404 Not Found
+
+- The state of the machine is `retiring` or `retired`.
+
+    HTTP status code: 500 Internal Server Error
+
+- `/<prefix>/crypts/<serial>/<path>` already exists in etcd.
+
+    HTTP status code: 409 Conflict
+
+- The request body is empty.
+
+  HTTP status code: 400 Bad Request
+
+**Example**
+
+```console
+$ head -c256 /dev/urandom | curl -s -i -X PUT -d - 'localhost:10080/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
+HTTP/1.1 201 Created
+Content-Type: application/json
+Date: Tue, 10 Apr 2018 09:12:12 GMT
+Content-Length: 31
+
+{"status": 201, "path":"pci-0000:00:17.0-ata-1"}
+```
+
+## <a name="getcrypts" />`GET /api/v1/crypts/<serial>/<path>`
+
+Get an encryption key of the particular disk.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: application/octet-stream`
+- HTTP response body: A raw key data
+
+**Failure responses**
+
+- No specified `/<prefix>/crypts/<serial>/<path>` found in etcd in etcd.
+
+  HTTP status code: 404 Not Found
+
+**Example**
+
+```console
+$ curl -s -i 'localhost:10080/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
+HTTP/1.1 200 OK
+Content-Type: application/octet-stream
+Date: Tue, 10 Apr 2018 09:15:59 GMT
+Content-Length: 64
+
+.....
+```
+
+## <a name="deletecrypts" />`DELETE /api/v1/crypts/<serial>`
+
+Delete all disk encryption keys of the specified machine. This request does not delete `/api/v1/machines/<serial>`, User can re-register encryption keys using `<serial>`.
+
+**Successful response**
+
+- HTTP status code: 200 OK
+- HTTP response header: `Content-Type: application/json`
+- HTTP response body: Array of the `<path>` which are deleted successfully in JSON.
+
+**Example**
+
+```console
+$ curl -s -X DELETE 'localhost:10080/api/v1/crypts/1'
+["abdef", "aaaaa"]
+```
+
+**Failure responses**
+
+- The machine's state is not `retiring`.
+
+    HTTP status code: 500 Internal Server Error
+
+- The machine is not found.
+
+    HTTP status code: 404 Not Found

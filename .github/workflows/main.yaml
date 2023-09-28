@@ -39,7 +39,10 @@ jobs:
         run: |
           sudo ./sabakan -dhcp-bind 0.0.0.0:10067 \
           -etcd-endpoints http://localhost:2379 \
-          -advertise-url http://localhost:10080 &
+          -advertise-url http://localhost:10080 \
+          -advertise-url-https https://localhost:10443 \
+          -sabakan-tls-cert ./e2e/certs/server.crt \
+          -sabakan-tls-key ./e2e/certs/server.key.insecure &
 
       - name: Run test
         run: make test

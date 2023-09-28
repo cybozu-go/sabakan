@@ -1,6 +1,7 @@
 passwd: passwd.yml
 files:
   - /etc/hostname
+  - /etc/sabakan/sabakan-tls-ca.crt
 networkd:
   - 10-eth0.network
 systemd:

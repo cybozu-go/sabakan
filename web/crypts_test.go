@@ -18,7 +18,7 @@ import (
 func testCryptsGet(t *testing.T) {
 	ctx := context.Background()
 	m := mock.NewModel()
-	handler := Server{Model: m}
+	handler := Server{Model: m, TLSServer: true}
 
 	err := m.Machine.Register(ctx, []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{Serial: "1"}),
@@ -70,6 +70,7 @@ func testCryptsPut(t *testing.T) {
 	ctx := context.Background()
 	m := mock.NewModel()
 	handler := newTestServer(m)
+	handler.TLSServer = true
 
 	err := m.Machine.Register(ctx, []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{Serial: "1"}),
@@ -141,6 +142,7 @@ func testCryptsDelete(t *testing.T) {
 	ctx := context.Background()
 	m := mock.NewModel()
 	handler := newTestServer(m)
+	handler.TLSServer = true
 
 	err := m.Machine.Register(ctx, []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{Serial: "abc"}),

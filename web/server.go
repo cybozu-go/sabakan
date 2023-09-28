@@ -45,6 +45,7 @@ func (w *recorderWriter) WriteHeader(statusCode int) {
 type Server struct {
 	Model          sabakan.Model
 	MyURL          *url.URL
+	MyURLHTTPS     *url.URL
 	IPXEFirmware   string
 	CryptSetup     string
 	AllowedRemotes []*net.IPNet
@@ -52,11 +53,13 @@ type Server struct {
 
 	graphQL    http.Handler
 	playground http.HandlerFunc
+
+	TLSServer bool
 }
 
 // NewServer constructs Server instance
 func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
-	advertiseURL *url.URL, allowedIPs []*net.IPNet, enablePlayground bool, counter *metrics.APICounter) *Server {
+	advertiseURL, AdvertiseURLHTTPS *url.URL, allowedIPs []*net.IPNet, enablePlayground bool, counter *metrics.APICounter, tlsServer bool) *Server {
 	graphQL := handler.NewDefaultServer(generated.NewExecutableSchema(
 		generated.Config{
 			Resolvers: &graph.Resolver{Model: model},
@@ -67,9 +70,11 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 		IPXEFirmware:   ipxePath,
 		CryptSetup:     cryptsetupPath,
 		MyURL:          advertiseURL,
+		MyURLHTTPS:     AdvertiseURLHTTPS,
 		AllowedRemotes: allowedIPs,
 		Counter:        counter,
 		graphQL:        graphQL,
+		TLSServer:      tlsServer,
 	}
 
 	if enablePlayground {
@@ -81,7 +86,11 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 // ServeHTTP implements http.Handler.ServeHTTP
 func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w2 := &recorderWriter{ResponseWriter: w}
-	s.serveHTTP(w2, r)
+	if s.TLSServer {
+		s.serveHTTPS(w2, r)
+	} else {
+		s.serveHTTP(w2, r)
+	}
 	if s.Counter != nil {
 		s.Counter.Inc(w2.statusCode, r.URL.Path, r.Method)
 	}
@@ -113,6 +122,18 @@ func (s Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	renderError(r.Context(), w, APIErrNotFound)
+}
+
+func (s Server) serveHTTPS(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, "/api/v1/") {
+		s.handleAPIV1HTTPS(w, r)
+		return
+	}
+	if r.URL.Path == "/test" {
+		w.Write([]byte("response from sabakan TLS\n"))
+		return
+	}
 	renderError(r.Context(), w, APIErrNotFound)
 }
 
@@ -161,8 +182,6 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 		s.handleConfigDHCP(w, r)
 	case p == "config/ipam":
 		s.handleConfigIPAM(w, r)
-	case strings.HasPrefix(p, "crypts/"):
-		s.handleCrypts(w, r)
 	case p == "cryptsetup":
 		s.handleCryptSetup(w, r)
 	case strings.HasPrefix(p, "ignitions/"):
@@ -181,6 +200,24 @@ func (s Server) handleAPIV1(w http.ResponseWriter, r *http.Request) {
 		s.handleRetireDate(w, r)
 	case strings.HasPrefix(p, "kernel_params/"):
 		s.handleKernelParams(w, r)
+	default:
+		renderError(r.Context(), w, APIErrNotFound)
+	}
+}
+
+func (s Server) handleAPIV1HTTPS(w http.ResponseWriter, r *http.Request) {
+	p := r.URL.Path[len("/api/v1/"):]
+
+	if !s.hasPermission(r) {
+		renderError(r.Context(), w, APIErrForbidden)
+		return
+	}
+
+	r = r.WithContext(auditContext(r))
+
+	switch {
+	case strings.HasPrefix(p, "crypts/"):
+		s.handleCrypts(w, r)
 	default:
 		renderError(r.Context(), w, APIErrNotFound)
 	}

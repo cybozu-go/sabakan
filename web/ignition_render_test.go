@@ -81,12 +81,15 @@ func testRenderIgnition2_3(t *testing.T) {
 	})
 	ipam.GenerateIP(mc)
 	strPtr := func(s string) *string { return &s }
-	files := make([]ign23.File, 2)
+	files := make([]ign23.File, 3)
 	files[0].Path = "/etc/hostname"
 	files[0].Contents.Source = "data:,rack%7B%7B%20.Spec.Rack%20%7D%7D-%7B%7B%20.Spec.Role%20%7D%7D-%7B%7B%20.Spec.IndexInRack%20%7D%7D%0A"
 	files[1].Path = "/opt/sbin/sabakan-cryptsetup"
 	files[1].Contents.Source = `{{ MyURL }}/api/v1/assets/sabakan-cryptsetup`
 	files[1].Contents.Verification.Hash = strPtr(`{{ Metadata "cryptsetuphash" }}`)
+	files[2].Path = "/etc/sabakan/hoge"
+	files[2].Contents.Source = `{{ MyURLHTTPS }}/api/v1/assets/hoge`
+
 	ign := ign23.Config{
 		Passwd: ign23.Passwd{
 			Groups: []ign23.PasswdGroup{
@@ -201,12 +204,15 @@ ExecStart=/bin/echo {{ add .Spec.Rack 10 }}
 			Shell:             "/bin/bash",
 		},
 	}
-	expectedFiles := make([]ign23.File, 2)
+	expectedFiles := make([]ign23.File, 3)
 	expectedFiles[0].Path = "/etc/hostname"
 	expectedFiles[0].Contents.Source = "data:,rack1-cs-4%0A"
 	expectedFiles[1].Path = "/opt/sbin/sabakan-cryptsetup"
 	expectedFiles[1].Contents.Source = testMyURL + "/api/v1/assets/sabakan-cryptsetup"
 	expectedFiles[1].Contents.Verification.Hash = strPtr("hahaha")
+	expectedFiles[2].Path = "/etc/sabakan/hoge"
+	expectedFiles[2].Contents.Source = testMyURLHTTPS + "/api/v1/assets/hoge"
+
 	expected.Storage.Files = expectedFiles
 	expected.Networkd.Units = []ign23.Networkdunit{
 		{
