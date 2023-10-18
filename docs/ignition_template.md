@@ -58,8 +58,8 @@ For example, `{{ .Spec.Serial }}` will be replaced with the serial number of the
 
 Following additional template functions are defined and can be used:
 
-* `MyURL`: returns the URL of the sabakan server.
-* `MyURLHTTPS`: returns the URL of the sabakan TLS server.
+* `MyURL`: returns the URL of the sabakan HTTP server.
+* `MyURLHTTPS`: returns the URL of the sabakan HTTPS server.
 * `Metadata`: takes a key to retrieve metadata value saved along with the template.
 * `json`: renders the argument as JSON.
 * `add`, `sub`, `mul`, `div`: do arithmetic on parameters.

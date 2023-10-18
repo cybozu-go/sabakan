@@ -50,8 +50,8 @@ var (
 	flagEtcdTLSCA      = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
 	flagEtcdTLSCert    = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
 	flagEtcdTLSKey     = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
-	flagSabakanTLSCert = flag.String("sabakan-tls-cert", defaultSabakanTLSCertFile, "path to server TLS certificate of sabakan")
-	flagSabakanTLSKey  = flag.String("sabakan-tls-key", defaultSabakanTLSKeyFile, "path to server TLS key of sabakan")
+	flagSabakanTLSCert = flag.String("server-cert", defaultServerCertFile, "path to server TLS certificate of sabakan")
+	flagSabakanTLSKey  = flag.String("server-key", defaultServerKeyFile, "path to server TLS key of sabakan")
 
 	flagConfigFile = flag.String("config-file", "", "path to configuration file")
 )
@@ -106,8 +106,8 @@ func subMain(ctx context.Context) error {
 		cfg.Etcd.TLSCAFile = *flagEtcdTLSCA
 		cfg.Etcd.TLSCertFile = *flagEtcdTLSCert
 		cfg.Etcd.TLSKeyFile = *flagEtcdTLSKey
-		cfg.SabakanTLSCertFile = *flagSabakanTLSCert
-		cfg.SabakanTLSKeyFile = *flagSabakanTLSKey
+		cfg.ServerCertFile = *flagSabakanTLSCert
+		cfg.ServerKeyFile = *flagSabakanTLSKey
 	} else {
 		data, err := os.ReadFile(*flagConfigFile)
 		if err != nil {
@@ -195,8 +195,7 @@ func subMain(ctx context.Context) error {
 	}
 	s.ListenAndServe()
 
-	//sabakan TLS
-	counter = metrics.NewCounter()
+	// HTTPS API
 	webServerHTTPS := web.NewServer(model, cfg.IPXEPath, cryptsetupPath, advertiseURL, advertiseURLHTTPS, allowedIPs, cfg.Playground, counter, true)
 	ss := &well.HTTPServer{
 		Server: &http.Server{
@@ -206,7 +205,7 @@ func subMain(ctx context.Context) error {
 		ShutdownTimeout: 3 * time.Minute,
 		Env:             env,
 	}
-	err = ss.ListenAndServeTLS(cfg.SabakanTLSCertFile, cfg.SabakanTLSKeyFile)
+	err = ss.ListenAndServeTLS(cfg.ServerCertFile, cfg.ServerKeyFile)
 	if err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
 			return err

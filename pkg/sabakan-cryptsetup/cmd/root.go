@@ -79,5 +79,4 @@ func init() {
 	rootCmd.Flags().IntVar(&opts.keySize, "keysize", defaultKeySize, "key size in bits")
 	rootCmd.Flags().StringArrayVar(&opts.excludes, "excludes", nil, `disk name patterns to be excluded, e.g. "nvme*"`)
 	rootCmd.Flags().StringVar(&opts.caCert, "cert", defaultCACert, "location of sabakan CA certificate")
-
 }

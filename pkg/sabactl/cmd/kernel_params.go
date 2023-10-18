@@ -25,7 +25,7 @@ var kernelParamsGetCmd = &cobra.Command{
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		well.Go(func(ctx context.Context) error {
-			params, err := api.KernelParamsGet(ctx, kernelParamsOS)
+			params, err := httpApi.KernelParamsGet(ctx, kernelParamsOS)
 			if err != nil {
 				return err
 			}
@@ -45,7 +45,7 @@ var kernelParamsSetCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		params := args[0]
 		well.Go(func(ctx context.Context) error {
-			return api.KernelParamsSet(ctx, kernelParamsOS, sabakan.KernelParams(params))
+			return httpApi.KernelParamsSet(ctx, kernelParamsOS, sabakan.KernelParams(params))
 		})
 		well.Stop()
 		return well.Wait()

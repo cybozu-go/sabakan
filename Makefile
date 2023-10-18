@@ -6,6 +6,7 @@ GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 IMAGE ?= quay.io/cybozu/sabakan
 TAG ?= latest
+CFSSL_VER = 1.6.4
 
 .PHONY: all
 all: build
@@ -64,8 +65,22 @@ etcd:
 		rm -rf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz /tmp/etcd; \
 	fi
 
-.PHONY: docker-build
-docker-build:build
+.PHONY: docker-build-local
+docker-build-local:build
 	cp sabactl sabakan sabakan-cryptsetup LICENSE ./docker/
 	docker build -t $(IMAGE):$(TAG) ./docker
 	rm ./docker/sabactl ./docker/sabakan ./docker/sabakan-cryptsetup ./docker/LICENSE
+
+.PHONY: setup-cfssl
+setup-cfssl:
+	curl -sSLf -o cfssl https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssl_$(CFSSL_VER)_linux_amd64
+	curl -sSLf -o cfssljson https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssljson_$(CFSSL_VER)_linux_amd64
+	chmod +x cfssl cfssljson
+	sudo mv cfssl cfssljson /usr/local/bin/
+
+.PHONY: generate-certs
+generate-certs:
+	cd ./e2e/certs && ./gencerts.sh
+	cp ./e2e/certs/ca.crt ./mtest/ignitions/files/etc/sabakan/sabakan-tls-ca.crt
+	yq -i '(.storage.files[] | select( .path == "/etc/sabakan/sabakan-tls.crt")).contents.inline = load_str("./e2e/certs/server.crt") ' ./mtest/host-ign.yml
+	yq -i '(.storage.files[] | select( .path == "/etc/sabakan/sabakan-tls.key")).contents.inline = load_str("./e2e/certs/server.key.insecure") ' ./mtest/host-ign.yml

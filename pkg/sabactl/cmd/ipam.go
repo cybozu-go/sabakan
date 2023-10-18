@@ -26,7 +26,7 @@ var ipamGetCmd = &cobra.Command{
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		well.Go(func(ctx context.Context) error {
-			conf, err := api.IPAMConfigGet(ctx)
+			conf, err := httpApi.IPAMConfigGet(ctx)
 			if err != nil {
 				return err
 			}
@@ -58,7 +58,7 @@ var ipamSetCmd = &cobra.Command{
 		}
 
 		well.Go(func(ctx context.Context) error {
-			return api.IPAMConfigSet(ctx, &conf)
+			return httpApi.IPAMConfigSet(ctx, &conf)
 		})
 		well.Stop()
 		return well.Wait()

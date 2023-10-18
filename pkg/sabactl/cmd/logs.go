@@ -100,7 +100,7 @@ are retrieved.`,
 			if !logsJSON {
 				w = &logPrinter{w: w}
 			}
-			return api.LogsGet(ctx, since, until, w)
+			return httpApi.LogsGet(ctx, since, until, w)
 		})
 		well.Stop()
 		return well.Wait()

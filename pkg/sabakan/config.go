@@ -3,15 +3,15 @@ package main
 import "github.com/cybozu-go/etcdutil"
 
 const (
-	defaultListenHTTP         = "0.0.0.0:10080"
-	defaultListenHTTPS        = "0.0.0.0:10443"
-	defaultListenMetrics      = "0.0.0.0:10081"
-	defaultEtcdPrefix         = "/sabakan/"
-	defaultDHCPBind           = "0.0.0.0:10067"
-	defaultIPXEPath           = "/usr/lib/ipxe/ipxe.efi"
-	defaultDataDir            = "/var/lib/sabakan"
-	defaultSabakanTLSCertFile = "/etc/sabakan/sabakan-tls.crt"
-	defaultSabakanTLSKeyFile  = "/etc/sabakan/sabakan-tls.key"
+	defaultListenHTTP     = "0.0.0.0:10080"
+	defaultListenHTTPS    = "0.0.0.0:10443"
+	defaultListenMetrics  = "0.0.0.0:10081"
+	defaultEtcdPrefix     = "/sabakan/"
+	defaultDHCPBind       = "0.0.0.0:10067"
+	defaultIPXEPath       = "/usr/lib/ipxe/ipxe.efi"
+	defaultDataDir        = "/var/lib/sabakan"
+	defaultServerCertFile = "/etc/sabakan/server.crt"
+	defaultServerKeyFile  = "/etc/sabakan/server.key"
 )
 
 var (
@@ -20,16 +20,16 @@ var (
 
 func newConfig() *config {
 	return &config{
-		ListenHTTP:         defaultListenHTTP,
-		ListenHTTPS:        defaultListenHTTPS,
-		ListenMetrics:      defaultListenMetrics,
-		DHCPBind:           defaultDHCPBind,
-		IPXEPath:           defaultIPXEPath,
-		DataDir:            defaultDataDir,
-		AllowIPs:           defaultAllowIPs,
-		Etcd:               etcdutil.NewConfig(defaultEtcdPrefix),
-		SabakanTLSCertFile: defaultSabakanTLSCertFile,
-		SabakanTLSKeyFile:  defaultSabakanTLSKeyFile,
+		ListenHTTP:     defaultListenHTTP,
+		ListenHTTPS:    defaultListenHTTPS,
+		ListenMetrics:  defaultListenMetrics,
+		DHCPBind:       defaultDHCPBind,
+		IPXEPath:       defaultIPXEPath,
+		DataDir:        defaultDataDir,
+		AllowIPs:       defaultAllowIPs,
+		Etcd:           etcdutil.NewConfig(defaultEtcdPrefix),
+		ServerCertFile: defaultServerCertFile,
+		ServerKeyFile:  defaultServerKeyFile,
 	}
 }
 
@@ -43,9 +43,9 @@ type config struct {
 	AdvertiseURL      string `json:"advertise-url"`
 	AdvertiseURLHTTPS string `json:"advertise-url-https"`
 
-	AllowIPs           []string         `json:"allow-ips"`
-	Playground         bool             `json:"enable-playground"`
-	Etcd               *etcdutil.Config `json:"etcd"`
-	SabakanTLSCertFile string           `json:"sabakan-tls-cert"`
-	SabakanTLSKeyFile  string           `json:"sabakan-tls-key"`
+	AllowIPs       []string         `json:"allow-ips"`
+	Playground     bool             `json:"enable-playground"`
+	Etcd           *etcdutil.Config `json:"etcd"`
+	ServerCertFile string           `json:"server-cert"`
+	ServerKeyFile  string           `json:"server-key"`
 }

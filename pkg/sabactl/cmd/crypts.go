@@ -28,7 +28,7 @@ var cryptsDeleteCmd = &cobra.Command{
 			return errors.New("use --force explicitly")
 		}
 		well.Go(func(ctx context.Context) error {
-			return tlsApi.CryptsDelete(ctx, args[0])
+			return httpsApi.CryptsDelete(ctx, args[0])
 		})
 		well.Stop()
 		return well.Wait()

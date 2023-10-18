@@ -4,6 +4,7 @@ REST API
 For GraphQL API, see [graphql.md](graphql.md).
 
 ## HTTP API
+
 * [PUT /api/v1/config/ipam](#putipam)
 * [GET /api/v1/config/ipam](#getipam)
 * [PUT /api/v1/config/dhcp](#putdhcp)
@@ -43,6 +44,7 @@ For GraphQL API, see [graphql.md](graphql.md).
 * [GET /health](#health)
 
 ## HTTPS APIs
+
 * [PUT /api/v1/crypts](#putcrypts)
 * [GET /api/v1/crypts](#getcrypts)
 * [DELETE /api/v1/crypts](#deletecrypts)
@@ -1008,7 +1010,7 @@ Register disk encryption key. The request body is raw binary format of the key.
 **Example**
 
 ```console
-$ head -c256 /dev/urandom | curl -s -i -X PUT -d - 'localhost:10080/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
+$ head -c256 /dev/urandom | curl -s -i -X PUT -d - 'localhost:10443/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
 HTTP/1.1 201 Created
 Content-Type: application/json
 Date: Tue, 10 Apr 2018 09:12:12 GMT

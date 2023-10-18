@@ -41,7 +41,7 @@ var machinesGetCmd = &cobra.Command{
 			params[k] = *v
 		}
 		well.Go(func(ctx context.Context) error {
-			ms, err := api.MachinesGet(ctx, params)
+			ms, err := httpApi.MachinesGet(ctx, params)
 			if err != nil {
 				return err
 			}
@@ -85,7 +85,7 @@ var machinesCreateCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			return api.MachinesCreate(ctx, specs)
+			return httpApi.MachinesCreate(ctx, specs)
 		})
 		well.Stop()
 		return well.Wait()
@@ -101,7 +101,7 @@ var machinesRemoveCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		serial := args[0]
 		well.Go(func(ctx context.Context) error {
-			return api.MachinesRemove(ctx, serial)
+			return httpApi.MachinesRemove(ctx, serial)
 		})
 		well.Stop()
 		return well.Wait()
@@ -118,7 +118,7 @@ var machinesGetStateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		serial := args[0]
 		well.Go(func(ctx context.Context) error {
-			state, err := api.MachinesGetState(ctx, serial)
+			state, err := httpApi.MachinesGetState(ctx, serial)
 			if err != nil {
 				return err
 			}
@@ -148,7 +148,7 @@ STATE can be one of:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		serial, state := args[0], strings.ToLower(args[1])
 		well.Go(func(ctx context.Context) error {
-			return api.MachinesSetState(ctx, serial, state)
+			return httpApi.MachinesSetState(ctx, serial, state)
 		})
 		well.Stop()
 		return well.Wait()
@@ -164,7 +164,7 @@ var machinesSetLabelCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		serial, label, value := args[0], args[1], args[2]
 		well.Go(func(ctx context.Context) error {
-			return api.MachinesSetLabel(ctx, serial, label, value)
+			return httpApi.MachinesSetLabel(ctx, serial, label, value)
 		})
 		well.Stop()
 		return well.Wait()
@@ -180,7 +180,7 @@ var machinesRemoveLabelCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		serial, label := args[0], args[1]
 		well.Go(func(ctx context.Context) error {
-			return api.MachinesRemoveLabel(ctx, serial, label)
+			return httpApi.MachinesRemoveLabel(ctx, serial, label)
 		})
 		well.Stop()
 		return well.Wait()
@@ -200,7 +200,7 @@ var machinesSetRetireDateCmd = &cobra.Command{
 			return err
 		}
 		well.Go(func(ctx context.Context) error {
-			return api.MachinesSetRetireDate(ctx, serial, date)
+			return httpApi.MachinesSetRetireDate(ctx, serial, date)
 		})
 		well.Stop()
 		return well.Wait()

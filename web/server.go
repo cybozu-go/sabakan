@@ -59,7 +59,7 @@ type Server struct {
 
 // NewServer constructs Server instance
 func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
-	advertiseURL, AdvertiseURLHTTPS *url.URL, allowedIPs []*net.IPNet, enablePlayground bool, counter *metrics.APICounter, tlsServer bool) *Server {
+	advertiseURL, advertiseURLHTTPS *url.URL, allowedIPs []*net.IPNet, enablePlayground bool, counter *metrics.APICounter, tlsServer bool) *Server {
 	graphQL := handler.NewDefaultServer(generated.NewExecutableSchema(
 		generated.Config{
 			Resolvers: &graph.Resolver{Model: model},
@@ -70,7 +70,7 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 		IPXEFirmware:   ipxePath,
 		CryptSetup:     cryptsetupPath,
 		MyURL:          advertiseURL,
-		MyURLHTTPS:     AdvertiseURLHTTPS,
+		MyURLHTTPS:     advertiseURLHTTPS,
 		AllowedRemotes: allowedIPs,
 		Counter:        counter,
 		graphQL:        graphQL,
@@ -128,10 +128,6 @@ func (s Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 func (s Server) serveHTTPS(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/v1/") {
 		s.handleAPIV1HTTPS(w, r)
-		return
-	}
-	if r.URL.Path == "/test" {
-		w.Write([]byte("response from sabakan TLS\n"))
 		return
 	}
 	renderError(r.Context(), w, APIErrNotFound)

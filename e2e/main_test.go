@@ -17,8 +17,8 @@ const (
 	etcdCA             = "./certs/ca.crt"
 	etcdCert           = "./certs/server.crt"
 	etcdKey            = "./certs/server.key.insecure"
-	SabakanTLSCertFile = "./certs/server.crt"
-	SabakanTLSKeyFile  = "./certs/server.key.insecure"
+	sabakanTLSCertFile = "./certs/server.crt"
+	sabakanTLSKeyFile  = "./certs/server.key.insecure"
 )
 
 var ci = false
@@ -110,8 +110,8 @@ func runSabakan() (func(), error) {
 		"-advertise-url", "http://localhost:10080",
 		"-advertise-url-https", "https://localhost:10443",
 		"-data-dir", dataDir,
-		"-sabakan-tls-cert", SabakanTLSCertFile,
-		"-sabakan-tls-key", SabakanTLSKeyFile,
+		"-server-cert", sabakanTLSCertFile,
+		"-server-key", sabakanTLSKeyFile,
 	)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr

@@ -9,7 +9,7 @@ See [specification of etcdutil](https://github.com/cybozu-go/etcdutil/blob/main/
 ```console
 $ sabakan -h
 Usage of sabakan:
- -advertise-url string
+  -advertise-url string
         public URL of this server
   -advertise-url-https string
         public URL of this server(https)
@@ -53,16 +53,16 @@ Usage of sabakan:
         Log level [critical,error,warning,info,debug]
   -metrics string
         <Listen IP>:<Port number> (default "0.0.0.0:10081")
-  -sabakan-tls-cert string
+  -server-cert string
         path to server TLS certificate of sabakan (default "/etc/sabakan/sabakan-tls.crt")
-  -sabakan-tls-key string
+  -server-key string
         path to server TLS key of sabakan (default "/etc/sabakan/sabakan-tls.key")
 ```
 
 | Option               | Default value                      | Description                                                     |
 | -------------------- | ---------------------------------- | --------------------------------------------------------------- |
-| `advertise-url`      | ""                                 | Public URL to access this server.  Required.                    |
-| `advertise-url-https`| ""                                 | Public URL to access this server.  Required.                    |
+| `advertise-url`      | ""                                 | Public URL to access HTTP server.  Required.                    |
+| `advertise-url-https`| ""                                 | Public URL to access HTTPS server.  Required.                   |
 | `allow-ips`          | `127.0.0.1,::1`                    | Comma-separated IPs allowed to change resources.                |
 | `config-file`        | ""                                 | If given, configurations are read from the file.                |
 | `data-dir`           | `/var/lib/sabakan`                 | Directory to store files.                                       |
@@ -80,9 +80,8 @@ Usage of sabakan:
 | `https`              | `0.0.0.0:10443`                    | IP address and port number of HTTPS server.                     |
 | `ipxe-efi-path`      | `/usr/lib/ipxe/ipxe.efi`           | Path to ipxe.efi .                                              |
 | `metrics`            | `0.0.0.0:10081`                    | IP address and port number of metrics HTTP server.              |
-| `sabakan-tls-cert`   | `/etc/sabakan/sabakan-tls.crt`     | Path to server TLS certificate of sabakan.                      |
-| `sabakan-tls-key`    | `/etc/sabakan/sabakan-tls.key`     | Path to server TLS key of sabakan.                              |
-
+| `server-cert`        | `/etc/sabakan/server.crt`          | Path to server  certificate of sabakan.                         |
+| `server-key`         | `/etc/sabakan/server.key`          | Path to server TLS key of sabakan.                              |
 
 Config file
 -----------

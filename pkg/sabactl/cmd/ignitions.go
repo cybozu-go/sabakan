@@ -34,14 +34,14 @@ If ID is given, this command outputs the ignition template in JSON format.`,
 		role := args[0]
 		well.Go(func(ctx context.Context) error {
 			if len(args) == 1 {
-				ids, err := api.IgnitionsListIDs(ctx, role)
+				ids, err := httpApi.IgnitionsListIDs(ctx, role)
 				if err != nil {
 					return err
 				}
 				return json.NewEncoder(cmd.OutOrStdout()).Encode(ids)
 			}
 
-			tmpl, err := api.IgnitionsGet(ctx, role, args[1])
+			tmpl, err := httpApi.IgnitionsGet(ctx, role, args[1])
 			if err != nil {
 				return err
 			}
@@ -116,7 +116,7 @@ If not, FILENAME should be a YAML file like this:
 		}
 
 		well.Go(func(ctx context.Context) error {
-			return api.IgnitionsSet(ctx, role, id, tmpl)
+			return httpApi.IgnitionsSet(ctx, role, id, tmpl)
 		})
 		well.Stop()
 		return well.Wait()
@@ -132,7 +132,7 @@ var ignitionsDeleteCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		role, id := args[0], args[1]
 		well.Go(func(ctx context.Context) error {
-			return api.IgnitionsDelete(ctx, role, id)
+			return httpApi.IgnitionsDelete(ctx, role, id)
 		})
 		well.Stop()
 		return well.Wait()
