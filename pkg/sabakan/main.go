@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
-	"io/fs"
 	"net"
 	"net/http"
 	"net/url"
@@ -193,7 +191,10 @@ func subMain(ctx context.Context) error {
 		ShutdownTimeout: 3 * time.Minute,
 		Env:             env,
 	}
-	s.ListenAndServe()
+	err = s.ListenAndServe()
+	if err != nil {
+		return err
+	}
 
 	// HTTPS API
 	webServerHTTPS := web.NewServer(model, cfg.IPXEPath, cryptsetupPath, advertiseURL, advertiseURLHTTPS, allowedIPs, cfg.Playground, counter, true)
@@ -207,10 +208,7 @@ func subMain(ctx context.Context) error {
 	}
 	err = ss.ListenAndServeTLS(cfg.ServerCertFile, cfg.ServerKeyFile)
 	if err != nil {
-		if !errors.Is(err, fs.ErrNotExist) {
-			return err
-		}
-		fmt.Fprintln(os.Stderr, "TLS certificate not found.  Starting without serving TLS API server.")
+		return err
 	}
 
 	// Metrics

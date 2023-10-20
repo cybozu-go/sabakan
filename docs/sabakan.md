@@ -54,9 +54,9 @@ Usage of sabakan:
   -metrics string
         <Listen IP>:<Port number> (default "0.0.0.0:10081")
   -server-cert string
-        path to server TLS certificate of sabakan (default "/etc/sabakan/sabakan-tls.crt")
+        path to server TLS certificate of sabakan (default "/etc/sabakan/server.crt")
   -server-key string
-        path to server TLS key of sabakan (default "/etc/sabakan/sabakan-tls.key")
+        path to server TLS key of sabakan (default "/etc/sabakan/server.key")
 ```
 
 | Option               | Default value                      | Description                                                     |
