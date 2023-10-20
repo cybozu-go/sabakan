@@ -20,7 +20,7 @@ storage:
       contents:
         inline: |
           advertise-url: http://__HOST__:10080
-          advertise-url-https: http://__HOST__:10443
+          advertise-url-https: https://__HOST__:10443
           allow-ips: [0.0.0.0/0]
           dhcp-bind: 0.0.0.0:67
           etcd:
