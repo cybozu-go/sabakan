@@ -164,3 +164,10 @@ clean:
 .PHONY: setup
 setup:
 	go install github.com/onsi/ginkgo/v2/ginkgo
+
+.PHONY: generate-certs
+generate-certs:
+	cd ./certs && ./gencerts.sh
+	cp ./certs/ca.crt ./ignitions/files/etc/sabakan/sabakan-tls-ca.crt
+	yq -i '(.storage.files[] | select( .path == "/etc/sabakan/server.crt")).contents.inline = load_str("./certs/server.crt") ' ./host-ign.yml
+	yq -i '(.storage.files[] | select( .path == "/etc/sabakan/server.key")).contents.inline = load_str("./certs/server.key.insecure") ' ./host-ign.yml

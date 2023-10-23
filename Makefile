@@ -78,9 +78,3 @@ setup-cfssl:
 	chmod +x cfssl cfssljson
 	sudo mv cfssl cfssljson /usr/local/bin/
 
-.PHONY: generate-certs
-generate-certs:
-	cd ./e2e/certs && ./gencerts.sh
-	cp ./e2e/certs/ca.crt ./mtest/ignitions/files/etc/sabakan/sabakan-tls-ca.crt
-	yq -i '(.storage.files[] | select( .path == "/etc/sabakan/server.crt")).contents.inline = load_str("./e2e/certs/server.crt") ' ./mtest/host-ign.yml
-	yq -i '(.storage.files[] | select( .path == "/etc/sabakan/server.key")).contents.inline = load_str("./e2e/certs/server.key.insecure") ' ./mtest/host-ign.yml

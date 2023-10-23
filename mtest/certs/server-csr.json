@@ -1,0 +1,23 @@
+{
+    "key": {
+      "algo": "rsa",
+      "size": 2048
+    },
+    "names": [
+      {
+        "O": "Cybozu, Inc.",
+        "OU": "Neco",
+        "ST": "Tokyo",
+        "C": "Japan"
+      }
+    ],
+    "CN": "example.com",
+    "hosts": [
+      "127.0.0.1",
+      "localhost",
+      "10.0.0.101",
+      "10.0.0.102",
+      "10.0.0.103"
+    ]
+  }
+  
