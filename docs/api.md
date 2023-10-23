@@ -1010,7 +1010,7 @@ Register disk encryption key. The request body is raw binary format of the key.
 **Example**
 
 ```console
-$ head -c256 /dev/urandom | curl -s -i -X PUT -d - 'localhost:10443/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
+$ head -c256 /dev/urandom | curl -s -i -X PUT -d - 'https://localhost:10443/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
 HTTP/1.1 201 Created
 Content-Type: application/json
 Date: Tue, 10 Apr 2018 09:12:12 GMT
@@ -1038,7 +1038,7 @@ Get an encryption key of the particular disk.
 **Example**
 
 ```console
-$ curl -s -i 'localhost:10080/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
+$ curl -s -i 'https://localhost:10443/api/v1/crypts/1/pci-0000:00:17.0-ata-1'
 HTTP/1.1 200 OK
 Content-Type: application/octet-stream
 Date: Tue, 10 Apr 2018 09:15:59 GMT
@@ -1060,7 +1060,7 @@ Delete all disk encryption keys of the specified machine. This request does not 
 **Example**
 
 ```console
-$ curl -s -X DELETE 'localhost:10080/api/v1/crypts/1'
+$ curl -s -X DELETE 'https://localhost:10443/api/v1/crypts/1'
 ["abdef", "aaaaa"]
 ```
 

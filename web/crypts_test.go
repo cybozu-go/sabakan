@@ -15,6 +15,37 @@ import (
 	"github.com/cybozu-go/sabakan/v2/models/mock"
 )
 
+func testCryptsHTTP(t *testing.T) {
+	// test sabakan HTTP Server returns 404 for crypts API
+	ctx := context.Background()
+	m := mock.NewModel()
+	handler := Server{Model: m, TLSServer: false}
+	err := m.Machine.Register(ctx, []*sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{Serial: "1"}),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	serial := "1"
+	diskPath := "exists-path"
+	key := "aaa"
+
+	err = m.Storage.PutEncryptionKey(ctx, serial, diskPath, []byte(key))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedStatusCode := 404
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", path.Join("/api/v1/crypts", serial, diskPath), nil)
+	handler.ServeHTTP(w, r)
+	resp := w.Result()
+	if resp.StatusCode != expectedStatusCode {
+		t.Error("wrong status code, expects:", expectedStatusCode, ", actual:", resp.StatusCode)
+	}
+}
+
 func testCryptsGet(t *testing.T) {
 	ctx := context.Background()
 	m := mock.NewModel()
@@ -252,6 +283,7 @@ func testCryptsDelete(t *testing.T) {
 }
 
 func TestCrypts(t *testing.T) {
+	t.Run("HTTP", testCryptsHTTP)
 	t.Run("Get", testCryptsGet)
 	t.Run("Put", testCryptsPut)
 	t.Run("Delete", testCryptsDelete)

@@ -41,8 +41,8 @@ jobs:
           -etcd-endpoints http://localhost:2379 \
           -advertise-url http://localhost:10080 \
           -advertise-url-https https://localhost:10443 \
-          -server-cert ./e2e/certs/server.crt \
-          -server-key ./e2e/certs/server.key.insecure &
+          -server-cert ./mtest/certs/server.crt \
+          -server-key ./mtest/certs/server.key.insecure &
 
       - name: Run test
         run: make test
