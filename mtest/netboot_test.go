@@ -93,6 +93,18 @@ func testNetboot() {
 				}
 				return nil
 			}, 6*time.Minute).Should(Succeed())
+
+			By("Checking status of sabakan-cryptsetup")
+			Eventually(func() error {
+				stdout, _, err := execAt(worker, "systemctl", "is-active", "sabakan-cryptsetup")
+				if err != nil {
+					return err
+				}
+				if string(stdout) != "active\n" {
+					return fmt.Errorf("sabakan-cryptsetup is not active:%s", stdout)
+				}
+				return nil
+			}).Should(Succeed())
 		}
 
 		By("Copying readnvram binary")
