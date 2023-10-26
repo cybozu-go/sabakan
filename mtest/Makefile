@@ -11,7 +11,7 @@ PLACEMAT = /usr/bin/placemat2
 GINKGO = $(GOPATH)/bin/ginkgo
 ETCD_VERSION = 3.5.7
 PLACEMAT_DATADIR = /var/scratch/placemat
-COREOS_VERSION := 3374.2.4
+COREOS_VERSION := current
 COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
 COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
 # The latest CT is 0.9.4, but it is not distributed as a pre-built binary.
