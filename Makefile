@@ -76,5 +76,5 @@ setup-cfssl:
 	curl -sSLf -o cfssl https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssl_$(CFSSL_VER)_linux_amd64
 	curl -sSLf -o cfssljson https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssljson_$(CFSSL_VER)_linux_amd64
 	chmod +x cfssl cfssljson
-	sudo mv cfssl cfssljson /usr/local/bin/
+	$(SUDO) mv cfssl cfssljson /usr/local/bin/
 

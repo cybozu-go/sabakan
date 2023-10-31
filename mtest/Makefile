@@ -56,8 +56,14 @@ PLACEMAT_DEPS = \
 	$(OUTPUT)/host1.ign \
 	$(OUTPUT)/host2.ign \
 	$(OUTPUT)/host3.ign \
-	$(OUTPUT)/ignitions
+	$(OUTPUT)/ignitions \
+	$(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt
 
+CERTS = \
+	$(OUTPUT)/certs/ca.crt \
+	$(OUTPUT)/certs/server.crt\
+	$(OUTPUT)/certs/server.key.insecure
+	
 .PHONY: all
 all:
 	@echo "Specify one of these targets:"
@@ -113,22 +119,28 @@ $(OUTPUT)/host.ign: host-ign.yml $(CT)
 	mkdir -p $(OUTPUT)
 	$(CT) -strict -in-file=$< -pretty -out-file=$@
 
-$(OUTPUT)/host1.ign: $(OUTPUT)/host.ign
+$(OUTPUT)/host1.ign: $(OUTPUT)/host.ign $(CERTS)
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
+		-e 's@__SERVER_CERT__@$(SERVER_CERT)@' \
+		-e 's@__SERVER_KEY__@$(SERVER_KEY)@' \
 		-e 's/__HOST_NAME__/host1/' \
 		-e 's/__HOST1__/$(HOST1)/' \
 		-e 's/__HOST__/$(HOST1)/g' \
 		-e 's/__HOST_ADDRESS__/$(HOST1)/' $< > $@
 
-$(OUTPUT)/host2.ign: $(OUTPUT)/host.ign
+$(OUTPUT)/host2.ign: $(OUTPUT)/host.ign $(CERTS)
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
+		-e 's@__SERVER_CERT__@$(SERVER_CERT)@' \
+		-e 's@__SERVER_KEY__@$(SERVER_KEY)@' \
 		-e 's/__HOST_NAME__/host2/' \
 		-e 's/__HOST1__/$(HOST1)/' \
 		-e 's/__HOST__/$(HOST2)/g' \
 		-e 's/__HOST_ADDRESS__/$(HOST2)/' $< > $@
 
-$(OUTPUT)/host3.ign: $(OUTPUT)/host.ign
+$(OUTPUT)/host3.ign: $(OUTPUT)/host.ign $(CERTS)
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
+		-e 's@__SERVER_CERT__@$(SERVER_CERT)@' \
+		-e 's@__SERVER_KEY__@$(SERVER_KEY)@' \
 		-e 's/__HOST_NAME__/host3/' \
 		-e 's/__HOST1__/$(HOST1)/' \
 		-e 's/__HOST__/$(HOST3)/g' \
@@ -136,6 +148,14 @@ $(OUTPUT)/host3.ign: $(OUTPUT)/host.ign
 
 $(OUTPUT)/readnvram:
 	go build -o $@ ./readnvram/main.go
+
+$(CERTS):
+	cd ./certs && ./gencerts.sh
+	$(eval SERVER_CERT := $(shell cat ./certs/server.crt))
+	$(eval SERVER_KEY := $(shell cat ./certs/server.key.insecure))
+
+$(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt: $(CERTS)
+	cp $(OUTPUT)/certs/ca.crt $(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt
 
 # Targets
 .PHONY: test
@@ -164,10 +184,3 @@ clean:
 .PHONY: setup
 setup:
 	go install github.com/onsi/ginkgo/v2/ginkgo
-
-.PHONY: generate-certs
-generate-certs:
-	cd ./certs && ./gencerts.sh
-	cp ./certs/ca.crt ./ignitions/files/etc/sabakan/sabakan-tls-ca.crt
-	yq -i '(.storage.files[] | select( .path == "/etc/sabakan/server.crt")).contents.inline = load_str("./certs/server.crt") ' ./host-ign.yml
-	yq -i '(.storage.files[] | select( .path == "/etc/sabakan/server.key")).contents.inline = load_str("./certs/server.key.insecure") ' ./host-ign.yml

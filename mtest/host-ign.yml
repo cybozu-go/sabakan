@@ -29,61 +29,13 @@ storage:
       mode: 0644
       contents:
         inline: |
-          -----BEGIN CERTIFICATE-----
-          MIID7DCCAtSgAwIBAgIUDx3hEH1LrEgblkKqKt69o5BsHsAwDQYJKoZIhvcNAQEL
-          BQAwUzEOMAwGA1UEBhMFSmFwYW4xDjAMBgNVBAgTBVRva3lvMRUwEwYDVQQKEwxD
-          eWJvenUsIEluYy4xDTALBgNVBAsTBE5lY28xCzAJBgNVBAMTAmNhMB4XDTIzMTAy
-          MzAxMDAwMFoXDTMzMTAyMDAxMDAwMFowXDEOMAwGA1UEBhMFSmFwYW4xDjAMBgNV
-          BAgTBVRva3lvMRUwEwYDVQQKEwxDeWJvenUsIEluYy4xDTALBgNVBAsTBE5lY28x
-          FDASBgNVBAMTC2V4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
-          CgKCAQEArIZzOttCo0mRK5rKcBiS3zb/O9vHaSQCvnX+KcUEtrpCWEKST0lv4Gh2
-          Q1ay+BbZa7ijVGo2l4WpQKbzkoqEZmrZX/9qipQ0sey8gal7raRfjsz4/ZD4T6iY
-          5D9oDbURop3fPu0AUEUw5WpM1CQylJrJn6Cl9tSJeKJ4isUZY7eIgwBNWsvfHLkX
-          lhmNOHFPcPlOA9lPYRtf9QiVK4QBxuFReKYTlfJqe+yYiytBGPndf445klTt9UxF
-          +3AM14kfso77uGcPazM2KwgrYnLJpk2WfeAFhkY2wmincsY1K534jyFPGUraOZ9p
-          lJDd35kD2eCxKJFtvlxQoIFPDZfC+wIDAQABo4GuMIGrMA4GA1UdDwEB/wQEAwIF
-          oDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAd
-          BgNVHQ4EFgQUv62poY3xkppl6IA0LBFiO7ZIgCAwHwYDVR0jBBgwFoAUaDqVK6fV
-          qWQhXA6Pt3m7M7jvGkQwLAYDVR0RBCUwI4IJbG9jYWxob3N0hwR/AAABhwQKAABl
-          hwQKAABmhwQKAABnMA0GCSqGSIb3DQEBCwUAA4IBAQCUd4Bt408GKmKlONkTSL53
-          R11BwIc9fX165hk8IwVrUj4b3ILo5HLOU0pSKNNhj75P6AnkYQgoQggOFAZyEf2o
-          kwum1A0l/1Ai2k/SeHHp5tRWcw4NdUhes3DEAxbL9Z/R3lqnwvBmOKCigI/EXfci
-          +3IXFw8pLe96tVQ+hjPA2k8GnRgdCxiOPvCz4mx2y9EEdpbzAHXh0r0oqbd1vz0D
-          kcqbApaMYdrebHp7IENonWSJHTOiw50ifRjixqaAoSmecRXPOdGzEfEfuFr9/g1W
-          7byFpsg7XkLmRDO1PMyTnVBHHJS2IgWHZpR/x5lTdgEd9ltWcozu+cAxcpaFuYNi
-          -----END CERTIFICATE-----
+          __SERVER_CERT__
     - path: "/etc/sabakan/server.key"
       filesystem: root
       mode: 0644
       contents:
         inline: |
-          -----BEGIN RSA PRIVATE KEY-----
-          MIIEoQIBAAKCAQEArIZzOttCo0mRK5rKcBiS3zb/O9vHaSQCvnX+KcUEtrpCWEKS
-          T0lv4Gh2Q1ay+BbZa7ijVGo2l4WpQKbzkoqEZmrZX/9qipQ0sey8gal7raRfjsz4
-          /ZD4T6iY5D9oDbURop3fPu0AUEUw5WpM1CQylJrJn6Cl9tSJeKJ4isUZY7eIgwBN
-          WsvfHLkXlhmNOHFPcPlOA9lPYRtf9QiVK4QBxuFReKYTlfJqe+yYiytBGPndf445
-          klTt9UxF+3AM14kfso77uGcPazM2KwgrYnLJpk2WfeAFhkY2wmincsY1K534jyFP
-          GUraOZ9plJDd35kD2eCxKJFtvlxQoIFPDZfC+wIDAQABAoIBADuo9toIjn+25ful
-          OJIQ/WExPIvvkYK7UDOay/yXw+yIdn7c7ol6hLSeix74MUV3aVJF9D0xyZUWRJQ1
-          547qVaSxGGCJC8fGPn60te9Es581c1IHcacF5chuLgjoIEx1LBcG7vdsr6oSczky
-          TEUkC1W2PTj1Lc8waiWMUZDzXbdMZBAjjKsWppm6HnS1tjWhjgegpqPAaT1BEfN1
-          iOdMcNskQcqeZhFLpI16CrIRkPsCVx2Z8x1Ur+k564n2+n6ZgC0MVyjsgkbSBL/9
-          VQ9El1xTuyMdq7T+eNZD0yQT7MxAiiNQ2o0tSAtgEGNyL4RIJ0k9bpNziAkPfWHZ
-          Tt6yxpECgYEA0g9aQrMxm2muHTjgmoYHFnCBNNRRrvxPUFmah6gY7EsfKmw4uS0a
-          6NKpjDvkFzfXboRk17JT5azWHcpTUT2ZELZBsosuwpFgxR7j6Sfx13udvDk2i707
-          +M4WG2cbyuvo3pJMGr2iaJHJwRc6YCIvB2hfOayeZ9uZrHsrAaWXGlMCgYEA0kGi
-          cL2Ad9CKLfdJNCz3oQ7aPApXzLNBWC14PNV9oU8x0zM85ah5o48YAjLU8yH+ALAq
-          yUZhpNK/mDcMTaa/VJLcFjqb/vYr6QtOB9Jb6SdMDxngCYHlaGhTBze4GIgwj9E4
-          IsrhNwLMtAF1xSLjoxOjvZ88k6HE0PnCx88dr7kCfy+XStvRvWt4hfoY6MoZk4GB
-          +8P8VoVOpKmPo3MYoozmeCkkW7WYgoA9OiyLZSHdhPGFDVPREzD194zIShgd3I/s
-          uvW4kt+CEGqYlQo+AozPdO0wCSufs/aquld7BND0oc3LV3K3hBQs84jLum4NUJpd
-          CzYF5d2h4y8wuI2m9pUCgYAQ3zl0yJAljTN5as2SBUW9w95ZUQ8omv3UYJm0cAFL
-          z3oVE5iAaVuRd2sayg9yjzi9v2U/j4lIW60KPuia1pWl6L8GfZ+E/yYY5lJVqFi9
-          xeyBjbb/rE/HaA+5lYwNU+hpsgVKLXOTIYNhsnhL4HfZ3zqVfdCznBiaGGC7/e/I
-          6QKBgQCGNdProfkTtmwL0r+q2VkWqV3AcMzVwfYyIsx4CQsVJ4wdn6+7uht7Cluk
-          joQjkylBg0ybc+x7gbe4FVzlK8Ok3mr7dk1dn09oUWXBWYv84oLc8i7LLSklicO8
-          Z4+MIQNIv6cBRhJfknBMmG6fAtdf36BK3f/J6Vs9XyqoK7zlWQ==
-          -----END RSA PRIVATE KEY-----
+          __SERVER_KEY__
   directories:
     - filesystem: root
       path: "/opt/bin"

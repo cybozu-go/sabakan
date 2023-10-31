@@ -7,3 +7,4 @@
 /flatcar_*.cpio.gz
 /flatcar_*.img
 /etcd-*.tar.gz
+sabakan-tls-ca.crt

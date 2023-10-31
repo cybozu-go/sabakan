@@ -35,15 +35,6 @@ jobs:
       - name: Build binaries
         run: make build
 
-      - name: Start sabakan
-        run: |
-          sudo ./sabakan -dhcp-bind 0.0.0.0:10067 \
-          -etcd-endpoints http://localhost:2379 \
-          -advertise-url http://localhost:10080 \
-          -advertise-url-https https://localhost:10443 \
-          -server-cert ./mtest/certs/server.crt \
-          -server-key ./mtest/certs/server.key.insecure &
-
       - name: Run test
         run: make test
 

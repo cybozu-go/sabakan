@@ -1,19 +1,18 @@
 {
-    "key": {
-      "algo": "rsa",
-      "size": 2048
-    },
-    "names": [
-      {
-        "O": "Cybozu, Inc.",
-        "OU": "Neco",
-        "ST": "Tokyo",
-        "C": "Japan"
-      }
-    ],
-    "CN": "ca",
-    "ca": {
-      "expiry": "87600h"
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "O": "Cybozu, Inc.",
+      "OU": "Neco",
+      "ST": "Tokyo",
+      "C": "Japan"
     }
+  ],
+  "CN": "ca",
+  "ca": {
+    "expiry": "87600h"
   }
-  
+}
