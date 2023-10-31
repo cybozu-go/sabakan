@@ -34,7 +34,8 @@ jobs:
 
       - name: Build binaries
         run: make build
-
+      - name: Check e2e 
+        run: echo $RUN_E2E
       - name: Run test
         run: make test
 
