@@ -28,14 +28,12 @@ storage:
       filesystem: root
       mode: 0644
       contents:
-        inline: |
-          __SERVER_CERT__
+        local: ./output/certs/server.crt
     - path: "/etc/sabakan/server.key"
       filesystem: root
       mode: 0644
       contents:
-        inline: |
-          __SERVER_KEY__
+        local: ./output/certs/server.key.insecure
   directories:
     - filesystem: root
       path: "/opt/bin"

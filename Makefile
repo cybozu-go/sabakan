@@ -65,10 +65,11 @@ etcd:
 		rm -rf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz /tmp/etcd; \
 	fi
 
-.PHONY: docker-build-local
-docker-build-local:build
-	cp sabactl sabakan sabakan-cryptsetup LICENSE ./docker/
-	docker build -t $(IMAGE):$(TAG) ./docker
+.PHONY: docker-build
+docker-build: build
+	cp LICENSE ./docker
+	cp ./sabakan ./sabactl ./sabakan-cryptsetup ./docker
+	docker build --no-cache -t $(IMAGE):$(TAG) ./docker
 	rm ./docker/sabactl ./docker/sabakan ./docker/sabakan-cryptsetup ./docker/LICENSE
 
 .PHONY: setup-cfssl

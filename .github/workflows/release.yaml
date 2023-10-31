@@ -20,15 +20,9 @@ jobs:
         with:
           go-version: ${{ env.go-version }}
 
-      - name: Build Binaries
-        run: |
-          make build
-          cp LICENSE ./docker
-          cp ./sabakan ./sabactl ./sabakan-cryptsetup ./docker
-
       - name: Build image
-        run: docker build -t quay.io/cybozu/sabakan:latest ./docker
-
+        run: make docker-build
+        
       - name: Push docker image to Quay.io
         run: |
           echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USER }} --password-stdin quay.io

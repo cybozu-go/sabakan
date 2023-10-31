@@ -27,7 +27,9 @@ SSH_PRIVKEY = $(realpath ./mtest_key)
 OUTPUT := ./output
 COREOS_IMAGE := flatcar_production_qemu_image.img
 SABAKAN_IMAGE := $(abspath $(OUTPUT))/sabakan.img
-SABAKAN_IMAGE_URL := quay.io/cybozu/sabakan:dev
+SABAKAN_IMAGE_NAME := quay.io/cybozu/sabakan
+SABAKAN_IMAGE_TAG := dev
+SABAKAN_IMAGE_URL := $(SABAKAN_IMAGE_NAME):$(SABAKAN_IMAGE_TAG)
 CT := $(abspath $(OUTPUT))/ct
 ETCD := $(abspath $(OUTPUT))/etcd
 ETCDCTL := $(abspath $(OUTPUT))/etcdctl
@@ -90,11 +92,7 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	touch $@
 
 $(OUTPUT)/sabakan.img:
-	GOBIN=$(shell pwd)/../docker CGO_ENABLED=0 go install ../pkg/sabakan
-	GOBIN=$(shell pwd)/../docker CGO_ENABLED=0 go install ../pkg/sabakan-cryptsetup
-	GOBIN=$(shell pwd)/../docker CGO_ENABLED=0 go install ../pkg/sabactl
-	cp ../LICENSE $(shell pwd)/../docker
-	sudo docker build --no-cache --rm=false -t $(SABAKAN_IMAGE_URL) ../docker/
+	make -C ../ IMG=$(SABAKAN_IMAGE_NAME) TAG=$(SABAKAN_IMAGE_TAG) docker-build
 	mkdir -p $(OUTPUT)
 	sudo docker save $(SABAKAN_IMAGE_URL) > $@
 
@@ -115,14 +113,13 @@ $(CT):
 	curl -fsSL -o $@ https://github.com/flatcar/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
 	chmod +x $@
 
-$(OUTPUT)/host.ign: host-ign.yml $(CT)
+$(OUTPUT)/host.ign: host-ign.yml $(CT) $(CERTS)
 	mkdir -p $(OUTPUT)
-	$(CT) -strict -in-file=$< -pretty -out-file=$@
+	$(CT) -strict -in-file=host-ign.yml --files-dir=. -pretty -out-file=$@
+	# rm host-ign.yml.tmp
 
-$(OUTPUT)/host1.ign: $(OUTPUT)/host.ign $(CERTS)
+$(OUTPUT)/host1.ign: $(OUTPUT)/host.ign 
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
-		-e 's@__SERVER_CERT__@$(SERVER_CERT)@' \
-		-e 's@__SERVER_KEY__@$(SERVER_KEY)@' \
 		-e 's/__HOST_NAME__/host1/' \
 		-e 's/__HOST1__/$(HOST1)/' \
 		-e 's/__HOST__/$(HOST1)/g' \
@@ -130,8 +127,6 @@ $(OUTPUT)/host1.ign: $(OUTPUT)/host.ign $(CERTS)
 
 $(OUTPUT)/host2.ign: $(OUTPUT)/host.ign $(CERTS)
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
-		-e 's@__SERVER_CERT__@$(SERVER_CERT)@' \
-		-e 's@__SERVER_KEY__@$(SERVER_KEY)@' \
 		-e 's/__HOST_NAME__/host2/' \
 		-e 's/__HOST1__/$(HOST1)/' \
 		-e 's/__HOST__/$(HOST2)/g' \
@@ -139,8 +134,6 @@ $(OUTPUT)/host2.ign: $(OUTPUT)/host.ign $(CERTS)
 
 $(OUTPUT)/host3.ign: $(OUTPUT)/host.ign $(CERTS)
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
-		-e 's@__SERVER_CERT__@$(SERVER_CERT)@' \
-		-e 's@__SERVER_KEY__@$(SERVER_KEY)@' \
 		-e 's/__HOST_NAME__/host3/' \
 		-e 's/__HOST1__/$(HOST1)/' \
 		-e 's/__HOST__/$(HOST3)/g' \
@@ -151,10 +144,9 @@ $(OUTPUT)/readnvram:
 
 $(CERTS):
 	cd ./certs && ./gencerts.sh
-	$(eval SERVER_CERT := $(shell cat ./certs/server.crt))
-	$(eval SERVER_KEY := $(shell cat ./certs/server.key.insecure))
 
 $(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt: $(CERTS)
+	mkdir -p $(IGNITIONS)/files/etc/sabakan
 	cp $(OUTPUT)/certs/ca.crt $(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt
 
 # Targets
@@ -184,3 +176,4 @@ clean:
 .PHONY: setup
 setup:
 	go install github.com/onsi/ginkgo/v2/ginkgo
+	sudo make -C ../ setup-cfssl

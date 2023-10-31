@@ -21,12 +21,6 @@ const (
 	sabakanTLSKeyFile  = "./certs/server.key.insecure"
 )
 
-var ci = false
-
-func init() {
-	ci = os.Getenv("CI") == "true"
-}
-
 func testMain(m *testing.M) (int, error) {
 	stopEtcd := runEtcd()
 	defer func() {
@@ -78,11 +72,6 @@ func runEtcd() func() {
 }
 
 func TestMain(m *testing.M) {
-	if ci {
-		code := m.Run()
-		os.Exit(code)
-	}
-
 	if len(os.Getenv("RUN_E2E")) == 0 {
 		os.Exit(0)
 	}
