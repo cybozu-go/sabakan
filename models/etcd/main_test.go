@@ -22,12 +22,6 @@ const (
 )
 
 func testMain(m *testing.M) int {
-	ci := os.Getenv("CI") == "true"
-	if ci {
-		code := m.Run()
-		os.Exit(code)
-	}
-
 	etcdDataDir, err := os.MkdirTemp("", "sabakan-test")
 	if err != nil {
 		log.ErrorExit(err)
@@ -60,16 +54,8 @@ func TestMain(m *testing.M) {
 }
 
 func newEtcdClient(prefix string) (*clientv3.Client, error) {
-	var clientURL string
-	ci := os.Getenv("CI") == "true"
-	if ci {
-		clientURL = "http://localhost:2379"
-	} else {
-		clientURL = etcdClientURL
-	}
-
 	cfg := etcdutil.NewConfig(prefix)
-	cfg.Endpoints = []string{clientURL}
+	cfg.Endpoints = []string{etcdClientURL}
 	return etcdutil.NewClient(cfg)
 }
 
