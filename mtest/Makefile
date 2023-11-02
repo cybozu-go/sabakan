@@ -116,7 +116,6 @@ $(CT):
 $(OUTPUT)/host.ign: host-ign.yml $(CT) $(CERTS)
 	mkdir -p $(OUTPUT)
 	$(CT) -strict -in-file=host-ign.yml --files-dir=. -pretty -out-file=$@
-	# rm host-ign.yml.tmp
 
 $(OUTPUT)/host1.ign: $(OUTPUT)/host.ign 
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
@@ -125,14 +124,14 @@ $(OUTPUT)/host1.ign: $(OUTPUT)/host.ign
 		-e 's/__HOST__/$(HOST1)/g' \
 		-e 's/__HOST_ADDRESS__/$(HOST1)/' $< > $@
 
-$(OUTPUT)/host2.ign: $(OUTPUT)/host.ign $(CERTS)
+$(OUTPUT)/host2.ign: $(OUTPUT)/host.ign
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
 		-e 's/__HOST_NAME__/host2/' \
 		-e 's/__HOST1__/$(HOST1)/' \
 		-e 's/__HOST__/$(HOST2)/g' \
 		-e 's/__HOST_ADDRESS__/$(HOST2)/' $< > $@
 
-$(OUTPUT)/host3.ign: $(OUTPUT)/host.ign $(CERTS)
+$(OUTPUT)/host3.ign: $(OUTPUT)/host.ign
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
 		-e 's/__HOST_NAME__/host3/' \
 		-e 's/__HOST1__/$(HOST1)/' \

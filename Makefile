@@ -7,6 +7,13 @@ BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 IMAGE ?= quay.io/cybozu/sabakan
 TAG ?= latest
 CFSSL_VER = 1.6.4
+CFSSL = /usr/local/bin/cfssl
+CFSSLJSON = /usr/local/bin/cfssljson
+E2E_OUTPUT=$(abspath ./e2e/output)
+E2E_CERTS = \
+	$(E2E_OUTPUT)/certs/ca.crt \
+	$(E2E_OUTPUT)/certs/server.crt\
+	$(E2E_OUTPUT)/certs/server.key.insecure
 
 .PHONY: all
 all: build
@@ -33,12 +40,13 @@ test:
 	go test -race -v ./...
 
 .PHONY: e2e
-e2e: build
+e2e: build $(E2E_CERTS)
 	RUN_E2E=1 go test -v -count=1 ./e2e
 
 .PHONY: clean
 clean:
 	rm -f $(BUILT_TARGET)
+	rm -rf $(E2E_OUTPUT)
 
 .PHONY: test-tools
 test-tools: custom-checker staticcheck etcd
@@ -72,10 +80,13 @@ docker-build: build
 	docker build --no-cache -t $(IMAGE):$(TAG) ./docker
 	rm ./docker/sabactl ./docker/sabakan ./docker/sabakan-cryptsetup ./docker/LICENSE
 
-.PHONY: setup-cfssl
 setup-cfssl:
-	curl -sSLf -o cfssl https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssl_$(CFSSL_VER)_linux_amd64
-	curl -sSLf -o cfssljson https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssljson_$(CFSSL_VER)_linux_amd64
-	chmod +x cfssl cfssljson
-	$(SUDO) mv cfssl cfssljson /usr/local/bin/
+	if ! [ -f $(CFSSL) -a -f $(CFSSLJSON) ]; then \
+		curl -sSLf -o cfssl https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssl_$(CFSSL_VER)_linux_amd64; \
+		curl -sSLf -o cfssljson https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssljson_$(CFSSL_VER)_linux_amd64; \
+		chmod +x cfssl cfssljson; \
+		$(SUDO) mv cfssl cfssljson /usr/local/bin/; \
+	fi
 
+$(E2E_CERTS): setup-cfssl
+	cd e2e/certs && ./gencerts.sh

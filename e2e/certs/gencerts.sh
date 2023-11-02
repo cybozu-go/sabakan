@@ -10,19 +10,20 @@ if ! which cfssl; then
   exit 255
 fi
 
-cfssl gencert --initca=true ./ca-csr.json | cfssljson --bare ./ca
-mv ca.pem ca.crt
+mkdir -p ../output/certs/
+cfssl gencert --initca=true ./ca-csr.json | cfssljson --bare ../output/certs/ca
+mv ../output/certs/ca.pem ../output/certs/ca.crt
 if which openssl >/dev/null; then
   openssl x509 -in ca.crt -noout -text
 fi
 
 # generate DNS: localhost, IP: 127.0.0.1, CN: example.com certificates
 cfssl gencert \
-  --ca ./ca.crt \
-  --ca-key ./ca-key.pem \
+  --ca ../output/certs//ca.crt \
+  --ca-key ../output/certs//ca-key.pem \
   --config ./gencert.json \
-  ./server-ca-csr.json | cfssljson --bare ./server
-mv server.pem server.crt
-mv server-key.pem server.key.insecure
+  ./server-ca-csr.json | cfssljson --bare ../output/certs/server
+mv ../output/certs/server.pem ../output/certs/server.crt
+mv ../output/certs/server-key.pem ../output/certs/server.key.insecure
 
-rm -f *.pem *.stderr *.txt
+cd ../output/certs/ && rm -f *.pem *.stderr *.txt

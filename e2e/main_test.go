@@ -14,11 +14,11 @@ import (
 const (
 	etcdClientURL      = "https://localhost:12379"
 	etcdPeerURL        = "https://localhost:12380"
-	etcdCA             = "./certs/ca.crt"
-	etcdCert           = "./certs/server.crt"
-	etcdKey            = "./certs/server.key.insecure"
-	sabakanTLSCertFile = "./certs/server.crt"
-	sabakanTLSKeyFile  = "./certs/server.key.insecure"
+	etcdCA             = "./output/certs/ca.crt"
+	etcdCert           = "./output/certs/server.crt"
+	etcdKey            = "./output/certs/server.key.insecure"
+	sabakanTLSCertFile = "./output/certs/server.crt"
+	sabakanTLSKeyFile  = "./output/certs/server.key.insecure"
 )
 
 func testMain(m *testing.M) (int, error) {
