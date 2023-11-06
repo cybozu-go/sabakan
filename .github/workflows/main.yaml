@@ -65,6 +65,9 @@ jobs:
       - name: Install test tools
         run: make SUDO="sudo" test-tools
 
+      - name: Setup cfssl
+        run: make SUDO="sudo" setup-cfssl
+
       - name: Build binaries
         run: make build
 

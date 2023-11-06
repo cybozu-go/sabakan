@@ -135,7 +135,7 @@ $(OUTPUT)/host3.ign: $(OUTPUT)/host.ign
 
 $(OUTPUT)/readnvram:
 	go build -o $@ ./readnvram/main.go
-	
+
 $(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt:
 	mkdir -p $(IGNITIONS)/files/etc/sabakan
 	cp $(OUTPUT)/certs/ca.crt $(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt
@@ -146,7 +146,7 @@ test: $(TEST_DEPS)
 	./test.sh "$(TARGET)"
 
 .PHONY: placemat
-placemat: gencerts $(PLACEMAT_DEPS) 
+placemat: gencerts $(PLACEMAT_DEPS)
 	sudo rm -rf $(PLACEMAT_DATADIR)
 	sudo rm -rf $(VM_SHARED_DIR)
 	sudo systemd-run --unit=placemat.service $(PLACEMAT) $(abspath output/cluster.yml)
