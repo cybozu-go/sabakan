@@ -60,11 +60,6 @@ PLACEMAT_DEPS = \
 	$(OUTPUT)/host3.ign \
 	$(OUTPUT)/ignitions \
 	$(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt
-
-CERTS = \
-	$(OUTPUT)/certs/ca.crt \
-	$(OUTPUT)/certs/server.crt\
-	$(OUTPUT)/certs/server.key.insecure
 	
 .PHONY: all
 all:
@@ -113,11 +108,11 @@ $(CT):
 	curl -fsSL -o $@ https://github.com/flatcar/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
 	chmod +x $@
 
-$(OUTPUT)/host.ign: host-ign.yml $(CT) $(CERTS)
+$(OUTPUT)/host.ign: host-ign.yml $(CT)
 	mkdir -p $(OUTPUT)
 	$(CT) -strict -in-file=host-ign.yml --files-dir=. -pretty -out-file=$@
 
-$(OUTPUT)/host1.ign: $(OUTPUT)/host.ign 
+$(OUTPUT)/host1.ign: $(OUTPUT)/host.ign
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
 		-e 's/__HOST_NAME__/host1/' \
 		-e 's/__HOST1__/$(HOST1)/' \
@@ -140,11 +135,8 @@ $(OUTPUT)/host3.ign: $(OUTPUT)/host.ign
 
 $(OUTPUT)/readnvram:
 	go build -o $@ ./readnvram/main.go
-
-$(CERTS):
-	cd ./certs && ./gencerts.sh
-
-$(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt: $(CERTS)
+	
+$(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt:
 	mkdir -p $(IGNITIONS)/files/etc/sabakan
 	cp $(OUTPUT)/certs/ca.crt $(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt
 
@@ -154,7 +146,7 @@ test: $(TEST_DEPS)
 	./test.sh "$(TARGET)"
 
 .PHONY: placemat
-placemat: $(PLACEMAT_DEPS)
+placemat: gencerts $(PLACEMAT_DEPS) 
 	sudo rm -rf $(PLACEMAT_DATADIR)
 	sudo rm -rf $(VM_SHARED_DIR)
 	sudo systemd-run --unit=placemat.service $(PLACEMAT) $(abspath output/cluster.yml)
@@ -176,3 +168,7 @@ clean:
 setup:
 	go install github.com/onsi/ginkgo/v2/ginkgo
 	sudo make -C ../ setup-cfssl
+
+.PHONY: gencerts
+gencerts:
+	cd ./certs && ./gencerts.sh

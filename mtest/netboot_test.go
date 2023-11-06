@@ -100,7 +100,7 @@ func testNetboot() {
 				if err != nil {
 					return err
 				}
-				if string(stdout) != "active\n" {
+				if strings.TrimSpace(string(stdout)) != "active" {
 					return fmt.Errorf("sabakan-cryptsetup is not active:%s", stdout)
 				}
 				return nil
