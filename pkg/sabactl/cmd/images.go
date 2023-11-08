@@ -25,7 +25,7 @@ var imagesIndexCmd = &cobra.Command{
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		well.Go(func(ctx context.Context) error {
-			index, err := api.ImagesIndex(ctx, imagesOS)
+			index, err := httpApi.ImagesIndex(ctx, imagesOS)
 			if err != nil {
 				return err
 			}
@@ -66,7 +66,7 @@ var imagesUploadCmd = &cobra.Command{
 		defer initrd.Close()
 
 		well.Go(func(ctx context.Context) error {
-			return api.ImagesUpload(ctx, imagesOS, id, kernel, kernelInfo.Size(), initrd, initrdInfo.Size())
+			return httpApi.ImagesUpload(ctx, imagesOS, id, kernel, kernelInfo.Size(), initrd, initrdInfo.Size())
 		})
 		well.Stop()
 		return well.Wait()
@@ -82,7 +82,7 @@ var imagesDeleteCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id := args[0]
 		well.Go(func(ctx context.Context) error {
-			return api.ImagesDelete(ctx, imagesOS, id)
+			return httpApi.ImagesDelete(ctx, imagesOS, id)
 		})
 		well.Stop()
 		return well.Wait()

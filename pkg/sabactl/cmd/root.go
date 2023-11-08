@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,9 +14,11 @@ import (
 )
 
 var (
-	flagServer string
-
-	api *client.Client
+	flagServer    string
+	flagTLSServer string
+	flagInsecure  bool
+	httpApi       *client.Client
+	httpsApi      *client.Client
 )
 
 const (
@@ -66,7 +69,17 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		api, err = client.NewClient(flagServer, &http.Client{})
+		httpApi, err = client.NewClient(flagServer, &http.Client{})
+		if err != nil {
+			return err
+		}
+		httpsApi, err = client.NewClient(flagTLSServer, &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: flagInsecure,
+				},
+			},
+		})
 		if err != nil {
 			return err
 		}
@@ -102,4 +115,6 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&flagServer, "server", "http://localhost:10080", "<Listen IP>:<Port number>")
+	rootCmd.PersistentFlags().StringVar(&flagTLSServer, "tls-server", "https://localhost:10443", "<Listen IP>:<Port number>")
+	rootCmd.PersistentFlags().BoolVar(&flagInsecure, "insecure", false, "Disable TLS verification")
 }

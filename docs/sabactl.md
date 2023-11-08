@@ -8,9 +8,11 @@ Usage
 $ sabactl [--server http://localhost:10080] <subcommand> <args>...
 ```
 
-| Option     | Default value            | Description    |
-| ---------- | ------------------------ | -------------- |
-| `--server` | `http://localhost:10080` | URL of sabakan |
+| Option         | Default value            | Description                          |
+| -------------- | ------------------------ | ------------------------------------ |
+| `--server`     | `http://localhost:10080` | URL of sabakan server                |
+| `--tls-server` | `https://localhost:10443`| URL of sabakan TLS server            |
+| `--insecure`   | `false`                  | Disable TLS certificate verification |
 
 `sabactl ipam set -f FILE`
 --------------------------

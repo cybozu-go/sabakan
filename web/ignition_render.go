@@ -59,8 +59,11 @@ func (s Server) handleIgnitions(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) renderIgnition(tmpl *sabakan.IgnitionTemplate, m *sabakan.Machine) (interface{}, error) {
 	myURL := s.MyURL.String()
+	myURLHTTPS := s.MyURLHTTPS.String()
+
 	tmplFuncs := template.FuncMap{
-		"MyURL": func() string { return myURL },
+		"MyURL":      func() string { return myURL },
+		"MyURLHTTPS": func() string { return myURLHTTPS },
 		"Metadata": func(key string) (interface{}, error) {
 			val, ok := tmpl.Metadata[key]
 			if !ok {

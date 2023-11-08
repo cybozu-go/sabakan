@@ -6,7 +6,6 @@ storage:
       contents:
         inline: |
           __HOST_NAME__
-
     - path: "/etc/hosts"
       filesystem: root
       mode: 0644
@@ -14,23 +13,31 @@ storage:
         inline: |
           127.0.0.1	localhost
           ::1		localhost
-
     - path: "/etc/sabakan.yml"
       filesystem: root
       contents:
         inline: |
           advertise-url: http://__HOST__:10080
+          advertise-url-https: https://__HOST__:10443
           allow-ips: [0.0.0.0/0]
           dhcp-bind: 0.0.0.0:67
           etcd:
             endpoints: [http://__HOST1__:2379]
       mode: 0644
-
+    - path: "/etc/sabakan/server.crt"
+      filesystem: root
+      mode: 0644
+      contents:
+        local: ./output/certs/server.crt
+    - path: "/etc/sabakan/server.key"
+      filesystem: root
+      mode: 0644
+      contents:
+        local: ./output/certs/server.key.insecure
   directories:
     - filesystem: root
       path: "/opt/bin"
       mode: 0755
-
 networkd:
   units:
     - name: 00-eth0.network
@@ -43,7 +50,6 @@ networkd:
         Gateway=__BRIDGE_ADDRESS__
         DNS=8.8.8.8
         DNS=1.1.1.1
-
 passwd:
   users:
     - name: cybozu
@@ -53,15 +59,12 @@ passwd:
       groups:
         - docker
         - sudo
-
 systemd:
   units:
     - name: update-engine.service
       mask: true
-
     - name: locksmithd.service
       mask: true
-
     - name: ignitions.mount
       enable: true
       contents: |

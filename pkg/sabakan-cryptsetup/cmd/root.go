@@ -14,6 +14,7 @@ const (
 	defaultTPMDev     = "/dev/tpm0"
 	defaultCipher     = "aes-xts-plain64"
 	defaultKeySize    = 512
+	defaultCACert     = "/etc/sabakan/sabakan-tls-ca.crt"
 )
 
 var opts struct {
@@ -22,6 +23,7 @@ var opts struct {
 	tpmdev     string
 	keySize    int
 	excludes   []string
+	caCert     string
 }
 
 var rootCmd = &cobra.Command{
@@ -76,4 +78,5 @@ func init() {
 	rootCmd.Flags().StringVar(&opts.cipher, "cipher", defaultCipher, "cipher specification")
 	rootCmd.Flags().IntVar(&opts.keySize, "keysize", defaultKeySize, "key size in bits")
 	rootCmd.Flags().StringArrayVar(&opts.excludes, "excludes", nil, `disk name patterns to be excluded, e.g. "nvme*"`)
+	rootCmd.Flags().StringVar(&opts.caCert, "cert", defaultCACert, "location of sabakan CA certificate")
 }

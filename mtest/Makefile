@@ -27,7 +27,9 @@ SSH_PRIVKEY = $(realpath ./mtest_key)
 OUTPUT := ./output
 COREOS_IMAGE := flatcar_production_qemu_image.img
 SABAKAN_IMAGE := $(abspath $(OUTPUT))/sabakan.img
-SABAKAN_IMAGE_URL := quay.io/cybozu/sabakan:dev
+SABAKAN_IMAGE_NAME := quay.io/cybozu/sabakan
+SABAKAN_IMAGE_TAG := dev
+SABAKAN_IMAGE_URL := $(SABAKAN_IMAGE_NAME):$(SABAKAN_IMAGE_TAG)
 CT := $(abspath $(OUTPUT))/ct
 ETCD := $(abspath $(OUTPUT))/etcd
 ETCDCTL := $(abspath $(OUTPUT))/etcdctl
@@ -56,8 +58,9 @@ PLACEMAT_DEPS = \
 	$(OUTPUT)/host1.ign \
 	$(OUTPUT)/host2.ign \
 	$(OUTPUT)/host3.ign \
-	$(OUTPUT)/ignitions
-
+	$(OUTPUT)/ignitions \
+	$(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt
+	
 .PHONY: all
 all:
 	@echo "Specify one of these targets:"
@@ -84,11 +87,7 @@ $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	touch $@
 
 $(OUTPUT)/sabakan.img:
-	GOBIN=$(shell pwd)/../docker CGO_ENABLED=0 go install ../pkg/sabakan
-	GOBIN=$(shell pwd)/../docker CGO_ENABLED=0 go install ../pkg/sabakan-cryptsetup
-	GOBIN=$(shell pwd)/../docker CGO_ENABLED=0 go install ../pkg/sabactl
-	cp ../LICENSE $(shell pwd)/../docker
-	sudo docker build --no-cache --rm=false -t $(SABAKAN_IMAGE_URL) ../docker/
+	make -C ../ IMG=$(SABAKAN_IMAGE_NAME) TAG=$(SABAKAN_IMAGE_TAG) docker-build
 	mkdir -p $(OUTPUT)
 	sudo docker save $(SABAKAN_IMAGE_URL) > $@
 
@@ -111,31 +110,35 @@ $(CT):
 
 $(OUTPUT)/host.ign: host-ign.yml $(CT)
 	mkdir -p $(OUTPUT)
-	$(CT) -strict -in-file=$< -pretty -out-file=$@
+	$(CT) -strict -in-file=host-ign.yml --files-dir=. -pretty -out-file=$@
 
 $(OUTPUT)/host1.ign: $(OUTPUT)/host.ign
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
 		-e 's/__HOST_NAME__/host1/' \
 		-e 's/__HOST1__/$(HOST1)/' \
-		-e 's/__HOST__/$(HOST1)/' \
+		-e 's/__HOST__/$(HOST1)/g' \
 		-e 's/__HOST_ADDRESS__/$(HOST1)/' $< > $@
 
 $(OUTPUT)/host2.ign: $(OUTPUT)/host.ign
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
 		-e 's/__HOST_NAME__/host2/' \
 		-e 's/__HOST1__/$(HOST1)/' \
-		-e 's/__HOST__/$(HOST2)/' \
+		-e 's/__HOST__/$(HOST2)/g' \
 		-e 's/__HOST_ADDRESS__/$(HOST2)/' $< > $@
 
 $(OUTPUT)/host3.ign: $(OUTPUT)/host.ign
 	sed -e 's/__BRIDGE_ADDRESS__/$(BRIDGE_ADDRESS)/' \
 		-e 's/__HOST_NAME__/host3/' \
 		-e 's/__HOST1__/$(HOST1)/' \
-		-e 's/__HOST__/$(HOST3)/' \
+		-e 's/__HOST__/$(HOST3)/g' \
 		-e 's/__HOST_ADDRESS__/$(HOST3)/' $< > $@
 
 $(OUTPUT)/readnvram:
 	go build -o $@ ./readnvram/main.go
+
+$(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt:
+	mkdir -p $(IGNITIONS)/files/etc/sabakan
+	cp $(OUTPUT)/certs/ca.crt $(IGNITIONS)/files/etc/sabakan/sabakan-tls-ca.crt
 
 # Targets
 .PHONY: test
@@ -143,7 +146,7 @@ test: $(TEST_DEPS)
 	./test.sh "$(TARGET)"
 
 .PHONY: placemat
-placemat: $(PLACEMAT_DEPS)
+placemat: gencerts $(PLACEMAT_DEPS)
 	sudo rm -rf $(PLACEMAT_DATADIR)
 	sudo rm -rf $(VM_SHARED_DIR)
 	sudo systemd-run --unit=placemat.service $(PLACEMAT) $(abspath output/cluster.yml)
@@ -164,3 +167,8 @@ clean:
 .PHONY: setup
 setup:
 	go install github.com/onsi/ginkgo/v2/ginkgo
+	sudo make -C ../ setup-cfssl
+
+.PHONY: gencerts
+gencerts:
+	cd ./certs && ./gencerts.sh

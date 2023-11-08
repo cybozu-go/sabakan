@@ -12,18 +12,14 @@ import (
 )
 
 const (
-	etcdClientURL = "https://localhost:12379"
-	etcdPeerURL   = "https://localhost:12380"
-	etcdCA        = "./certs/ca.crt"
-	etcdCert      = "./certs/server.crt"
-	etcdKey       = "./certs/server.key.insecure"
+	etcdClientURL      = "https://localhost:12379"
+	etcdPeerURL        = "https://localhost:12380"
+	etcdCA             = "./output/certs/ca.crt"
+	etcdCert           = "./output/certs/server.crt"
+	etcdKey            = "./output/certs/server.key.insecure"
+	sabakanTLSCertFile = "./output/certs/server.crt"
+	sabakanTLSKeyFile  = "./output/certs/server.key.insecure"
 )
-
-var ci = false
-
-func init() {
-	ci = os.Getenv("CI") == "true"
-}
 
 func testMain(m *testing.M) (int, error) {
 	stopEtcd := runEtcd()
@@ -76,11 +72,6 @@ func runEtcd() func() {
 }
 
 func TestMain(m *testing.M) {
-	if ci {
-		code := m.Run()
-		os.Exit(code)
-	}
-
 	if len(os.Getenv("RUN_E2E")) == 0 {
 		os.Exit(0)
 	}
@@ -106,7 +97,10 @@ func runSabakan() (func(), error) {
 		"-etcd-tls-cert", etcdCert,
 		"-etcd-tls-key", etcdKey,
 		"-advertise-url", "http://localhost:10080",
+		"-advertise-url-https", "https://localhost:10443",
 		"-data-dir", dataDir,
+		"-server-cert", sabakanTLSCertFile,
+		"-server-key", sabakanTLSKeyFile,
 	)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr

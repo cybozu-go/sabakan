@@ -425,7 +425,7 @@ func testMachinesDelete(t *testing.T) {
 
 func testMachinesGraphQL(t *testing.T) {
 	m := mock.NewModel()
-	handler := NewServer(m, "", "", nil, nil, false, nil)
+	handler := NewServer(m, "", "", nil, nil, nil, false, nil, false)
 
 	m.Machine.Register(context.Background(), []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{

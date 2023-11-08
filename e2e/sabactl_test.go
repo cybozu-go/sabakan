@@ -353,7 +353,7 @@ func testSabactlMachines(t *testing.T) {
 		t.Fatal("exit code:", code)
 	}
 
-	stdout, stderr, err = runSabactl("crypts", "delete", "--force", "12345678")
+	stdout, stderr, err = runSabactl("crypts", "delete", "--force", "12345678", "--insecure=true")
 	code = exitCode(err)
 	if code != ExitSuccess {
 		t.Log("stdout:", stdout.String())

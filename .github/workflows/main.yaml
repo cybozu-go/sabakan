@@ -8,8 +8,8 @@ env:
   go-version: "1.20"
   filename: 'main.yaml'
 jobs:
-  build:
-    name: Build
+  static-check:
+    name: Static Check
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -19,9 +19,6 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ env.go-version }}
-
-      - name: Start etcd container 
-        run: docker run -d --network host gcr.io/etcd-development/etcd:v3.5.7
 
       - name: Install test tools
         run: make SUDO="sudo" test-tools
@@ -32,35 +29,9 @@ jobs:
       - name: Run code check tools
         run: make code-check
 
-      - name: Build binaries
-        run: make build
-
-      - name: Start sabakan
-        run: |
-          sudo ./sabakan -dhcp-bind 0.0.0.0:10067 \
-          -etcd-endpoints http://localhost:2379 \
-          -advertise-url http://localhost:10080 &
-
-      - name: Run test
-        run: make test
-
-      - name: Prepare for uploading sabakan binaries
-        run: |
-          mkdir /tmp/workspace
-          cp ./sabakan ./sabactl ./sabakan-cryptsetup /tmp/workspace
-          cp LICENSE /tmp/workspace
-
-      - name: Upload sabakan binaries
-        uses: actions/upload-artifact@v3
-        with:
-          name: sabakan-binaries
-          path: /tmp/workspace
-          retention-days: 1
-
-  build-image:
-    name: Build Images
+  unit-test:
+    name: Unit Test
     runs-on: ubuntu-22.04
-    needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -70,24 +41,56 @@ jobs:
         with:
           go-version: ${{ env.go-version }}
 
-      - name: Download sabakan binaries
-        uses: actions/download-artifact@v3
+      - name: Install test tools
+        run: make SUDO="sudo" test-tools
+
+      - name: Build binaries
+        run: make build
+
+      - name: Run test
+        run: make test
+
+  e2e-test:
+    name: e2e Test
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup golang
+        uses: actions/setup-go@v3
         with:
-          name: sabakan-binaries
-          path: ./docker
+          go-version: ${{ env.go-version }}
 
-      - name: Build sabakan image
-        run: docker build -t quay.io/cybozu/sabakan:latest ./docker
+      - name: Install test tools
+        run: make SUDO="sudo" test-tools
 
-      - name: Save Image
-        run: |
-            mkdir -p /tmp/docker
-            docker save quay.io/cybozu/sabakan:latest -o /tmp/docker/image
+      - name: Setup cfssl
+        run: make SUDO="sudo" setup-cfssl
+
+      - name: Build binaries
+        run: make build
+
+      - name: Run test
+        run: make e2e
+
+  build-image:
+    name: Build Images
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.go-version }}
+      - name: Build image
+        run: make docker-build
 
   mtest:
     name: Multi-host test
     runs-on: ubuntu-22.04
-    needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v3

@@ -24,7 +24,7 @@ var assetsIndexCmd = &cobra.Command{
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		well.Go(func(ctx context.Context) error {
-			index, err := api.AssetsIndex(ctx)
+			index, err := httpApi.AssetsIndex(ctx)
 			if err != nil {
 				return err
 			}
@@ -46,7 +46,7 @@ var assetsInfoCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 		well.Go(func(ctx context.Context) error {
-			info, err := api.AssetsInfo(ctx, name)
+			info, err := httpApi.AssetsInfo(ctx, name)
 			if err != nil {
 				return err
 			}
@@ -69,7 +69,7 @@ var assetsUploadCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name, path := args[0], args[1]
 		well.Go(func(ctx context.Context) error {
-			st, err := api.AssetsUpload(ctx, name, path, assetsUploadMeta)
+			st, err := httpApi.AssetsUpload(ctx, name, path, assetsUploadMeta)
 			if err != nil {
 				return err
 			}
@@ -92,7 +92,7 @@ var assetsDeleteCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 		well.Go(func(ctx context.Context) error {
-			return api.AssetsDelete(ctx, name)
+			return httpApi.AssetsDelete(ctx, name)
 		})
 		well.Stop()
 		return well.Wait()

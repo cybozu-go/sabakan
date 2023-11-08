@@ -214,7 +214,7 @@ func runSabakan(image string) error {
 				return err
 			}
 			defer sess.Close()
-			return sess.Run("sudo mkdir -p /var/lib/sabakan && sudo systemd-run --unit=sabakan.service docker run --rm --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE --network host --name sabakan --mount type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan --mount type=bind,source=/etc/sabakan.yml,target=/etc/sabakan.yml " + image + " -config-file /etc/sabakan.yml")
+			return sess.Run("sudo mkdir -p /var/lib/sabakan && sudo systemd-run --unit=sabakan.service docker run --rm --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE --network host --name sabakan --mount type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan --mount type=bind,source=/etc/sabakan,target=/etc/sabakan --mount type=bind,source=/etc/sabakan.yml,target=/etc/sabakan.yml " + image + " -config-file /etc/sabakan.yml")
 		})
 	}
 	env.Stop()
@@ -301,5 +301,6 @@ func startHost2Sabakan(image string) ([]byte, []byte, error) {
 		"--network", "host", "--name", "sabakan",
 		"--mount", "type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan",
 		"--mount", "type=bind,source=/etc/sabakan.yml,target=/etc/sabakan.yml",
+		"--mount", "type=bind,source=/etc/sabakan,target=/etc/sabakan",
 		image, "-config-file=/etc/sabakan.yml")
 }

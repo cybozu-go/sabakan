@@ -26,7 +26,7 @@ var dhcpGetCmd = &cobra.Command{
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		well.Go(func(ctx context.Context) error {
-			conf, err := api.DHCPConfigGet(ctx)
+			conf, err := httpApi.DHCPConfigGet(ctx)
 			if err != nil {
 				return err
 			}
@@ -57,7 +57,7 @@ var dhcpSetCmd = &cobra.Command{
 		}
 
 		well.Go(func(ctx context.Context) error {
-			return api.DHCPConfigSet(ctx, &conf)
+			return httpApi.DHCPConfigSet(ctx, &conf)
 		})
 		well.Stop()
 		return well.Wait()

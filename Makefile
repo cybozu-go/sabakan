@@ -4,6 +4,12 @@
 ETCD_VERSION = 3.5.7
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
+IMAGE ?= quay.io/cybozu/sabakan
+TAG ?= latest
+CFSSL_VER = 1.6.4
+CFSSL = /usr/local/bin/cfssl
+CFSSLJSON = /usr/local/bin/cfssljson
+E2E_OUTPUT=./e2e/output
 
 .PHONY: all
 all: build
@@ -31,11 +37,13 @@ test:
 
 .PHONY: e2e
 e2e: build
+	cd e2e/certs && ./gencerts.sh
 	RUN_E2E=1 go test -v -count=1 ./e2e
 
 .PHONY: clean
 clean:
 	rm -f $(BUILT_TARGET)
+	rm -rf $(E2E_OUTPUT)
 
 .PHONY: test-tools
 test-tools: custom-checker staticcheck etcd
@@ -60,4 +68,20 @@ etcd:
 		tar xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/etcd --strip-components=1; \
 		$(SUDO) mv /tmp/etcd/etcd /usr/local/bin/; \
 		rm -rf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz /tmp/etcd; \
+	fi
+
+.PHONY: docker-build
+docker-build: build
+	cp LICENSE ./docker
+	cp ./sabakan ./sabactl ./sabakan-cryptsetup ./docker
+	docker build --no-cache -t $(IMAGE):$(TAG) ./docker
+	rm ./docker/sabactl ./docker/sabakan ./docker/sabakan-cryptsetup ./docker/LICENSE
+
+.PHONY: setup-cfssl
+setup-cfssl:
+	if ! [ -f $(CFSSL) -a -f $(CFSSLJSON) ]; then \
+		curl -sSLf -o cfssl https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssl_$(CFSSL_VER)_linux_amd64; \
+		curl -sSLf -o cfssljson https://github.com/cloudflare/cfssl/releases/download/v$(CFSSL_VER)/cfssljson_$(CFSSL_VER)_linux_amd64; \
+		chmod +x cfssl cfssljson; \
+		$(SUDO) mv cfssl cfssljson /usr/local/bin/; \
 	fi

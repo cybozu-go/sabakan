@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"net"
 	"net/http"
@@ -35,6 +37,13 @@ type Driver struct {
 // It may return nil when the serial code of the machine cannot be identified,
 // or sabakanURL is not valid.
 func NewDriver(sabakanURL, cipher string, keySize int, tpmdev string, disks []Disk) (*Driver, error) {
+	crt, err := os.ReadFile(opts.caCert)
+	if err != nil {
+		return nil, err
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(crt)
+
 	hc := &http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
@@ -45,6 +54,9 @@ func NewDriver(sabakanURL, cipher string, keySize int, tpmdev string, disks []Di
 			IdleConnTimeout:       90 * time.Second,
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
 		},
 	}
 	saba, err := sabakan.NewClient(sabakanURL, hc)
