@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/clientv3util"
 )

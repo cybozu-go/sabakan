@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

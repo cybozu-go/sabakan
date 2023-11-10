@@ -9,7 +9,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
 	"github.com/spf13/cobra"
 )

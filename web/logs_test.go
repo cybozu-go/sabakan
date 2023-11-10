@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cybozu-go/sabakan/v2"
-	"github.com/cybozu-go/sabakan/v2/models/mock"
+	"github.com/cybozu-go/sabakan/v3"
+	"github.com/cybozu-go/sabakan/v3/models/mock"
 )
 
 func TestLogs(t *testing.T) {

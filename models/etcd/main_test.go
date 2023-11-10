@@ -11,7 +11,7 @@ import (
 
 	"github.com/cybozu-go/etcdutil"
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )

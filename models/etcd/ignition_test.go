@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 	"github.com/google/go-cmp/cmp"
 )
 

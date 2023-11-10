@@ -1,6 +1,6 @@
 package graph
 
-import sabakan "github.com/cybozu-go/sabakan/v2"
+import sabakan "github.com/cybozu-go/sabakan/v3"
 
 // This file will not be regenerated automatically.
 //

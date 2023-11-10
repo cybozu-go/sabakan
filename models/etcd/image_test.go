@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func newTestImage(kernel, initrd string) io.Reader {

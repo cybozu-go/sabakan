@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func (d *driver) machineRegister(ctx context.Context, machines []*sabakan.Machine) error {

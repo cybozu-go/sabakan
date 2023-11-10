@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cybozu-go/sabakan/v2"
-	"github.com/cybozu-go/sabakan/v2/models/mock"
+	"github.com/cybozu-go/sabakan/v3"
+	"github.com/cybozu-go/sabakan/v3/models/mock"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 )
