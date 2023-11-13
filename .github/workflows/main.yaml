@@ -18,7 +18,7 @@ jobs:
       - name: Setup golang
         uses: actions/setup-go@v4
         with:
-          go-version: ${{ env.go-version }}
+          go-version-file: go.mod
 
       - name: Install test tools
         run: make SUDO="sudo" test-tools
@@ -39,7 +39,7 @@ jobs:
       - name: Setup golang
         uses: actions/setup-go@v4
         with:
-          go-version: ${{ env.go-version }}
+          go-version-file: go.mod
 
       - name: Install test tools
         run: make SUDO="sudo" test-tools
@@ -60,7 +60,7 @@ jobs:
       - name: Setup golang
         uses: actions/setup-go@v4
         with:
-          go-version: ${{ env.go-version }}
+          go-version-file: go.mod
 
       - name: Install test tools
         run: make SUDO="sudo" test-tools
@@ -84,7 +84,8 @@ jobs:
       - name: Setup golang
         uses: actions/setup-go@v4
         with:
-          go-version: ${{ env.go-version }}
+          go-version-file: go.mod
+
       - name: Build image
         run: make docker-build
 
@@ -98,7 +99,7 @@ jobs:
       - name: Setup golang
         uses: actions/setup-go@v4
         with:
-          go-version: ${{ env.go-version }}
+          go-version-file: go.mod
 
       - id: auth
         uses: google-github-actions/auth@v1
