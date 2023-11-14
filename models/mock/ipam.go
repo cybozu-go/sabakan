@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func (d *driver) putIPAMConfig(ctx context.Context, config *sabakan.IPAMConfig) error {

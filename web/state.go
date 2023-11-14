@@ -4,7 +4,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func (s Server) handleState(w http.ResponseWriter, r *http.Request) {

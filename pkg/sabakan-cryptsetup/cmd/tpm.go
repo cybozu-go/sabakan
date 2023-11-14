@@ -5,8 +5,8 @@ import (
 	"io"
 
 	"github.com/cybozu-go/log"
+	"github.com/google/go-tpm/legacy/tpm2"
 	"github.com/google/go-tpm/tpm"
-	"github.com/google/go-tpm/tpm2"
 	"github.com/google/go-tpm/tpmutil"
 )
 

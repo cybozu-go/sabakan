@@ -3,7 +3,7 @@
 package model
 
 import (
-	sabakan "github.com/cybozu-go/sabakan/v2"
+	sabakan "github.com/cybozu-go/sabakan/v3"
 )
 
 // Label represents an arbitrary key-value pairs.
@@ -20,9 +20,9 @@ type LabelInput struct {
 
 // MachineParams is a set of input parameters to search machines.
 type MachineParams struct {
-	Labels              []*LabelInput          `json:"labels"`
-	Racks               []int                  `json:"racks"`
-	Roles               []string               `json:"roles"`
-	States              []sabakan.MachineState `json:"states"`
-	MinDaysBeforeRetire *int                   `json:"minDaysBeforeRetire"`
+	Labels              []*LabelInput          `json:"labels,omitempty"`
+	Racks               []int                  `json:"racks,omitempty"`
+	Roles               []string               `json:"roles,omitempty"`
+	States              []sabakan.MachineState `json:"states,omitempty"`
+	MinDaysBeforeRetire *int                   `json:"minDaysBeforeRetire,omitempty"`
 }

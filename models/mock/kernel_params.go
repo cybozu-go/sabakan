@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 type kernelParamsDriver struct {

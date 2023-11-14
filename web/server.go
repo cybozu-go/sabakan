@@ -10,10 +10,10 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/cybozu-go/sabakan/v2"
-	"github.com/cybozu-go/sabakan/v2/gql/graph"
-	"github.com/cybozu-go/sabakan/v2/gql/graph/generated"
-	"github.com/cybozu-go/sabakan/v2/metrics"
+	"github.com/cybozu-go/sabakan/v3"
+	"github.com/cybozu-go/sabakan/v3/gql/graph"
+	"github.com/cybozu-go/sabakan/v3/gql/graph/generated"
+	"github.com/cybozu-go/sabakan/v3/metrics"
 )
 
 const (

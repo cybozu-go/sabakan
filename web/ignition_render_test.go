@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cybozu-go/sabakan/v2"
-	"github.com/cybozu-go/sabakan/v2/models/mock"
+	"github.com/cybozu-go/sabakan/v3"
+	"github.com/cybozu-go/sabakan/v3/models/mock"
 	ign23 "github.com/flatcar/ignition/config/v2_3/types"
 	"github.com/google/go-cmp/cmp"
 )

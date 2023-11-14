@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	sabakan "github.com/cybozu-go/sabakan/v2/client"
+	sabakan "github.com/cybozu-go/sabakan/v3/client"
 )
 
 const maxRetry = 10

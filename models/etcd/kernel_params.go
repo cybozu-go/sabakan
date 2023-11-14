@@ -4,7 +4,7 @@ import (
 	"context"
 	"path"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func (d *driver) putParams(ctx context.Context, os string, params string) error {

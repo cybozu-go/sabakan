@@ -4,7 +4,6 @@ on:
     tags:
       - 'v*'
 env:
-  go-version: "1.20"
   tag: ${GITHUB_REF#refs/tags/v}
   prerelease: ${{ contains(github.ref, '-') }}
 jobs:
@@ -13,12 +12,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup golang
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
-          go-version: ${{ env.go-version }}
+          go-version-file: go.mod
 
       - name: Build image
         run: make docker-build

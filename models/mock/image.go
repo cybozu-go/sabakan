@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v2"
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 type imageData struct {
