@@ -4,7 +4,6 @@ on:
     tags:
       - 'v*'
 env:
-  go-version: "1.21"
   tag: ${GITHUB_REF#refs/tags/v}
   prerelease: ${{ contains(github.ref, '-') }}
 jobs:
