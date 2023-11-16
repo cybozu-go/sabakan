@@ -10,6 +10,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - TLS is now required for crypts API ([#270](https://github.com/cybozu-go/sabakan/pull/270))
   - see docs about [HTTPS API](https://github.com/cybozu-go/sabakan/pull/272) and [Usage](https://github.com/cybozu-go/sabakan/blob/main/docs/sabakan.md#usage)
+- Bump version to v3 and update dependencies in [#273](https://github.com/cybozu-go/sabakan/pull/273)
+- Update dependencies in [#266](https://github.com/cybozu-go/sabakan/pull/266)
 
 ### Fixed
 - Fix to check error of etcd watch response in [#267](https://github.com/cybozu-go/sabakan/pull/267)
