@@ -5,9 +5,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-### Fixed
+## [3.0.0] - 2023-11-16
 
+### Changed
+- TLS is now required for crypts API ([#270](https://github.com/cybozu-go/sabakan/pull/270))
+  - see docs about [HTTPS API](https://github.com/cybozu-go/sabakan/pull/272) and [Usage](https://github.com/cybozu-go/sabakan/blob/main/docs/sabakan.md#usage)
+- Bump version to v3 and update dependencies in [#273](https://github.com/cybozu-go/sabakan/pull/273)
+- Update dependencies in [#266](https://github.com/cybozu-go/sabakan/pull/266)
+
+### Fixed
 - Fix to check error of etcd watch response in [#267](https://github.com/cybozu-go/sabakan/pull/267)
+- Enable tests related with vTPM ([#272](https://github.com/cybozu-go/sabakan/pull/272))
 
 ## [2.13.2] - 2023-02-24
 
@@ -256,16 +264,16 @@ No changes.  Only for updating Docker base image.
 ## [1.2.0] - 2019-02-13
 
 ### Added
-- `Machine.Info` brings NIC configuration information ([#136](https://github.com/cybozu-go/sabakan/pull/136)).  
+- `Machine.Info` brings NIC configuration information ([#136](https://github.com/cybozu-go/sabakan/pull/136)).
     This new information is also exposed in GraphQL and REST API.
-- `ipam.json` adds new mandatory field `node-gateway-offset` ([#136](https://github.com/cybozu-go/sabakan/pull/136)).  
+- `ipam.json` adds new mandatory field `node-gateway-offset` ([#136](https://github.com/cybozu-go/sabakan/pull/136)).
     Existing installations continue to work thanks to automatic data conversion.
 
 ### Changed
 - GraphQL data type `BMCInfoIPv4` is renamed to `NICConfig`.
 
 ### Removed
-- `dhcp.json` obsoletes `gateway-offset` field ([#136](https://github.com/cybozu-go/sabakan/pull/136)).  
+- `dhcp.json` obsoletes `gateway-offset` field ([#136](https://github.com/cybozu-go/sabakan/pull/136)).
     The field is moved to `ipam.json` as `node-gateway-offset`.
 
 ## [1.1.0] - 2019-01-29
@@ -291,7 +299,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v2.13.2...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/cybozu-go/sabakan/compare/v2.13.2...v3.0.0
 [2.13.2]: https://github.com/cybozu-go/sabakan/compare/v2.13.1...v2.13.2
 [2.13.1]: https://github.com/cybozu-go/sabakan/compare/v2.13.0...v2.13.1
 [2.13.0]: https://github.com/cybozu-go/sabakan/compare/v2.12.0...v2.13.0

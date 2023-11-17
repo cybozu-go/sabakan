@@ -37,8 +37,7 @@ It should look like:
 
 Increment schema version
 ------------------------
-
-When a backward-incompatible change is to be merged to `main`, the schema version must be incremented
+When a backward-incompatible change in the data structure which is stored in etcd is to be merged to `main`, the schema version must be incremented
 and conversion from old schema need to be implemented.
 
 1. Increment `SchemaVersion` in [version.go](./version.go) by 1.
