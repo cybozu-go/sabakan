@@ -8,6 +8,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"slices"
 	"strconv"
 	"time"
 
@@ -38,6 +39,10 @@ RETRY:
 
 	// asset has been replaced
 	if a.ID != asset.ID {
+		return nil
+	}
+
+	if slices.Contains(a.URLs, d.myURL("/api/v1/assets", a.Name)) {
 		return nil
 	}
 
