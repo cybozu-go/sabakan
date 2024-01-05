@@ -42,11 +42,13 @@ RETRY:
 		return nil
 	}
 
-	if slices.Contains(a.URLs, d.myURL("/api/v1/assets", a.Name)) {
+	currentURLs := slices.Clone(a.URLs)
+	a.URLs = append(a.URLs, d.myURL("/api/v1/assets", a.Name))
+	slices.Sort(a.URLs)
+	slices.Compact(a.URLs)
+	if slices.Equal(currentURLs, a.URLs) || len(a.URLs) > maxAssetURLs {
 		return nil
 	}
-
-	a.URLs = append(a.URLs, d.myURL("/api/v1/assets", a.Name))
 	key := KeyAssets + a.Name
 
 	j, err := json.Marshal(a)
@@ -125,11 +127,9 @@ func (d *driver) downloadAsset(ctx context.Context, asset *sabakan.Asset) error 
 		return err
 	}
 
-	if len(asset.URLs) < maxAssetURLs {
-		err = d.addAssetURL(ctx, asset)
-		if err != nil {
-			return err
-		}
+	err = d.addAssetURL(ctx, asset)
+	if err != nil {
+		return err
 	}
 
 	return nil
