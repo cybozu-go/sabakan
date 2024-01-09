@@ -64,7 +64,7 @@ A sample systemd service file is available at
 [pkg/sabakan/sabakan.service](../pkg/sabakan/sabakan.service).
 
 Alternatively, you may use docker to run sabakan:
-* Repository: [quay.io/cybozu/sabakan](https://quay.io/cybozu/sabakan)
+* Repository: [ghcr.io/cybozu-go/sabakan](https://github.com/cybozu-go/sabakan/pkgs/container/sabakan)
 * Usage: https://github.com/cybozu/neco-containers/blob/main/sabakan/README.md
 
 ## <a name="netboot" />Netboot

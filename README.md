@@ -111,7 +111,7 @@ $ sudo mkdir -p /var/lib/sabakan
 $ docker run -d --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE \
     --network host --name sabakan \
     --mount type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan \
-    quay.io/cybozu/sabakan:2.2 \
+    ghcr.io/cybozu-go/sabakan:3.1 \
     -etcd-endpoints http://foo.bar:2379,http://zot.bar:2379 \
     -advertise-url http://12.34.56.78:10080
 ```
@@ -124,7 +124,7 @@ Sabakan is licensed under the Apache License, Version 2.0.
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/sabakan)
+Docker images are available on [ghcr.io](https://github.com/cybozu-go/sabakan/pkgs/container/sabakan)
 
 [releases]: https://github.com/cybozu-go/sabakan/releases
 [etcd]: https://coreos.com/etcd/
