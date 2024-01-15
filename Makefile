@@ -4,7 +4,7 @@
 ETCD_VERSION = 3.5.7
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
-IMAGE ?= quay.io/cybozu/sabakan
+IMAGE ?= ghcr.io/cybozu-go/sabakan
 TAG ?= latest
 CFSSL_VER = 1.6.4
 CFSSL = /usr/local/bin/cfssl
