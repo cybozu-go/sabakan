@@ -5,6 +5,23 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [3.1.0] - 2024-01-16
+
+### Breaking Changes
+
+#### Migrate image registry
+
+We migrated the image repository of sabakan to `ghcr.io`.
+From sabakan v3.1.0, please use the following image.
+
+- https://github.com/cybozu-go/sabakan/pkgs/container/sabakan
+
+The [quay.io/cybozu/sabakan](https://quay.io/repository/cybozu/sabakan) will not be updated in the future.
+
+### Changed
+
+- Migrate to ghcr.io (#276)
+
 ## [3.0.0] - 2023-11-16
 
 ### Changed
