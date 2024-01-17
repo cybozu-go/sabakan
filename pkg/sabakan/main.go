@@ -128,7 +128,7 @@ func subMain(ctx context.Context) error {
 		return err
 	}
 	if cfg.AdvertiseURLHTTPS == "" {
-		return errors.New("advertise-url-http must be specified")
+		return errors.New("advertise-url-https must be specified")
 	}
 	advertiseURLHTTPS, err := url.Parse(cfg.AdvertiseURLHTTPS)
 	if err != nil {
