@@ -35,11 +35,26 @@ $ docker run -d --rm --name etcd --network=host --uts=host gcr.io/etcd-developme
 $ sudo mkdir -p /var/lib/sabakan
 ```
 
+### <a name="certs" />Prepare server certificate
+
+Create self-signed server certificate by using script and put it to `/etc/sabakan`:
+```console
+$ sudo mkdir -p /etc/sabakan
+$ git clone github.com/cybozu-go/sabakan
+$ make setup-cfssl
+$ cd e2e/certs && ./gencerts.sh
+$ cd ../..
+$ sudo cp e2e/output/certs/server.crt /etc/sabakan/server.crt
+$ sudo cp e2e/output/certs/server.key.insecure /etc/sabakan/server.key
+```
+
 ### <a name="configure" />Prepare sabakan.yml
 
 Save the following contents as `/usr/local/etc/sabakan.yml`:
 
 ```yaml
+advertise-url: http://localhost:10080
+advertise-url-https: https://localhost:10443
 etcd:
   endpoints:
     - http://localhost:2379

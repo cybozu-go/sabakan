@@ -60,7 +60,7 @@ Features
     To help implementing full disk encryption on client machines, sabakan accepts and stores
     encrypted disk encryption keys.  The key can be downloaded in the next boot to decrypt
     disks.
-    
+
     `sabakan-cryptsetup` is a tool for clients to encrypt disks; the tool generates a disk
     encryption key, encrypts it, and sends the encrypted key to sabakan.  In the next boot,
     it downloads the encrypted key from sabakan, decrypts it, then uses it to decrypt disks.
@@ -107,13 +107,23 @@ Run sabakan with docker
 # create directory to store OS images
 $ sudo mkdir -p /var/lib/sabakan
 
+# create server certificate
+$ sudo mkdir -p /etc/sabakan
+$ make setup-cfssl
+$ cd e2e/certs && ./gencerts.sh
+$ cd ../..
+$ sudo cp e2e/output/certs/server.crt /etc/sabakan/server.crt
+$ sudo cp e2e/output/certs/server.key.insecure /etc/sabakan/server.key
+
 # -advertise-url is the canonical URL of this sabakan.
 $ docker run -d --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE \
     --network host --name sabakan \
     --mount type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan \
+    --mount type=bind,source=/etc/sabakan,target=/etc/sabakan \
     ghcr.io/cybozu-go/sabakan:3.1 \
     -etcd-endpoints http://foo.bar:2379,http://zot.bar:2379 \
-    -advertise-url http://12.34.56.78:10080
+    -advertise-url http://12.34.56.78:10080 \
+    -advertise-url-https http://12.34.56.78:10443
 ```
 
 License
