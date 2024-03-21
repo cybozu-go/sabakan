@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Update dependencies in [#281](https://github.com/cybozu-go/sabakan/pull/281)
+
+### Fixed
+- update document for sabakan TLS in [#280](https://github.com/cybozu-go/sabakan/pull/280)
+
 ## [3.1.0] - 2024-01-17
 
 ### Breaking Changes
