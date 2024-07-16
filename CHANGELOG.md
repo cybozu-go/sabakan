@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Update dependencies in [#283](https://github.com/cybozu-go/sabakan/pull/283)
+
 ## [3.1.1] - 2024-03-21
 
 ### Changed
