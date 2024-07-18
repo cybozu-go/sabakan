@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - Update dependencies in [#283](https://github.com/cybozu-go/sabakan/pull/283)
+- Update release procedure to use gh command [#284](https://github.com/cybozu-go/sabakan/pull/284)
 
 ## [3.1.1] - 2024-03-21
 
