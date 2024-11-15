@@ -45,7 +45,7 @@ RETRY:
 	currentURLs := slices.Clone(a.URLs)
 	a.URLs = append(a.URLs, d.myURL("/api/v1/assets", a.Name))
 	slices.Sort(a.URLs)
-	slices.Compact(a.URLs)
+	a.URLs = slices.Compact(a.URLs)
 	if slices.Equal(currentURLs, a.URLs) || len(a.URLs) > maxAssetURLs {
 		return nil
 	}
