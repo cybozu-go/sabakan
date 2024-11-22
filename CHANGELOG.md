@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [3.1.3] - 2024-11-22
+
 ### Changed
 
 - Update dependencies in [#286](https://github.com/cybozu-go/sabakan/pull/286)
@@ -339,7 +341,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.2...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.3...HEAD
+[3.1.3]: https://github.com/cybozu-go/sabakan/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/cybozu-go/sabakan/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/cybozu-go/sabakan/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/cybozu-go/sabakan/compare/v3.0.0...v3.1.0
