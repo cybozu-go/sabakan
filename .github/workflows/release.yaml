@@ -9,7 +9,7 @@ env:
 jobs:
   release-image:
     name: Release Sabakan Image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,15 +44,14 @@ jobs:
 
   release-github:
     name: Release GitHub
-    runs-on: ubuntu-22.04
-    container:
-      image: ghcr.io/cybozu/golang:1.20-jammy # used for ghr, not for go command
+    runs-on: ubuntu-24.04
     steps:
       - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          OWNER=$(echo ${{ github.repository }} | cut -d '/' -f 1)
-          REPOSITORY=$(echo ${{ github.repository }} | cut -d '/' -f 2)
-          if ${{ env.prerelease }}; then
-            PRERELEASE="-prerelease"
-          fi
-          ghr -t ${{ secrets.GITHUB_TOKEN }} -u ${OWNER} -r ${REPOSITORY} -n v${{ env.tag }} ${PRERELEASE} -b "See [CHANGELOG.md](./CHANGELOG.md) for details." v${{ env.tag }}
+          VERSION=v${{ env.tag }}
+          if ${{ env.prerelease }}; then PRERELEASE_FLAG=-p; fi
+          gh release create $VERSION $PRERELEASE_FLAG \
+            -t "Release $VERSION"  \
+            -n "See [CHANGELOG.md](./CHANGELOG.md) for details."
