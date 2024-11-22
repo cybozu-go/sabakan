@@ -84,6 +84,15 @@ func testSetupConfig(t *testing.T, d *driver, ch <-chan struct{}) {
 		t.Fatal(err)
 	}
 	<-ch
+
+	// extra wait; the stateless watcher may send one additional message to the channel in rare cases
+	for {
+		_, err := d.getDHCPConfig()
+		if err == nil {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 func testDHCPLease(t *testing.T) {
