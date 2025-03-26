@@ -7,13 +7,18 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/sabakan/v3/gql/graph"
 	"github.com/cybozu-go/sabakan/v3/gql/graph/generated"
 	"github.com/cybozu-go/sabakan/v3/metrics"
+	"github.com/vektah/gqlparser/v2/ast"
 )
 
 const (
@@ -58,13 +63,23 @@ type Server struct {
 }
 
 // NewServer constructs Server instance
-func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
-	advertiseURL, advertiseURLHTTPS *url.URL, allowedIPs []*net.IPNet, enablePlayground bool, counter *metrics.APICounter, tlsServer bool) *Server {
-	graphQL := handler.NewDefaultServer(generated.NewExecutableSchema(
-		generated.Config{
-			Resolvers: &graph.Resolver{Model: model},
-		},
-	))
+func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string, advertiseURL, advertiseURLHTTPS *url.URL, allowedIPs []*net.IPNet, enablePlayground bool, counter *metrics.APICounter, tlsServer bool) *Server {
+	// These settings are the same as the handler.NewDefaultServer().
+	// https://github.com/99designs/gqlgen/blob/v0.17.68/graphql/handler/server.go#L34-L68
+	graphQLHandler := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{Model: model}}))
+	graphQLHandler.AddTransport(transport.Websocket{
+		KeepAlivePingInterval: 10 * time.Second,
+	})
+	graphQLHandler.AddTransport(transport.Options{})
+	graphQLHandler.AddTransport(transport.GET{})
+	graphQLHandler.AddTransport(transport.POST{})
+	graphQLHandler.AddTransport(transport.MultipartForm{})
+	graphQLHandler.SetQueryCache(lru.New[*ast.QueryDocument](1000))
+	graphQLHandler.Use(extension.Introspection{})
+	graphQLHandler.Use(extension.AutomaticPersistedQuery{
+		Cache: lru.New[string](100),
+	})
+
 	s := &Server{
 		Model:          model,
 		IPXEFirmware:   ipxePath,
@@ -73,7 +88,7 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string,
 		MyURLHTTPS:     advertiseURLHTTPS,
 		AllowedRemotes: allowedIPs,
 		Counter:        counter,
-		graphQL:        graphQL,
+		graphQL:        graphQLHandler,
 		TLSServer:      tlsServer,
 	}
 
