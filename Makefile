@@ -1,7 +1,7 @@
 # Makefile for sabakan
 
 # configuration variables
-ETCD_VERSION = 3.5.14
+ETCD_VERSION = 3.5.19
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 IMAGE ?= ghcr.io/cybozu-go/sabakan
