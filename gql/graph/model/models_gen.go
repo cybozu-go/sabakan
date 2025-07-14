@@ -26,3 +26,9 @@ type MachineParams struct {
 	States              []sabakan.MachineState `json:"states,omitempty"`
 	MinDaysBeforeRetire *int                   `json:"minDaysBeforeRetire,omitempty"`
 }
+
+type Mutation struct {
+}
+
+type Query struct {
+}
