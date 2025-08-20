@@ -28,6 +28,11 @@ func (l logger) Println(v ...interface{}) {
 type Metric struct {
 	collectors []prometheus.Collector
 	updater    func(context.Context, *sabakan.Model) error
+	leaderOnly bool
+}
+
+type LeaderChecker interface {
+	IsLeader() bool
 }
 
 // Collector is a metrics collector for Sabakan.
@@ -35,15 +40,17 @@ type Collector struct {
 	metrics map[string]Metric
 	model   *sabakan.Model
 	mu      *sync.Mutex
+	leader  LeaderChecker
 }
 
 // NewCollector returns a new Collector.
-func NewCollector(model *sabakan.Model) *Collector {
+func NewCollector(model *sabakan.Model, leader LeaderChecker) *Collector {
 	return &Collector{
 		metrics: map[string]Metric{
 			"machine_status": {
 				collectors: []prometheus.Collector{MachineStatus},
 				updater:    updateMachineStatus,
+				leaderOnly: true,
 			},
 			"api_request_count": {
 				collectors: []prometheus.Collector{APIRequestTotal},
@@ -58,8 +65,9 @@ func NewCollector(model *sabakan.Model) *Collector {
 				updater:    updateImageMetrics,
 			},
 		},
-		model: model,
-		mu:    &sync.Mutex{},
+		model:  model,
+		mu:     &sync.Mutex{},
+		leader: leader,
 	}
 }
 
@@ -100,6 +108,10 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 		wg.Add(1)
 		go func(key string, metric Metric) {
 			defer wg.Done()
+			// Emit leader-only metrics from the elected leader only
+			if metric.leaderOnly && (c.leader == nil || !c.leader.IsLeader()) {
+				return
+			}
 			err := metric.updater(ctx, c.model)
 			if err != nil {
 				log.Warn("unable to update metrics", map[string]interface{}{

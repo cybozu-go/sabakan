@@ -3,15 +3,16 @@ package main
 import "github.com/cybozu-go/etcdutil"
 
 const (
-	defaultListenHTTP     = "0.0.0.0:10080"
-	defaultListenHTTPS    = "0.0.0.0:10443"
-	defaultListenMetrics  = "0.0.0.0:10081"
-	defaultEtcdPrefix     = "/sabakan/"
-	defaultDHCPBind       = "0.0.0.0:10067"
-	defaultIPXEPath       = "/usr/lib/ipxe/ipxe.efi"
-	defaultDataDir        = "/var/lib/sabakan"
-	defaultServerCertFile = "/etc/sabakan/server.crt"
-	defaultServerKeyFile  = "/etc/sabakan/server.key"
+	defaultListenHTTP               = "0.0.0.0:10080"
+	defaultListenHTTPS              = "0.0.0.0:10443"
+	defaultListenMetrics            = "0.0.0.0:10081"
+	defaultEtcdPrefix               = "/sabakan/"
+	defaultDHCPBind                 = "0.0.0.0:10067"
+	defaultIPXEPath                 = "/usr/lib/ipxe/ipxe.efi"
+	defaultDataDir                  = "/var/lib/sabakan"
+	defaultServerCertFile           = "/etc/sabakan/server.crt"
+	defaultServerKeyFile            = "/etc/sabakan/server.key"
+	defaultMetricsLeaderElectionTTL = "60s"
 )
 
 var (
@@ -20,16 +21,17 @@ var (
 
 func newConfig() *config {
 	return &config{
-		ListenHTTP:     defaultListenHTTP,
-		ListenHTTPS:    defaultListenHTTPS,
-		ListenMetrics:  defaultListenMetrics,
-		DHCPBind:       defaultDHCPBind,
-		IPXEPath:       defaultIPXEPath,
-		DataDir:        defaultDataDir,
-		AllowIPs:       defaultAllowIPs,
-		Etcd:           etcdutil.NewConfig(defaultEtcdPrefix),
-		ServerCertFile: defaultServerCertFile,
-		ServerKeyFile:  defaultServerKeyFile,
+		ListenHTTP:               defaultListenHTTP,
+		ListenHTTPS:              defaultListenHTTPS,
+		ListenMetrics:            defaultListenMetrics,
+		DHCPBind:                 defaultDHCPBind,
+		IPXEPath:                 defaultIPXEPath,
+		DataDir:                  defaultDataDir,
+		AllowIPs:                 defaultAllowIPs,
+		Etcd:                     etcdutil.NewConfig(defaultEtcdPrefix),
+		ServerCertFile:           defaultServerCertFile,
+		ServerKeyFile:            defaultServerKeyFile,
+		MetricsLeaderElectionTTL: defaultMetricsLeaderElectionTTL,
 	}
 }
 
@@ -48,4 +50,6 @@ type config struct {
 	Etcd           *etcdutil.Config `json:"etcd"`
 	ServerCertFile string           `json:"server-cert"`
 	ServerKeyFile  string           `json:"server-key"`
+
+	MetricsLeaderElectionTTL string `json:"metrics-leader-election-ttl"`
 }

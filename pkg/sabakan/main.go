@@ -40,16 +40,17 @@ var (
 	flagAllowIPs          = flag.String("allow-ips", strings.Join(defaultAllowIPs, ","), "comma-separated IPs allowed to change resources")
 	flagPlayground        = flag.Bool("enable-playground", false, "enable GraphQL playground")
 
-	flagEtcdEndpoints  = flag.String("etcd-endpoints", strings.Join(etcdutil.DefaultEndpoints, ","), "comma-separated URLs of the backend etcd endpoints")
-	flagEtcdPrefix     = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
-	flagEtcdTimeout    = flag.String("etcd-timeout", etcdutil.DefaultTimeout, "dial timeout to etcd")
-	flagEtcdUsername   = flag.String("etcd-username", "", "username for etcd authentication")
-	flagEtcdPassword   = flag.String("etcd-password", "", "password for etcd authentication")
-	flagEtcdTLSCA      = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
-	flagEtcdTLSCert    = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
-	flagEtcdTLSKey     = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
-	flagSabakanTLSCert = flag.String("server-cert", defaultServerCertFile, "path to server TLS certificate of sabakan")
-	flagSabakanTLSKey  = flag.String("server-key", defaultServerKeyFile, "path to server TLS key of sabakan")
+	flagEtcdEndpoints            = flag.String("etcd-endpoints", strings.Join(etcdutil.DefaultEndpoints, ","), "comma-separated URLs of the backend etcd endpoints")
+	flagEtcdPrefix               = flag.String("etcd-prefix", defaultEtcdPrefix, "etcd prefix")
+	flagEtcdTimeout              = flag.String("etcd-timeout", etcdutil.DefaultTimeout, "dial timeout to etcd")
+	flagEtcdUsername             = flag.String("etcd-username", "", "username for etcd authentication")
+	flagEtcdPassword             = flag.String("etcd-password", "", "password for etcd authentication")
+	flagEtcdTLSCA                = flag.String("etcd-tls-ca", "", "path to CA bundle used to verify certificates of etcd servers")
+	flagEtcdTLSCert              = flag.String("etcd-tls-cert", "", "path to my certificate used to identify myself to etcd servers")
+	flagEtcdTLSKey               = flag.String("etcd-tls-key", "", "path to my key used to identify myself to etcd servers")
+	flagSabakanTLSCert           = flag.String("server-cert", defaultServerCertFile, "path to server TLS certificate of sabakan")
+	flagSabakanTLSKey            = flag.String("server-key", defaultServerKeyFile, "path to server TLS key of sabakan")
+	flagMetricsLeaderElectionTTL = flag.String("metrics-leader-election-ttl", defaultMetricsLeaderElectionTTL, "TTL for the etcd session used by metrics leader election. Accepts Go duration (e.g., 30s, 60s)")
 
 	flagConfigFile = flag.String("config-file", "", "path to configuration file")
 )
@@ -106,6 +107,7 @@ func subMain(ctx context.Context) error {
 		cfg.Etcd.TLSKeyFile = *flagEtcdTLSKey
 		cfg.ServerCertFile = *flagSabakanTLSCert
 		cfg.ServerKeyFile = *flagSabakanTLSKey
+		cfg.MetricsLeaderElectionTTL = *flagMetricsLeaderElectionTTL
 	} else {
 		data, err := os.ReadFile(*flagConfigFile)
 		if err != nil {
@@ -133,6 +135,13 @@ func subMain(ctx context.Context) error {
 	advertiseURLHTTPS, err := url.Parse(cfg.AdvertiseURLHTTPS)
 	if err != nil {
 		return err
+	}
+	metricsLeaderElectionTTL, err := time.ParseDuration(cfg.MetricsLeaderElectionTTL)
+	if err != nil {
+		return err
+	}
+	if metricsLeaderElectionTTL <= 0 {
+		return errors.New("metrics leader election TTL must be greather than 0")
 	}
 
 	c, err := etcdutil.NewClient(cfg.Etcd)
@@ -212,7 +221,10 @@ func subMain(ctx context.Context) error {
 	}
 
 	// Metrics
-	collector := metrics.NewCollector(&model)
+	elector := metrics.NewLeaderElector(c, cfg.Etcd.Prefix+"leaders/metrics", advertiseURL.String(), metricsLeaderElectionTTL)
+	env.Go(elector.Run)
+
+	collector := metrics.NewCollector(&model, elector)
 	metricsHandler := metrics.GetHandler(collector)
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", metricsHandler)

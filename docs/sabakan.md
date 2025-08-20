@@ -4,7 +4,7 @@ sabakan
 Usage
 -----
 
-See [specification of etcdutil](https://github.com/cybozu-go/etcdutil/blob/main/README.md#specifications) for etcd connection flags and parameters. 
+See [specification of etcdutil](https://github.com/cybozu-go/etcdutil/blob/main/README.md#specifications) for etcd connection flags and parameters.
 
 ```console
 $ sabakan -h
@@ -53,35 +53,38 @@ Usage of sabakan:
         Log level [critical,error,warning,info,debug]
   -metrics string
         <Listen IP>:<Port number> (default "0.0.0.0:10081")
+  -metrics-leader-election-ttl string
+        TTL for the etcd session used by metrics leader election. Accepts Go duration (e.g., 30s, 60s) (default "60s")
   -server-cert string
         path to server TLS certificate of sabakan (default "/etc/sabakan/server.crt")
   -server-key string
         path to server TLS key of sabakan (default "/etc/sabakan/server.key")
 ```
 
-| Option               | Default value                      | Description                                                     |
-| -------------------- | ---------------------------------- | --------------------------------------------------------------- |
-| `advertise-url`      | ""                                 | Public URL to access HTTP server.  Required.                    |
-| `advertise-url-https`| ""                                 | Public URL to access HTTPS server.  Required.                   |
-| `allow-ips`          | `127.0.0.1,::1`                    | Comma-separated IPs allowed to change resources.                |
-| `config-file`        | ""                                 | If given, configurations are read from the file.                |
-| `data-dir`           | `/var/lib/sabakan`                 | Directory to store files.                                       |
-| `dhcp-bind`          | `0.0.0.0:10067`                    | IP address and port number of DHCP server.                      |
-| `enable-playground`  | false                              | Enable GraphQL playground service.                              |
-| `etcd-endpoints`     | `http://127.0.0.1:2379`            | Comma-separated URLs of the backend etcd endpoints.             |
-| `etcd-password`      | ""                                 | Password for etcd authentication.                               |
-| `etcd-prefix`        | `/sabakan/`                        | etcd prefix.                                                    |
-| `etcd-timeout`       | `2s`                               | Dial timeout to etcd.                                           |
-| `etcd-tls-ca`        | ""                                 | Path to CA bundle used to verify certificates of etcd servers.  |
-| `etcd-tls-cert`      | ""                                 | Path to my certificate used to identify myself to etcd servers. |
-| `etcd-tls-key`       | ""                                 | Path to my key used to identify myself to etcd servers.         |
-| `etcd-username`      | ""                                 | Username for etcd authentication.                               |
-| `http`               | `0.0.0.0:10080`                    | IP address and port number of HTTP server.                      |
-| `https`              | `0.0.0.0:10443`                    | IP address and port number of HTTPS server.                     |
-| `ipxe-efi-path`      | `/usr/lib/ipxe/ipxe.efi`           | Path to ipxe.efi .                                              |
-| `metrics`            | `0.0.0.0:10081`                    | IP address and port number of metrics HTTP server.              |
-| `server-cert`        | `/etc/sabakan/server.crt`          | Path to server  certificate of sabakan.                         |
-| `server-key`         | `/etc/sabakan/server.key`          | Path to server TLS key of sabakan.                              |
+| Option                       | Default value                      | Description                                                     |
+| ---------------------------- | ---------------------------------- | --------------------------------------------------------------- |
+| `advertise-url`              | ""                                 | Public URL to access HTTP server.  Required.                    |
+| `advertise-url-https`        | ""                                 | Public URL to access HTTPS server.  Required.                   |
+| `allow-ips`                  | `127.0.0.1,::1`                    | Comma-separated IPs allowed to change resources.                |
+| `config-file`                | ""                                 | If given, configurations are read from the file.                |
+| `data-dir`                   | `/var/lib/sabakan`                 | Directory to store files.                                       |
+| `dhcp-bind`                  | `0.0.0.0:10067`                    | IP address and port number of DHCP server.                      |
+| `enable-playground`          | false                              | Enable GraphQL playground service.                              |
+| `etcd-endpoints`             | `http://127.0.0.1:2379`            | Comma-separated URLs of the backend etcd endpoints.             |
+| `etcd-password`              | ""                                 | Password for etcd authentication.                               |
+| `etcd-prefix`                | `/sabakan/`                        | etcd prefix.                                                    |
+| `etcd-timeout`               | `2s`                               | Dial timeout to etcd.                                           |
+| `etcd-tls-ca`                | ""                                 | Path to CA bundle used to verify certificates of etcd servers.  |
+| `etcd-tls-cert`              | ""                                 | Path to my certificate used to identify myself to etcd servers. |
+| `etcd-tls-key`               | ""                                 | Path to my key used to identify myself to etcd servers.         |
+| `etcd-username`              | ""                                 | Username for etcd authentication.                               |
+| `http`                       | `0.0.0.0:10080`                    | IP address and port number of HTTP server.                      |
+| `https`                      | `0.0.0.0:10443`                    | IP address and port number of HTTPS server.                     |
+| `ipxe-efi-path`              | `/usr/lib/ipxe/ipxe.efi`           | Path to ipxe.efi .                                              |
+| `metrics`                    | `0.0.0.0:10081`                    | IP address and port number of metrics HTTP server.              |
+| `metrics-leader-election-ttl`| `60s`                              | TTL for the etcd session used by metrics leader election.       |
+| `server-cert`                | `/etc/sabakan/server.crt`          | Path to server  certificate of sabakan.                         |
+| `server-key`                 | `/etc/sabakan/server.key`          | Path to server TLS key of sabakan.                              |
 
 Config file
 -----------

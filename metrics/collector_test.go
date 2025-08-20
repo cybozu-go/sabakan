@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -17,6 +18,12 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
+type leaderMock struct{ isLeader bool }
+
+func (l *leaderMock) IsLeader() bool {
+	return l.isLeader
+}
+
 type expectedMachineStatus struct {
 	status string
 	labels map[string]string
@@ -26,6 +33,14 @@ type machineStatusTestCase struct {
 	name            string
 	input           func() (*sabakan.Model, error)
 	expectedMetrics []expectedMachineStatus
+}
+
+type leaderOnlyMetricsTestCase struct {
+	name              string
+	isLeader          bool
+	input             func() (*sabakan.Model, error)
+	expectedMetrics   []string
+	unexpectedMetrics []string
 }
 
 type apiTestCase struct {
@@ -79,7 +94,7 @@ func testMachineStatus(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			collector := NewCollector(model)
+			collector := NewCollector(model, &leaderMock{isLeader: true})
 			handler := GetHandler(collector)
 
 			w := httptest.NewRecorder()
@@ -134,7 +149,7 @@ func MachineStatusWhenMachineDeleted(t *testing.T) {
 		"serial": "002",
 	}
 
-	collector := NewCollector(model)
+	collector := NewCollector(model, &leaderMock{isLeader: true})
 	handler := GetHandler(collector)
 	// If machines are deleted, corresponding metrics is also deleted
 	err = model.Machine.SetState(context.Background(), "001", sabakan.StateRetiring)
@@ -194,7 +209,7 @@ func testAPIMetrics(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			counter := NewCounter()
 			model := mock.NewModel()
-			collector := NewCollector(&model)
+			collector := NewCollector(&model, &leaderMock{})
 			handler := GetHandler(collector)
 
 			oldValue, err := getCounterValue(handler, "sabakan_api_request_count", tt.expectedLabels)
@@ -211,6 +226,71 @@ func testAPIMetrics(t *testing.T) {
 
 			if (newValue - oldValue) != 1 {
 				t.Errorf("counter value difference must be 1 but %f", newValue-oldValue)
+			}
+		})
+	}
+}
+
+func testLeaderOnlyMetrics(t *testing.T) {
+	testCases := []leaderOnlyMetricsTestCase{
+		{
+			isLeader: true,
+			input:    twoMachines,
+			expectedMetrics: []string{
+				"sabakan_assets_bytes_total",
+				"sabakan_assets_items_total",
+				"sabakan_images_bytes_total",
+				"sabakan_images_items_total",
+				"sabakan_machine_status",
+			},
+			unexpectedMetrics: []string{},
+		},
+		{
+			isLeader: false,
+			input:    twoMachines,
+			expectedMetrics: []string{
+				"sabakan_assets_bytes_total",
+				"sabakan_assets_items_total",
+				"sabakan_images_bytes_total",
+				"sabakan_images_items_total",
+			},
+			unexpectedMetrics: []string{
+				"sabakan_machine_status",
+			},
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			model, err := tt.input()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			collector := NewCollector(model, &leaderMock{isLeader: tt.isLeader})
+			handler := GetHandler(collector)
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("GET", "/metrics", nil)
+			handler.ServeHTTP(w, req)
+			metricsFamily, err := parseMetrics(w.Result())
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			metricsNames := []string{}
+			for _, mf := range metricsFamily {
+				metricsNames = append(metricsNames, *mf.Name)
+			}
+
+			for _, mt := range tt.expectedMetrics {
+				if !slices.Contains(metricsNames, mt) {
+					t.Errorf("excepted metrics %s but does not contains: %s", mt, metricsNames)
+				}
+			}
+			for _, mt := range tt.unexpectedMetrics {
+				if slices.Contains(metricsNames, mt) {
+					t.Errorf("unexcepted metrics %s but contains: %s", mt, metricsNames)
+				}
 			}
 		})
 	}
@@ -251,7 +331,7 @@ func testAssetsMetrics(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			collector := NewCollector(model)
+			collector := NewCollector(model, &leaderMock{})
 			handler := GetHandler(collector)
 
 			w := httptest.NewRecorder()
@@ -436,6 +516,7 @@ func getCounterValue(handler http.Handler, name string, labels map[string]string
 func TestMetrics(t *testing.T) {
 	t.Run("MachineStatus", testMachineStatus)
 	t.Run("MachineStatusWhenMachineDeleted", MachineStatusWhenMachineDeleted)
+	t.Run("LeaderOnlyMetrics", testLeaderOnlyMetrics)
 	t.Run("APIMetrics", testAPIMetrics)
 	t.Run("AssetsImagesMetrics", testAssetsMetrics)
 }
