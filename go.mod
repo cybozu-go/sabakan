@@ -2,11 +2,6 @@ module github.com/cybozu-go/sabakan/v3
 
 go 1.25.4
 
-tool (
-	github.com/99designs/gqlgen
-	github.com/99designs/gqlgen/graphql/introspection
-)
-
 require (
 	github.com/99designs/gqlgen v0.17.83
 	github.com/cybozu-go/etcdutil v1.6.11
@@ -28,7 +23,7 @@ require (
 	go.etcd.io/etcd/api/v3 v3.6.2
 	go.etcd.io/etcd/client/v3 v3.6.2
 	go.universe.tf/netboot v0.0.0-20240531232330-2ed7bd30206a
-	golang.org/x/crypto v0.43.0
+	golang.org/x/crypto v0.44.0
 	sigs.k8s.io/yaml v1.5.0
 )
 
@@ -76,12 +71,12 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/net v0.46.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
-	golang.org/x/text v0.30.0 // indirect
-	golang.org/x/tools v0.38.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/tools v0.39.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
@@ -89,3 +84,5 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+tool github.com/99designs/gqlgen
