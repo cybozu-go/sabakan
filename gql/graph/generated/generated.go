@@ -936,7 +936,7 @@ func (ec *executionContext) _BMC_bmcType(ctx context.Context, field graphql.Coll
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -980,7 +980,7 @@ func (ec *executionContext) _BMC_ipv4(ctx context.Context, field graphql.Collect
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1024,7 +1024,7 @@ func (ec *executionContext) _BMCInfo_ipv4(ctx context.Context, field graphql.Col
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1078,7 +1078,7 @@ func (ec *executionContext) _Label_name(ctx context.Context, field graphql.Colle
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1122,7 +1122,7 @@ func (ec *executionContext) _Label_value(ctx context.Context, field graphql.Coll
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1166,7 +1166,7 @@ func (ec *executionContext) _Machine_spec(ctx context.Context, field graphql.Col
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1230,7 +1230,7 @@ func (ec *executionContext) _Machine_status(ctx context.Context, field graphql.C
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1282,7 +1282,7 @@ func (ec *executionContext) _Machine_info(ctx context.Context, field graphql.Col
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1332,7 +1332,7 @@ func (ec *executionContext) _MachineInfo_network(ctx context.Context, field grap
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1380,7 +1380,7 @@ func (ec *executionContext) _MachineInfo_bmc(ctx context.Context, field graphql.
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1428,7 +1428,7 @@ func (ec *executionContext) _MachineSpec_serial(ctx context.Context, field graph
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1519,7 +1519,7 @@ func (ec *executionContext) _MachineSpec_rack(ctx context.Context, field graphql
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1563,7 +1563,7 @@ func (ec *executionContext) _MachineSpec_indexInRack(ctx context.Context, field 
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1607,7 +1607,7 @@ func (ec *executionContext) _MachineSpec_role(ctx context.Context, field graphql
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1651,7 +1651,7 @@ func (ec *executionContext) _MachineSpec_ipv4(ctx context.Context, field graphql
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1695,7 +1695,7 @@ func (ec *executionContext) _MachineSpec_registerDate(ctx context.Context, field
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1739,7 +1739,7 @@ func (ec *executionContext) _MachineSpec_retireDate(ctx context.Context, field g
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1783,7 +1783,7 @@ func (ec *executionContext) _MachineSpec_bmc(ctx context.Context, field graphql.
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1833,7 +1833,7 @@ func (ec *executionContext) _MachineStatus_state(ctx context.Context, field grap
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1877,7 +1877,7 @@ func (ec *executionContext) _MachineStatus_timestamp(ctx context.Context, field 
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1921,7 +1921,7 @@ func (ec *executionContext) _MachineStatus_duration(ctx context.Context, field g
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -1965,7 +1965,7 @@ func (ec *executionContext) _Mutation_setMachineState(ctx context.Context, field
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2028,7 +2028,7 @@ func (ec *executionContext) _NICConfig_address(ctx context.Context, field graphq
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2072,7 +2072,7 @@ func (ec *executionContext) _NICConfig_netmask(ctx context.Context, field graphq
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2116,7 +2116,7 @@ func (ec *executionContext) _NICConfig_maskbits(ctx context.Context, field graph
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2160,7 +2160,7 @@ func (ec *executionContext) _NICConfig_gateway(ctx context.Context, field graphq
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2204,7 +2204,7 @@ func (ec *executionContext) _NetworkInfo_ipv4(ctx context.Context, field graphql
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2258,7 +2258,7 @@ func (ec *executionContext) _Query_machine(ctx context.Context, field graphql.Co
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2321,7 +2321,7 @@ func (ec *executionContext) _Query_searchMachines(ctx context.Context, field gra
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2515,7 +2515,7 @@ func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2600,7 +2600,7 @@ func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2644,7 +2644,7 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2688,7 +2688,7 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2757,7 +2757,7 @@ func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2842,7 +2842,7 @@ func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -2927,7 +2927,7 @@ func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.Col
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3012,7 +3012,7 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3081,7 +3081,7 @@ func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.Col
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3149,7 +3149,7 @@ func (ec *executionContext) ___Field_isDeprecated(ctx context.Context, field gra
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3234,7 +3234,7 @@ func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphq
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3319,7 +3319,7 @@ func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphq
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3428,7 +3428,7 @@ func (ec *executionContext) ___InputValue_isDeprecated(ctx context.Context, fiel
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3554,7 +3554,7 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3622,7 +3622,7 @@ func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graph
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3820,7 +3820,7 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -3876,7 +3876,7 @@ func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.Coll
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
+			graphql.AddErrorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
@@ -5847,7 +5847,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	res := graphql.MarshalBoolean(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
 	return res
@@ -5872,7 +5872,7 @@ func (ec *executionContext) unmarshalNDateTime2ᚖgithubᚗcomᚋcybozuᚑgoᚋs
 func (ec *executionContext) marshalNDateTime2ᚖgithubᚗcomᚋcybozuᚑgoᚋsabakanᚋv3ᚋgqlᚐDateTime(ctx context.Context, sel ast.SelectionSet, v *gql.DateTime) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -5889,7 +5889,7 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	res := graphql.MarshalFloatContext(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
 	return graphql.WrapContextMarshaler(ctx, res)
@@ -5905,7 +5905,7 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	res := graphql.MarshalID(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
 	return res
@@ -5960,7 +5960,7 @@ func (ec *executionContext) unmarshalNIPAddress2ᚖgithubᚗcomᚋcybozuᚑgoᚋ
 func (ec *executionContext) marshalNIPAddress2ᚖgithubᚗcomᚋcybozuᚑgoᚋsabakanᚋv3ᚋgqlᚐIPAddress(ctx context.Context, sel ast.SelectionSet, v *gql.IPAddress) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -5977,7 +5977,7 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
 	return res
@@ -5986,7 +5986,7 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 func (ec *executionContext) marshalNLabel2ᚖgithubᚗcomᚋcybozuᚑgoᚋsabakanᚋv3ᚋgqlᚋgraphᚋmodelᚐLabel(ctx context.Context, sel ast.SelectionSet, v *model.Label) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -6049,7 +6049,7 @@ func (ec *executionContext) marshalNMachine2ᚕᚖgithubᚗcomᚋcybozuᚑgoᚋs
 func (ec *executionContext) marshalNMachine2ᚖgithubᚗcomᚋcybozuᚑgoᚋsabakanᚋv3ᚐMachine(ctx context.Context, sel ast.SelectionSet, v *sabakan.Machine) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -6074,7 +6074,7 @@ func (ec *executionContext) marshalNMachineState2githubᚗcomᚋcybozuᚑgoᚋsa
 	res := gql.MarshalMachineState(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
 	return res
@@ -6087,7 +6087,7 @@ func (ec *executionContext) marshalNMachineStatus2githubᚗcomᚋcybozuᚑgoᚋs
 func (ec *executionContext) marshalNMachineStatus2ᚖgithubᚗcomᚋcybozuᚑgoᚋsabakanᚋv3ᚐMachineStatus(ctx context.Context, sel ast.SelectionSet, v *sabakan.MachineStatus) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -6156,7 +6156,7 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
 	return res
@@ -6220,7 +6220,7 @@ func (ec *executionContext) marshalN__DirectiveLocation2string(ctx context.Conte
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
 	return res
@@ -6392,7 +6392,7 @@ func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 func (ec *executionContext) marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx context.Context, sel ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -6409,7 +6409,7 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
 	return res
