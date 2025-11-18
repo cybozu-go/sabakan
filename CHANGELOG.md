@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [3.1.7] - 2025-11-18
+
+### Changed
+
+- Update dependencies in [#296](https://github.com/cybozu-go/sabakan/pull/296)
+    - Upgrade direct dependencies in go.mod
+    - Regenerate GraphQL code with gqlgen v0.17.76
+
 ## [3.1.6] - 2025-07-15
 
 ### Changed
