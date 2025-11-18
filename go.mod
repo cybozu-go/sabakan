@@ -3,7 +3,7 @@ module github.com/cybozu-go/sabakan/v3
 go 1.25.4
 
 require (
-	github.com/99designs/gqlgen v0.17.76
+	github.com/99designs/gqlgen v0.17.83
 	github.com/cybozu-go/etcdutil v1.6.11
 	github.com/cybozu-go/log v1.7.0
 	github.com/cybozu-go/netutil v1.4.9
@@ -18,7 +18,7 @@ require (
 	github.com/prometheus/client_model v0.6.2
 	github.com/prometheus/common v0.65.0
 	github.com/spf13/cobra v1.9.1
-	github.com/vektah/gqlparser/v2 v2.5.30
+	github.com/vektah/gqlparser/v2 v2.5.31
 	github.com/vincent-petithory/dataurl v1.0.0
 	go.etcd.io/etcd/api/v3 v3.6.2
 	go.etcd.io/etcd/client/v3 v3.6.2
