@@ -15,6 +15,7 @@ import (
 	"github.com/cybozu-go/sabakan/v3/models/mock"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 )
 
 type expectedMachineStatus struct {
@@ -396,7 +397,7 @@ func hasLabels(lm map[string]string, expectedLabels map[string]string) bool {
 }
 
 func parseMetrics(resp *http.Response) ([]*dto.MetricFamily, error) {
-	var parser expfmt.TextParser
+	parser := expfmt.NewTextParser(model.UTF8Validation)
 	parsed, err := parser.TextToMetricFamilies(resp.Body)
 	if err != nil {
 		return nil, err
