@@ -9,13 +9,16 @@ WORKER1 = 10.0.0.104
 WORKER2 = 10.0.0.105
 PLACEMAT = /usr/bin/placemat2
 GINKGO = $(GOPATH)/bin/ginkgo
-ETCD_VERSION = 3.5.19
+ETCD_VERSION = 3.6.9
+ETCD_SHA256SUM = 633136f13fcadac52e5c0ddcb97912643af6fcb9cb362e75774d0f96f7666396
 PLACEMAT_DATADIR = /var/scratch/placemat
-COREOS_VERSION := current
-COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
-COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
+COREOS_VERSION := 4459.2.4
+COREOS_IMAGE_SHA512SUM := c53e24f5bcf0fa10b4ecf50942267d34ee8c05657eb1750fb031fde541395043829818418905c8c63cf5d335dd592d06bc2478f768819a051dad1c4e41fbe94c
+COREOS_KERNEL_SHA512SUM := d95d658bb11ab4a5593d8cba5d6cdd6dcf9e7dcf58ed4ad6b6ec9aedaee3420a6eb64cd0672ea79fcda2a8e5defd9fab0c612c1b604b36e5d4ab7698ef24a778
+COREOS_INITRD_SHA512SUM := c4c2d973237d4c22c35b18593821e8660591b9a47a4402cb46d90e1ad565cf5d9c5c1ca1120b851a35c0e0aa50730e80750ab60f9ff037cd725c08436c40c7c2
 # The latest CT is 0.9.4, but it is not distributed as a pre-built binary.
 CT_VERSION = 0.9.3
+CT_SHA256SUM = bb5ccbaddd26e0cfd241309de72ef3011aa718095bd2f94ca19096d98efb6ab8
 SUDO = sudo
 
 export HOST1 HOST2 HOST3 WORKER1 WORKER2 PLACEMAT GINKGO
@@ -26,6 +29,8 @@ ETCD_ARCHIVE := etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
 SSH_PRIVKEY = $(realpath ./mtest_key)
 OUTPUT := ./output
 COREOS_IMAGE := flatcar_production_qemu_image.img
+COREOS_KERNEL := $(abspath .)/flatcar_production_pxe.vmlinuz
+COREOS_INITRD := $(abspath .)/flatcar_production_pxe_image.cpio.gz
 SABAKAN_IMAGE := $(abspath $(OUTPUT))/sabakan.img
 SABAKAN_IMAGE_NAME := ghcr.io/cybozu-go/sabakan
 SABAKAN_IMAGE_TAG := dev
@@ -73,13 +78,20 @@ all:
 
 $(ETCD_ARCHIVE):
 	curl -sSLf -o $@ https://github.com/etcd-io/etcd/releases/download/v$(ETCD_VERSION)/etcd-v$(ETCD_VERSION)-linux-amd64.tar.gz
+	echo "$(ETCD_SHA256SUM) $@" | sha256sum -c -
 
 $(COREOS_IMAGE):
-	curl -sSLf -o $@.bz2 https://stable.release.flatcar-linux.net/amd64-usr/current/$@.bz2
+	curl -sSLf -o $@.bz2 https://stable.release.flatcar-linux.net/amd64-usr/$(COREOS_VERSION)/$@.bz2
+	echo "$(COREOS_IMAGE_SHA512SUM) $@.bz2" | sha512sum -c -
 	bunzip2 -q $@.bz2
 
-$(COREOS_KERNEL) $(COREOS_INITRD):
+$(COREOS_KERNEL):
 	curl -fSL -o $@ http://stable.release.flatcar-linux.net/amd64-usr/$(COREOS_VERSION)/$(notdir $@)
+	echo "$(COREOS_KERNEL_SHA512SUM) $@" | sha512sum -c -
+
+$(COREOS_INITRD):
+	curl -fSL -o $@ http://stable.release.flatcar-linux.net/amd64-usr/$(COREOS_VERSION)/$(notdir $@)
+	echo "$(COREOS_INITRD_SHA512SUM) $@" | sha512sum -c -
 
 $(OUTPUT)/etcd $(OUTPUT)/etcdctl: $(ETCD_ARCHIVE)
 	mkdir -p $(OUTPUT)
@@ -106,6 +118,7 @@ $(OUTPUT)/ignitions:
 
 $(CT):
 	curl -fsSL -o $@ https://github.com/flatcar/container-linux-config-transpiler/releases/download/v$(CT_VERSION)/ct-v$(CT_VERSION)-x86_64-unknown-linux-gnu
+	echo "$(CT_SHA256SUM) $@" | sha256sum -c -
 	chmod +x $@
 
 $(OUTPUT)/host.ign: host-ign.yml $(CT)
