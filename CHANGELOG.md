@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+- Update dependencies in [#299](https://github.com/cybozu-go/sabakan/pull/299)
+    - Upgrade base container image to Ubuntu 24.04
+    - Upgrade direct dependencies in go.mod
+    - Update Makefiles to validate downloaded files
+    - Update Makefiles with commit hash SHAs
+    - Update GitHub Actions with commit hash SHAs
+
 ## [3.1.7] - 2025-11-20
 
 ### Changed

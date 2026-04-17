@@ -1,5 +1,5 @@
 # Sabakan container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu-go/sabakan"
 
 RUN apt-get update \
