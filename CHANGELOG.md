@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [3.1.8] - 2026-04-22
+
 - Update dependencies in [#299](https://github.com/cybozu-go/sabakan/pull/299)
     - Upgrade base container image to Ubuntu 24.04
     - Upgrade direct dependencies in go.mod
@@ -374,7 +376,9 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.6...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.8...HEAD
+[3.1.8]: https://github.com/cybozu-go/sabakan/compare/v3.1.7...v3.1.8
+[3.1.7]: https://github.com/cybozu-go/sabakan/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/cybozu-go/sabakan/compare/v3.1.5...v3.1.6
 [3.1.5]: https://github.com/cybozu-go/sabakan/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/cybozu-go/sabakan/compare/v3.1.3...v3.1.4
