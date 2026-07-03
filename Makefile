@@ -1,8 +1,8 @@
 # Makefile for sabakan
 
 # configuration variables
-ETCD_VERSION = 3.6.9
-ETCD_SHA256SUM = 633136f13fcadac52e5c0ddcb97912643af6fcb9cb362e75774d0f96f7666396
+ETCD_VERSION = 3.6.13
+ETCD_SHA256SUM = b4928654aed84d90952620c7144555e4186d795e1e7414e65fe0cf6265fd0465
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 IMAGE ?= ghcr.io/cybozu-go/sabakan
