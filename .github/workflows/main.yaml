@@ -26,7 +26,7 @@ jobs:
         run: make check-generate
 
       - name: Run code check tools
-        run: make code-check
+        run: make lint
 
   unit-test:
     name: Unit Test

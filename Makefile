@@ -27,11 +27,11 @@ check-generate:
 	go mod tidy
 	git diff --exit-code --name-only
 
-.PHONY: code-check
-code-check:
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	staticcheck ./...
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
+.PHONY: lint
+lint:
+	test -z "$$(go tool goimports -l . | tee /dev/stderr)"
+	go tool staticcheck ./...
+	test -z "$$(go tool custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
 	go vet ./...
 
 .PHONY: test
@@ -49,19 +49,7 @@ clean:
 	rm -rf $(E2E_OUTPUT)
 
 .PHONY: test-tools
-test-tools: custom-checker staticcheck etcd
-
-.PHONY: custom-checker
-custom-checker:
-	if ! which custom-checker >/dev/null; then \
-		env GOFLAGS= go install github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@5cda2f85e31dbe2453825f6520710a76465f197e; \
-	fi
-
-.PHONY: staticcheck
-staticcheck:
-	if ! which staticcheck >/dev/null; then \
-		env GOFLAGS= go install honnef.co/go/tools/cmd/staticcheck@ff63afafc529279f454e02f1d060210bd4263951; \
-	fi
+test-tools: etcd
 
 .PHONY: etcd
 etcd:
