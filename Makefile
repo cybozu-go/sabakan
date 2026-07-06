@@ -1,8 +1,8 @@
 # Makefile for sabakan
 
 # configuration variables
-ETCD_VERSION = 3.6.9
-ETCD_SHA256SUM = 633136f13fcadac52e5c0ddcb97912643af6fcb9cb362e75774d0f96f7666396
+ETCD_VERSION = 3.6.13
+ETCD_SHA256SUM = b4928654aed84d90952620c7144555e4186d795e1e7414e65fe0cf6265fd0465
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 BUILT_TARGET=sabakan sabactl sabakan-cryptsetup
 IMAGE ?= ghcr.io/cybozu-go/sabakan
@@ -22,16 +22,21 @@ build: $(BUILT_TARGET)
 $(BUILT_TARGET): $(GO_FILES)
 	CGO_ENABLED=0 go build -ldflags="-s -w" ./pkg/$@
 
-.PHONY: check-generate
-check-generate:
+.PHONY: gqlgen-generate
+gqlgen-generate:
+	cd gql && go tool gqlgen generate
+
+.PHONY: check-generated
+check-generated:
 	go mod tidy
+	$(MAKE) gqlgen-generate
 	git diff --exit-code --name-only
 
-.PHONY: code-check
-code-check:
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	staticcheck ./...
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
+.PHONY: lint
+lint:
+	test -z "$$(go tool goimports -l . | tee /dev/stderr)"
+	go tool staticcheck ./...
+	test -z "$$(go tool custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
 	go vet ./...
 
 .PHONY: test
@@ -49,19 +54,7 @@ clean:
 	rm -rf $(E2E_OUTPUT)
 
 .PHONY: test-tools
-test-tools: custom-checker staticcheck etcd
-
-.PHONY: custom-checker
-custom-checker:
-	if ! which custom-checker >/dev/null; then \
-		env GOFLAGS= go install github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@5cda2f85e31dbe2453825f6520710a76465f197e; \
-	fi
-
-.PHONY: staticcheck
-staticcheck:
-	if ! which staticcheck >/dev/null; then \
-		env GOFLAGS= go install honnef.co/go/tools/cmd/staticcheck@ff63afafc529279f454e02f1d060210bd4263951; \
-	fi
+test-tools: etcd
 
 .PHONY: etcd
 etcd:
