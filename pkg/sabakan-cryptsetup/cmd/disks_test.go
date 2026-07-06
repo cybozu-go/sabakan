@@ -1,6 +1,9 @@
 package cmd
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestDisk(t *testing.T) {
 	t.Parallel()
@@ -42,34 +45,21 @@ func TestFindDisks(t *testing.T) {
 		t.Error("disks should be excluded:", disks)
 	}
 
+	//   - loop0 has no "device" link      -> excluded
+	//   - sda is read-only                -> excluded
+	//   - sdb is removable                -> excluded
+	//   - sdc is normal (hidden=0, ro=0)  -> included
+	//   - sdd is normal (hidden=0, ro=0)  -> included
+	//   - sde is hidden (hidden=1)        -> excluded
 	disks, err = findDisks(nil, "./testdata")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(disks) != 2 {
-		t.Fatal("unexpected result: ", disks)
+	expected := []Disk{
+		{name: "sdc", sectorSize: 512, size512: 2048},
+		{name: "sdd", sectorSize: 4096, size512: 2048},
 	}
-
-	d1 := disks[0]
-	d2 := disks[1]
-
-	if d1.Name() != "sdc" {
-		t.Error(`d1.Name() != "sdc"`, d1.Name())
-	}
-	if d1.SectorSize() != 512 {
-		t.Error(`d1.SectorSize() != 512`, d1.SectorSize())
-	}
-	if d1.Size512() != 2048 {
-		t.Error(`d1.Size512() != 2048`, d1.Size512())
-	}
-
-	if d2.Name() != "sdd" {
-		t.Error(`d2.Name() != "sdd"`, d2.Name())
-	}
-	if d2.SectorSize() != 4096 {
-		t.Error(`d2.SectorSize() != 4096`, d2.SectorSize())
-	}
-	if d2.Size512() != 2048 {
-		t.Error(`d2.Size512() != 2048`, d2.Size512())
+	if !reflect.DeepEqual(disks, expected) {
+		t.Errorf("unexpected disks: got %+v, want %+v", disks, expected)
 	}
 }

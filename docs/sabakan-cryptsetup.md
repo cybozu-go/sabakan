@@ -43,6 +43,7 @@ Target disks
 * Virtual devices (devices not having `/sys/block/*/device`)
 * Removable devices (devices whose `/sys/block/*/removable` are not `0`)
 * Read-only devices (devices whose `/sys/block/*/ro` are not `0`)
+* Hidden devices (devices whose `/sys/block/*/hidden` are not `0`)
 
 `--excludes` can be used to exclude some disks from automatic encryption.
 Following example excludes NVMe snd SCSI disks.
