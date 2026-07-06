@@ -23,7 +23,7 @@ jobs:
         run: make SUDO="sudo" test-tools
 
       - name: Check auto-generated files
-        run: make check-generate
+        run: make check-generated
 
       - name: Run code check tools
         run: make lint

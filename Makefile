@@ -22,9 +22,14 @@ build: $(BUILT_TARGET)
 $(BUILT_TARGET): $(GO_FILES)
 	CGO_ENABLED=0 go build -ldflags="-s -w" ./pkg/$@
 
-.PHONY: check-generate
-check-generate:
+.PHONY: gqlgen-generate
+gqlgen-generate:
+	cd gql && go tool gqlgen generate
+
+.PHONY: check-generated
+check-generated:
 	go mod tidy
+	$(MAKE) gqlgen-generate
 	git diff --exit-code --name-only
 
 .PHONY: lint

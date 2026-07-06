@@ -42,6 +42,7 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
+	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/pprof v0.0.0-20260402051712-545e8a4df936 // indirect
@@ -64,6 +65,7 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spf13/viper v1.18.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/urfave/cli/v3 v3.10.0 // indirect
 	github.com/vishvananda/netlink v1.3.1 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.6.13 // indirect
@@ -90,6 +92,7 @@ require (
 )
 
 tool (
+	github.com/99designs/gqlgen
 	github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker
 	golang.org/x/tools/cmd/goimports
 	honnef.co/go/tools/cmd/staticcheck
