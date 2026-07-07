@@ -80,6 +80,13 @@ func findDisks(excludes []string, base string) ([]Disk, error) {
 		if ok {
 			continue
 		}
+		ok, err = hasFlag(name, "hidden")
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			continue
+		}
 		ok, err = hasFlag(name, "ro")
 		if err != nil {
 			return nil, err

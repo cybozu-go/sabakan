@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Exclude hidden devices in disk discovery in [#301](https://github.com/cybozu-go/sabakan/pull/301)
+
 ## [3.1.8] - 2026-04-22
 
 - Update dependencies in [#299](https://github.com/cybozu-go/sabakan/pull/299)
