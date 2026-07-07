@@ -7,6 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [3.1.9] - 2026-07-07
 
+### Changed
+
+- Update dependencies in [#302](https://github.com/cybozu-go/sabakan/pull/302)
+    - Update dependencies
+    - Use `go tool` for lint tools
+    - Add make target for `gqlgen generate`.
+    - Regenerate the GraphQL related files.
+
 ### Fixed
 
 - Exclude hidden devices in disk discovery in [#301](https://github.com/cybozu-go/sabakan/pull/301)
