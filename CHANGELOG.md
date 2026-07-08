@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [3.1.9] - 2026-07-07
+
+### Changed
+
+- Update dependencies in [#302](https://github.com/cybozu-go/sabakan/pull/302)
+    - Update dependencies
+    - Use `go tool` for lint tools
+    - Add make target for `gqlgen generate`.
+    - Regenerate the GraphQL related files.
+
 ### Fixed
 
 - Exclude hidden devices in disk discovery in [#301](https://github.com/cybozu-go/sabakan/pull/301)
@@ -380,7 +390,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.8...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.9...HEAD
+[3.1.9]: https://github.com/cybozu-go/sabakan/compare/v3.1.8...v3.1.9
 [3.1.8]: https://github.com/cybozu-go/sabakan/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/cybozu-go/sabakan/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/cybozu-go/sabakan/compare/v3.1.5...v3.1.6
