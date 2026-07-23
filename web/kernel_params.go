@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/cybozu-go/log"
+
 	"github.com/cybozu-go/sabakan/v3"
 )
 
@@ -50,7 +51,7 @@ func (s Server) handleKernelParamsGet(w http.ResponseWriter, r *http.Request, os
 	w.Header().Set("Content-Type", "text/plain")
 	_, err = w.Write([]byte(kernelParams))
 	if err != nil {
-		log.Error("failed to output text", map[string]interface{}{
+		log.Error("failed to output text", map[string]any{
 			log.FnError: err.Error(),
 		})
 	}

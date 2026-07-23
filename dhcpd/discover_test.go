@@ -150,7 +150,6 @@ func testDiscoverIPXE(t *testing.T) {
 		t.Fatal(err)
 	}
 	testComparePacket(t, resp, expected)
-
 }
 
 func TestDiscover(t *testing.T) {

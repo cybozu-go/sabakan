@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/clientv3util"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func auditKey(t time.Time) string {
@@ -19,12 +20,12 @@ func auditKey(t time.Time) string {
 }
 
 func (d *driver) addLog(ctx context.Context, ts time.Time, rev int64, cat sabakan.AuditCategory,
-	instance, action, detail string) {
-
+	instance, action, detail string,
+) {
 	a := sabakan.NewAuditLog(ctx, ts, rev, cat, instance, action, detail)
 	j, err := json.Marshal(a)
 	if err != nil { // unlikely
-		log.Error("etcd: addLog failed", map[string]interface{}{
+		log.Error("etcd: addLog failed", map[string]any{
 			log.FnError: err,
 			"category":  string(cat),
 			"instance":  instance,
@@ -39,7 +40,7 @@ func (d *driver) addLog(ctx context.Context, ts time.Time, rev int64, cat sabaka
 		return
 	}
 
-	log.Error("etcd: addLog failed", map[string]interface{}{
+	log.Error("etcd: addLog failed", map[string]any{
 		log.FnError: err,
 		"category":  string(cat),
 		"instance":  instance,
@@ -80,7 +81,7 @@ func (d *driver) logCompact(ctx context.Context, now time.Time) error {
 	oldest := now.Add(time.Duration(-logRetentionDays) * 24 * time.Hour)
 	key := auditKey(oldest)
 
-	log.Info("log: compacting...", map[string]interface{}{
+	log.Info("log: compacting...", map[string]any{
 		"key": key,
 	})
 
@@ -89,7 +90,7 @@ func (d *driver) logCompact(ctx context.Context, now time.Time) error {
 		return err
 	}
 
-	log.Info("log: compacted", map[string]interface{}{
+	log.Info("log: compacted", map[string]any{
 		"deleted": resp.Deleted,
 	})
 

@@ -6,22 +6,22 @@ import (
 	"io"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
-var (
-	imageMembers = map[string][]string{
-		"coreos": {
-			sabakan.ImageKernelFilename,
-			sabakan.ImageInitrdFilename,
-		},
-	}
-)
+var imageMembers = map[string][]string{
+	"coreos": {
+		sabakan.ImageKernelFilename,
+		sabakan.ImageInitrdFilename,
+	},
+}
 
 func (d *driver) getImageDir(os string) ImageDir {
 	return ImageDir{
@@ -103,8 +103,8 @@ func (d *driver) imageGetInfoAll(ctx context.Context) ([]*sabakan.Image, error) 
 
 func (d *driver) imageCASIndex(ctx context.Context, os string,
 	index sabakan.ImageIndex, indexRev int64,
-	deleted []string, delRev int64) (*clientv3.TxnResponse, error) {
-
+	deleted []string, delRev int64,
+) (*clientv3.TxnResponse, error) {
 	indexKey := path.Join(KeyImages, os)
 	deletedKey := path.Join(KeyImages, os, "deleted")
 
@@ -140,10 +140,8 @@ RETRY:
 		return err
 	}
 
-	for _, d := range deleted {
-		if d == id {
-			return sabakan.ErrConflicted
-		}
+	if slices.Contains(deleted, id) {
+		return sabakan.ErrConflicted
 	}
 
 	dir := d.getImageDir(os)
@@ -199,7 +197,7 @@ func (d *driver) imageDownload(ctx context.Context, os, id string, out io.Writer
 
 	err = dir.Download(out, id)
 	if err != nil {
-		log.Error("imageDownload failed", map[string]interface{}{
+		log.Error("imageDownload failed", map[string]any{
 			"os":        os,
 			"id":        id,
 			log.FnError: err.Error(),
@@ -254,19 +252,19 @@ RETRY:
 }
 
 func (d *driver) imageServeFile(ctx context.Context, os, filename string,
-	f func(modtime time.Time, content io.ReadSeeker)) error {
-
+	f func(modtime time.Time, content io.ReadSeeker),
+) error {
 	index, err := d.imageGetIndex(ctx, os)
 	if err != nil {
 		return err
 	}
 
 	dir := d.getImageDir(os)
-	for i := len(index) - 1; i >= 0; i-- {
-		id := index[i].ID
-		date := index[i].Date
+	for _, i := range slices.Backward(index) {
+		id := i.ID
+		date := i.Date
 		if !dir.Exists(id) {
-			log.Warn("imageServeFile: no local copy", map[string]interface{}{
+			log.Warn("imageServeFile: no local copy", map[string]any{
 				"id": id,
 			})
 			continue
@@ -305,6 +303,7 @@ func (d imageDriver) Delete(ctx context.Context, os, id string) error {
 }
 
 func (d imageDriver) ServeFile(ctx context.Context, os, filename string,
-	f func(modtime time.Time, content io.ReadSeeker)) error {
+	f func(modtime time.Time, content io.ReadSeeker),
+) error {
 	return d.imageServeFile(ctx, os, filename, f)
 }

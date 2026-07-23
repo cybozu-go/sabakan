@@ -69,7 +69,7 @@ func (c *Client) do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
-		var msg map[string]interface{}
+		var msg map[string]any
 		err = json.Unmarshal(body, &msg)
 		if err != nil {
 			return nil, &httpError{code: resp.StatusCode, reason: string(body)}
@@ -81,7 +81,7 @@ func (c *Client) do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func (c *Client) getJSON(ctx context.Context, p string, params map[string]string, data interface{}) error {
+func (c *Client) getJSON(ctx context.Context, p string, params map[string]string, data any) error {
 	req := c.newRequest(ctx, "GET", p, nil)
 	q := req.URL.Query()
 	for k, v := range params {
@@ -118,7 +118,7 @@ func (c *Client) getBytes(ctx context.Context, p string) ([]byte, error) {
 	return body, nil
 }
 
-func (c *Client) sendRequestWithJSON(ctx context.Context, method, p string, data interface{}) error {
+func (c *Client) sendRequestWithJSON(ctx context.Context, method, p string, data any) error {
 	b := new(bytes.Buffer)
 	err := json.NewEncoder(b).Encode(data)
 	if err != nil {

@@ -57,7 +57,7 @@ func (s Server) handleCoreOSiPXE(w http.ResponseWriter, r *http.Request) {
 	ipxe := fmt.Sprintf(redirectiPXETemplate, u.String())
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
-	w.Write([]byte(ipxe))
+	_, _ = w.Write([]byte(ipxe))
 }
 
 func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Request, serial string) {
@@ -89,7 +89,7 @@ func (s Server) handleCoreOSiPXEWithSerial(w http.ResponseWriter, r *http.Reques
 	ipxe := fmt.Sprintf(coreOSiPXETemplate, u.String(), ids[len(ids)-1], params)
 
 	w.Header().Set("Content-Type", "text/plain; charset=ASCII")
-	w.Write([]byte(ipxe))
+	_, _ = w.Write([]byte(ipxe))
 }
 
 func (s Server) handleCoreOSKernel(w http.ResponseWriter, r *http.Request) {

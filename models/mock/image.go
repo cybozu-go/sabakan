@@ -55,7 +55,7 @@ func (d *imageDriver) Upload(ctx context.Context, os, id string, r io.Reader) er
 	d.mu.Lock()
 	defer func() {
 		d.mu.Unlock()
-		io.Copy(io.Discard, r)
+		_, _ = io.Copy(io.Discard, r)
 	}()
 
 	if os != "coreos" {
@@ -134,7 +134,7 @@ func (d *imageDriver) Download(ctx context.Context, os, id string, out io.Writer
 	// kernel
 	hdr := &tar.Header{
 		Name: sabakan.ImageKernelFilename,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: int64(len(data.kernel)),
 	}
 	err := tw.WriteHeader(hdr)
@@ -149,7 +149,7 @@ func (d *imageDriver) Download(ctx context.Context, os, id string, out io.Writer
 	// initrd
 	hdr = &tar.Header{
 		Name: sabakan.ImageInitrdFilename,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: int64(len(data.initrd)),
 	}
 	err = tw.WriteHeader(hdr)
@@ -183,7 +183,8 @@ func (d *imageDriver) Delete(ctx context.Context, os, id string) error {
 }
 
 func (d *imageDriver) ServeFile(ctx context.Context, os, filename string,
-	f func(modtime time.Time, content io.ReadSeeker)) error {
+	f func(modtime time.Time, content io.ReadSeeker),
+) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 

@@ -73,7 +73,7 @@ func testAssets() {
 		currentRevision := v.Header.Revision
 
 		By("Executing compaction")
-		etcdctl("compaction", "--physical=true", strconv.Itoa(currentRevision))
+		_, _, _ = etcdctl("compaction", "--physical=true", strconv.Itoa(currentRevision))
 
 		By("Restarting host2 sabakan")
 		_, _, err = startHost2Sabakan(sabakanImageURL)

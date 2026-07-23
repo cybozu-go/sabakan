@@ -39,7 +39,7 @@ func (s Server) handleStateGet(w http.ResponseWriter, r *http.Request, serial st
 	}
 
 	w.Header().Set("content-type", "text/plain")
-	io.WriteString(w, m.Status.State.String())
+	_, _ = io.WriteString(w, m.Status.State.String())
 }
 
 func (s Server) handleStatePut(w http.ResponseWriter, r *http.Request, serial string) {

@@ -1,6 +1,7 @@
 package gql
 
 import (
+	"slices"
 	"time"
 
 	"github.com/cybozu-go/sabakan/v3"
@@ -88,24 +89,14 @@ func containsRack(h *model.MachineParams, target int, base bool) bool {
 	if h == nil || len(h.Racks) == 0 {
 		return base
 	}
-	for _, rack := range h.Racks {
-		if rack == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(h.Racks, target)
 }
 
 func containsRole(h *model.MachineParams, target string, base bool) bool {
 	if h == nil || len(h.Roles) == 0 {
 		return base
 	}
-	for _, role := range h.Roles {
-		if role == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(h.Roles, target)
 }
 
 func containsState(h *model.MachineParams, target sabakan.MachineState, base bool) bool {
@@ -113,10 +104,5 @@ func containsState(h *model.MachineParams, target sabakan.MachineState, base boo
 		return base
 	}
 
-	for _, state := range h.States {
-		if state == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(h.States, target)
 }

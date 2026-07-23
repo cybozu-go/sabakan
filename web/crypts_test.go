@@ -186,7 +186,7 @@ func testCryptsDelete(t *testing.T) {
 	expected := make(map[string]struct{})
 	serial := "abc"
 	key := "aaa"
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		diskPath := fmt.Sprintf("path%d", i)
 		expected[diskPath] = struct{}{}
 		err := m.Storage.PutEncryptionKey(ctx, serial, diskPath, []byte(key))
@@ -262,7 +262,7 @@ func testCryptsDelete(t *testing.T) {
 		t.Fatal("unexpected response:", deletedPaths)
 	}
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		diskPath := fmt.Sprintf("path%d", i)
 		data, err := m.Storage.GetEncryptionKey(ctx, serial, diskPath)
 		if err != nil {

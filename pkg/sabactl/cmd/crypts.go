@@ -32,7 +32,6 @@ var cryptsDeleteCmd = &cobra.Command{
 		})
 		well.Stop()
 		return well.Wait()
-
 	},
 }
 

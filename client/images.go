@@ -33,7 +33,7 @@ func (c *Client) ImagesUpload(ctx context.Context, os, id string, kernel io.Read
 func addFileToTar(tw *tar.Writer, name string, src io.Reader, size int64) error {
 	hdr := &tar.Header{
 		Name: name,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: size,
 	}
 	err := tw.WriteHeader(hdr)

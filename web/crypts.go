@@ -7,8 +7,9 @@ import (
 	"strings"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func (s Server) handleCrypts(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +97,7 @@ func (s Server) handleCryptsPut(w http.ResponseWriter, r *http.Request, params [
 		return
 	}
 
-	resp := make(map[string]interface{})
+	resp := make(map[string]any)
 	resp["status"] = http.StatusCreated
 	resp["path"] = p
 

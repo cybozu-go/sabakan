@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 var testDHCPConfig = sabakan.DHCPConfig{
@@ -130,7 +131,7 @@ func testDHCPLease(t *testing.T) {
 		t.Error("dhcpip is not expected: ", dhcpip.String())
 	}
 
-	for i := 0; i < 29; i++ {
+	for i := range 29 {
 		mac := net.HardwareAddr([]byte{0x11, 0x22, 0x33, 0x44, 0x55, byte(i)})
 		_, err := d.dhcpLease(context.Background(), interfaceip, mac)
 		if err != nil {
