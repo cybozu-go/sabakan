@@ -8,9 +8,10 @@ import (
 	"path"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/clientv3util"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 type rackIndexUsage struct {
@@ -63,7 +64,7 @@ OUT:
 
 func (r *rackIndexUsage) release(m *sabakan.Machine) (needUpdate bool) {
 	if _, ok := r.indexMap[m.Spec.IndexInRack]; !ok {
-		log.Info("etcd: node_index not found in indexMap; deleted by another sabakan", map[string]interface{}{
+		log.Info("etcd: node_index not found in indexMap; deleted by another sabakan", map[string]any{
 			"node_index": m.Spec.IndexInRack,
 		})
 		needUpdate = false

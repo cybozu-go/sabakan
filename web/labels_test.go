@@ -18,7 +18,7 @@ func testLabelsPut(t *testing.T) {
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
-	m.Machine.Register(context.Background(), []*sabakan.Machine{
+	_ = m.Machine.Register(context.Background(), []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial: "1234abcd",
 			Rack:   1,
@@ -75,7 +75,7 @@ func testLabelsDelete(t *testing.T) {
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
-	m.Machine.Register(context.Background(), []*sabakan.Machine{
+	_ = m.Machine.Register(context.Background(), []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial: "1234abcd",
 			Labels: map[string]string{"datacenter": "heaven"},

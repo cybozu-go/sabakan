@@ -8,9 +8,10 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 const (
@@ -20,7 +21,7 @@ const (
 
 type logger struct{}
 
-func (l logger) Println(v ...interface{}) {
+func (l logger) Println(v ...any) {
 	log.Error(fmt.Sprint(v...), nil)
 }
 
@@ -102,7 +103,7 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 			defer wg.Done()
 			err := metric.updater(ctx, c.model)
 			if err != nil {
-				log.Warn("unable to update metrics", map[string]interface{}{
+				log.Warn("unable to update metrics", map[string]any{
 					"name":      key,
 					log.FnError: err,
 				})

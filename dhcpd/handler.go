@@ -9,8 +9,9 @@ import (
 	"path"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	"go.universe.tf/netboot/dhcp4"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 // Handler defines an interface for Server.
@@ -38,7 +39,7 @@ func (h DHCPHandler) ServeDHCP(ctx context.Context, pkt *dhcp4.Packet, intf Inte
 	case dhcp4.MsgInform:
 		return h.handleInform(ctx, pkt, intf)
 	default:
-		log.Error("unexpected message type", map[string]interface{}{
+		log.Error("unexpected message type", map[string]any{
 			"type": pkt.Type.String(),
 		})
 	}

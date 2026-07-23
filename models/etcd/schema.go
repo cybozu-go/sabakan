@@ -6,17 +6,16 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/clientv3util"
 	"go.etcd.io/etcd/client/v3/concurrency"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 const noVersion = "1"
 
-var (
-	errLostOwner = errors.New("lost ownership during conversion")
-)
+var errLostOwner = errors.New("lost ownership during conversion")
 
 func (d *driver) Version(ctx context.Context) (string, error) {
 RETRY:
@@ -66,7 +65,7 @@ func (d *driver) Upgrade(ctx context.Context) error {
 	}
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		mu.Unlock(ctx)
+		_ = mu.Unlock(ctx)
 		cancel()
 	}()
 
@@ -79,7 +78,7 @@ func (d *driver) Upgrade(ctx context.Context) error {
 		return nil
 	}
 
-	log.Info("upgrading schema version", map[string]interface{}{
+	log.Info("upgrading schema version", map[string]any{
 		"from": sv,
 		"to":   sabakan.SchemaVersion,
 	})
@@ -99,7 +98,7 @@ func (d *driver) Upgrade(ctx context.Context) error {
 		}
 
 		// fallthrough when case "3" is added
-		//fallthrough
+		// fallthrough
 	default:
 		return errors.New("unknown schema version: " + sv)
 	}

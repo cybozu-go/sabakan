@@ -17,30 +17,29 @@ import (
 )
 
 func newTestImage(kernel, initrd string) io.Reader {
-
 	buf := new(bytes.Buffer)
 	tw := tar.NewWriter(buf)
 	hdr := &tar.Header{
 		Name: sabakan.ImageKernelFilename,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: int64(len(kernel)),
 	}
 	err := tw.WriteHeader(hdr)
 	if err != nil {
 		panic(err)
 	}
-	tw.Write([]byte(kernel))
+	_, _ = tw.Write([]byte(kernel))
 
 	hdr = &tar.Header{
 		Name: sabakan.ImageInitrdFilename,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: int64(len(initrd)),
 	}
 	err = tw.WriteHeader(hdr)
 	if err != nil {
 		panic(err)
 	}
-	tw.Write([]byte(initrd))
+	_, _ = tw.Write([]byte(initrd))
 	tw.Close()
 	return buf
 }
@@ -98,7 +97,7 @@ func testImageGetIndex(t *testing.T) {
 	if len(index) != 2 {
 		t.Fatal("wrong image index: ", len(index))
 	}
-	for i := 0; i < len(testIndex); i++ {
+	for i := range testIndex {
 		if index[i].ID != testIndex[i].ID {
 			t.Error("mismatch id", i, index[i].ID)
 		}
@@ -107,7 +106,7 @@ func testImageGetIndex(t *testing.T) {
 		}
 	}
 
-	err = os.MkdirAll(filepath.Join(tempdir, "images", "coreos", "1234.5"), 0755)
+	err = os.MkdirAll(filepath.Join(tempdir, "images", "coreos", "1234.5"), 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +203,7 @@ func testImageUpload(t *testing.T) {
 		t.Error("image is not stored")
 	}
 
-	for i := 0; i < sabakan.MaxImages; i++ {
+	for i := range sabakan.MaxImages {
 		archive = newTestImage("abcd", "efg")
 		err = d.imageUpload(context.Background(), "coreos", fmt.Sprint(i), archive)
 		if err != nil {
@@ -230,7 +229,7 @@ func testImageUpload(t *testing.T) {
 		t.Error("wrong deleted image ID")
 	}
 
-	for i := 0; i < MaxDeleted; i++ {
+	for i := range MaxDeleted {
 		archive = newTestImage("abcd", "efg")
 		err = d.imageUpload(context.Background(), "coreos", fmt.Sprint(i+10), archive)
 		if err != nil {
@@ -412,14 +411,14 @@ func testImageDelete(t *testing.T) {
 	}
 
 	index = sabakan.ImageIndex{}
-	for i := 0; i < MaxDeleted; i++ {
+	for i := range MaxDeleted {
 		index = append(index, &sabakan.Image{
 			ID: fmt.Sprint(i),
 		})
 	}
 	testImagePutIndex(t, d, index, "coreos")
 
-	for i := 0; i < MaxDeleted; i++ {
+	for i := range MaxDeleted {
 		err = d.imageDelete(context.Background(), "coreos", fmt.Sprint(i))
 		if err != nil {
 			t.Fatal(err)
@@ -463,7 +462,7 @@ func testImageServeFile(t *testing.T) {
 	buf := new(bytes.Buffer)
 	f := func(mt time.Time, content io.ReadSeeker) {
 		buf.Reset()
-		io.Copy(buf, content)
+		_, _ = io.Copy(buf, content)
 	}
 
 	err = d.imageServeFile(context.Background(), "coreos", "kernel", f)

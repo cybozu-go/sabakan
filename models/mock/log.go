@@ -12,5 +12,5 @@ type logDriver struct {
 }
 
 func (d logDriver) Dump(ctx context.Context, since, until time.Time, w io.Writer) error {
-	return json.NewEncoder(w).Encode(d.driver.log)
+	return json.NewEncoder(w).Encode(d.log)
 }

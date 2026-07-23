@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
 	"github.com/spf13/cobra"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 var kernelParamsOS string
@@ -36,6 +37,7 @@ var kernelParamsGetCmd = &cobra.Command{
 		return well.Wait()
 	},
 }
+
 var kernelParamsSetCmd = &cobra.Command{
 	Use:   "set PARAMS",
 	Short: "set new kernel parameters",

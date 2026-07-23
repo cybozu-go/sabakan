@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
 	"github.com/spf13/cobra"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 var (
@@ -28,7 +29,7 @@ func ppLog(line []byte, w io.Writer) error {
 	}
 
 	ts := a.Timestamp.Format("Jan 02 15:04:05.000")
-	detail := strings.Replace(a.Detail, "\n", " ", -1)
+	detail := strings.ReplaceAll(a.Detail, "\n", " ")
 	if len(detail) > 20 {
 		detail = detail[:20]
 	}
@@ -49,7 +50,7 @@ func (lp *logPrinter) Write(data []byte) (int, error) {
 		return n, err
 	}
 
-	for i := 0; i < newlines; i++ {
+	for range newlines {
 		line, err := lp.buf.ReadBytes('\n')
 		if err != nil {
 			return n, err

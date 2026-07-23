@@ -76,7 +76,7 @@ func testNetboot() {
 				for scanner.Scan() {
 					hasNoReadWorkQueue := false
 					hasNoWriteWorkQueue := false
-					for _, field := range strings.Fields(scanner.Text()) {
+					for field := range strings.FieldsSeq(scanner.Text()) {
 						if field == "no_read_workqueue" {
 							hasNoReadWorkQueue = true
 						}
@@ -117,7 +117,7 @@ func testNetboot() {
 
 		By("Checking encryption key is kept after reboot")
 		// Exit code is 255 when ssh is disconnected
-		execAt(worker2, "sudo", "reboot")
+		_, _, _ = execAt(worker2, "sudo", "reboot")
 		Expect(prepareSSHClients(worker2)).NotTo(HaveOccurred())
 		copyReadNVRAM(worker2, remoteFilename)
 

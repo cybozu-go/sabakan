@@ -13,8 +13,9 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func decodeAsset(data []byte) (*sabakan.Asset, error) {
@@ -87,7 +88,7 @@ func (d *driver) downloadAsset(ctx context.Context, asset *sabakan.Asset) error 
 	}
 
 	if err != nil {
-		log.Error("asset: failed to pull", map[string]interface{}{
+		log.Error("asset: failed to pull", map[string]any{
 			"name": asset.Name,
 			"id":   asset.ID,
 			"urls": asset.URLs,
@@ -95,13 +96,13 @@ func (d *driver) downloadAsset(ctx context.Context, asset *sabakan.Asset) error 
 		return err
 	}
 	defer func() {
-		io.Copy(io.Discard, resp.Body)
+		_, _ = io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 	}()
 
 	id, err := strconv.Atoi(resp.Header.Get("X-Sabakan-Asset-ID"))
 	if err != nil {
-		log.Error("invalid asset ID", map[string]interface{}{
+		log.Error("invalid asset ID", map[string]any{
 			log.FnError: err,
 			"id":        resp.Header.Get("X-Sabakan-Asset-ID"),
 		})
@@ -114,7 +115,7 @@ func (d *driver) downloadAsset(ctx context.Context, asset *sabakan.Asset) error 
 
 	if asset.ID != id {
 		// the asset has been replaced with newer one
-		log.Info("asset: replaced during pull", map[string]interface{}{
+		log.Info("asset: replaced during pull", map[string]any{
 			"requested": asset.ID,
 			"received":  id,
 			"name":      asset.Name,
@@ -161,7 +162,7 @@ REDO:
 		}
 		err = d.downloadAsset(ctx, asset)
 		if err == nil {
-			log.Info("asset: downloaded a local copy", map[string]interface{}{
+			log.Info("asset: downloaded a local copy", map[string]any{
 				"name": asset.Name,
 				"id":   asset.ID,
 			})
@@ -171,7 +172,7 @@ REDO:
 		// continue even when download failed because, if sabakan died,
 		// operators could not workaround by, for example, re-uploading
 		// the asset.
-		log.Error("asset: download failed", map[string]interface{}{
+		log.Error("asset: download failed", map[string]any{
 			log.FnError: err,
 			"name":      asset.Name,
 			"id":        asset.ID,
@@ -193,7 +194,7 @@ REDO:
 		goto REDO
 	}
 
-	dir.GC(ids)
+	_ = dir.GC(ids)
 	return nil
 }
 
@@ -204,7 +205,7 @@ func (d *driver) handleAssetAdd(ctx context.Context, asset *sabakan.Asset) error
 
 	err := d.downloadAsset(ctx, asset)
 	if err == nil {
-		log.Info("asset: downloaded a local copy", map[string]interface{}{
+		log.Info("asset: downloaded a local copy", map[string]any{
 			"name": asset.Name,
 			"id":   asset.ID,
 		})
@@ -212,7 +213,7 @@ func (d *driver) handleAssetAdd(ctx context.Context, asset *sabakan.Asset) error
 		// continue even when download failed because, if sabakan died,
 		// operators could not workaround by, for example, re-uploading
 		// the asset.
-		log.Error("asset: download failed", map[string]interface{}{
+		log.Error("asset: download failed", map[string]any{
 			log.FnError: err,
 			"name":      asset.Name,
 			"id":        asset.ID,
@@ -240,13 +241,13 @@ func (d *driver) handleAssetDelete(ctx context.Context, asset *sabakan.Asset) er
 		return nil
 	}
 
-	log.Info("asset: delete a local copy", map[string]interface{}{
+	log.Info("asset: delete a local copy", map[string]any{
 		"name": asset.Name,
 		"id":   asset.ID,
 	})
 	err := dir.Remove(asset.ID)
 	if err != nil {
-		log.Error("asset: failed to remove a local copy", map[string]interface{}{
+		log.Error("asset: failed to remove a local copy", map[string]any{
 			log.FnError: err,
 			"name":      asset.Name,
 			"id":        asset.ID,
@@ -285,7 +286,7 @@ func (d *driver) handleAssetEvent(ctx context.Context, ev *clientv3.Event) error
 func (d *driver) startAssetUpdater(ctx context.Context, ch <-chan EventPool) error {
 	for ep := range ch {
 		jitter := rand.Intn(maxJitterSeconds * 100)
-		log.Info("asset updater: waiting...", map[string]interface{}{
+		log.Info("asset updater: waiting...", map[string]any{
 			"centiseconds": jitter,
 		})
 		select {

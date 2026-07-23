@@ -8,10 +8,6 @@ import (
 	"github.com/cybozu-go/sabakan/v3/gql/graph/model"
 )
 
-func testInt(i int) *int {
-	return &i
-}
-
 func TestMatchMachine(t *testing.T) {
 	now := time.Date(2018, time.November, 26, 0, 0, 0, 0, time.UTC)
 	nowPlus60 := now.Add(time.Hour * 24 * 60)
@@ -267,7 +263,7 @@ func TestMatchMachine(t *testing.T) {
 				Status: sabakan.MachineStatus{},
 			},
 			having: &model.MachineParams{
-				MinDaysBeforeRetire: testInt(90),
+				MinDaysBeforeRetire: new(90),
 			},
 			notHaving: &model.MachineParams{},
 			now:       now,
@@ -282,7 +278,7 @@ func TestMatchMachine(t *testing.T) {
 				Status: sabakan.MachineStatus{},
 			},
 			having: &model.MachineParams{
-				MinDaysBeforeRetire: testInt(50),
+				MinDaysBeforeRetire: new(50),
 			},
 			notHaving: &model.MachineParams{},
 			now:       now,
@@ -298,7 +294,7 @@ func TestMatchMachine(t *testing.T) {
 			},
 			having: &model.MachineParams{},
 			notHaving: &model.MachineParams{
-				MinDaysBeforeRetire: testInt(50),
+				MinDaysBeforeRetire: new(50),
 			},
 			now:    now,
 			expect: false,
@@ -326,7 +322,6 @@ func TestMatchMachine(t *testing.T) {
 	}
 
 	for _, c := range testCases {
-		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 

@@ -34,10 +34,11 @@ check-generated:
 
 .PHONY: lint
 lint:
-	test -z "$$(go tool goimports -l . | tee /dev/stderr)"
-	go tool staticcheck ./...
-	test -z "$$(go tool custom-checker -restrictpkg.packages=html/template,log $$(go list -tags='$(GOTAGS)' ./...) 2>&1 | tee /dev/stderr)"
-	go vet ./...
+	go tool golangci-lint run
+
+.PHONY: fmt
+fmt:
+	go tool golangci-lint fmt
 
 .PHONY: test
 test:

@@ -14,11 +14,12 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/vektah/gqlparser/v2/ast"
+
 	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/sabakan/v3/gql/graph"
 	"github.com/cybozu-go/sabakan/v3/gql/graph/generated"
 	"github.com/cybozu-go/sabakan/v3/metrics"
-	"github.com/vektah/gqlparser/v2/ast"
 )
 
 const (
@@ -26,9 +27,7 @@ const (
 	HeaderSabactlUser = "X-Sabakan-User"
 )
 
-var (
-	hostnameAtStartup string
-)
+var hostnameAtStartup string
 
 func init() {
 	hostnameAtStartup, _ = os.Hostname()

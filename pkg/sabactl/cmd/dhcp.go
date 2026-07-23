@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
 	"github.com/spf13/cobra"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 var dhcpConfigFile string
@@ -38,6 +39,7 @@ var dhcpGetCmd = &cobra.Command{
 		return well.Wait()
 	},
 }
+
 var dhcpSetCmd = &cobra.Command{
 	Use:   "set -f FILE",
 	Short: "update DHCP configuration",
@@ -66,7 +68,7 @@ var dhcpSetCmd = &cobra.Command{
 
 func init() {
 	dhcpSetCmd.Flags().StringVarP(&dhcpConfigFile, "file", "f", "", "DHCP configuration in json")
-	dhcpSetCmd.MarkFlagRequired("file")
+	_ = dhcpSetCmd.MarkFlagRequired("file")
 
 	dhcpCmd.AddCommand(dhcpGetCmd)
 	dhcpCmd.AddCommand(dhcpSetCmd)

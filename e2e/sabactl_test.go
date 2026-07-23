@@ -11,8 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 const (
@@ -43,7 +44,7 @@ func exitCode(err error) int {
 	return ExitSuccess
 }
 
-func runSabactlWithFile(t *testing.T, data interface{}, args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
+func runSabactlWithFile(t *testing.T, data any, args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
 	f, err := os.CreateTemp("", "sabakan-test")
 	if err != nil {
 		t.Fatal(err)
@@ -72,7 +73,7 @@ func testSabactlRoot(t *testing.T) {
 }
 
 func testSabactlDHCP(t *testing.T) {
-	var conf = sabakan.DHCPConfig{
+	conf := sabakan.DHCPConfig{
 		DNSServers: []string{"1.1.1.1", "8.8.8.8"},
 	}
 	stdout, stderr, err := runSabactlWithFile(t, &conf, "dhcp", "set")
@@ -100,7 +101,7 @@ func testSabactlDHCP(t *testing.T) {
 		t.Error("unexpected config", got)
 	}
 
-	var badConf = sabakan.DHCPConfig{
+	badConf := sabakan.DHCPConfig{
 		DNSServers: []string{"a.b.c.d"},
 	}
 	stdout, stderr, err = runSabactlWithFile(t, &badConf, "dhcp", "set")
@@ -121,7 +122,7 @@ func testSabactlDHCP(t *testing.T) {
 }
 
 func testSabactlIPAM(t *testing.T) {
-	var conf = sabakan.IPAMConfig{
+	conf := sabakan.IPAMConfig{
 		MaxNodesInRack:    28,
 		NodeIPv4Pool:      "10.69.0.0/20",
 		NodeIPv4Offset:    "",
@@ -163,7 +164,7 @@ func testSabactlIPAM(t *testing.T) {
 		t.Error("unexpected config", got)
 	}
 
-	var badConf = sabakan.IPAMConfig{
+	badConf := sabakan.IPAMConfig{
 		MaxNodesInRack:    0,
 		NodeIPv4Pool:      "10.69.0.0/20",
 		NodeIPv4Offset:    "",
@@ -196,7 +197,7 @@ func testSabactlIPAM(t *testing.T) {
 }
 
 func testSabactlMachines(t *testing.T) {
-	var conf = sabakan.IPAMConfig{
+	conf := sabakan.IPAMConfig{
 		MaxNodesInRack:    28,
 		NodeIPv4Pool:      "10.69.0.0/20",
 		NodeIPv4Offset:    "",
@@ -648,9 +649,9 @@ func testSabactlIgnitions(t *testing.T) {
 	if len(tmpl.Template) == 0 {
 		t.Error("empty template")
 	}
-	expectedMeta := map[string]interface{}{
+	expectedMeta := map[string]any{
 		"foo":   "bar",
-		"array": []interface{}{1.0, 2.0, 3.0},
+		"array": []any{1.0, 2.0, 3.0},
 	}
 	if !cmp.Equal(expectedMeta, tmpl.Metadata) {
 		t.Error("wrong meta data:", cmp.Diff(expectedMeta, tmpl.Metadata))

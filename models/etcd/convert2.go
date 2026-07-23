@@ -6,9 +6,10 @@ import (
 	"fmt"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/concurrency"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func (d *driver) convertTo2Machines(ctx context.Context, mu *concurrency.Mutex, ipam *sabakan.IPAMConfig) error {
@@ -140,7 +141,7 @@ func (d *driver) convertTo2(ctx context.Context, mu *concurrency.Mutex) error {
 		return errLostOwner
 	}
 
-	log.Info("updated schema version", map[string]interface{}{
+	log.Info("updated schema version", map[string]any{
 		"to": thisVersion,
 	})
 	return nil

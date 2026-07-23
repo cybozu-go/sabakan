@@ -110,7 +110,7 @@ func (c *IPAMConfig) GenerateIP(mc *Machine) {
 		}
 		a := netutil.IPAdd(poolIP, noffset)
 		su := uint(1) << shift
-		for i := uint(0); i < numip; i++ {
+		for i := range numip {
 			result[i] = netutil.IPAdd(a, int64(su*numip*lrn+idx+i*su))
 		}
 		return result

@@ -13,10 +13,11 @@ import (
 	"testing"
 	"time"
 
+	dto "github.com/prometheus/client_model/go"
+
 	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/sabakan/v3/metrics"
 	"github.com/cybozu-go/sabakan/v3/models/mock"
-	dto "github.com/prometheus/client_model/go"
 )
 
 func testHandleAPIV1(t *testing.T) {
