@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/cybozu-go/sabakan/v3/client"
 	"github.com/cybozu-go/well"
 	"github.com/spf13/cobra"
+
+	"github.com/cybozu-go/sabakan/v3/client"
 )
 
 var ignSetOpts struct {
@@ -95,7 +96,7 @@ If not, FILENAME should be a YAML file like this:
 			}
 			tmpl = rawTemplate
 		} else {
-			var metadata map[string]interface{}
+			var metadata map[string]any
 			if ignSetOpts.metafile != "" {
 				f, err := os.Open(ignSetOpts.metafile)
 				if err != nil {
@@ -143,7 +144,7 @@ func init() {
 	ignitionsSetCmd.Flags().StringVarP(&ignSetOpts.filename, "file", "f", "", "ignition template filename")
 	ignitionsSetCmd.Flags().StringVar(&ignSetOpts.metafile, "meta", "", "JSON file containing meta data")
 	ignitionsSetCmd.Flags().BoolVar(&ignSetOpts.json, "json", false, "read raw JSON template")
-	ignitionsSetCmd.MarkFlagRequired("file")
+	_ = ignitionsSetCmd.MarkFlagRequired("file")
 
 	ignitionsCmd.AddCommand(ignitionsGetCmd)
 	ignitionsCmd.AddCommand(ignitionsSetCmd)

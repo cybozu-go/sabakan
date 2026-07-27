@@ -7,10 +7,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cybozu-go/sabakan/v3"
-	"github.com/cybozu-go/sabakan/v3/client"
 	"github.com/cybozu-go/well"
 	"github.com/spf13/cobra"
+
+	"github.com/cybozu-go/sabakan/v3"
+	"github.com/cybozu-go/sabakan/v3/client"
 )
 
 var (

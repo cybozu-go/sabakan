@@ -9,8 +9,10 @@ import (
 	"github.com/cybozu-go/sabakan/v3"
 )
 
-const testMyURL = "http://www.example.com"
-const testMyURLHTTPS = "https://www.example.com"
+const (
+	testMyURL      = "http://www.example.com"
+	testMyURLHTTPS = "https://www.example.com"
+)
 
 func newTestServer(m sabakan.Model) *Server {
 	// httptest.NewRequest() sets RemoteAddr as "192.0.2.1:1234"

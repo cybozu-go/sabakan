@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/cybozu-go/log"
+
 	"github.com/cybozu-go/sabakan/v3"
 )
 
@@ -54,7 +55,7 @@ func writeToFile(p string, r io.Reader) error {
 	}
 	defer f.Close()
 
-	err = f.Chmod(0644)
+	err = f.Chmod(0o644)
 	if err != nil {
 		return err
 	}
@@ -126,10 +127,10 @@ func equalFileContent(filename0, filename1 string) (bool, error) {
 // archive lacks a file in "members", this function returns sabakan.ErrBadRequest.
 func (d ImageDir) Extract(r io.Reader, id string, members []string) error {
 	defer func() {
-		io.Copy(io.Discard, r)
+		_, _ = io.Copy(io.Discard, r)
 	}()
 
-	err := os.MkdirAll(d.Dir, 0755)
+	err := os.MkdirAll(d.Dir, 0o755)
 	if err != nil {
 		return err
 	}
@@ -219,7 +220,7 @@ func (d ImageDir) Download(w io.Writer, id string) error {
 
 	for _, fi := range files {
 		if !fi.Type().IsRegular() {
-			log.Warn("non-regular file in image dir", map[string]interface{}{
+			log.Warn("non-regular file in image dir", map[string]any{
 				"dir":  filepath.Join(d.Dir, id),
 				"name": fi.Name(),
 			})
@@ -234,7 +235,7 @@ func (d ImageDir) Download(w io.Writer, id string) error {
 		hdr := &tar.Header{
 			Name: fi.Name(),
 			Size: info.Size(),
-			Mode: 0644,
+			Mode: 0o644,
 		}
 		err = tw.WriteHeader(hdr)
 		if err != nil {

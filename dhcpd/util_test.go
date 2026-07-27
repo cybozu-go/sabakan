@@ -7,9 +7,10 @@ import (
 	"net/url"
 	"testing"
 
+	"go.universe.tf/netboot/dhcp4"
+
 	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/sabakan/v3/models/mock"
-	"go.universe.tf/netboot/dhcp4"
 )
 
 type mockInterface struct {
@@ -27,7 +28,7 @@ func (i mockInterface) Name() string {
 
 func testNewHandler(maskbits, gwoffset, leasemin uint) DHCPHandler {
 	m := mock.NewModel()
-	m.IPAM.PutConfig(context.Background(), &sabakan.IPAMConfig{
+	_ = m.IPAM.PutConfig(context.Background(), &sabakan.IPAMConfig{
 		MaxNodesInRack:    28,
 		NodeIPv4Pool:      "10.69.0.0/20",
 		NodeIPv4Offset:    "",
@@ -42,7 +43,7 @@ func testNewHandler(maskbits, gwoffset, leasemin uint) DHCPHandler {
 		BMCRangeMask:      20,
 		BMCGatewayOffset:  1,
 	})
-	m.DHCP.PutConfig(context.Background(), &sabakan.DHCPConfig{
+	_ = m.DHCP.PutConfig(context.Background(), &sabakan.DHCPConfig{
 		LeaseMinutes: leasemin,
 		DNSServers:   []string{"10.0.0.1", "10.0.0.2"},
 	})

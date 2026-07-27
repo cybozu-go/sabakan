@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func testLogAdd(t *testing.T) {
@@ -47,7 +48,7 @@ func testLogCompact(t *testing.T) {
 
 	now := time.Date(2013, time.April, 5, 1, 2, 3, 4, time.UTC)
 	ts := now.Add(-61 * 24 * time.Hour)
-	for i := int64(0); i < 3; i++ {
+	for i := range int64(3) {
 		d.addLog(ctx, ts, 100+i, sabakan.AuditIPAM, "config", "put", "test")
 		ts = ts.Add(24 * time.Hour)
 	}
@@ -101,7 +102,7 @@ func testLogTryCompact(t *testing.T) {
 
 	now := time.Date(2013, time.April, 5, 1, 2, 3, 4, time.UTC)
 	ts := now.Add(-61 * 24 * time.Hour)
-	for i := int64(0); i < 3; i++ {
+	for i := range int64(3) {
 		d.addLog(ctx, ts, 100+i, sabakan.AuditIPAM, "config", "put", "test")
 		ts = ts.Add(24 * time.Hour)
 	}
@@ -164,7 +165,7 @@ func testLogDump(t *testing.T) {
 
 	begin := time.Date(2013, time.April, 5, 1, 2, 3, 4, time.UTC)
 	end := begin
-	for i := int64(0); i < 2*logPageSize; i++ {
+	for i := range int64(2 * logPageSize) {
 		d.addLog(ctx, end, 100+i, sabakan.AuditIPAM, "config", "put", "test")
 		end = end.Add(time.Hour)
 	}

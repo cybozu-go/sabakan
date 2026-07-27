@@ -17,7 +17,7 @@ func TestBuildIgnitionTemplate(t *testing.T) {
 func testBuildIgnitionTemplate2_3(t *testing.T) {
 	t.Parallel()
 
-	meta := map[string]interface{}{
+	meta := map[string]any{
 		"foo": []int{1, 2, 3},
 		"bar": "zot",
 	}
@@ -74,7 +74,7 @@ func testBuildIgnitionTemplate2_3(t *testing.T) {
 	expectedFiles[2].Filesystem = "root"
 	expectedFiles[2].Path = "/opt/sbin/bar"
 	expectedFiles[2].Contents.Source = "{{ MyURL }}/api/v1/assets/bar"
-	expectedFiles[2].Mode = intPtr(0755)
+	expectedFiles[2].Mode = intPtr(0o755)
 	expectedFiles[3].Filesystem = "root"
 	expectedFiles[3].Path = "/etc/hostname"
 	expectedFiles[3].Contents.Source = "data:," + dataurl.EscapeString("{{ .Spec.Serial }}\n")

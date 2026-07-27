@@ -4,8 +4,7 @@ import (
 	"context"
 )
 
-type healthDriver struct {
-}
+type healthDriver struct{}
 
 func newHealthDriver() *healthDriver {
 	return &healthDriver{}

@@ -33,7 +33,7 @@ func (t *tpmDriver) allocateNVRAM() error {
 			return err
 		}
 		if e.Code != tpm2.RCNVRange {
-			log.Warn("out of range key encryption key, so re-define NV space", map[string]interface{}{
+			log.Warn("out of range key encryption key, so re-define NV space", map[string]any{
 				log.FnError: err,
 			})
 			err := t.undefineNVSpace()
@@ -91,7 +91,7 @@ func readKeyFromTPM(device string) ([]byte, TpmVersionID, error) {
 		t2, err2 := tpm.OpenTPM(device)
 		if err2 == nil {
 			t2.Close()
-			log.Warn("device is not TPM 2.0. disk encryption proceeds without TPM", map[string]interface{}{
+			log.Warn("device is not TPM 2.0. disk encryption proceeds without TPM", map[string]any{
 				"device": device,
 			})
 			return nil, TpmNone, nil
@@ -107,7 +107,7 @@ func readKeyFromTPM(device string) ([]byte, TpmVersionID, error) {
 		return kek, Tpm20, nil
 	}
 
-	log.Info("TPM key encryption key was not found", map[string]interface{}{
+	log.Info("TPM key encryption key was not found", map[string]any{
 		log.FnError: err,
 	})
 	err = t.allocateNVRAM()

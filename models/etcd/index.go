@@ -7,8 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 const (
@@ -153,32 +154,32 @@ func (mi *machinesIndex) query(q sabakan.Query) []string {
 
 	res := make(map[string]struct{})
 
-	for _, rack := range strings.Split(q.Rack(), ",") {
+	for rack := range strings.SplitSeq(q.Rack(), ",") {
 		for _, serial := range mi.Rack[rack] {
 			res[serial] = struct{}{}
 		}
 	}
-	for _, role := range strings.Split(q.Role(), ",") {
+	for role := range strings.SplitSeq(q.Role(), ",") {
 		for _, serial := range mi.Role[role] {
 			res[serial] = struct{}{}
 		}
 	}
-	for _, ipv4 := range strings.Split(q.IPv4(), ",") {
+	for ipv4 := range strings.SplitSeq(q.IPv4(), ",") {
 		if serial, ok := mi.IPv4[ipv4]; len(ipv4) > 0 && ok {
 			res[serial] = struct{}{}
 		}
 	}
-	for _, ipv6 := range strings.Split(q.IPv6(), ",") {
+	for ipv6 := range strings.SplitSeq(q.IPv6(), ",") {
 		if serial, ok := mi.IPv6[ipv6]; len(ipv6) > 0 && ok {
 			res[serial] = struct{}{}
 		}
 	}
-	for _, bmcType := range strings.Split(q.BMCType(), ",") {
+	for bmcType := range strings.SplitSeq(q.BMCType(), ",") {
 		for _, serial := range mi.BMCType[bmcType] {
 			res[serial] = struct{}{}
 		}
 	}
-	for _, state := range strings.Split(q.State(), ",") {
+	for state := range strings.SplitSeq(q.State(), ",") {
 		for _, serial := range mi.State[sabakan.MachineState(state)] {
 			res[serial] = struct{}{}
 		}

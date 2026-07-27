@@ -11,20 +11,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/vektah/gqlparser/v2/gqlerror"
+
 	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/sabakan/v3/models/mock"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 type setStateResponse struct {
 	Errors []gqlerror.Error `json:"errors"`
 	Data   struct {
-		State []interface{} `json:"state"`
+		State []any `json:"state"`
 	} `json:"data"`
 }
 
 func testMachinesPost(t *testing.T) {
-
 	m := mock.NewModel()
 	handler := newTestServer(m)
 
@@ -184,7 +184,7 @@ func testMachinesGet(t *testing.T) {
 	m := mock.NewModel()
 	handler := Server{Model: m}
 
-	m.Machine.Register(context.Background(), []*sabakan.Machine{
+	_ = m.Machine.Register(context.Background(), []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial: "1234abcd",
 			Labels: map[string]string{
@@ -427,7 +427,7 @@ func testMachinesGraphQL(t *testing.T) {
 	m := mock.NewModel()
 	handler := NewServer(m, "", "", nil, nil, nil, false, nil, false)
 
-	m.Machine.Register(context.Background(), []*sabakan.Machine{
+	_ = m.Machine.Register(context.Background(), []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{
 			Serial: "1234abcd",
 			Labels: map[string]string{
@@ -472,9 +472,9 @@ func testMachinesGraphQL(t *testing.T) {
 	}
 
 	var gqlResponse struct {
-		Errors []interface{} `json:"errors"`
+		Errors []any `json:"errors"`
 		Data   struct {
-			SearchMachines []interface{} `json:"searchMachines"`
+			SearchMachines []any `json:"searchMachines"`
 		} `json:"data"`
 	}
 	err := json.NewDecoder(resp.Body).Decode(&gqlResponse)

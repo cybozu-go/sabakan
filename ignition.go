@@ -16,7 +16,7 @@ const (
 // IgnitionTemplate represents an ignition template.
 // The exact type of Template is determined by Version.
 type IgnitionTemplate struct {
-	Version  IgnitionVersion        `json:"version"`
-	Template json.RawMessage        `json:"template"`
-	Metadata map[string]interface{} `json:"meta"`
+	Version  IgnitionVersion `json:"version"`
+	Template json.RawMessage `json:"template"`
+	Metadata map[string]any  `json:"meta"`
 }

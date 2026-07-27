@@ -7,10 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cybozu-go/sabakan/v3"
-	"github.com/cybozu-go/sabakan/v3/models/mock"
 	ign23 "github.com/flatcar/ignition/config/v2_3/types"
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/cybozu-go/sabakan/v3"
+	"github.com/cybozu-go/sabakan/v3/models/mock"
 )
 
 func TestIgnitions(t *testing.T) {
@@ -64,6 +65,7 @@ func TestIgnitions(t *testing.T) {
 		t.Error(`ign.Ignition.Version != "2.3.0"`)
 	}
 }
+
 func TestRenderIgnition(t *testing.T) {
 	t.Run("2.3", testRenderIgnition2_3)
 }
@@ -144,7 +146,7 @@ ExecStart=/bin/echo {{ add .Spec.Rack 10 }}
 		},
 	}
 
-	metadata := map[string]interface{}{
+	metadata := map[string]any{
 		"group1":         "g1",
 		"group1hash":     "g1hash",
 		"user1":          "u1",

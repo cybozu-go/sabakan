@@ -90,7 +90,7 @@ func (r *machineStatusResolver) Timestamp(ctx context.Context, obj *sabakan.Mach
 func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, state sabakan.MachineState) (*sabakan.MachineStatus, error) {
 	now := time.Now()
 
-	log.Info("SetMachineState is called", map[string]interface{}{
+	log.Info("SetMachineState is called", map[string]any{
 		"serial": serial,
 		"state":  state,
 	})
@@ -101,7 +101,7 @@ func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, s
 		case sabakan.ErrNotFound:
 			return &sabakan.MachineStatus{}, &gqlerror.Error{
 				Message: err.Error(),
-				Extensions: map[string]interface{}{
+				Extensions: map[string]any{
 					"serial": serial,
 					"type":   gql.ErrMachineNotFound,
 				},
@@ -109,7 +109,7 @@ func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, s
 		case sabakan.ErrEncryptionKeyExists:
 			return &sabakan.MachineStatus{}, &gqlerror.Error{
 				Message: err.Error(),
-				Extensions: map[string]interface{}{
+				Extensions: map[string]any{
 					"serial": serial,
 					"type":   gql.ErrEncryptionKeyExists,
 				},
@@ -120,7 +120,7 @@ func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, s
 			if err2 != nil {
 				return &sabakan.MachineStatus{}, &gqlerror.Error{
 					Message: err.Error(),
-					Extensions: map[string]interface{}{
+					Extensions: map[string]any{
 						"serial": serial,
 						"type":   gql.ErrInternalServerError,
 					},
@@ -128,7 +128,7 @@ func (r *mutationResolver) SetMachineState(ctx context.Context, serial string, s
 			}
 			return &sabakan.MachineStatus{}, &gqlerror.Error{
 				Message: err.Error(),
-				Extensions: map[string]interface{}{
+				Extensions: map[string]any{
 					"serial": serial,
 					"type":   gql.ErrInvalidStateTransition,
 				},
@@ -163,7 +163,7 @@ func (r *nICConfigResolver) Gateway(ctx context.Context, obj *sabakan.NICConfig)
 func (r *queryResolver) Machine(ctx context.Context, serial string) (*sabakan.Machine, error) {
 	now := time.Now()
 
-	log.Info("Machine is called", map[string]interface{}{
+	log.Info("Machine is called", map[string]any{
 		"serial": serial,
 	})
 
@@ -179,7 +179,7 @@ func (r *queryResolver) Machine(ctx context.Context, serial string) (*sabakan.Ma
 func (r *queryResolver) SearchMachines(ctx context.Context, having *model.MachineParams, notHaving *model.MachineParams) ([]*sabakan.Machine, error) {
 	now := time.Now()
 
-	log.Info("SearchMachines is called", map[string]interface{}{
+	log.Info("SearchMachines is called", map[string]any{
 		"having":    having,
 		"nothaving": notHaving,
 	})

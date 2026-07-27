@@ -28,7 +28,7 @@ func (s Server) Serve(ctx context.Context) error {
 		pkt, intf, err := s.Conn.RecvDHCP()
 		if err != nil {
 			if ctx.Err() != context.Canceled {
-				log.Error("RecvDHCP returns an error, exiting", map[string]interface{}{
+				log.Error("RecvDHCP returns an error, exiting", map[string]any{
 					log.FnError: err.Error(),
 				})
 			}
@@ -55,7 +55,7 @@ func (s Server) Serve(ctx context.Context) error {
 			case nil:
 				// continue to SendDHCP
 			default:
-				log.Error("handler returns an error", map[string]interface{}{
+				log.Error("handler returns an error", map[string]any{
 					log.FnError: err.Error(),
 				})
 				return nil
@@ -65,7 +65,7 @@ func (s Server) Serve(ctx context.Context) error {
 			log.Debug("dhcp: options", getOptionsLog(resp))
 			err = s.Conn.SendDHCP(resp, intf)
 			if err != nil {
-				log.Error("SendDHCP returns an error", map[string]interface{}{
+				log.Error("SendDHCP returns an error", map[string]any{
 					log.FnError: err.Error(),
 				})
 			}

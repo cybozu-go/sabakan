@@ -16,7 +16,7 @@ func (d *driver) loadLastRev() int64 {
 	p := filepath.Join(d.dataDir, LastRevFile)
 	f, err := os.Open(p)
 	if err != nil {
-		log.Warn("failed to open lastrev file", map[string]interface{}{
+		log.Warn("failed to open lastrev file", map[string]any{
 			log.FnError: err,
 		})
 		os.Remove(p)
@@ -26,7 +26,7 @@ func (d *driver) loadLastRev() int64 {
 
 	data, err := io.ReadAll(f)
 	if err != nil {
-		log.Warn("failed to read lastrev file", map[string]interface{}{
+		log.Warn("failed to read lastrev file", map[string]any{
 			log.FnError: err,
 		})
 		os.Remove(p)
@@ -35,7 +35,7 @@ func (d *driver) loadLastRev() int64 {
 
 	rev, err := strconv.ParseInt(string(data), 10, 64)
 	if err != nil {
-		log.Warn("invalid lastrev file", map[string]interface{}{
+		log.Warn("invalid lastrev file", map[string]any{
 			log.FnError: err,
 		})
 		os.Remove(p)
@@ -47,7 +47,7 @@ func (d *driver) loadLastRev() int64 {
 
 func (d *driver) saveLastRev(rev int64) error {
 	p := filepath.Join(d.dataDir, LastRevFile)
-	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0644)
+	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0o644)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ RETRY:
 			return err
 		}
 	} else {
-		log.Info("resume stateful watching", map[string]interface{}{
+		log.Info("resume stateful watching", map[string]any{
 			"rev": rev,
 		})
 	}
@@ -145,7 +145,7 @@ RETRY:
 				return err
 			}
 
-			log.Warn("database has been compacted; re-initializing", map[string]interface{}{
+			log.Warn("database has been compacted; re-initializing", map[string]any{
 				"compactedrev": resp.CompactRevision,
 			})
 			err := d.saveLastRev(0)

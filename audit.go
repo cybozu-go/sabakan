@@ -45,8 +45,8 @@ const (
 
 // NewAuditLog creates an audit log entry and initializes it.
 func NewAuditLog(ctx context.Context, ts time.Time, rev int64, cat AuditCategory,
-	instance, action, detail string) *AuditLog {
-
+	instance, action, detail string,
+) *AuditLog {
 	a := new(AuditLog)
 	a.Timestamp = ts.UTC()
 	a.Revision = rev

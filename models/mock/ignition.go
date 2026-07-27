@@ -5,8 +5,9 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/cybozu-go/sabakan/v3"
 	version "github.com/hashicorp/go-version"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 type ignitionDriver struct {

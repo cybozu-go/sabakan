@@ -11,9 +11,10 @@ import (
 
 	"github.com/cybozu-go/etcdutil"
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
 	clientv3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 const (
@@ -41,8 +42,8 @@ func testMain(m *testing.M) int {
 		log.ErrorExit(err)
 	}
 	defer func() {
-		cmd.Process.Kill()
-		cmd.Wait()
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
 		os.RemoveAll(etcdDataDir)
 	}()
 
@@ -77,7 +78,7 @@ func testNewDriver(t *testing.T) (*driver, <-chan struct{}) {
 		advertiseURL: u,
 	}
 	ch := make(chan struct{}, 8) // buffers post-modify-done signals, up to 8
-	go d.startStatelessWatcher(context.Background(), ch, nil)
+	go func() { _ = d.startStatelessWatcher(context.Background(), ch, nil) }()
 	<-ch
 	return d, ch
 }

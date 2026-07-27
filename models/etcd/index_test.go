@@ -59,7 +59,7 @@ func TestMachinesIndex(t *testing.T) {
 		t.Fatal("wrong query count:", len(serials))
 	}
 	sort.Strings(serials)
-	if !(serials[0] == "2" && serials[1] == "3") {
+	if serials[0] != "2" || serials[1] != "3" {
 		t.Error("wrong query serials:", serials)
 	}
 

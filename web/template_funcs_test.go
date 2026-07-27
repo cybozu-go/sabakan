@@ -10,10 +10,10 @@ import (
 func testArithmeticFuncs(t *testing.T) {
 	cases := []struct {
 		name    string
-		f       func(a, b interface{}) (interface{}, error)
-		a       interface{}
-		b       interface{}
-		expect  interface{}
+		f       func(a, b any) (any, error)
+		a       any
+		b       any
+		expect  any
 		wantErr bool
 	}{
 		{"addInt2", addFunc, int(3), int(-1), int64(2), false},
@@ -62,7 +62,6 @@ func testArithmeticFuncs(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			actual, err := tt.f(tt.a, tt.b)

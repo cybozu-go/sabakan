@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 type updateData struct {
@@ -89,7 +90,7 @@ OUTER:
 				return err
 			}
 
-			log.Info("image updater: pulled image", map[string]interface{}{
+			log.Info("image updater: pulled image", map[string]any{
 				"os":  os,
 				"id":  img.ID,
 				"url": u,
@@ -104,7 +105,7 @@ OUTER:
 			continue OUTER
 		}
 
-		log.Error("failed to pull image", map[string]interface{}{
+		log.Error("failed to pull image", map[string]any{
 			"os":   os,
 			"id":   img.ID,
 			"urls": img.URLs,
@@ -167,7 +168,7 @@ func (d *driver) startImageUpdater(ctx context.Context, ch <-chan struct{}) erro
 		select {
 		case <-ch:
 			jitter := rand.Intn(maxJitterSeconds * 100)
-			log.Info("image updater: waiting...", map[string]interface{}{
+			log.Info("image updater: waiting...", map[string]any{
 				"centiseconds": jitter,
 			})
 			select {

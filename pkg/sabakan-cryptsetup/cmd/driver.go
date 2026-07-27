@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
+
 	sabakan "github.com/cybozu-go/sabakan/v3/client"
 )
 
@@ -89,7 +90,7 @@ func (d *Driver) Setup(ctx context.Context) error {
 	_, err := os.Stat(d.tpmdev)
 	switch {
 	case err == nil:
-		log.Info("TPM is found. disk encryption proceeds with TPM", map[string]interface{}{
+		log.Info("TPM is found. disk encryption proceeds with TPM", map[string]any{
 			"device": d.tpmdev,
 		})
 		kek, d.tpmVersion, err = readKeyFromTPM(d.tpmdev)
@@ -97,7 +98,7 @@ func (d *Driver) Setup(ctx context.Context) error {
 			return err
 		}
 	case os.IsNotExist(err):
-		log.Info("no TPM is found. disk encryption proceeds without TPM", map[string]interface{}{
+		log.Info("no TPM is found. disk encryption proceeds without TPM", map[string]any{
 			"device":    d.tpmdev,
 			log.FnError: err,
 		})
@@ -110,7 +111,7 @@ func (d *Driver) Setup(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		log.Info("encrypted disk is ready", map[string]interface{}{
+		log.Info("encrypted disk is ready", map[string]any{
 			"path": filepath.Join("/dev/mapper", disk.CryptName()),
 		})
 	}
@@ -118,11 +119,11 @@ func (d *Driver) Setup(ctx context.Context) error {
 }
 
 func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKek []byte) error {
-	log.Info("setting up full disk encryption", map[string]interface{}{
+	log.Info("setting up full disk encryption", map[string]any{
 		"disk":           disk.Name(),
 		"tpm_kek_length": len(tpmKek),
 	})
-	f, err := os.OpenFile(disk.Device(), os.O_RDWR, 0660)
+	f, err := os.OpenFile(disk.Device(), os.O_RDWR, 0o660)
 	if err != nil {
 		return err
 	}
@@ -130,7 +131,7 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKek []byte) error 
 
 	md, err := ReadMetadata(f)
 	if err == ErrNotFound {
-		log.Info("disk is not formatted. format disk", map[string]interface{}{
+		log.Info("disk is not formatted. format disk", map[string]any{
 			"disk": disk.Name(),
 		})
 		return d.formatDisk(ctx, disk, f, tpmKek)
@@ -140,12 +141,12 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKek []byte) error 
 	}
 	if md.tpmVersion != d.tpmVersion {
 		if d.tpmVersion == 0 {
-			log.Error("TPM becomes unavailable", map[string]interface{}{
+			log.Error("TPM becomes unavailable", map[string]any{
 				"tpmversion": md.tpmVersion.String(),
 			})
 			return errors.New("TPM unavailable")
 		}
-		log.Info("reformat disk because TPM is now available", map[string]interface{}{
+		log.Info("reformat disk because TPM is now available", map[string]any{
 			"disk":       disk.Name(),
 			"tpmversion": d.tpmVersion.String(),
 		})
@@ -156,19 +157,19 @@ func (d *Driver) setupDisk(ctx context.Context, disk Disk, tpmKek []byte) error 
 RETRY:
 	ek, err := d.sabakan.CryptsGet(ctx, d.serial, md.HexID())
 	if err == nil {
-		log.Info("encryption key is found. run cryptsetup", map[string]interface{}{
+		log.Info("encryption key is found. run cryptsetup", map[string]any{
 			"disk": disk.Name(),
 		})
 		return Cryptsetup(disk, md, ek, tpmKek)
 	}
 	if sabakan.IsNotFound(err) {
-		log.Info("encryption key is not found in sabakan. format disk", map[string]interface{}{
+		log.Info("encryption key is not found in sabakan. format disk", map[string]any{
 			"disk": disk.Name(),
 		})
 		return d.formatDisk(ctx, disk, f, tpmKek)
 	}
 
-	log.Error("failed to retrieve key from sabakan", map[string]interface{}{
+	log.Error("failed to retrieve key from sabakan", map[string]any{
 		log.FnError: err,
 		"disk":      disk.Name(),
 		"try":       retries + 1,
@@ -215,7 +216,7 @@ RETRY:
 	if err == nil {
 		return nil
 	}
-	log.Error("failed to send key to sabakan", map[string]interface{}{
+	log.Error("failed to send key to sabakan", map[string]any{
 		log.FnError: err,
 		"disk":      disk.Name(),
 		"try":       retries + 1,

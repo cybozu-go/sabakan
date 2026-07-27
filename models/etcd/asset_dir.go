@@ -45,7 +45,7 @@ func (d AssetDir) Remove(id int) error {
 // Save stores an asset.
 // When successful, this returns SHA256 checksum of the contents.
 func (d AssetDir) Save(id int, r io.Reader, csum []byte) ([]byte, error) {
-	err := os.MkdirAll(d.Dir, 0755)
+	err := os.MkdirAll(d.Dir, 0o755)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (d AssetDir) GC(ids map[int]bool) error {
 
 		id, err := strconv.Atoi(fi.Name())
 		if err != nil || !ids[id] {
-			log.Info("removing garbage asset", map[string]interface{}{
+			log.Info("removing garbage asset", map[string]any{
 				"name": fi.Name(),
 			})
 			os.Remove(filepath.Join(d.Dir, fi.Name()))

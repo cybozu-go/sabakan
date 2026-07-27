@@ -14,14 +14,15 @@ import (
 
 	"github.com/cybozu-go/etcdutil"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
+	"go.universe.tf/netboot/dhcp4"
+	"sigs.k8s.io/yaml"
+
 	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/sabakan/v3/dhcpd"
 	"github.com/cybozu-go/sabakan/v3/metrics"
 	"github.com/cybozu-go/sabakan/v3/models/etcd"
 	"github.com/cybozu-go/sabakan/v3/web"
-	"github.com/cybozu-go/well"
-	"go.universe.tf/netboot/dhcp4"
-	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -56,7 +57,7 @@ var (
 
 func main() {
 	flag.Parse()
-	well.LogConfig{}.Apply()
+	_ = well.LogConfig{}.Apply()
 
 	well.Go(subMain)
 	well.Stop()
@@ -222,7 +223,9 @@ func subMain(ctx context.Context) error {
 			Handler: mux,
 		},
 	}
-	ms.ListenAndServe()
+	if err := ms.ListenAndServe(); err != nil {
+		return err
+	}
 
 	env.Stop()
 	return env.Wait()

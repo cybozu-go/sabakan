@@ -63,7 +63,7 @@ func (i ImageIndex) Append(img *Image) (ImageIndex, []string) {
 
 	ndels := len(i) - MaxImages + 1
 	dels := make([]string, ndels)
-	for j := 0; j < ndels; j++ {
+	for j := range ndels {
 		dels[j] = i[j].ID
 	}
 	copy(i, i[ndels:])

@@ -43,8 +43,8 @@ func optionLogKey(n dhcp4.Option) string {
 	return fmt.Sprintf("option_%d_%s", n, optionNames[n])
 }
 
-func getPacketLog(pkt *dhcp4.Packet, intf *net.Interface) map[string]interface{} {
-	pktLog := map[string]interface{}{
+func getPacketLog(pkt *dhcp4.Packet, intf *net.Interface) map[string]any {
+	pktLog := map[string]any{
 		"intf":      intf.Name,
 		"type":      pkt.Type.String(),
 		"xid":       binary.BigEndian.Uint32(pkt.TransactionID),
@@ -70,8 +70,8 @@ func getPacketLog(pkt *dhcp4.Packet, intf *net.Interface) map[string]interface{}
 	return pktLog
 }
 
-func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
-	optLog := make(map[string]interface{})
+func getOptionsLog(pkt *dhcp4.Packet) map[string]any {
+	optLog := make(map[string]any)
 
 	optLog["xid"] = binary.BigEndian.Uint32(pkt.TransactionID)
 
@@ -82,7 +82,7 @@ func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
 	sort.Ints(opts)
 	for _, n := range opts {
 		targetOpt := dhcp4.Option(n)
-		var out interface{}
+		var out any
 		var err error
 		switch targetOpt {
 		case dhcp4.OptSubnetMask:
@@ -129,10 +129,10 @@ func getOptionsLog(pkt *dhcp4.Packet) map[string]interface{} {
 	return optLog
 }
 
-func addPacketLog(pkt *dhcp4.Packet, fields map[string]interface{}) map[string]interface{} {
+func addPacketLog(pkt *dhcp4.Packet, fields map[string]any) map[string]any {
 	ret := fields
 	if ret == nil {
-		ret = make(map[string]interface{})
+		ret = make(map[string]any)
 	}
 	ret["xid"] = binary.BigEndian.Uint32(pkt.TransactionID)
 	ret["chaddr"] = pkt.HardwareAddr.String()

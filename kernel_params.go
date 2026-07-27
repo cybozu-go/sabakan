@@ -2,9 +2,7 @@ package sabakan
 
 import "regexp"
 
-var (
-	reValidKernelParams = regexp.MustCompile(`^[0-9a-zA-Z.,-_= ]*$`)
-)
+var reValidKernelParams = regexp.MustCompile(`^[0-9a-zA-Z.,-_= ]*$`)
 
 // IsValidKernelParams returns true if s is valid as an kernel params
 func IsValidKernelParams(s string) bool {

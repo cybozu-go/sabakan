@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"time"
 
 	version "github.com/hashicorp/go-version"
@@ -201,12 +202,7 @@ func NewMachine(spec MachineSpec) *Machine {
 }
 
 func (m *Machine) isPermittedTransition(to MachineState) bool {
-	for _, v := range permittedTransitions[m.Status.State] {
-		if v == to {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(permittedTransitions[m.Status.State], to)
 }
 
 // SetState sets the state of the machine.

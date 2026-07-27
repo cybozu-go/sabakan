@@ -15,30 +15,29 @@ import (
 )
 
 func newTestImage(kernel, initrd string) io.Reader {
-
 	buf := new(bytes.Buffer)
 	tw := tar.NewWriter(buf)
 	hdr := &tar.Header{
 		Name: sabakan.ImageKernelFilename,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: int64(len(kernel)),
 	}
 	err := tw.WriteHeader(hdr)
 	if err != nil {
 		panic(err)
 	}
-	tw.Write([]byte(kernel))
+	_, _ = tw.Write([]byte(kernel))
 
 	hdr = &tar.Header{
 		Name: sabakan.ImageInitrdFilename,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: int64(len(initrd)),
 	}
 	err = tw.WriteHeader(hdr)
 	if err != nil {
 		panic(err)
 	}
-	tw.Write([]byte(initrd))
+	_, _ = tw.Write([]byte(initrd))
 	tw.Close()
 	return buf
 }
@@ -50,14 +49,14 @@ func newBrokenTestImage() io.Reader {
 	tw := tar.NewWriter(buf)
 	hdr := &tar.Header{
 		Name: sabakan.ImageKernelFilename,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: int64(len(kernel)),
 	}
 	err := tw.WriteHeader(hdr)
 	if err != nil {
 		panic(err)
 	}
-	tw.Write(kernel)
+	_, _ = tw.Write(kernel)
 	tw.Close()
 	return buf
 }

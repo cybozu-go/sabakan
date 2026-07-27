@@ -125,7 +125,7 @@ func loadImage(path string) error {
 				return err
 			}
 			defer func() {
-				sess.Run("rm -f " + path)
+				_ = sess.Run("rm -f " + path)
 				sess.Close()
 			}()
 			return sess.Run("docker load -i " + path)
@@ -133,7 +133,6 @@ func loadImage(path string) error {
 	}
 	env.Stop()
 	return env.Wait()
-
 }
 
 func installTools(image string) error {
@@ -237,7 +236,7 @@ func doExec(agent *sshAgent, input io.Reader, args ...string) ([]byte, []byte, e
 	if err != nil {
 		return nil, nil, err
 	}
-	defer agent.conn.SetDeadline(time.Time{})
+	defer func() { _ = agent.conn.SetDeadline(time.Time{}) }()
 
 	sess, err := agent.client.NewSession()
 	if err != nil {

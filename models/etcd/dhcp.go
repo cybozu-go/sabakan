@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/clientv3util"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func (d *driver) putDHCPConfig(ctx context.Context, config *sabakan.DHCPConfig) error {
@@ -117,7 +118,7 @@ func (l *leaseUsage) lease(mac net.HardwareAddr, lr *sabakan.LeaseRange, du time
 		}
 		l.usageMap[i] = true
 		l.hwMap[hwAddr] = leaseInfo{i, leaseUntil}
-		log.Debug("etcd/dhcp: lease", map[string]interface{}{
+		log.Debug("etcd/dhcp: lease", map[string]any{
 			"node_index":  i,
 			"mac":         hwAddr,
 			"ip":          lr.IP(i),
@@ -138,7 +139,7 @@ func (l *leaseUsage) renew(mac net.HardwareAddr, du time.Duration) error {
 
 	leaseUntil := time.Now().Add(du)
 	v.LeaseUntil = leaseUntil
-	log.Debug("etcd/dhcp: renew", map[string]interface{}{
+	log.Debug("etcd/dhcp: renew", map[string]any{
 		"node_index":  v.Index,
 		"mac":         hwAddr,
 		"lease_until": leaseUntil,
@@ -155,7 +156,7 @@ func (l *leaseUsage) release(mac net.HardwareAddr) {
 		return
 	}
 
-	log.Debug("etcd/dhcp: release", map[string]interface{}{
+	log.Debug("etcd/dhcp: release", map[string]any{
 		"node_index": v.Index,
 		"mac":        hwAddr,
 	})
@@ -171,7 +172,7 @@ func (l *leaseUsage) decline(mac net.HardwareAddr) {
 		return
 	}
 
-	log.Debug("etcd/dhcp: decline", map[string]interface{}{
+	log.Debug("etcd/dhcp: decline", map[string]any{
 		"node_index": v.Index,
 		"mac":        hwAddr,
 	})

@@ -7,9 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/sabakan/v3/models/mock"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestIgnitionTemplates(t *testing.T) {
@@ -31,7 +32,7 @@ func TestIgnitionTemplates(t *testing.T) {
 	tmpl := &sabakan.IgnitionTemplate{
 		Version:  sabakan.Ignition2_3,
 		Template: json.RawMessage(testIgn),
-		Metadata: map[string]interface{}{"foo": "bar"},
+		Metadata: map[string]any{"foo": "bar"},
 	}
 	data, err := json.Marshal(tmpl)
 	if err != nil {

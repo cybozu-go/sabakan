@@ -65,8 +65,8 @@ func runEtcd() func() {
 	}
 
 	return func() {
-		command.Process.Kill()
-		command.Wait()
+		_ = command.Process.Kill()
+		_ = command.Wait()
 		os.RemoveAll(etcdDataDir)
 	}
 }
@@ -110,14 +110,14 @@ func runSabakan() (func(), error) {
 	}
 
 	// wait for startup
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		var resp *http.Response
 		resp, err = http.Get("http://localhost:10080/api/v1/config/ipam")
 		if err == nil {
 			resp.Body.Close()
 			return func() {
-				command.Process.Kill()
-				command.Wait()
+				_ = command.Process.Kill()
+				_ = command.Wait()
 				os.RemoveAll(dataDir)
 			}, nil
 		}

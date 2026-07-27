@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
 	"github.com/spf13/cobra"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 var ipamConfigFile string
@@ -67,7 +68,7 @@ var ipamSetCmd = &cobra.Command{
 
 func init() {
 	ipamSetCmd.Flags().StringVarP(&ipamConfigFile, "file", "f", "", "IPAM configuration in json")
-	ipamSetCmd.MarkFlagRequired("file")
+	_ = ipamSetCmd.MarkFlagRequired("file")
 
 	ipamCmd.AddCommand(ipamGetCmd)
 	ipamCmd.AddCommand(ipamSetCmd)

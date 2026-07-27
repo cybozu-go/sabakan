@@ -8,9 +8,10 @@ import (
 	"path"
 	"sync/atomic"
 
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
 	clientv3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 type driver struct {

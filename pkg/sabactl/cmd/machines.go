@@ -9,9 +9,10 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/cybozu-go/well"
 	"github.com/spf13/cobra"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 var (
@@ -47,12 +48,12 @@ var machinesGetCmd = &cobra.Command{
 			}
 			if machinesGetOutput == "simple" {
 				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 1, 1, ' ', 0)
-				w.Write([]byte("Serial\tRack\tRole\tState\tIPv4\tBMC\n"))
+				_, _ = w.Write([]byte("Serial\tRack\tRole\tState\tIPv4\tBMC\n"))
 				for _, m := range ms {
 					if len(m.Spec.IPv4) > 0 {
-						w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv4[0], m.Spec.BMC.Type)))
+						fmt.Fprintf(w, "%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv4[0], m.Spec.BMC.Type)
 					} else {
-						w.Write([]byte(fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv6[0], m.Spec.BMC.Type)))
+						fmt.Fprintf(w, "%v\t%v\t%v\t%v\t%v\t%v\t\n", m.Spec.Serial, m.Spec.Rack, m.Spec.Role, m.Status.State, m.Spec.IPv6[0], m.Spec.BMC.Type)
 					}
 				}
 				return w.Flush()
@@ -233,7 +234,7 @@ func init() {
 	}
 	machinesGetCmd.Flags().StringVarP(&machinesGetOutput, "output", "o", "json", "Output format [json,simple]")
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateFile, "file", "f", "", "machiens in json")
-	machinesCreateCmd.MarkFlagRequired("file")
+	_ = machinesCreateCmd.MarkFlagRequired("file")
 
 	machinesCmd.AddCommand(machinesGetCmd)
 	machinesCmd.AddCommand(machinesCreateCmd)

@@ -11,11 +11,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cybozu-go/sabakan/v3"
-	"github.com/cybozu-go/sabakan/v3/models/mock"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
+
+	"github.com/cybozu-go/sabakan/v3"
+	"github.com/cybozu-go/sabakan/v3/models/mock"
 )
 
 type expectedMachineStatus struct {
@@ -317,7 +318,7 @@ func twoMachines() (*sabakan.Model, error) {
 func twoAssets() (*sabakan.Model, error) {
 	model := mock.NewModel()
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		_, err := model.Asset.Put(context.Background(), "asset"+strconv.Itoa(i), "ctype"+strconv.Itoa(i), nil, nil, strings.NewReader("bar"))
 		if err != nil {
 			return nil, err
@@ -330,7 +331,7 @@ func twoAssets() (*sabakan.Model, error) {
 func threeImages() (*sabakan.Model, error) {
 	model := mock.NewModel()
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		r, err := newTestImage("kernel", "initrd")
 		if err != nil {
 			return nil, err
@@ -349,25 +350,25 @@ func newTestImage(kernel, initrd string) (io.Reader, error) {
 	tw := tar.NewWriter(buf)
 	hdr := &tar.Header{
 		Name: sabakan.ImageKernelFilename,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: int64(len(kernel)),
 	}
 	err := tw.WriteHeader(hdr)
 	if err != nil {
 		return nil, err
 	}
-	tw.Write([]byte(kernel))
+	_, _ = tw.Write([]byte(kernel))
 
 	hdr = &tar.Header{
 		Name: sabakan.ImageInitrdFilename,
-		Mode: 0644,
+		Mode: 0o644,
 		Size: int64(len(initrd)),
 	}
 	err = tw.WriteHeader(hdr)
 	if err != nil {
 		return nil, err
 	}
-	tw.Write([]byte(initrd))
+	_, _ = tw.Write([]byte(initrd))
 	tw.Close()
 	return buf, nil
 }

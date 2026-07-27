@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/cybozu-go/sabakan/v3"
 	"github.com/vektah/gqlparser/v2/gqlerror"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 const (
@@ -35,7 +36,7 @@ type IPAddress struct {
 }
 
 // UnmarshalGQL implements graphql.Marshaler interface.
-func (a *IPAddress) UnmarshalGQL(v interface{}) error {
+func (a *IPAddress) UnmarshalGQL(v any) error {
 	str, err := graphql.UnmarshalString(v)
 	if err != nil {
 		return fmt.Errorf("invalid IPAddress: %v, %v", v, err)
@@ -59,7 +60,7 @@ func (a IPAddress) MarshalGQL(w io.Writer) {
 type DateTime time.Time
 
 // UnmarshalGQL implements graphql.Marshaler interface.
-func (dt *DateTime) UnmarshalGQL(v interface{}) error {
+func (dt *DateTime) UnmarshalGQL(v any) error {
 	t, err := graphql.UnmarshalTime(v)
 	if err != nil {
 		return fmt.Errorf("invalid DateTime: %v, %v", v, err)
@@ -80,7 +81,7 @@ func MarshalMachineState(state sabakan.MachineState) graphql.Marshaler {
 }
 
 // UnmarshalMachineState helps mapping sabakan.MachineState with GraphQL enum.
-func UnmarshalMachineState(v interface{}) (sabakan.MachineState, error) {
+func UnmarshalMachineState(v any) (sabakan.MachineState, error) {
 	str, err := graphql.UnmarshalString(v)
 	if err != nil {
 		return "", err
@@ -89,7 +90,7 @@ func UnmarshalMachineState(v interface{}) (sabakan.MachineState, error) {
 	if !st.IsValid() {
 		return "", &gqlerror.Error{
 			Message: "invalid state: " + str,
-			Extensions: map[string]interface{}{
+			Extensions: map[string]any{
 				"type": ErrInvalidStateName,
 			},
 		}

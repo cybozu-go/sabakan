@@ -14,9 +14,7 @@ const (
 	defaultServerKeyFile  = "/etc/sabakan/server.key"
 )
 
-var (
-	defaultAllowIPs = []string{"127.0.0.1", "::1"}
-)
+var defaultAllowIPs = []string{"127.0.0.1", "::1"}
 
 func newConfig() *config {
 	return &config{

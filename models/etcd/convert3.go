@@ -6,11 +6,12 @@ import (
 	"errors"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan/v3"
 	ign22 "github.com/flatcar/ignition/config/v2_2/types"
 	"github.com/vincent-petithory/dataurl"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/concurrency"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func (d *driver) convertTo3(ctx context.Context, mu *concurrency.Mutex) error {
@@ -49,7 +50,7 @@ func (d *driver) convertTo3(ctx context.Context, mu *concurrency.Mutex) error {
 		return err
 	}
 	for _, kv := range resp.Kvs {
-		var metadata map[string]interface{}
+		var metadata map[string]any
 		key := string(kv.Key[len("ignitions/meta/"):])
 		err := json.Unmarshal(kv.Value, &metadata)
 		if err != nil {
@@ -87,7 +88,7 @@ func (d *driver) convertTo3(ctx context.Context, mu *concurrency.Mutex) error {
 		return errLostOwner
 	}
 
-	log.Info("updated schema version", map[string]interface{}{
+	log.Info("updated schema version", map[string]any{
 		"to": thisVersion,
 	})
 	return nil

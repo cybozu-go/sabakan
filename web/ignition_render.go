@@ -9,10 +9,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/cybozu-go/sabakan/v3"
 	ign22 "github.com/flatcar/ignition/config/v2_2/types"
 	ign23 "github.com/flatcar/ignition/config/v2_3/types"
 	"github.com/vincent-petithory/dataurl"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 type renderFunc func(name, tmpl string) (string, error)
@@ -57,14 +58,14 @@ func (s Server) handleIgnitions(w http.ResponseWriter, r *http.Request) {
 	renderJSON(w, ign, http.StatusOK)
 }
 
-func (s Server) renderIgnition(tmpl *sabakan.IgnitionTemplate, m *sabakan.Machine) (interface{}, error) {
+func (s Server) renderIgnition(tmpl *sabakan.IgnitionTemplate, m *sabakan.Machine) (any, error) {
 	myURL := s.MyURL.String()
 	myURLHTTPS := s.MyURLHTTPS.String()
 
 	tmplFuncs := template.FuncMap{
 		"MyURL":      func() string { return myURL },
 		"MyURLHTTPS": func() string { return myURLHTTPS },
-		"Metadata": func(key string) (interface{}, error) {
+		"Metadata": func(key string) (any, error) {
 			val, ok := tmpl.Metadata[key]
 			if !ok {
 				return nil, errors.New("no such meta data: " + key)
@@ -100,7 +101,7 @@ func (s Server) renderIgnition(tmpl *sabakan.IgnitionTemplate, m *sabakan.Machin
 	return nil, errors.New("unsupported ignition version: " + string(tmpl.Version))
 }
 
-func renderIgnition2_2(tmpl *sabakan.IgnitionTemplate, render renderFunc) (interface{}, error) {
+func renderIgnition2_2(tmpl *sabakan.IgnitionTemplate, render renderFunc) (any, error) {
 	ign := new(ign22.Config)
 	err := json.Unmarshal([]byte(tmpl.Template), ign)
 	if err != nil {
@@ -216,7 +217,7 @@ func renderIgnition2_2(tmpl *sabakan.IgnitionTemplate, render renderFunc) (inter
 	return ign, nil
 }
 
-func renderIgnition2_3(tmpl *sabakan.IgnitionTemplate, render renderFunc) (interface{}, error) {
+func renderIgnition2_3(tmpl *sabakan.IgnitionTemplate, render renderFunc) (any, error) {
 	ign := new(ign23.Config)
 	err := json.Unmarshal([]byte(tmpl.Template), ign)
 	if err != nil {

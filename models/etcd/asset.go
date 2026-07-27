@@ -12,9 +12,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cybozu-go/sabakan/v3"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/clientv3util"
+
+	"github.com/cybozu-go/sabakan/v3"
 )
 
 func (d *driver) getAssetDir() AssetDir {
@@ -129,7 +130,8 @@ func (d *driver) assetGetInfo(ctx context.Context, name string) (*sabakan.Asset,
 }
 
 func (d *driver) assetPut(ctx context.Context, name, contentType string,
-	csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
+	csum []byte, options map[string]string, r io.Reader,
+) (*sabakan.AssetStatus, error) {
 	id, err := d.assetNewID(ctx)
 	if err != nil {
 		return nil, err
@@ -183,7 +185,7 @@ func (d *driver) assetPut(ctx context.Context, name, contentType string,
 		return nil, err
 	}
 	if !tresp.Succeeded {
-		dir.Remove(id)
+		_ = dir.Remove(id)
 		return nil, sabakan.ErrConflicted
 	}
 
@@ -236,7 +238,6 @@ func (d *driver) assetDelete(ctx context.Context, name string) error {
 		If(clientv3util.KeyExists(key)).
 		Then(clientv3.OpDelete(key)).
 		Commit()
-
 	if err != nil {
 		return err
 	}
@@ -267,7 +268,8 @@ func (d assetDriver) GetInfoAll(ctx context.Context) ([]*sabakan.Asset, error) {
 }
 
 func (d assetDriver) Put(ctx context.Context, name, contentType string,
-	csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
+	csum []byte, options map[string]string, r io.Reader,
+) (*sabakan.AssetStatus, error) {
 	return d.assetPut(ctx, name, contentType, csum, options, r)
 }
 

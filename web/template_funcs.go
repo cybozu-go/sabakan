@@ -11,7 +11,7 @@ var (
 	errZeroDivision = errors.New("zero division")
 )
 
-func jsonFunc(i interface{}) (string, error) {
+func jsonFunc(i any) (string, error) {
 	data, err := json.Marshal(i)
 	if err != nil {
 		return "", err
@@ -19,7 +19,7 @@ func jsonFunc(i interface{}) (string, error) {
 	return string(data), nil
 }
 
-func getAsInt64(a interface{}) (int64, error) {
+func getAsInt64(a any) (int64, error) {
 	switch i := a.(type) {
 	case int:
 		return int64(i), nil
@@ -46,7 +46,7 @@ func getAsInt64(a interface{}) (int64, error) {
 	return 0, errNotInt
 }
 
-func getAsFloat64(a interface{}) (float64, error) {
+func getAsFloat64(a any) (float64, error) {
 	switch f := a.(type) {
 	case float32:
 		return float64(f), nil
@@ -57,7 +57,7 @@ func getAsFloat64(a interface{}) (float64, error) {
 	return 0, errNotFloat
 }
 
-func getAsInts(a, b interface{}) (int64, int64, error) {
+func getAsInts(a, b any) (int64, int64, error) {
 	ia, err := getAsInt64(a)
 	if err != nil {
 		return 0, 0, err
@@ -70,7 +70,7 @@ func getAsInts(a, b interface{}) (int64, int64, error) {
 	return ia, ib, nil
 }
 
-func getAsFloats(a, b interface{}) (float64, float64, error) {
+func getAsFloats(a, b any) (float64, float64, error) {
 	fa, err := getAsFloat64(a)
 	if err != nil {
 		ia, err2 := getAsInt64(a)
@@ -91,7 +91,7 @@ func getAsFloats(a, b interface{}) (float64, float64, error) {
 	return fa, fb, nil
 }
 
-func addFunc(a, b interface{}) (interface{}, error) {
+func addFunc(a, b any) (any, error) {
 	ia, ib, err := getAsInts(a, b)
 	if err == nil {
 		return ia + ib, nil
@@ -103,7 +103,7 @@ func addFunc(a, b interface{}) (interface{}, error) {
 	return nil, err
 }
 
-func subFunc(a, b interface{}) (interface{}, error) {
+func subFunc(a, b any) (any, error) {
 	ia, ib, err := getAsInts(a, b)
 	if err == nil {
 		return ia - ib, nil
@@ -115,7 +115,7 @@ func subFunc(a, b interface{}) (interface{}, error) {
 	return nil, err
 }
 
-func mulFunc(a, b interface{}) (interface{}, error) {
+func mulFunc(a, b any) (any, error) {
 	ia, ib, err := getAsInts(a, b)
 	if err == nil {
 		return ia * ib, nil
@@ -127,7 +127,7 @@ func mulFunc(a, b interface{}) (interface{}, error) {
 	return nil, err
 }
 
-func divFunc(a, b interface{}) (interface{}, error) {
+func divFunc(a, b any) (any, error) {
 	ia, ib, err := getAsInts(a, b)
 	if err == nil {
 		if ib == 0 {

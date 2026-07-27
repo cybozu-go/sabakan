@@ -66,7 +66,7 @@ func loadSource(sourceFile, baseDir string) (*TemplateSource, string, error) {
 }
 
 // BuildIgnitionTemplate constructs an IgnitionTemplate from source file.
-func BuildIgnitionTemplate(sourceFile string, metadata map[string]interface{}) (*IgnitionTemplate, error) {
+func BuildIgnitionTemplate(sourceFile string, metadata map[string]any) (*IgnitionTemplate, error) {
 	cwd, err := filepath.Abs(".")
 	if err != nil {
 		return nil, err

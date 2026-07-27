@@ -66,7 +66,8 @@ func (d *assetDriver) GetInfo(ctx context.Context, name string) (*sabakan.Asset,
 }
 
 func (d *assetDriver) Put(ctx context.Context, name, contentType string,
-	csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
+	csum []byte, options map[string]string, r io.Reader,
+) (*sabakan.AssetStatus, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -108,8 +109,8 @@ func (d *assetDriver) Delete(ctx context.Context, name string) error {
 }
 
 func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
-	csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
-
+	csum []byte, options map[string]string, r io.Reader,
+) (*sabakan.AssetStatus, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -149,8 +150,8 @@ func (d *assetDriver) newAsset(ctx context.Context, name, contentType string,
 }
 
 func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
-	contentType string, csum []byte, options map[string]string, r io.Reader) (*sabakan.AssetStatus, error) {
-
+	contentType string, csum []byte, options map[string]string, r io.Reader,
+) (*sabakan.AssetStatus, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err

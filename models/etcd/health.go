@@ -8,7 +8,6 @@ import (
 )
 
 func (d *driver) getHealth(ctx context.Context) error {
-
 	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
@@ -19,7 +18,6 @@ func (d *driver) getHealth(ctx context.Context) error {
 	}
 
 	return err
-
 }
 
 type healthDriver struct {

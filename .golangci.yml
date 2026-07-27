@@ -1,0 +1,53 @@
+version: "2"
+linters:
+  enable:
+    - depguard
+    - ginkgolinter
+    - govet
+    - modernize
+    - nilerr
+    - staticcheck
+  exclusions:
+    generated: lax
+    paths:
+      # gqlgen generates this file but its header is not the standard
+      # "DO NOT EDIT" form, so it is not detected by `generated: lax`.
+      - gql/graph/schema.resolvers.go
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+  settings:
+    depguard:
+      rules:
+        restricted-packages:
+          files:
+            - $all
+          deny:
+            - pkg: html/template$
+              desc: html/template must not be used
+            - pkg: log$
+              desc: log must not be used
+    errcheck:
+      exclude-functions:
+        - github.com/cybozu-go/log.Debug
+        - github.com/cybozu-go/log.Info
+        - github.com/cybozu-go/log.Warn
+        - github.com/cybozu-go/log.Error
+        - (*github.com/cybozu-go/log.Logger).Debug
+        - (*github.com/cybozu-go/log.Logger).Info
+        - (*github.com/cybozu-go/log.Logger).Warn
+        - (*github.com/cybozu-go/log.Logger).Error
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - gql/graph/schema.resolvers.go
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/cybozu-go/sabakan

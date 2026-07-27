@@ -221,7 +221,7 @@ func testHandleAssetsPut(t *testing.T) {
 
 	pr, pw := io.Pipe()
 	go func() {
-		pw.Write([]byte("bar"))
+		_, _ = pw.Write([]byte("bar"))
 		pw.Close()
 	}()
 	w = httptest.NewRecorder()
@@ -236,7 +236,7 @@ func testHandleAssetsPut(t *testing.T) {
 
 	pr2, pw2 := io.Pipe()
 	go func() {
-		pw2.Write([]byte("bar"))
+		_, _ = pw2.Write([]byte("bar"))
 		pw2.Close()
 	}()
 	w = httptest.NewRecorder()

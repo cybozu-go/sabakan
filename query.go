@@ -2,6 +2,7 @@ package sabakan
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -11,10 +12,14 @@ type Query map[string]string
 // Match returns true if all non-empty fields matches Machine
 func (q Query) Match(m *Machine) (bool, error) {
 	if serial := q["serial"]; len(serial) > 0 {
+		if !slices.Contains(strings.Split(serial, ","), m.Spec.Serial) {
+			return false, nil
+		}
+	}
+	if ipv4 := q["ipv4"]; len(ipv4) > 0 {
 		match := false
-		serials := strings.Split(serial, ",")
-		for _, s := range serials {
-			if s == m.Spec.Serial {
+		for ipv4address := range strings.SplitSeq(ipv4, ",") {
+			if slices.Contains(m.Spec.IPv4, ipv4address) {
 				match = true
 				break
 			}
@@ -23,30 +28,12 @@ func (q Query) Match(m *Machine) (bool, error) {
 			return false, nil
 		}
 	}
-	if ipv4 := q["ipv4"]; len(ipv4) > 0 {
-		ipv4s := strings.Split(ipv4, ",")
-		match := false
-		for _, ipv4address := range ipv4s {
-			for _, ip := range m.Spec.IPv4 {
-				if ip == ipv4address {
-					match = true
-					break
-				}
-			}
-		}
-		if !match {
-			return false, nil
-		}
-	}
 	if ipv6 := q["ipv6"]; len(ipv6) > 0 {
-		ipv6s := strings.Split(ipv6, ",")
 		match := false
-		for _, ipv6address := range ipv6s {
-			for _, ip := range m.Spec.IPv6 {
-				if ip == ipv6address {
-					match = true
-					break
-				}
+		for ipv6address := range strings.SplitSeq(ipv6, ",") {
+			if slices.Contains(m.Spec.IPv6, ipv6address) {
+				match = true
+				break
 			}
 		}
 		if !match {
@@ -54,8 +41,7 @@ func (q Query) Match(m *Machine) (bool, error) {
 		}
 	}
 	if labels := q["labels"]; len(labels) > 0 {
-		queries := strings.Split(labels, ",")
-		for _, query := range queries {
+		for query := range strings.SplitSeq(labels, ",") {
 			kv := strings.SplitN(query, "=", 2)
 			if len(kv) != 2 {
 				return false, fmt.Errorf("invalid query in labels: %s", query)
@@ -72,89 +58,47 @@ func (q Query) Match(m *Machine) (bool, error) {
 		}
 	}
 	if rack := q["rack"]; len(rack) > 0 {
-		racks := strings.Split(rack, ",")
-		match := false
-		for _, r := range racks {
-			if r == fmt.Sprint(m.Spec.Rack) {
-				match = true
-				break
-			}
-		}
-		if !match {
+		if !slices.Contains(strings.Split(rack, ","), fmt.Sprint(m.Spec.Rack)) {
 			return false, nil
 		}
 	}
 	if role := q["role"]; len(role) > 0 {
-		roles := strings.Split(role, ",")
-		match := false
-		for _, r := range roles {
-			if r == m.Spec.Role {
-				match = true
-				break
-			}
-		}
-		if !match {
+		if !slices.Contains(strings.Split(role, ","), m.Spec.Role) {
 			return false, nil
 		}
 	}
 	if bmc := q["bmc-type"]; len(bmc) > 0 {
-		bmcs := strings.Split(bmc, ",")
-		match := false
-		for _, b := range bmcs {
-			if b == m.Spec.BMC.Type {
-				match = true
-				break
-			}
-		}
-		if !match {
+		if !slices.Contains(strings.Split(bmc, ","), m.Spec.BMC.Type) {
 			return false, nil
 		}
 	}
 	if state := q["state"]; len(state) > 0 {
-		states := strings.Split(state, ",")
-		match := false
-		for _, s := range states {
-			if s == fmt.Sprint(m.Status.State) {
-				match = true
-				break
-			}
-		}
-		if !match {
+		if !slices.Contains(strings.Split(state, ","), fmt.Sprint(m.Status.State)) {
 			return false, nil
 		}
 	}
 	if withoutSerial := q["without-serial"]; len(withoutSerial) > 0 {
-		withoutSerials := strings.Split(withoutSerial, ",")
-		for _, wr := range withoutSerials {
-			if wr == fmt.Sprint(m.Spec.Serial) {
+		if slices.Contains(strings.Split(withoutSerial, ","), fmt.Sprint(m.Spec.Serial)) {
+			return false, nil
+		}
+	}
+	if withoutIPv4 := q["without-ipv4"]; len(withoutIPv4) > 0 {
+		for wIPv4 := range strings.SplitSeq(withoutIPv4, ",") {
+			if slices.Contains(m.Spec.IPv4, wIPv4) {
 				return false, nil
 			}
 		}
 	}
-	if withoutIPv4 := q["without-ipv4"]; len(withoutIPv4) > 0 {
-		withoutIPv4s := strings.Split(withoutIPv4, ",")
-		for _, wIPv4 := range withoutIPv4s {
-			for _, ip := range m.Spec.IPv4 {
-				if ip == wIPv4 {
-					return false, nil
-				}
-			}
-		}
-	}
 	if withoutIPv6 := q["without-ipv6"]; len(withoutIPv6) > 0 {
-		withoutIPv6s := strings.Split(withoutIPv6, ",")
-		for _, wIPv6 := range withoutIPv6s {
-			for _, ip := range m.Spec.IPv6 {
-				if ip == wIPv6 {
-					return false, nil
-				}
+		for wIPv6 := range strings.SplitSeq(withoutIPv6, ",") {
+			if slices.Contains(m.Spec.IPv6, wIPv6) {
+				return false, nil
 			}
 		}
 	}
 	if withoutLabels := q["without-labels"]; len(withoutLabels) > 0 {
-		queries := strings.Split(withoutLabels, ",")
 		excluded := true
-		for _, query := range queries {
+		for query := range strings.SplitSeq(withoutLabels, ",") {
 			kv := strings.SplitN(query, "=", 2)
 			if len(kv) != 2 {
 				return false, fmt.Errorf("invalid query in without-labels: %s", query)
@@ -176,35 +120,23 @@ func (q Query) Match(m *Machine) (bool, error) {
 		}
 	}
 	if withoutRack := q["without-rack"]; len(withoutRack) > 0 {
-		withoutRacks := strings.Split(withoutRack, ",")
-		for _, wr := range withoutRacks {
-			if wr == fmt.Sprint(m.Spec.Rack) {
-				return false, nil
-			}
+		if slices.Contains(strings.Split(withoutRack, ","), fmt.Sprint(m.Spec.Rack)) {
+			return false, nil
 		}
 	}
 	if withoutRole := q["without-role"]; len(withoutRole) > 0 {
-		withoutRoles := strings.Split(withoutRole, ",")
-		for _, wr := range withoutRoles {
-			if wr == fmt.Sprint(m.Spec.Role) {
-				return false, nil
-			}
+		if slices.Contains(strings.Split(withoutRole, ","), fmt.Sprint(m.Spec.Role)) {
+			return false, nil
 		}
 	}
 	if withoutBmc := q["without-bmc-type"]; len(withoutBmc) > 0 {
-		withoutBmcs := strings.Split(withoutBmc, ",")
-		for _, wb := range withoutBmcs {
-			if wb == fmt.Sprint(m.Spec.BMC.Type) {
-				return false, nil
-			}
+		if slices.Contains(strings.Split(withoutBmc, ","), fmt.Sprint(m.Spec.BMC.Type)) {
+			return false, nil
 		}
 	}
 	if withoutState := q["without-state"]; len(withoutState) > 0 {
-		withoutStates := strings.Split(withoutState, ",")
-		for _, ws := range withoutStates {
-			if ws == fmt.Sprint(m.Status.State) {
-				return false, nil
-			}
+		if slices.Contains(strings.Split(withoutState, ","), fmt.Sprint(m.Status.State)) {
+			return false, nil
 		}
 	}
 
