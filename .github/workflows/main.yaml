@@ -25,6 +25,11 @@ jobs:
       - name: Check auto-generated files
         run: make check-generated
 
+      - name: Check code format
+        run: |
+          make fmt
+          git diff --exit-code
+
       - name: Run code check tools
         run: make lint
 
