@@ -10,6 +10,10 @@ jobs:
   release-image:
     name: Release Sabakan Image
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -18,6 +22,11 @@ jobs:
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
+
+      - name: Setup Takumi Guard
+        uses: flatt-security/setup-takumi-guard-golang@1c8aa7498f7f635fbd6ad6a0f436d03092b3502d # v1.1.0
+        with:
+          bot-id: '${{ vars.TAKUMI_GUARD_BOT_ID }}'
 
       - name: Build image
         run: make docker-build
@@ -45,6 +54,8 @@ jobs:
   release-github:
     name: Release GitHub
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
