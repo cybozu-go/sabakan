@@ -37,6 +37,12 @@ export GOPATH
 PATH=/usr/local/go/bin:\$GOPATH/bin:\$PATH
 export PATH
 
+# Download Go modules through Takumi Guard. This runs on the GCE instance, so
+# the credentials the action writes on the GitHub runner are not available
+# here; requests are anonymous (Tier A blocking only).
+GOPROXY=https://golang.flatt.tech
+export GOPROXY
+
 git clone https://github.com/${GITHUB_REPOSITORY} \
     \$HOME/go/src/github.com/${GITHUB_REPOSITORY}
 cd \$HOME/go/src/github.com/${GITHUB_REPOSITORY}

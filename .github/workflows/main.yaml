@@ -6,10 +6,15 @@ on:
       - 'main'
 env:
   filename: 'main.yaml'
+permissions:
+  contents: read
 jobs:
   static-check:
     name: Static Check
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -18,6 +23,11 @@ jobs:
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
+
+      - name: Setup Takumi Guard
+        uses: flatt-security/setup-takumi-guard-golang@1c8aa7498f7f635fbd6ad6a0f436d03092b3502d # v1.1.0
+        with:
+          bot-id: '${{ vars.TAKUMI_GUARD_BOT_ID }}'
 
       - name: Install test tools
         run: make SUDO="sudo" test-tools
@@ -36,6 +46,9 @@ jobs:
   unit-test:
     name: Unit Test
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -44,6 +57,11 @@ jobs:
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
+
+      - name: Setup Takumi Guard
+        uses: flatt-security/setup-takumi-guard-golang@1c8aa7498f7f635fbd6ad6a0f436d03092b3502d # v1.1.0
+        with:
+          bot-id: '${{ vars.TAKUMI_GUARD_BOT_ID }}'
 
       - name: Install test tools
         run: make SUDO="sudo" test-tools
@@ -57,6 +75,9 @@ jobs:
   e2e-test:
     name: e2e Test
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -65,6 +86,11 @@ jobs:
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
+
+      - name: Setup Takumi Guard
+        uses: flatt-security/setup-takumi-guard-golang@1c8aa7498f7f635fbd6ad6a0f436d03092b3502d # v1.1.0
+        with:
+          bot-id: '${{ vars.TAKUMI_GUARD_BOT_ID }}'
 
       - name: Install test tools
         run: make SUDO="sudo" test-tools
@@ -81,6 +107,9 @@ jobs:
   build-image:
     name: Build Images
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -89,6 +118,11 @@ jobs:
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
+
+      - name: Setup Takumi Guard
+        uses: flatt-security/setup-takumi-guard-golang@1c8aa7498f7f635fbd6ad6a0f436d03092b3502d # v1.1.0
+        with:
+          bot-id: '${{ vars.TAKUMI_GUARD_BOT_ID }}'
 
       - name: Build image
         run: make docker-build
