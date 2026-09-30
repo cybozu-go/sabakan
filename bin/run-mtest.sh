@@ -37,11 +37,11 @@ export GOPATH
 PATH=/usr/local/go/bin:\$GOPATH/bin:\$PATH
 export PATH
 
-# Download Go modules through Takumi Guard. This runs on the GCE instance, so
-# the credentials the action writes on the GitHub runner are not available
-# here; requests are anonymous (Tier A blocking only).
+# Download Go modules through Takumi Guard.
 GOPROXY=https://golang.flatt.tech
 export GOPROXY
+NETRC=/home/cybozu/.netrc
+export NETRC
 
 git clone https://github.com/${GITHUB_REPOSITORY} \
     \$HOME/go/src/github.com/${GITHUB_REPOSITORY}
@@ -57,6 +57,13 @@ sleep 3
 exec make test TARGET="${TARGET}"
 EOF
 chmod +x run.sh
+
+NETRC_FILE=$(mktemp)
+if grep -q '^machine golang\.flatt\.tech ' "$HOME/.netrc" 2>/dev/null; then
+  grep '^machine golang\.flatt\.tech ' "$HOME/.netrc" > ${NETRC_FILE}
+  $GCLOUD compute scp --zone=${ZONE} ${NETRC_FILE} cybozu@${INSTANCE_NAME}:.netrc
+fi
+rm -f ${NETRC_FILE}
 
 $GCLOUD compute scp --zone=${ZONE} run.sh cybozu@${INSTANCE_NAME}:
 set +e

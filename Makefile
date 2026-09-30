@@ -1,5 +1,8 @@
 # Makefile for sabakan
 
+GOPROXY ?= https://golang.flatt.tech
+export GOPROXY
+
 # configuration variables
 ETCD_VERSION = 3.6.13
 ETCD_SHA256SUM = b4928654aed84d90952620c7144555e4186d795e1e7414e65fe0cf6265fd0465
