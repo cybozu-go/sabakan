@@ -1,6 +1,7 @@
 #!/bin/sh -e
 
 . $(dirname $0)/env
+: ${INSTANCE_NAME:?}
 
 test $# -eq 1
 service="$1"
