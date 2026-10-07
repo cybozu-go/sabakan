@@ -177,15 +177,11 @@ jobs:
 
       - name: Set the GCP instance lifetime
         if: ${{ failure() ||  cancelled() }}
-        run: |
-          . ./bin/env
-          $GCLOUD compute instances add-metadata ${INSTANCE_NAME} --zone ${ZONE} \
-          --metadata shutdown-at=$(date -Iseconds -d+30minutes)
+        run: ./bin/set-lifetime.sh
 
       - name: Notify to Slack if failed or cancelled
         if: ${{ failure() ||  cancelled() }}
         run: |
-          . ./bin/env
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
               BRANCH_NAME=${GITHUB_HEAD_REF}
           else
@@ -214,6 +210,4 @@ jobs:
 
       - name: Delete CI instance if succeeded
         if: ${{ success() }}
-        run: |
-          . ./bin/env
-          $GCLOUD compute instances delete ${INSTANCE_NAME} --zone ${ZONE}
+        run: ./bin/delete-instance.sh
