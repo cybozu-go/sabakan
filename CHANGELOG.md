@@ -5,8 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [3.1.12] - 2026-10-22
+
 ### Changed
 
+- Use Takumi Guard on the GCE instance in [#309](https://github.com/cybozu-go/sabakan/pull/309)
 - Clean up GCP settings in mtest in [#310](https://github.com/cybozu-go/sabakan/pull/310)
 
 ## [3.1.11] - 2026-09-09
@@ -407,7 +410,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.11...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.12...HEAD
+[3.1.12]: https://github.com/cybozu-go/sabakan/compare/v3.1.11...v3.1.12
 [3.1.11]: https://github.com/cybozu-go/sabakan/compare/v3.1.10...v3.1.11
 [3.1.10]: https://github.com/cybozu-go/sabakan/compare/v3.1.9...v3.1.10
 [3.1.9]: https://github.com/cybozu-go/sabakan/compare/v3.1.8...v3.1.9
