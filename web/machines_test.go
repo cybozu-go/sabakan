@@ -1,8 +1,10 @@
 package web
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -425,7 +427,7 @@ func testMachinesDelete(t *testing.T) {
 
 func testMachinesGraphQL(t *testing.T) {
 	m := mock.NewModel()
-	handler := NewServer(m, "", "", nil, nil, nil, false, nil, false)
+	handler := newTestServer(m)
 
 	_ = m.Machine.Register(context.Background(), []*sabakan.Machine{
 		sabakan.NewMachine(sabakan.MachineSpec{
@@ -524,9 +526,93 @@ func setMachineStateRequest(state string, handler *Server) *http.Response {
 	return w.Result()
 }
 
+func testMachinesGraphQLPermission(t *testing.T) {
+	cases := []struct {
+		name      string
+		remote    string
+		query     string
+		wantState sabakan.MachineState
+		wantError string
+	}{
+		{
+			name:      "query from a remote that is not allowed",
+			remote:    "10.69.0.4:11111",
+			query:     `query { machine(serial: "1234abcd") { status { state } } }`,
+			wantState: sabakan.StateUninitialized,
+		},
+		{
+			name:      "mutation from a remote that is not allowed",
+			remote:    "10.69.0.4:11111",
+			query:     `mutation { setMachineState(serial: "1234abcd", state: RETIRING) { state } }`,
+			wantState: sabakan.StateUninitialized,
+			wantError: "FORBIDDEN",
+		},
+		{
+			name:      "mutation from an allowed remote",
+			remote:    "127.0.0.1:11111",
+			query:     `mutation { setMachineState(serial: "1234abcd", state: RETIRING) { state } }`,
+			wantState: sabakan.StateRetiring,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			m := mock.NewModel()
+			err := m.Machine.Register(context.Background(), []*sabakan.Machine{
+				sabakan.NewMachine(sabakan.MachineSpec{Serial: "1234abcd", Role: "worker"}),
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, ipnet, err := net.ParseCIDR("127.0.0.1/32")
+			if err != nil {
+				t.Fatal(err)
+			}
+			handler := NewServer(m, "", "", nil, nil, []*net.IPNet{ipnet}, false, nil, false)
+
+			body, err := json.Marshal(map[string]string{"query": tc.query})
+			if err != nil {
+				t.Fatal(err)
+			}
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest("POST", "/graphql", bytes.NewReader(body))
+			r.RemoteAddr = tc.remote
+			r.Header.Set("Content-Type", "application/json")
+			handler.ServeHTTP(w, r)
+
+			var resp struct {
+				Errors []gqlerror.Error `json:"errors"`
+			}
+			if err := json.NewDecoder(w.Result().Body).Decode(&resp); err != nil {
+				t.Fatal(err)
+			}
+			switch {
+			case tc.wantError == "" && len(resp.Errors) != 0:
+				t.Errorf("unexpected errors: %v", resp.Errors)
+			case tc.wantError != "" && len(resp.Errors) == 0:
+				t.Errorf("no errors, want type %q", tc.wantError)
+			case tc.wantError != "":
+				if got, _ := resp.Errors[0].Extensions["type"].(string); got != tc.wantError {
+					t.Errorf("error type = %q, want %q (errors=%v)", got, tc.wantError, resp.Errors)
+				}
+			}
+
+			machine, err := m.Machine.Get(context.Background(), "1234abcd")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if machine.Status.State != tc.wantState {
+				t.Errorf("state = %s, want %s", machine.Status.State, tc.wantState)
+			}
+		})
+	}
+}
+
 func TestMachines(t *testing.T) {
 	t.Run("Get", testMachinesGet)
 	t.Run("Post", testMachinesPost)
 	t.Run("Delete", testMachinesDelete)
 	t.Run("GraphQL", testMachinesGraphQL)
+	t.Run("GraphQLPermission", testMachinesGraphQLPermission)
 }
