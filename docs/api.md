@@ -58,6 +58,8 @@ are rejected from remote hosts excluding addresses specified in `-allow-ips` opt
 - `GET /api/v1/crypts`
 - `GET|HEAD /*`
 
+For `/graphql`, see [Access control](graphql.md#access-control) in the GraphQL API document.
+
 This means that localhost can manage all resources, and the remote hosts such
 as worker nodes can only read resources.  `PUT /api/v1/crypts` and `GET
 /api/v1/crypts` are permitted from all remote hosts since the encryption keys

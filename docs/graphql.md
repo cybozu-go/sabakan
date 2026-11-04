@@ -14,6 +14,12 @@ Playground
 If [sabakan](sabakan.md) starts with `-enable-playground` command-line flag,
 it serves a web-based playground for GraphQL API at `/playground` HTTP endpoint.
 
+Access control
+--------------
+
+Queries are allowed for all remote hosts.
+Mutations are rejected from remote hosts excluding addresses specified in `-allow-ips` option.
+
 Examples
 --------
 
@@ -301,6 +307,24 @@ Result:
       "extensions": {
         "serial": "00000004",
         "type": "INVALID_STATE_TRANSITION"
+      }
+    }
+  ],
+  "data": null
+}
+```
+
+- Sent from a remote host that is not allowed.
+
+Result:
+
+```json
+{
+  "errors": [
+    {
+      "message": "forbidden",
+      "extensions": {
+        "type": "FORBIDDEN"
       }
     }
   ],

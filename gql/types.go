@@ -28,6 +28,9 @@ const (
 
 	// ErrInternalServerError is an error code when internal server error has occurred.
 	ErrInternalServerError = "INTERNAL_SERVER_ERROR"
+
+	// ErrForbidden is an error code when a mutation is sent from a remote that is not allowed.
+	ErrForbidden = "FORBIDDEN"
 )
 
 // IPAddress represents "IPAddress" GraphQL custom scalar.

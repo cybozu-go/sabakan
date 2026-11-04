@@ -9,14 +9,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 
 	"github.com/cybozu-go/sabakan/v3"
+	"github.com/cybozu-go/sabakan/v3/gql"
 	"github.com/cybozu-go/sabakan/v3/gql/graph"
 	"github.com/cybozu-go/sabakan/v3/gql/graph/generated"
 	"github.com/cybozu-go/sabakan/v3/metrics"
@@ -28,6 +31,8 @@ const (
 )
 
 var hostnameAtStartup string
+
+type remoteAddrKey struct{}
 
 func init() {
 	hostnameAtStartup, _ = os.Hostname()
@@ -78,6 +83,21 @@ func NewServer(model sabakan.Model, ipxePath, cryptsetupPath string, advertiseUR
 	graphQLHandler.Use(extension.AutomaticPersistedQuery{
 		Cache: lru.New[string](100),
 	})
+	graphQLHandler.AroundOperations(func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
+		if graphql.GetOperationContext(ctx).Operation.Operation != ast.Mutation {
+			return next(ctx)
+		}
+		remoteAddr, _ := ctx.Value(remoteAddrKey{}).(string)
+		if isAllowedRemote(allowedIPs, remoteAddr) {
+			return next(ctx)
+		}
+		return graphql.OneShot(&graphql.Response{
+			Errors: gqlerror.List{{
+				Message:    "forbidden",
+				Extensions: map[string]any{"type": gql.ErrForbidden},
+			}},
+		})
+	})
 
 	s := &Server{
 		Model:          model,
@@ -117,7 +137,8 @@ func (s Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Path == "/graphql" {
-		s.graphQL.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), remoteAddrKey{}, r.RemoteAddr)
+		s.graphQL.ServeHTTP(w, r.WithContext(ctx))
 		return
 	}
 
@@ -242,11 +263,15 @@ func (s Server) hasPermission(r *http.Request) bool {
 	if strings.HasPrefix(p, "crypts/") && r.Method != http.MethodDelete {
 		return true
 	}
-	rhost, _, err := net.SplitHostPort(r.RemoteAddr)
+	return isAllowedRemote(s.AllowedRemotes, r.RemoteAddr)
+}
+
+func isAllowedRemote(allowedIPs []*net.IPNet, remoteAddr string) bool {
+	rhost, _, err := net.SplitHostPort(remoteAddr)
 	if rhost == "" || err != nil {
 		return false
 	}
-	for _, allowed := range s.AllowedRemotes {
+	for _, allowed := range allowedIPs {
 		if allowed.Contains(net.ParseIP(rhost)) {
 			return true
 		}
