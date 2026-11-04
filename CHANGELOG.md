@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [3.1.13] - 2026-11-04
+
+### Changed
+
+- Reject GraphQL mutations from remotes not in allow-ips in [#312](https://github.com/cybozu-go/sabakan/pull/312)
+
 ## [3.1.12] - 2026-10-22
 
 ### Changed
@@ -410,7 +416,8 @@ No changes.  Only for updating Docker base image.
 
 See [CHANGELOG-0](./CHANGELOG-0.md).
 
-[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.12...HEAD
+[Unreleased]: https://github.com/cybozu-go/sabakan/compare/v3.1.13...HEAD
+[3.1.13]: https://github.com/cybozu-go/sabakan/compare/v3.1.12...v3.1.13
 [3.1.12]: https://github.com/cybozu-go/sabakan/compare/v3.1.11...v3.1.12
 [3.1.11]: https://github.com/cybozu-go/sabakan/compare/v3.1.10...v3.1.11
 [3.1.10]: https://github.com/cybozu-go/sabakan/compare/v3.1.9...v3.1.10
