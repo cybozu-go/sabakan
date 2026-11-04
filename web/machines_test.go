@@ -587,12 +587,15 @@ func testMachinesGraphQLPermission(t *testing.T) {
 			if err := json.NewDecoder(w.Result().Body).Decode(&resp); err != nil {
 				t.Fatal(err)
 			}
-			var gotError string
-			if len(resp.Errors) > 0 {
-				gotError, _ = resp.Errors[0].Extensions["type"].(string)
-			}
-			if gotError != tc.wantError {
-				t.Errorf("error type = %q, want %q (errors=%v)", gotError, tc.wantError, resp.Errors)
+			switch {
+			case tc.wantError == "" && len(resp.Errors) != 0:
+				t.Errorf("unexpected errors: %v", resp.Errors)
+			case tc.wantError != "" && len(resp.Errors) == 0:
+				t.Errorf("no errors, want type %q", tc.wantError)
+			case tc.wantError != "":
+				if got, _ := resp.Errors[0].Extensions["type"].(string); got != tc.wantError {
+					t.Errorf("error type = %q, want %q (errors=%v)", got, tc.wantError, resp.Errors)
+				}
 			}
 
 			machine, err := m.Machine.Get(context.Background(), "1234abcd")
