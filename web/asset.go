@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -203,7 +204,7 @@ func (s Server) isAllowedAssetClient(ctx context.Context, asset *sabakan.Asset, 
 
 	host, _, err := net.SplitHostPort(remoteAddr)
 	if err != nil {
-		return false, nil
+		return false, fmt.Errorf("invalid remote address %q: %w", remoteAddr, err)
 	}
 	ip := net.ParseIP(host)
 	if ip == nil {
