@@ -80,6 +80,9 @@ func (h assetHandler) ServeContent(asset *sabakan.Asset, content io.ReadSeeker) 
 	}
 
 	header := h.w.Header()
+	if _, ok := asset.Options[assetOptionAllowedRoles]; ok {
+		header.Set("Cache-Control", "no-store")
+	}
 	header.Set("content-type", asset.ContentType)
 	header.Set("X-Sabakan-Asset-ID", strconv.Itoa(asset.ID))
 	header.Set("X-Sabakan-Asset-SHA256", asset.Sha256)

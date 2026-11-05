@@ -353,7 +353,17 @@ func testHandleAssetsGetAllowedRoles(t *testing.T) {
 			if resp.StatusCode != tt.wantStatus {
 				t.Fatalf("status = %d, want %d", resp.StatusCode, tt.wantStatus)
 			}
-			if tt.wantStatus != http.StatusOK || tt.method != "GET" {
+			if tt.wantStatus != http.StatusOK {
+				return
+			}
+			wantCacheControl := ""
+			if tt.asset == "secret" {
+				wantCacheControl = "no-store"
+			}
+			if got := resp.Header.Get("Cache-Control"); got != wantCacheControl {
+				t.Errorf("Cache-Control = %q, want %q", got, wantCacheControl)
+			}
+			if tt.method != "GET" {
 				return
 			}
 			data, err := io.ReadAll(resp.Body)
