@@ -1,9 +1,12 @@
 package web
 
 import (
+	"context"
 	"encoding/hex"
 	"io"
+	"net"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -12,6 +15,9 @@ import (
 
 const (
 	maxAssetSize = 2 << 31
+
+	// assetOptionAllowedRoles restricts GET and HEAD of the asset to machines whose role is in the comma-separated list.
+	assetOptionAllowedRoles = "allowed-roles"
 )
 
 func (s Server) handleAssets(w http.ResponseWriter, r *http.Request) {
@@ -56,11 +62,22 @@ func (s Server) handleAssetsIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 type assetHandler struct {
+	s Server
 	w http.ResponseWriter
 	r *http.Request
 }
 
 func (h assetHandler) ServeContent(asset *sabakan.Asset, content io.ReadSeeker) {
+	allowed, err := h.s.isAllowedAssetClient(h.r.Context(), asset, h.r.RemoteAddr)
+	if err != nil {
+		renderError(h.r.Context(), h.w, InternalServerError(err))
+		return
+	}
+	if !allowed {
+		renderError(h.r.Context(), h.w, APIErrForbidden)
+		return
+	}
+
 	header := h.w.Header()
 	header.Set("content-type", asset.ContentType)
 	header.Set("X-Sabakan-Asset-ID", strconv.Itoa(asset.ID))
@@ -73,7 +90,7 @@ func (h assetHandler) Redirect(u string) {
 }
 
 func (s Server) handleAssetsGet(w http.ResponseWriter, r *http.Request, name string) {
-	err := s.Model.Asset.Get(r.Context(), name, assetHandler{w, r})
+	err := s.Model.Asset.Get(r.Context(), name, assetHandler{s, w, r})
 	if err == sabakan.ErrNotFound {
 		renderError(r.Context(), w, APIErrNotFound)
 		return
@@ -135,7 +152,7 @@ func (s Server) handleAssetsPut(w http.ResponseWriter, r *http.Request, name str
 				renderError(r.Context(), w, BadRequest("invalid option key"+key))
 				return
 			}
-			if !sabakan.IsValidLabelValue(v[0]) {
+			if !isValidAssetOptionValue(key, v[0]) {
 				renderError(r.Context(), w, BadRequest("invalid option value"+v[0]))
 				return
 			}
@@ -164,4 +181,44 @@ func (s Server) handleAssetsDelete(w http.ResponseWriter, r *http.Request, name 
 	if err != nil {
 		renderError(r.Context(), w, InternalServerError(err))
 	}
+}
+
+func isValidAssetOptionValue(key, value string) bool {
+	if key != assetOptionAllowedRoles {
+		return sabakan.IsValidLabelValue(value)
+	}
+	for role := range strings.SplitSeq(value, ",") {
+		if !sabakan.IsValidRole(role) {
+			return false
+		}
+	}
+	return true
+}
+
+func (s Server) isAllowedAssetClient(ctx context.Context, asset *sabakan.Asset, remoteAddr string) (bool, error) {
+	value, ok := asset.Options[assetOptionAllowedRoles]
+	if !ok {
+		return true, nil
+	}
+
+	host, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil {
+		return false, nil
+	}
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return false, nil
+	}
+
+	machines, err := s.Model.Machine.Query(ctx, sabakan.Query{"ipv4": ip.String()})
+	if err != nil {
+		return false, err
+	}
+	roles := strings.Split(value, ",")
+	for _, m := range machines {
+		if slices.Contains(roles, m.Spec.Role) {
+			return true, nil
+		}
+	}
+	return false, nil
 }

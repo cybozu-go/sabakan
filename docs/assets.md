@@ -45,6 +45,16 @@ It becomes `true` if the server has a local copy of the asset.
 `options` is optional metadata.  Sabakan just stores and shows these data
 as given. Option keys are converted to lowercase implicitly.
 
+The `allowed-roles` option is an exception.  If it is set, sabakan serves
+the asset contents only to machines whose role is in the comma-separated
+list (e.g. `cs,ss`).  The client is identified by matching its IP address
+with `spec.ipv4` of the registered machines, so requests from other
+addresses, such as localhost, BMC addresses, or Pods, are rejected with
+403 Forbidden.  The metadata of the asset is still available to anyone.
+All sabakan servers should support this option before it is used, because
+a server that does not have a local copy redirects the client to another
+server.
+
 ### Assets directory
 
 Sabakan saves uploaded assets under `/var/lib/sabakan/assets` directory.

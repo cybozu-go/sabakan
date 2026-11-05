@@ -292,6 +292,130 @@ func testHandleAssetsPut(t *testing.T) {
 	}
 }
 
+func testHandleAssetsGetAllowedRoles(t *testing.T) {
+	t.Parallel()
+
+	m := mock.NewModel()
+	handler := newTestServer(m)
+	ctx := context.Background()
+
+	err := m.Machine.Register(ctx, []*sabakan.Machine{
+		sabakan.NewMachine(sabakan.MachineSpec{
+			Serial: "cs1",
+			Role:   "cs",
+			IPv4:   []string{"10.0.0.1", "10.0.1.1"},
+			BMC:    sabakan.MachineBMC{IPv4: "10.1.0.1"},
+		}),
+		sabakan.NewMachine(sabakan.MachineSpec{
+			Serial: "boot1",
+			Role:   "boot",
+			IPv4:   []string{"10.0.0.2"},
+		}),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = m.Asset.Put(ctx, "secret", "text/plain", nil, map[string]string{"allowed-roles": "cs,ss"}, strings.NewReader("bar"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = m.Asset.Put(ctx, "public", "text/plain", nil, nil, strings.NewReader("bar"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name       string
+		method     string
+		asset      string
+		remoteAddr string
+		wantStatus int
+	}{
+		{"allowed role", "GET", "secret", "10.0.0.1:1234", http.StatusOK},
+		{"allowed role with another address", "GET", "secret", "10.0.1.1:1234", http.StatusOK},
+		{"allowed role with HEAD", "HEAD", "secret", "10.0.0.1:1234", http.StatusOK},
+		{"allowed role with IPv4-mapped IPv6", "GET", "secret", "[::ffff:10.0.0.1]:1234", http.StatusOK},
+		{"denied role", "GET", "secret", "10.0.0.2:1234", http.StatusForbidden},
+		{"denied role with HEAD", "HEAD", "secret", "10.0.0.2:1234", http.StatusForbidden},
+		{"BMC address", "GET", "secret", "10.1.0.1:1234", http.StatusForbidden},
+		{"unknown address", "GET", "secret", "10.0.0.9:1234", http.StatusForbidden},
+		{"localhost", "GET", "secret", "127.0.0.1:1234", http.StatusForbidden},
+		{"no restriction", "GET", "public", "10.0.0.9:1234", http.StatusOK},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest(tt.method, "/api/v1/assets/"+tt.asset, nil)
+			r.RemoteAddr = tt.remoteAddr
+			handler.ServeHTTP(w, r)
+
+			resp := w.Result()
+			if resp.StatusCode != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", resp.StatusCode, tt.wantStatus)
+			}
+			if tt.wantStatus != http.StatusOK || tt.method != "GET" {
+				return
+			}
+			data, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(data) != "bar" {
+				t.Errorf("body = %q, want %q", data, "bar")
+			}
+		})
+	}
+}
+
+func testHandleAssetsPutAllowedRoles(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		header     string
+		value      string
+		wantStatus int
+	}{
+		{"single role", "X-Sabakan-Asset-Options-Allowed-Roles", "cs", http.StatusCreated},
+		{"multiple roles", "X-Sabakan-Asset-Options-Allowed-Roles", "cs,ss,ss2", http.StatusCreated},
+		{"empty", "X-Sabakan-Asset-Options-Allowed-Roles", "", http.StatusBadRequest},
+		{"empty item", "X-Sabakan-Asset-Options-Allowed-Roles", "cs,,ss", http.StatusBadRequest},
+		{"trailing comma", "X-Sabakan-Asset-Options-Allowed-Roles", "cs,", http.StatusBadRequest},
+		{"invalid role", "X-Sabakan-Asset-Options-Allowed-Roles", "cs;ss", http.StatusBadRequest},
+		{"comma in another option", "X-Sabakan-Asset-Options-Version", "1,2", http.StatusBadRequest},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			m := mock.NewModel()
+			handler := newTestServer(m)
+
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest("PUT", "/api/v1/assets/foo", strings.NewReader("bar"))
+			r.Header.Set("content-length", "3")
+			r.Header.Set("content-type", "text/plain")
+			r.Header.Set(tt.header, tt.value)
+			handler.ServeHTTP(w, r)
+
+			resp := w.Result()
+			if resp.StatusCode != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", resp.StatusCode, tt.wantStatus)
+			}
+			if tt.wantStatus != http.StatusCreated {
+				return
+			}
+			asset, err := m.Asset.GetInfo(context.Background(), "foo")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if asset.Options["allowed-roles"] != tt.value {
+				t.Errorf("allowed-roles = %q, want %q", asset.Options["allowed-roles"], tt.value)
+			}
+		})
+	}
+}
+
 func testHandleAssetsDelete(t *testing.T) {
 	t.Parallel()
 
@@ -326,6 +450,8 @@ func TestHandleAssets(t *testing.T) {
 	t.Run("GetIndex", testHandleAssetsGetIndex)
 	t.Run("GetInfo", testHandleAssetsGetInfo)
 	t.Run("Get", testHandleAssetsGet)
+	t.Run("GetAllowedRoles", testHandleAssetsGetAllowedRoles)
 	t.Run("Put", testHandleAssetsPut)
+	t.Run("PutAllowedRoles", testHandleAssetsPutAllowedRoles)
 	t.Run("Delete", testHandleAssetsDelete)
 }

@@ -580,6 +580,7 @@ Upload a file as an asset.
 - `Content-Length`: required
 - `X-Sabakan-Asset-SHA256`: if given, the uploaded data will be verified by SHA256.
 - `X-Sabakan-Asset-Options-<KEY>`: if given, the uploaded data will have meta data of `"<Lowercased KEY>": "<VALUE>"`.
+    - `X-Sabakan-Asset-Options-Allowed-Roles`: a comma-separated list of machine roles.  If given, only those machines can download the asset.  See [asset management](assets.md).
 
 **Successful response**
 
@@ -639,6 +640,10 @@ Download the named asset.
     - `X-Sabakan-Asset-SHA256`: SHA256 checksum of the asset
 
 **Failure responses**
+
+- The asset has the `allowed-roles` option, and the client is not a machine with one of the roles.
+
+    HTTP status code: 403 Forbidden
 
 - The asset was not found.
 
