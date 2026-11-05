@@ -329,24 +329,32 @@ func testHandleAssetsGetAllowedRoles(t *testing.T) {
 		method     string
 		asset      string
 		remoteAddr string
+		peerToken  string
 		wantStatus int
 	}{
-		{"allowed role", "GET", "secret", "10.0.0.1:1234", http.StatusOK},
-		{"allowed role with another address", "GET", "secret", "10.0.1.1:1234", http.StatusOK},
-		{"allowed role with HEAD", "HEAD", "secret", "10.0.0.1:1234", http.StatusOK},
-		{"allowed role with IPv4-mapped IPv6", "GET", "secret", "[::ffff:10.0.0.1]:1234", http.StatusOK},
-		{"denied role", "GET", "secret", "10.0.0.2:1234", http.StatusForbidden},
-		{"denied role with HEAD", "HEAD", "secret", "10.0.0.2:1234", http.StatusForbidden},
-		{"BMC address", "GET", "secret", "10.1.0.1:1234", http.StatusForbidden},
-		{"unknown address", "GET", "secret", "10.0.0.9:1234", http.StatusForbidden},
-		{"localhost", "GET", "secret", "127.0.0.1:1234", http.StatusForbidden},
-		{"no restriction", "GET", "public", "10.0.0.9:1234", http.StatusOK},
+		{"allowed role", "GET", "secret", "10.0.0.1:1234", "", http.StatusOK},
+		{"allowed role with another address", "GET", "secret", "10.0.1.1:1234", "", http.StatusOK},
+		{"allowed role with HEAD", "HEAD", "secret", "10.0.0.1:1234", "", http.StatusOK},
+		{"allowed role with IPv4-mapped IPv6", "GET", "secret", "[::ffff:10.0.0.1]:1234", "", http.StatusOK},
+		{"denied role", "GET", "secret", "10.0.0.2:1234", "", http.StatusForbidden},
+		{"denied role with HEAD", "HEAD", "secret", "10.0.0.2:1234", "", http.StatusForbidden},
+		{"BMC address", "GET", "secret", "10.1.0.1:1234", "", http.StatusForbidden},
+		{"unknown address", "GET", "secret", "10.0.0.9:1234", "", http.StatusForbidden},
+		{"localhost", "GET", "secret", "127.0.0.1:1234", "", http.StatusForbidden},
+		{"no restriction", "GET", "public", "10.0.0.9:1234", "", http.StatusOK},
+		{"peer token from denied role", "GET", "secret", "10.0.0.2:1234", mock.AssetPeerToken, http.StatusOK},
+		{"peer token from localhost", "GET", "secret", "127.0.0.1:1234", mock.AssetPeerToken, http.StatusOK},
+		{"wrong peer token from denied role", "GET", "secret", "10.0.0.2:1234", "wrong", http.StatusForbidden},
+		{"wrong peer token from allowed role", "GET", "secret", "10.0.0.1:1234", "wrong", http.StatusOK},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest(tt.method, "/api/v1/assets/"+tt.asset, nil)
 			r.RemoteAddr = tt.remoteAddr
+			if tt.peerToken != "" {
+				r.Header.Set(sabakan.AssetPeerTokenHeader, tt.peerToken)
+			}
 			handler.ServeHTTP(w, r)
 
 			resp := w.Result()

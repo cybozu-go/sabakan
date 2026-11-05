@@ -15,6 +15,9 @@ import (
 	"github.com/cybozu-go/sabakan/v3"
 )
 
+// AssetPeerToken is the only token that the mock accepts in VerifyPeerToken.
+const AssetPeerToken = "mock-asset-peer-token"
+
 type assetDriver struct {
 	mu     sync.Mutex
 	assets map[string]*sabakan.Asset
@@ -181,4 +184,9 @@ func (d *assetDriver) updateAsset(ctx context.Context, asset *sabakan.Asset,
 	}
 
 	return status, nil
+}
+
+// VerifyPeerToken does not lock d.mu, because Get calls it through ServeContent with d.mu locked.
+func (d *assetDriver) VerifyPeerToken(ctx context.Context, token string) (bool, error) {
+	return token == AssetPeerToken, nil
 }

@@ -15,6 +15,7 @@ const (
 	KeyImages           = "images/"
 	KeyAssets           = "assets/"
 	KeyAssetsID         = "assets"
+	KeyAssetPeerToken   = "asset-peer-token"
 	KeyIgnitions        = "ignitions/"
 	KeyAudit            = "audit/"
 	KeyAuditLastGC      = "audit"

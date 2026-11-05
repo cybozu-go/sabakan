@@ -78,7 +78,7 @@ OUTER:
 		}
 
 		for _, u := range urls {
-			resp, err := d.pullURL(ctx, u)
+			resp, err := d.pullURL(ctx, u, nil)
 			if err != nil {
 				continue
 			}

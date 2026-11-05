@@ -88,6 +88,7 @@ type AssetModel interface {
 	Put(ctx context.Context, name, contentType string, csum []byte, options map[string]string, r io.Reader) (*AssetStatus, error)
 	Get(ctx context.Context, name string, h AssetHandler) error
 	Delete(ctx context.Context, name string) error
+	VerifyPeerToken(ctx context.Context, token string) (bool, error)
 }
 
 // IgnitionModel is an interface for ignition template.

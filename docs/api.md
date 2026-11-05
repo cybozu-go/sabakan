@@ -641,7 +641,7 @@ Download the named asset.
 
 **Failure responses**
 
-- The asset has the `allowed-roles` option, and the client is not a machine with one of the roles.
+- The asset has the `allowed-roles` option, the client is not a machine with one of the roles, and the request does not have a valid `X-Sabakan-Asset-Peer-Token` header.
 
     HTTP status code: 403 Forbidden
 

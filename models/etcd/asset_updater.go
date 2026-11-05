@@ -77,11 +77,20 @@ func (d *driver) downloadAsset(ctx context.Context, asset *sabakan.Asset) error 
 		urls[v] = asset.URLs[i]
 	}
 
+	header := make(http.Header)
+	if _, ok := asset.Options[sabakan.AssetOptionAllowedRoles]; ok {
+		token, err := d.assetPeerToken(ctx)
+		if err != nil {
+			return err
+		}
+		header.Set(sabakan.AssetPeerTokenHeader, token)
+	}
+
 	var resp *http.Response
 	var err error
 
 	for _, u := range urls {
-		resp, err = d.pullURL(ctx, u)
+		resp, err = d.pullURL(ctx, u, header)
 		if err == nil {
 			break
 		}

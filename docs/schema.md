@@ -67,6 +67,12 @@ or updated, the value will be incremented by one.
 These keys hold the meta data of an asset.
 The value is described in [asset management](assets.md).
 
+`<prefix>/asset-peer-token`
+---------------------------
+
+This key holds the token that sabakan servers use to pull assets with the
+`allowed-roles` option from each other.  See [asset management](assets.md).
+
 `<prefix>/ignitions/<role>/<id>`
 --------------------------------
 

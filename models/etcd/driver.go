@@ -3,6 +3,7 @@ package etcd
 
 import (
 	"context"
+	"maps"
 	"net/http"
 	"net/url"
 	"path"
@@ -57,11 +58,12 @@ func (d *driver) myURL(p ...string) string {
 	return u.String()
 }
 
-func (d *driver) pullURL(ctx context.Context, u string) (*http.Response, error) {
+func (d *driver) pullURL(ctx context.Context, u string, header http.Header) (*http.Response, error) {
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
+	maps.Copy(req.Header, header)
 
 	req = req.WithContext(ctx)
 	return d.httpclient.Do(req)

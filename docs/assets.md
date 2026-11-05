@@ -55,6 +55,11 @@ All sabakan servers should support this option before it is used, because
 a server that does not have a local copy redirects the client to another
 server.
 
+Sabakan servers pull such an asset from each other with the
+`X-Sabakan-Asset-Peer-Token` header.  The token is a random string kept in
+`<prefix>/asset-peer-token` in etcd.  A sabakan server creates it when it
+first pulls such an asset.  To change the token, overwrite the key in etcd.
+
 ### Assets directory
 
 Sabakan saves uploaded assets under `/var/lib/sabakan/assets` directory.

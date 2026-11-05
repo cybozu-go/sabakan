@@ -280,3 +280,7 @@ func (d assetDriver) Get(ctx context.Context, name string, h sabakan.AssetHandle
 func (d assetDriver) Delete(ctx context.Context, name string) error {
 	return d.assetDelete(ctx, name)
 }
+
+func (d assetDriver) VerifyPeerToken(ctx context.Context, token string) (bool, error) {
+	return d.verifyAssetPeerToken(ctx, token)
+}

@@ -1,7 +1,6 @@
 package web
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -16,9 +15,6 @@ import (
 
 const (
 	maxAssetSize = 2 << 31
-
-	// assetOptionAllowedRoles restricts GET and HEAD of the asset to machines whose role is in the comma-separated list.
-	assetOptionAllowedRoles = "allowed-roles"
 )
 
 func (s Server) handleAssets(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +65,7 @@ type assetHandler struct {
 }
 
 func (h assetHandler) ServeContent(asset *sabakan.Asset, content io.ReadSeeker) {
-	allowed, err := h.s.isAllowedAssetClient(h.r.Context(), asset, h.r.RemoteAddr)
+	allowed, err := h.s.isAllowedAssetClient(h.r, asset)
 	if err != nil {
 		renderError(h.r.Context(), h.w, InternalServerError(err))
 		return
@@ -80,7 +76,7 @@ func (h assetHandler) ServeContent(asset *sabakan.Asset, content io.ReadSeeker) 
 	}
 
 	header := h.w.Header()
-	if _, ok := asset.Options[assetOptionAllowedRoles]; ok {
+	if _, ok := asset.Options[sabakan.AssetOptionAllowedRoles]; ok {
 		header.Set("Cache-Control", "no-store")
 	}
 	header.Set("content-type", asset.ContentType)
@@ -188,7 +184,7 @@ func (s Server) handleAssetsDelete(w http.ResponseWriter, r *http.Request, name 
 }
 
 func isValidAssetOptionValue(key, value string) bool {
-	if key != assetOptionAllowedRoles {
+	if key != sabakan.AssetOptionAllowedRoles {
 		return sabakan.IsValidLabelValue(value)
 	}
 	for role := range strings.SplitSeq(value, ",") {
@@ -199,15 +195,26 @@ func isValidAssetOptionValue(key, value string) bool {
 	return true
 }
 
-func (s Server) isAllowedAssetClient(ctx context.Context, asset *sabakan.Asset, remoteAddr string) (bool, error) {
-	value, ok := asset.Options[assetOptionAllowedRoles]
+func (s Server) isAllowedAssetClient(r *http.Request, asset *sabakan.Asset) (bool, error) {
+	value, ok := asset.Options[sabakan.AssetOptionAllowedRoles]
 	if !ok {
 		return true, nil
 	}
 
-	host, _, err := net.SplitHostPort(remoteAddr)
+	ctx := r.Context()
+	if token := r.Header.Get(sabakan.AssetPeerTokenHeader); token != "" {
+		valid, err := s.Model.Asset.VerifyPeerToken(ctx, token)
+		if err != nil {
+			return false, err
+		}
+		if valid {
+			return true, nil
+		}
+	}
+
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		return false, fmt.Errorf("invalid remote address %q: %w", remoteAddr, err)
+		return false, fmt.Errorf("invalid remote address %q: %w", r.RemoteAddr, err)
 	}
 	ip := net.ParseIP(host)
 	if ip == nil {

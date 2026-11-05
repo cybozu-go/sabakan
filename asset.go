@@ -2,6 +2,14 @@ package sabakan
 
 import "time"
 
+const (
+	// AssetOptionAllowedRoles restricts GET and HEAD of the asset to machines whose role is in the comma-separated list.
+	AssetOptionAllowedRoles = "allowed-roles"
+
+	// AssetPeerTokenHeader is the HTTP header to send the token that lets sabakan servers pull restricted assets from each other.
+	AssetPeerTokenHeader = "X-Sabakan-Asset-Peer-Token"
+)
+
 // Asset represents an asset.
 type Asset struct {
 	Name        string            `json:"name"`
