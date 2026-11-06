@@ -2,7 +2,6 @@ package mtest
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -18,24 +17,7 @@ func testAssets() {
 		sabactlSafe("assets", "upload", "test", "asset.txt")
 
 		By("Checking all servers pull the asset")
-		Eventually(func() error {
-			var info struct {
-				Urls []string `json:"urls"`
-			}
-
-			stdout, stderr, err := sabactl("assets", "info", "test")
-			if err != nil {
-				return fmt.Errorf("%v: stderr=%s", err, stderr)
-			}
-			err = json.Unmarshal(stdout, &info)
-			if err != nil {
-				return err
-			}
-			if len(info.Urls) != 3 {
-				return errors.New("uploaded asset does not have 3 urls")
-			}
-			return nil
-		}).Should(Succeed())
+		waitAssetURLs("test")
 
 		By("Removing the asset from the index")
 		sabactlSafe("assets", "delete", "test")
@@ -80,24 +62,52 @@ func testAssets() {
 		Expect(err).To(Succeed())
 
 		By("Confirming that sabakan can get the latest asset again")
-		Eventually(func() error {
-			var info struct {
-				Urls []string `json:"urls"`
-			}
-
-			stdout, stderr, err := sabactl("assets", "info", "test2")
-			if err != nil {
-				return fmt.Errorf("%v: stderr=%s", err, stderr)
-			}
-			err = json.Unmarshal(stdout, &info)
-			if err != nil {
-				return err
-			}
-
-			if len(info.Urls) != 3 {
-				return errors.New("uploaded asset does not have 3 urls")
-			}
-			return nil
-		}).Should(Succeed())
+		waitAssetURLs("test2")
 	})
+
+	It("should restrict downloads of an asset with allowed-roles", func() {
+		By("Uploading an asset with allowed-roles")
+		execSafeAt(host1, "echo", "secret", ">", "restricted.txt")
+		// --meta splits values by commas, so a single role is used here.
+		sabactlSafe("assets", "upload", "--meta", "allowed-roles=worker", "restricted", "restricted.txt")
+
+		By("Checking all servers pull the asset with the peer token")
+		waitAssetURLs("restricted")
+
+		By("Checking that clients that are not machines with the role are denied")
+		for _, h := range []string{host1, host2, host3} {
+			for _, server := range []string{host1, host2, host3} {
+				stdout := execSafeAt(h, "curl", "-s", "-o", "/dev/null", "-w", "'%{http_code}'",
+					"http://"+server+":10080/api/v1/assets/restricted")
+				Expect(string(stdout)).To(Equal("403"), "client=%s server=%s", h, server)
+			}
+		}
+
+		By("Checking that the metadata is still available")
+		sabactlSafe("assets", "info", "restricted")
+
+		By("Removing the asset")
+		sabactlSafe("assets", "delete", "restricted")
+	})
+}
+
+func waitAssetURLs(name string) {
+	GinkgoHelper()
+	Eventually(func() error {
+		var info struct {
+			Urls []string `json:"urls"`
+		}
+
+		stdout, stderr, err := sabactl("assets", "info", name)
+		if err != nil {
+			return fmt.Errorf("%v: stderr=%s", err, stderr)
+		}
+		if err := json.Unmarshal(stdout, &info); err != nil {
+			return err
+		}
+		if len(info.Urls) != 3 {
+			return fmt.Errorf("asset %s does not have 3 urls", name)
+		}
+		return nil
+	}).Should(Succeed())
 }
