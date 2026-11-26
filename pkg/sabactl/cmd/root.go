@@ -114,8 +114,16 @@ func Execute() {
 	os.Exit(code)
 }
 
+// envOrDefault returns the value of the environment variable key, or def if it is unset or empty.
+func envOrDefault(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
+}
+
 func init() {
-	rootCmd.PersistentFlags().StringVar(&flagServer, "server", "http://localhost:10080", "<Listen IP>:<Port number>")
-	rootCmd.PersistentFlags().StringVar(&flagTLSServer, "tls-server", "https://localhost:10443", "<Listen IP>:<Port number>")
+	rootCmd.PersistentFlags().StringVar(&flagServer, "server", envOrDefault("SABACTL_SERVER", "http://localhost:10080"), "URL of sabakan server (env: SABACTL_SERVER)")
+	rootCmd.PersistentFlags().StringVar(&flagTLSServer, "tls-server", envOrDefault("SABACTL_TLS_SERVER", "https://localhost:10443"), "URL of sabakan TLS server (env: SABACTL_TLS_SERVER)")
 	rootCmd.PersistentFlags().BoolVar(&flagInsecure, "insecure", false, "Disable TLS verification")
 }
