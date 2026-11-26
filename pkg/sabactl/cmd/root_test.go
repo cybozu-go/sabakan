@@ -1,6 +1,9 @@
 package cmd
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestEnvOrDefault(t *testing.T) {
 	tests := []struct {
@@ -15,8 +18,10 @@ func TestEnvOrDefault(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.set {
-				t.Setenv("SABACTL_TEST_SERVER", tt.value)
+			// t.Setenv restores the original value after the test, including for the unset case.
+			t.Setenv("SABACTL_TEST_SERVER", tt.value)
+			if !tt.set {
+				os.Unsetenv("SABACTL_TEST_SERVER")
 			}
 			if got := envOrDefault("SABACTL_TEST_SERVER", "http://localhost:10080"); got != tt.want {
 				t.Errorf("envOrDefault() = %q, want %q", got, tt.want)
