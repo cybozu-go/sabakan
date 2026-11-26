@@ -14,6 +14,13 @@ $ sabactl [--server http://localhost:10080] <subcommand> <args>...
 | `--tls-server` | `https://localhost:10443`| URL of sabakan TLS server            |
 | `--insecure`   | `false`                  | Disable TLS certificate verification |
 
+| Environment variable | Default value | Description                                                        |
+| -------------------- | ------------- | ------------------------------------------------------------------ |
+| `SABACTL_SERVER`     | ""            | Default URL of sabakan server when `--server` is not given.        |
+| `SABACTL_TLS_SERVER` | ""            | Default URL of sabakan TLS server when `--tls-server` is not given. |
+
+An empty variable is the same as an unset one.
+
 `sabactl ipam set -f FILE`
 --------------------------
 

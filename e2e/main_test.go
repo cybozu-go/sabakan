@@ -130,6 +130,8 @@ func runSabakan() (func(), error) {
 func runSabactl(args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
+	// The test server listens on localhost, whatever SABACTL_SERVER and SABACTL_TLS_SERVER say.
+	args = append([]string{"--server", "http://localhost:10080", "--tls-server", "https://localhost:10443"}, args...)
 	command := exec.Command("../sabactl", args...)
 	command.Stdout = stdout
 	command.Stderr = stderr
