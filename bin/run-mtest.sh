@@ -56,9 +56,41 @@ cd mtest
 cp /assets/etcd-*.tar.gz .
 cp /assets/ubuntu-*.img .
 make SUDO="sudo" setup
+command -v socat >/dev/null || (apt-get update -q && apt-get install -y -q socat) || true
+mkdir -p /var/scratch/console
+for n in host1 host2 host3 worker1 worker2; do
+  ( until socat -u UNIX-CONNECT:/tmp/\$n.socket STDOUT 2>/dev/null; do sleep 0.2; done ) >>/var/scratch/console/\$n.log 2>&1 </dev/null &
+  CONSOLE_PIDS="\$CONSOLE_PIDS \$!"
+done
+
 make placemat
 sleep 3
-exec make test TARGET="${TARGET}"
+set +e
+make test TARGET="${TARGET}"
+RET=\$?
+if [ \$RET -ne 0 ]; then
+  echo "===== debug: host"
+  uname -a
+  cat /etc/os-release
+  dpkg-query -W 'linux-image-*' qemu-system-x86 swtpm swtpm-tools libtpms0 ipxe-qemu seabios ovmf 2>&1
+  ls -l /dev/kvm
+  cat /sys/module/kvm_intel/parameters/nested 2>&1
+  echo "===== debug: placemat journal"
+  journalctl -u placemat.service --no-pager
+  echo "===== debug: processes"
+  ps -eo pid,etime,stat,args | grep -E '[q]emu|[s]wtpm'
+  echo "===== debug: pmctl2"
+  pmctl2 node list --json
+  echo "===== debug: dmesg"
+  dmesg | tail -200
+  for f in /var/scratch/console/*.log; do
+    echo "===== debug: console \$f"
+    tail -c 30000 \$f | tr -cd '\11\12\40-\176'
+  done
+fi
+kill \$CONSOLE_PIDS 2>/dev/null
+pkill -f 'socat -u UNIX-CONNECT:/tmp/'
+exit \$RET
 EOF
 chmod +x run.sh
 
